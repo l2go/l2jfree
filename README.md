@@ -91,7 +91,7 @@ Both are flagged here deliberately, not silently carried or silently patched.
 
 - **JRE 11**, not the full JDK, is enough to *run* a built release (see [Releases](../../releases)):
   [Temurin 11 JRE, Windows x64 MSI](https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.32.1%2B1/OpenJDK11U-jre_x64_windows_hotspot_11.0.32.1_1.msi)
-  (`sha256: f8c7da672f5dba36b6f870608820b6b598cfae91296929f1b8f21ef2f1e8a0dd`) — the same distribution CI
+  (`sha256: 2ee24ab2946b0454463bb38f5d9b2d7e4d2620af7f4fb46df6f313f32635ccdd`) — the same distribution CI
   builds with.
 - **MySQL 5.7.37**, not the newer 5.7.44 — deliberately: [MySQL Archives — pick `mysql-5.7.37-winx64.zip`](https://downloads.mysql.com/archives/community/?product=mysql-installer-community&version=5.7.37)
   (Oracle blocks direct hotlinks to the file itself; use the archive page). 5.7.38+ needs the
