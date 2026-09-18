@@ -1,10 +1,10 @@
 <div align="center">
 
-# l2jfree-ct2.3
+# l2jfree
 
 ### Gracia Final. Protocol 83. Frozen since 2015 — building again since today.
 
-[![build](https://github.com/l2go/l2jfree-ct2.3/actions/workflows/build.yml/badge.svg)](https://github.com/l2go/l2jfree-ct2.3/actions/workflows/build.yml)
+[![build](https://github.com/l2go/l2jfree/actions/workflows/build.yml/badge.svg)](https://github.com/l2go/l2jfree/actions/workflows/build.yml)
 [![license: GPLv3](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
 [![JDK 11 · Windows 7 SP1 x64](https://img.shields.io/badge/target-JDK%2011%20%C2%B7%20Win7%20SP1%20x64-orange.svg)](#requirements)
 
@@ -42,7 +42,7 @@ graph TD
 ## Build
 
 ```sh
-git clone git@github.com:l2go/l2jfree-ct2.3.git && cd l2jfree-ct2.3 && ./mvnw install
+git clone git@github.com:l2go/l2jfree.git && cd l2jfree && ./mvnw install
 ```
 
 On Windows: `mvnw.cmd install`. No separately installed Maven required — the wrapper fetches the
