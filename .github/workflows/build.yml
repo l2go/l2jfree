@@ -1,0 +1,33 @@
+name: build
+
+# Bounded build/toolchain verification only (l2go ADR-0002 D2) — this workflow
+# never touches game logic, only confirms the pack still compiles on the
+# project's target JDK (l2go ADR-0006). CI is the source of truth for "does
+# it build": see l2go ADR-0002/ADR-0005 — this is deliberately never built or
+# verified on the maintainer's own local machine.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # maven-jgit-buildnumber-plugin reads git history; a shallow clone
+          # produces a wrong/missing build number, not a build failure, but
+          # full history keeps the number meaningful.
+          fetch-depth: 0
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+
+      - name: Build (mvn install, from repository root)
+        run: mvn -B -ntp install

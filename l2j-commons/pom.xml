@@ -54,7 +54,7 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.36</version>
+			<version>5.1.49</version>
 		</dependency>
 		<!-- Javolution 5.4.1 is the last MMORPG development suitable version of Javolution. It is not recommend to be updated to a newer version. -->
 		<dependency>
