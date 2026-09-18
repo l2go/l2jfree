@@ -80,6 +80,21 @@ not a bounded fix. Flagged, not silently carried or silently patched.
 | MySQL | 5.7 | Its own docs name Windows 7 SP1 explicitly. |
 | Git | 2.46.2 | Last release before Windows 7/8 support was dropped upstream. |
 
+**Deploying on the target OS — what you actually need to install:**
+
+- **JRE 11**, not the full JDK, is enough to *run* a built release (see [Releases](../../releases)):
+  [Temurin 11 JRE, Windows x64 MSI](https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.32.1%2B1/OpenJDK11U-jre_x64_windows_hotspot_11.0.32.1_1.msi)
+  (`sha256: f8c7da672f5dba36b6f870608820b6b598cfae91296929f1b8f21ef2f1e8a0dd`) — the same distribution CI
+  builds with.
+- **MySQL 5.7.44** (the last 5.7.x release): [MySQL Archives — pick `mysql-5.7.44-winx64.zip`](https://downloads.mysql.com/archives/community/?product=mysql-installer-community&version=5.7.44)
+  (Oracle blocks direct hotlinks to the file itself; use the archive page).
+- **Visual C++ Redistributable**, required by MySQL 5.7.44 specifically (5.7.40+ needs the **2019**
+  runtime; earlier 5.7.x patches needed 2013 instead). Do **not** use Microsoft's "latest" redirect
+  (`aka.ms/vs/.../vc_redist.x64.exe`) — it auto-updates, and the newest builds of this redistributable
+  have dropped Windows 7 support. Pick a specific, pre-2026 dated build from
+  [Microsoft's version history](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)
+  instead of trusting a floating link.
+
 </details>
 
 ## Not this
