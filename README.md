@@ -88,12 +88,12 @@ not a bounded fix. Flagged, not silently carried or silently patched.
   builds with.
 - **MySQL 5.7.44** (the last 5.7.x release): [MySQL Archives — pick `mysql-5.7.44-winx64.zip`](https://downloads.mysql.com/archives/community/?product=mysql-installer-community&version=5.7.44)
   (Oracle blocks direct hotlinks to the file itself; use the archive page).
-- **Visual C++ Redistributable**, required by MySQL 5.7.44 specifically (5.7.40+ needs the **2019**
-  runtime; earlier 5.7.x patches needed 2013 instead). Do **not** use Microsoft's "latest" redirect
-  (`aka.ms/vs/.../vc_redist.x64.exe`) — it auto-updates, and the newest builds of this redistributable
-  have dropped Windows 7 support. Pick a specific, pre-2026 dated build from
-  [Microsoft's version history](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)
-  instead of trusting a floating link.
+- **Visual C++ Redistributable** — **unresolved, not just "pick an older build."** MySQL 5.7.44
+  needs the 2019-era v14 runtime (5.7.40+ requirement). Microsoft's official page
+  (`aka.ms/vc14/vc_redist.x64.exe`) only offers one auto-updating link, no archive of past builds —
+  and that link's current build supports only Windows 10/11. There is currently no confirmed,
+  first-party source for a Windows-7-compatible build of this runtime. Do not treat this as solved;
+  test on a real or emulated Windows 7 SP1 x64 machine before relying on MySQL 5.7.44 there.
 
 </details>
 
