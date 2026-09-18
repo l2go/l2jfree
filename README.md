@@ -74,6 +74,7 @@ Everything below is build tooling; not one line of game logic changed.
 | Root `pom.xml` added | The pack already had a full Maven reactor — but rooted at `l2jfree-module/`, not the repository root, so `mvn install` only worked from inside that subdirectory. This is a thin delegator, no build logic of its own. |
 | `maven-compiler-plugin` 3.3 → 3.8.1 | The only plugin in the build with real JDK 11 compatibility risk. Source/target level is untouched (`1.8`, same as upstream) — this changes *what builds it*, not *what it builds*. |
 | `mysql-connector-java` 5.1.36 → 5.1.49 | Fixes CVE-2019-2692, CVE-2020-2934, CVE-2020-2875 — the last release in the same 5.1.x branch, chosen to match [MySQL 5.7, l2go's ADR-0007 pin](https://github.com/l2go/l2go-workspace/blob/main/adr/ADR-0007-l2jfree-database-mysql57.md) rather than jumping to 8.x. |
+| `maven-antrun-plugin` pinned to `1.8` in `l2jfree-datapack` | Was unpinned, so it silently floated to whatever the latest release was — a real bug, not just a version choice: antrun 3.0.0 removed the `<tasks>` element this pack's build-metadata step uses. First CI run under this modernization failed on exactly this. Pinning fixes it without touching the (non-gameplay) task content, which only stamps build metadata. |
 | CI workflow added | Build verification now happens on a real, reproducible JDK 11 runner — not on any single maintainer's machine. See the badge above. |
 
 **Left untouched, on purpose:** `spring` 2.0.2, `spring-mock` 2.0.2, and `hibernate` 3.2.2.ga are

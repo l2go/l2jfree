@@ -43,6 +43,16 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
+				<!--
+					Version was previously unpinned, so Maven silently resolved whatever the
+					latest release was at build time. antrun 3.0.0 removed the <tasks> element
+					this config uses (renamed to <target>), which is exactly why an unpinned
+					plugin version is itself a build-reliability bug: the same pom can build
+					successfully today and fail tomorrow with no local change. Pinning 1.8 (the
+					last widely-used release supporting <tasks> as written) fixes that without
+					touching the actual task content, which only stamps build metadata.
+				-->
+				<version>1.8</version>
 				<executions>
 					<execution>
 						<phase>generate-resources</phase>
