@@ -77,7 +77,7 @@ not a bounded fix. Flagged, not silently carried or silently patched.
 | OS (server-side) | Windows 7 Pro SP1 x64 | The floor everything below is chosen for. Client-side is unrestricted. |
 | JDK | 11 (LTS) | Last LTS Oracle's certified configs list for Windows 7 SP1. |
 | Maven | 3.6.3, via `./mvnw` — no manual install needed | JDK 11 compatibility, not an OS constraint. |
-| MySQL | 5.7 | Its own docs name Windows 7 SP1 explicitly. |
+| MySQL | 5.7.37 specifically | Its own docs name Windows 7 SP1 explicitly; 5.7.37 also avoids a VC++ runtime dead end (see below). |
 | Git | 2.46.2 | Last release before Windows 7/8 support was dropped upstream. |
 
 **Deploying on the target OS — what you actually need to install:**
@@ -86,14 +86,16 @@ not a bounded fix. Flagged, not silently carried or silently patched.
   [Temurin 11 JRE, Windows x64 MSI](https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.32.1%2B1/OpenJDK11U-jre_x64_windows_hotspot_11.0.32.1_1.msi)
   (`sha256: f8c7da672f5dba36b6f870608820b6b598cfae91296929f1b8f21ef2f1e8a0dd`) — the same distribution CI
   builds with.
-- **MySQL 5.7.44** (the last 5.7.x release): [MySQL Archives — pick `mysql-5.7.44-winx64.zip`](https://downloads.mysql.com/archives/community/?product=mysql-installer-community&version=5.7.44)
-  (Oracle blocks direct hotlinks to the file itself; use the archive page).
-- **Visual C++ Redistributable** — **unresolved, not just "pick an older build."** MySQL 5.7.44
-  needs the 2019-era v14 runtime (5.7.40+ requirement). Microsoft's official page
-  (`aka.ms/vc14/vc_redist.x64.exe`) only offers one auto-updating link, no archive of past builds —
-  and that link's current build supports only Windows 10/11. There is currently no confirmed,
-  first-party source for a Windows-7-compatible build of this runtime. Do not treat this as solved;
-  test on a real or emulated Windows 7 SP1 x64 machine before relying on MySQL 5.7.44 there.
+- **MySQL 5.7.37**, not the newer 5.7.44 — deliberately: [MySQL Archives — pick `mysql-5.7.37-winx64.zip`](https://downloads.mysql.com/archives/community/?product=mysql-installer-community&version=5.7.37)
+  (Oracle blocks direct hotlinks to the file itself; use the archive page). 5.7.38+ needs the
+  ever-updating "2015–2022 unified" VC++ runtime, whose *current* build supports only Windows
+  10/11 with no archived older build available from Microsoft. 5.7.37 needs only the legacy,
+  frozen VC++ 2013 package instead (see next item) — a version Microsoft stopped updating years
+  ago, so its download link can't drift out from under this project the way the newer one did.
+- **Visual C++ 2013 Redistributable (x64)**: [`vcredist_x64.exe`, version `12.0.40664.0`](https://aka.ms/highdpimfc2013x64enu)
+  — confirmed resolving, confirmed to support Windows 7 SP1. Do **not** substitute the newer
+  "2015–2022" VC++ package here; it's a different runtime line and its current build has dropped
+  Windows 7 support entirely.
 
 </details>
 
