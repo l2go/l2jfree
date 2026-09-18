@@ -59,13 +59,20 @@ on faith, never built on one person's machine.
 | Root `pom.xml` | The reactor already existed, just rooted at `l2jfree-module/` instead of repo root. This is a 3-line delegator. |
 | `maven-compiler-plugin` 3.3 → 3.8.1 | Only real JDK 11 risk in the plugin set. Bytecode level unchanged (still `1.8`). |
 | `mysql-connector-java` 5.1.36 → 5.1.49 | Last 5.1.x release; fixes 3 known CVEs without jumping to the 8.x driver line. |
+| `c3p0` 0.9.5.1 → 0.9.5.4 | Same 0.9.5.x branch; fixes CVE-2018-20433 (XXE, critical) and CVE-2019-5427 (billion-laughs XML expansion). |
 | `maven-antrun-plugin` pinned to `1.8` | Was unpinned and had silently drifted to a release that broke the build's `<tasks>` syntax — a real bug CI caught on the first run, not a style choice. |
 | CI added | Build health now lives on a reproducible JDK 11 runner. |
 | Maven Wrapper (`mvnw`/`mvnw.cmd`) added | Pins the exact Maven version (checksum-verified) instead of requiring a separately installed, correctly-versioned Maven — one less manual step for anyone self-hosting this on the target OS. |
 
-**Left alone, on purpose:** `spring` 2.0.2, `spring-mock` 2.0.2, `hibernate` 3.2.2.ga — old enough to
-be a plausible security risk, but bumping them is a behavioral gamble across a decade of changes,
-not a bounded fix. Flagged, not silently carried or silently patched.
+**Left alone, on purpose:**
+- `spring` 2.0.2, `spring-mock` 2.0.2, `hibernate` 3.2.2.ga — old enough to be a plausible security
+  risk, but bumping them is a behavioral gamble across a decade of changes, not a bounded fix.
+- `jython` 2.2.1 — has a known, real vulnerability (CVE-2013-2027, local file-permission issue via
+  umask handling). Not bumped: the next line (2.5+) is a materially different Python-language
+  implementation, and this pack's 449 AI/quest scripts are written against 2.2's specific behavior —
+  the same "behavioral gamble, not a bounded fix" reasoning as Spring/Hibernate above.
+
+Both are flagged here deliberately, not silently carried or silently patched.
 
 </details>
 
