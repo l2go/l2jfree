@@ -92,8 +92,11 @@ not a bounded fix. Flagged, not silently carried or silently patched.
   10/11 with no archived older build available from Microsoft. 5.7.37 needs only the legacy,
   frozen VC++ 2013 package instead (see next item) — a version Microsoft stopped updating years
   ago, so its download link can't drift out from under this project the way the newer one did.
-- **Visual C++ 2013 Redistributable (x64)**: [`vcredist_x64.exe`, version `12.0.40664.0`](https://aka.ms/highdpimfc2013x64enu)
-  — confirmed resolving, confirmed to support Windows 7 SP1. Do **not** substitute the newer
+- **Visual C++ 2013 Redistributable**, version `12.0.40664.0` — install both, as is standard practice
+  (x64 for 64-bit MySQL, x86 alongside it for any 32-bit components/tools):
+  [x64 — `vcredist_x64.exe`](https://aka.ms/highdpimfc2013x64enu) ·
+  [x86 — `vcredist_x86.exe`](https://aka.ms/highdpimfc2013x86enu)
+  — both confirmed resolving, confirmed to support Windows 7 SP1. Do **not** substitute the newer
   "2015–2022" VC++ package here; it's a different runtime line and its current build has dropped
   Windows 7 support entirely.
 
