@@ -29,5 +29,5 @@ jobs:
           distribution: temurin
           java-version: "11"
 
-      - name: Build (mvn install, from repository root)
-        run: mvn -B -ntp install
+      - name: Build (./mvnw install, from repository root)
+        run: ./mvnw -B -ntp install

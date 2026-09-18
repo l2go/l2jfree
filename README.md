@@ -42,10 +42,14 @@ graph TD
 ## Build
 
 ```sh
-git clone git@github.com:l2go/l2jfree-ct2.3.git && cd l2jfree-ct2.3 && mvn install
+git clone git@github.com:l2go/l2jfree-ct2.3.git && cd l2jfree-ct2.3 && ./mvnw install
 ```
 
-Verified on JDK 11 by CI on every push — never taken on faith, never built on one person's machine.
+On Windows: `mvnw.cmd install`. No separately installed Maven required — the wrapper fetches the
+exact pinned version (3.6.3, checksum-verified) on first run. Only a JDK is your responsibility.
+
+Verified on JDK 11 by CI on every push, via the same `./mvnw` anyone else would run — never taken
+on faith, never built on one person's machine.
 
 <details>
 <summary><strong>What changed, and why</strong> — build tooling only, zero game logic touched</summary>
@@ -57,6 +61,7 @@ Verified on JDK 11 by CI on every push — never taken on faith, never built on 
 | `mysql-connector-java` 5.1.36 → 5.1.49 | Last 5.1.x release; fixes 3 known CVEs without jumping to the 8.x driver line. |
 | `maven-antrun-plugin` pinned to `1.8` | Was unpinned and had silently drifted to a release that broke the build's `<tasks>` syntax — a real bug CI caught on the first run, not a style choice. |
 | CI added | Build health now lives on a reproducible JDK 11 runner. |
+| Maven Wrapper (`mvnw`/`mvnw.cmd`) added | Pins the exact Maven version (checksum-verified) instead of requiring a separately installed, correctly-versioned Maven — one less manual step for anyone self-hosting this on the target OS. |
 
 **Left alone, on purpose:** `spring` 2.0.2, `spring-mock` 2.0.2, `hibernate` 3.2.2.ga — old enough to
 be a plausible security risk, but bumping them is a behavioral gamble across a decade of changes,
@@ -71,7 +76,7 @@ not a bounded fix. Flagged, not silently carried or silently patched.
 |---|---|---|
 | OS (server-side) | Windows 7 Pro SP1 x64 | The floor everything below is chosen for. Client-side is unrestricted. |
 | JDK | 11 (LTS) | Last LTS Oracle's certified configs list for Windows 7 SP1. |
-| Maven | 3.6.x | JDK 11 compatibility, not an OS constraint. |
+| Maven | 3.6.3, via `./mvnw` — no manual install needed | JDK 11 compatibility, not an OS constraint. |
 | MySQL | 5.7 | Its own docs name Windows 7 SP1 explicitly. |
 | Git | 2.46.2 | Last release before Windows 7/8 support was dropped upstream. |
 
