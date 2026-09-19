@@ -11,8 +11,12 @@
 </div>
 
 > **Fan-made, non-commercial. Not affiliated with or endorsed by NCSoft.**
-> "Lineage 2" is a trademark of its owner. No NCSoft assets, no client, no reverse engineering —
-> just a GPLv3 server pack, kept buildable.
+> "Lineage 2" is a trademark of its owner. No client binaries or extracted assets (art, audio,
+> models) here or added by this fork. The upstream datapack's text content (NPC dialogue
+> templates, HTML) is inherited from upstream under GPLv3, not authored or added here — this fork
+> keeps the build tooling current, it doesn't audit or strip that inherited content. This project
+> did not reverse-engineer anything itself; `l2jfree` upstream's own history predates this fork by
+> years and isn't something this README can retroactively characterize.
 
 ## Lineage
 
