@@ -6,7 +6,7 @@
 
 [![build](https://github.com/l2go/l2jfree/actions/workflows/build.yml/badge.svg)](https://github.com/l2go/l2jfree/actions/workflows/build.yml)
 [![license: GPLv3](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
-[![JDK 11 · Windows 7 SP1 x64](https://img.shields.io/badge/target-JDK%2011%20%C2%B7%20Win7%20SP1%20x64-orange.svg)](#requirements)
+[![JDK 11 · Windows 10 Pro x64](https://img.shields.io/badge/target-JDK%2011%20%C2%B7%20Windows%2010%20Pro%20x64-orange.svg)](#requirements)
 
 </div>
 
@@ -81,15 +81,18 @@ Both are flagged here deliberately, not silently carried or silently patched.
 </details>
 
 <details>
-<summary><strong>Requirements</strong> — pinned to a specific target, not "whatever's newest"</summary>
+<summary><strong>Requirements</strong> — current build baseline and server target</summary>
 
 | | Version | Why |
 |---|---|---|
-| OS (server-side) | Windows 7 Pro SP1 x64 | The floor everything below is chosen for. Client-side is unrestricted. |
-| JDK | 11 (LTS) | Last LTS Oracle's certified configs list for Windows 7 SP1. |
+| OS (server-side) | Windows 10 Pro x64 | Server deployment target; the client OS is independent. |
+| JDK | 11 (LTS) | Current CI-verified build toolchain and release bytecode level. |
 | Maven | 3.6.3, via `./mvnw` — no manual install needed | JDK 11 compatibility, not an OS constraint. |
-| MySQL | 5.7.37 specifically | Its own docs name Windows 7 SP1 explicitly; 5.7.37 also avoids a VC++ runtime dead end (see below). |
-| Git | 2.46.2 | Last release before Windows 7/8 support was dropped upstream. |
+| MySQL | 5.7.37 for the prepared deployment | Compatibility baseline for the existing SQL and configuration; a newer version needs separate testing. |
+| Git | Only if building from source | A release download needs no Git installation. |
+
+The build is verified on JDK 11 in CI. A complete server runtime check on Windows 10 Pro x64
+has not yet been recorded; the target above is a specification, not a claim of such a test.
 
 **Deploying on the target OS — what you actually need to install:**
 
@@ -97,19 +100,15 @@ Both are flagged here deliberately, not silently carried or silently patched.
   [Temurin 11 JRE, Windows x64 MSI](https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.32.1%2B1/OpenJDK11U-jre_x64_windows_hotspot_11.0.32.1_1.msi)
   (`sha256: 2ee24ab2946b0454463bb38f5d9b2d7e4d2620af7f4fb46df6f313f32635ccdd`) — the same distribution CI
   builds with.
-- **MySQL 5.7.37**, not the newer 5.7.44 — deliberately: [MySQL Archives — pick `mysql-5.7.37-winx64.zip`](https://downloads.mysql.com/archives/community/?product=mysql-installer-community&version=5.7.37)
-  (Oracle blocks direct hotlinks to the file itself; use the archive page). 5.7.38+ needs the
-  ever-updating "2015–2022 unified" VC++ runtime, whose *current* build supports only Windows
-  10/11 with no archived older build available from Microsoft. 5.7.37 needs only the legacy,
-  frozen VC++ 2013 package instead (see next item) — a version Microsoft stopped updating years
-  ago, so its download link can't drift out from under this project the way the newer one did.
-- **Visual C++ 2013 Redistributable**, version `12.0.40664.0` — install both, as is standard practice
-  (x64 for 64-bit MySQL, x86 alongside it for any 32-bit components/tools):
+- **MySQL 5.7.37** is the current prepared-package version:
+  [MySQL Archives — select `mysql-5.7.37-winx64.zip`](https://downloads.mysql.com/archives/community/?product=mysql-installer-community&version=5.7.37).
+  The version is retained for compatibility with the existing SQL; an upgrade should be
+  tested separately and this old release should not be assumed to have current support.
+- **Visual C++ 2013 Redistributable**, version `12.0.40664.0`, is required by that
+  prepared MySQL package. Install both, as recorded for this package:
   [x64 — `vcredist_x64.exe`](https://aka.ms/highdpimfc2013x64enu) ·
-  [x86 — `vcredist_x86.exe`](https://aka.ms/highdpimfc2013x86enu)
-  — both confirmed resolving, confirmed to support Windows 7 SP1. Do **not** substitute the newer
-  "2015–2022" VC++ package here; it's a different runtime line and its current build has dropped
-  Windows 7 support entirely.
+  [x86 — `vcredist_x86.exe`](https://aka.ms/highdpimfc2013x86enu).
+  A different MySQL package may require a different runtime.
 
 </details>
 
