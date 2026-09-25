@@ -37,7 +37,7 @@ public class MySqlConnect
 	{
 		try (Formatter form = new Formatter())
 		{
-			Class.forName("com.mysql.jdbc.Driver").newInstance();
+			Class.forName("com.mysql.cj.jdbc.Driver");
 			final String formattedText = form.format("jdbc:mysql://%1$s:%2$s", host, port).toString();
 			con = DriverManager.getConnection(formattedText, user, password);
 			
@@ -56,30 +56,6 @@ public class MySqlConnect
 			else
 			{
 				JOptionPane.showMessageDialog(null, "MySQL Error: " + e.getMessage(), "Connection Error",
-						JOptionPane.ERROR_MESSAGE);
-			}
-		}
-		catch (InstantiationException e)
-		{
-			if (console)
-			{
-				e.printStackTrace();
-			}
-			else
-			{
-				JOptionPane.showMessageDialog(null, "Instantiation Exception: " + e.getMessage(), "Connection Error",
-						JOptionPane.ERROR_MESSAGE);
-			}
-		}
-		catch (IllegalAccessException e)
-		{
-			if (console)
-			{
-				e.printStackTrace();
-			}
-			else
-			{
-				JOptionPane.showMessageDialog(null, "Illegal Access: " + e.getMessage(), "Connection Error",
 						JOptionPane.ERROR_MESSAGE);
 			}
 		}

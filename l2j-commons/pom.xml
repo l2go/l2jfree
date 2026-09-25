@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.l2jfree</groupId>
 		<artifactId>l2jfree-module</artifactId>
-		<version>1.3.0</version>
+		<version>1.4.0</version>
 		<relativePath>../l2jfree-module</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
@@ -52,9 +52,9 @@
 			<version>0.9.5.4</version>
 		</dependency>
 		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.49</version>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<version>${mysql-connector-j.version}</version>
 		</dependency>
 		<!-- Javolution 5.4.1 is the last MMORPG development suitable version of Javolution. It is not recommend to be updated to a newer version. -->
 		<dependency>
@@ -65,7 +65,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>3.8.2</version>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -82,4 +82,3 @@
 		</plugins>
 	</build>
 </project>
-	

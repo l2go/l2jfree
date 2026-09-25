@@ -2,11 +2,11 @@
 
 # l2jfree
 
-### Gracia Final. Protocol 83. Frozen since 2015 — building again since today.
+### Gracia Final · Protocol 83 · 2026 Q4 Windows 10 x64 Upgrade
 
 [![build](https://github.com/l2go/l2jfree/actions/workflows/build.yml/badge.svg)](https://github.com/l2go/l2jfree/actions/workflows/build.yml)
 [![license: GPLv3](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
-[![JDK 11 · Windows 10 Pro x64](https://img.shields.io/badge/target-JDK%2011%20%C2%B7%20Windows%2010%20Pro%20x64-orange.svg)](#requirements)
+[![OpenJDK 11 and 25 · Windows 10 x64 2026 Q4 Upgrade](https://img.shields.io/badge/build-OpenJDK%2011%20%2B%2025%20%C2%B7%20Windows%2010%20x64%202026%20Q4%20Upgrade-orange.svg)](#requirements)
 
 </div>
 
@@ -25,6 +25,10 @@ savormix (2010) → lord_rex / l2jfree-ct2.3 (2015) → this fork (today)
 ```
 
 Unmodified original: [`UPSTREAM_README.md`](UPSTREAM_README.md).
+
+## 2026 Q4 Upgrade
+
+The deployment is moving from Windows 7 SP1 x64 to Windows 10 Pro 22H2 x64. Repository implementation now targets Microsoft Build of OpenJDK 25 while retaining Java 8 bytecode, Maven Wrapper 3.9.16, MySQL Connector/J 26.7.0, and launchers that honor `JAVA_HOME`. Windows 7 compatibility is not a goal. Windows host runtime qualification and the MySQL server migration remain pending; the target versions, qualification limits, migration sequence, rollback requirements, and exit criteria are documented in the [2026 Q4 Upgrade plan](docs/2026-Q4-UPGRADE.md).
 
 ## Module graph
 
@@ -50,13 +54,13 @@ git clone git@github.com:l2go/l2jfree.git && cd l2jfree && ./mvnw install
 ```
 
 On Windows: `mvnw.cmd install`. No separately installed Maven required — the wrapper fetches the
-exact pinned version (3.6.3, checksum-verified) on first run. Only a JDK is your responsibility.
+exact pinned version (3.9.16, SHA-256 verified) on first run. Only a JDK is your responsibility.
 
-Verified on JDK 11 by CI on every push, via the same `./mvnw` anyone else would run — never taken
-on faith, never built on one person's machine.
+CI is configured for Microsoft Build of OpenJDK 11 and 25. The existing baseline has prior CI
+verification; the new JDK 25 workflow and Windows 10 runtime still require qualification.
 
 <details>
-<summary><strong>What changed, and why</strong> — build tooling only, zero game logic touched</summary>
+<summary><strong>What changed, and why</strong> — build and deployment tooling; gameplay logic unchanged</summary>
 
 | Change | Reason |
 |---|---|
@@ -67,6 +71,7 @@ on faith, never built on one person's machine.
 | `maven-antrun-plugin` pinned to `1.8` | Was unpinned and had silently drifted to a release that broke the build's `<tasks>` syntax — a real bug CI caught on the first run, not a style choice. |
 | CI added | Build health now lives on a reproducible JDK 11 runner. |
 | Maven Wrapper (`mvnw`/`mvnw.cmd`) added | Pins the exact Maven version (checksum-verified) instead of requiring a separately installed, correctly-versioned Maven — one less manual step for anyone self-hosting this on the target OS. |
+| 2026 Q4 toolchain upgrade | Pins Maven 3.9.16, configures Java 8 release bytecode and Microsoft OpenJDK 11/25 CI, updates MySQL Connector/J to 26.7.0, and makes Windows launchers use `JAVA_HOME` when set. Runtime qualification is pending. |
 
 **Left alone, on purpose:**
 - `spring` 2.0.2, `spring-mock` 2.0.2, `hibernate` 3.2.2.ga — old enough to be a plausible security
@@ -85,16 +90,23 @@ Both are flagged here deliberately, not silently carried or silently patched.
 
 | | Version | Why |
 |---|---|---|
-| OS (server-side) | Windows 10 Pro x64 | Server deployment target; the client OS is independent. |
-| JDK | 11 (LTS) | Current CI-verified build toolchain and release bytecode level. |
-| Maven | 3.6.3, via `./mvnw` — no manual install needed | JDK 11 compatibility, not an OS constraint. |
-| MySQL | 5.7.37 for the prepared deployment | Compatibility baseline for the existing SQL and configuration; a newer version needs separate testing. |
+| Existing server OS | Windows 7 SP1 x64 | Existing deployment baseline; not the upgrade target. |
+| 2026 Q4 OS target | Windows 10 Pro 22H2 x64 | Target deployment; Windows 10 runtime qualification is pending. |
+| CI JDK matrix | Microsoft Build of OpenJDK 11 and 25 x64 | Workflow configured for both; Windows 10 runtime qualification remains pending. |
+| Target JDK | Microsoft Build of OpenJDK 25 LTS x64 | Upgrade runtime and build JDK; application qualification is required. |
+| Maven Wrapper | 3.9.16 | Exact distribution pinned with SHA-256. |
+| Java bytecode | Java 8 (`--release 8`) | Retains the existing bytecode contract during runtime modernization. |
+| Existing MySQL package | 5.7.37 | Prepared-deployment baseline. |
+| JDBC driver | MySQL Connector/J 26.7.0 | Repository dependency and driver class updated; runtime qualification remains pending. |
+| Target database | MySQL 8.4 LTS, latest patch at deployment | Retained as the maintained target; Windows 10 operation needs project qualification or a separate supported database host. MySQL 8.0 is EOL and is not the production fallback. |
+| Upgrade release | 1.4.0 (`v1.4.0`) | Prepared as the first release containing the upgrade; publish as a prerelease first and promote only after the exact deploy image passes qualification. |
 | Git | Only if building from source | A release download needs no Git installation. |
 
-The build is verified on JDK 11 in CI. A complete server runtime check on Windows 10 Pro x64
-has not yet been recorded; the target above is a specification, not a claim of such a test.
+The workflow is configured for JDK 11 and 25, but the new matrix has not yet been run in this repository and neither JDK 25 nor the Windows 10 / MySQL 8.4 stack has passed runtime qualification. The first upgraded release is planned as `v1.4.0`; publish it as a prerelease for deployment qualification, then promote the same assets to stable. Windows 10 is beyond general support and no ESU is assumed; see the [2026 Q4 Upgrade plan](docs/2026-Q4-UPGRADE.md) for the operating constraint and deployment precautions.
 
-**Deploying on the target OS — what you actually need to install:**
+**Existing prepared package baseline (not the 2026 Q4 target):**
+
+The following legacy package notes describe the current JDK 11 / MySQL 5.7.37 release only. They are not installation instructions for the planned Windows 10 / OpenJDK 25 / MySQL 8.4 profile; use the [2026 Q4 Upgrade plan](docs/2026-Q4-UPGRADE.md) for that migration.
 
 - **JRE 11**, not the full JDK, is enough to *run* a built release (see [Releases](../../releases)):
   [Temurin 11 JRE, Windows x64 MSI](https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.32.1%2B1/OpenJDK11U-jre_x64_windows_hotspot_11.0.32.1_1.msi)

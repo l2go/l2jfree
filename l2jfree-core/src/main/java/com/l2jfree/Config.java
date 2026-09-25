@@ -215,7 +215,7 @@ public final class Config
 			OPTIONAL_NETWORKS = serverSettings.getProperty("OptionalNetworks", "");
 			PACKET_HANDLER_DEBUG = Boolean.parseBoolean(serverSettings.getProperty("PacketHandlerDebug", "false"));
 			MAXIMUM_ONLINE_USERS = Integer.parseInt(serverSettings.getProperty("MaximumOnlineUsers", "100"));
-			DATABASE_DRIVER = serverSettings.getProperty("Driver", "com.mysql.jdbc.Driver");
+			DATABASE_DRIVER = serverSettings.getProperty("Driver", "com.mysql.cj.jdbc.Driver");
 			DATABASE_URL = serverSettings.getProperty("URL", "jdbc:mysql://localhost/l2jfree_gs");
 			DATABASE_LOGIN = serverSettings.getProperty("Login", "root");
 			DATABASE_PASSWORD = serverSettings.getProperty("Password", "");

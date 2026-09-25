@@ -101,7 +101,7 @@ public final class Config
 			LOGIN_BLOCK_AFTER_BAN = Integer.parseInt(serverSettings.getProperty("LoginBlockAfterBan", "600"));
 			GM_MIN = Integer.parseInt(serverSettings.getProperty("GMMinLevel", "100"));
 			
-			DATABASE_DRIVER = serverSettings.getProperty("Driver", "com.mysql.jdbc.Driver");
+			DATABASE_DRIVER = serverSettings.getProperty("Driver", "com.mysql.cj.jdbc.Driver");
 			DATABASE_URL = serverSettings.getProperty("URL", "jdbc:mysql://localhost/l2jfree_ls");
 			DATABASE_LOGIN = serverSettings.getProperty("Login", "root");
 			DATABASE_PASSWORD = serverSettings.getProperty("Password", "");
