@@ -62,7 +62,7 @@ On the Windows 10 qualification host, run the 1.4.0 package from a clean deploym
 
 ### 7. Publish the release candidate
 
-After the candidate stack passes the qualification checks, push the `v1.4.0` tag. The GitHub Actions workflow checks that the tag matches the Maven project version, builds the three distribution ZIPs, computes SHA-256 checksums, and publishes a GitHub prerelease. The prerelease assets are the exact inputs for the deployment-image check below.
+After the GitHub build matrix passes and the release contents are reviewed, push the `v1.4.0` tag to publish a GitHub prerelease candidate. The workflow checks that the tag matches the Maven project version, builds the three distribution ZIPs, computes SHA-256 checksums, and attaches them to the prerelease. This candidate is for deployment qualification; it is not a stable release and does not claim that Windows 10 runtime qualification has passed.
 
 The first release carrying this upgrade is prepared as **1.4.0** (`v1.4.0`). Its release packages are portable JVM distributions and do not bundle Windows or MySQL installers.
 
@@ -84,9 +84,8 @@ The current `repos/l2jfree-deploy` tree is the 1.3.0 deployment baseline: it con
 
 ## Verification snapshot (2026-09-26)
 
-- `./mvnw -B -ntp install` succeeds locally on OpenJDK 21 and produces all three 1.4.0 distribution ZIPs. Their archives pass integrity checks, the release workflow's Maven version query returns `1.4.0`, and application class files report Java 8 bytecode (major version 52). The local JDK 25 and Windows 10 runtime checks have not been performed.
-- Tests remain skipped by default, as in the previous build configuration. When explicitly enabled, all 31 `l2j-commons` tests pass; `l2jfree-login` reports 1 failure and 15 errors across 21 tests, and `l2jfree-core` reports 3 failures and 5 errors across 28 tests. Failures point to stale Spring/resource fixtures and invalid class-name assumptions. CI therefore remains a compile/package check; repair or replace those tests before making them a release gate.
-- Static comparison confirms the existing deploy tree still contains the 1.3.0 artifacts and Windows launchers. The three release ZIPs were extracted together into a temporary clean stage and passed expected-file checks; no site-specific `l2jfree-deploy` image has been assembled or runtime-tested yet.
+- GitHub Actions run [36194342679](https://github.com/l2go/l2jfree/actions/runs/36194342679) passed both build matrix jobs using Microsoft Build of OpenJDK 11 and 25. The workflow runs `./mvnw -B -ntp install`; tests remain skipped by default, so this run verifies compilation and packaging, not the test suites.
+- Windows 10 runtime qualification, MySQL 8.4 integration, and the site-specific `l2jfree-deploy` image have not been qualified. Build that image from the exact prerelease ZIPs and record its smoke and persistence results before promoting the prerelease to stable.
 
 ## Exit criteria
 
@@ -94,7 +93,7 @@ The current `repos/l2jfree-deploy` tree is the 1.3.0 deployment baseline: it con
 - `l2jfree-deploy` is assembled from the exact 1.4.0 release ZIPs in a clean staging tree and contains no 1.3.0 application JARs, Java 11 runtime, MySQL 5.7 server, or Connector/J 5.1 driver.
 - CI produces release candidate archives with checksums using the pinned JDK and Maven versions; the exact candidate passes deploy-image qualification before promotion to a stable release.
 - Login, gameplay entry, representative quests/scripts, persistence, backup, clean shutdown, restart, and rollback all pass on the qualification deployment.
-- The explicitly enabled legacy test suites pass, or every remaining failure has a documented release disposition before `v1.4.0` is tagged.
+- The explicitly enabled legacy test suites pass, or every remaining failure has a documented release disposition before the prerelease is promoted to stable.
 - The exact Windows, Java, Maven, database, JDBC, and VC++ versions are recorded with the qualified release artifacts.
 - The old Windows 7 deployment remains available only as an isolated rollback reference and is no longer the supported target.
 
