@@ -159,7 +159,9 @@ public class LookupTable<T> implements Iterable<T>
 	public final T remove(final int key)
 	{
 		final T oldValue = get(key);
-		
+		if (oldValue == null)
+			return null;
+
 		set(key, null);
 		
 		return oldValue;
