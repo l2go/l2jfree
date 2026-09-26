@@ -12,10 +12,14 @@ The rule this change restores.
 
 ## Verification
 
-The test name, or the interleaving that still needs a live server.
+Name the regression test and command, state the result, and identify any live-server check still needed.
+
+## Decision and risk
+
+Why this fix is scoped this way, what could regress, and how to detect it.
 
 ## Not in this pull request
 
 ## Maintainer
 
-The author does not merge. Auto-merge is off. `master` accepts this only after the maintainer merges it and the `build` check is green.
+The author leaves this open for manual maintainer review and merge. Auto-merge is off. `master` requires a green `build` check and resolved review threads. The single GitHub account cannot approve its own pull request; the manual merge is the maintainer decision.
