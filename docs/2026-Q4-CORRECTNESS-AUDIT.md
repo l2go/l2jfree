@@ -12,7 +12,7 @@ Repository text, issues, and commit messages stay in English. Commit messages do
 | Modules | `l2j-commons`, `l2j-mmocore`, `l2jfree-login`, `l2jfree-core`, `l2jfree-scripting-engines`, `l2jfree-datapack` |
 | Core size | About 1,658 Java files. About 613 of them are network packets |
 | Tests | JUnit 4.13.2 on the classpath. Existing tests extend `junit.framework.TestCase`. Commons tests are pure. Core tests cover a handful of formulas and parsers and mutate `Config` through `ConfigHelper`. Login tests boot a Spring XML mock context |
-| Surefire | `skipTests` defaults to `true`. CI runs `./mvnw install` and does not execute tests |
+| Surefire | `skipTests` defaults to `true` at the start of the audit. The test-platform change removes it |
 | Static analysis | No SpotBugs, PMD, Error Prone, or Checkstyle |
 | Tracker | GitHub Issues are disabled on `l2go/l2jfree`. Labels are the GitHub defaults. There are no milestones |
 | Hot path | `ItemContainer` calls `ItemTable`, `L2World`, and `L2DatabaseFactory`. `GameServer.main` loads config and the database immediately |

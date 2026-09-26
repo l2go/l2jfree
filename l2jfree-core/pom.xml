@@ -38,13 +38,6 @@
 			<artifactId>trove4j</artifactId>
 			<version>2.1.0</version>
 		</dependency>
-		<dependency>
-			<!-- JUnit 4 keeps compatibility with this module's JUnit 3 style tests. -->
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 	<build>
 		<defaultGoal>install</defaultGoal>

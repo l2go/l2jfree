@@ -1,6 +1,0 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE list SYSTEM "database/l2jdb.dtd">
-<dataset>
-  <gameservers server_id="0"
-    hexid="651de5d23464e255346a36d0bbb1966a" host="*" />
-</dataset>
