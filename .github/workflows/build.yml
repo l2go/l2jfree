@@ -1,7 +1,7 @@
 name: build
 
-# Build compatibility matrix for the 2026 Q4 Windows 10 upgrade. JDK 11 is
-# retained as a transition baseline; JDK 25 is the new build and release JDK.
+# Microsoft OpenJDK 25 is the only build and release JDK. JDK 11 stayed in
+# the matrix while Windows 7 was still a host; that host is gone.
 # Windows 10 runtime compatibility still requires qualification on a real host.
 
 on:
@@ -14,10 +14,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        java: ["11", "25"]
     steps:
       - uses: actions/checkout@v5
         with:
@@ -26,11 +22,11 @@ jobs:
           # full history keeps the number meaningful.
           fetch-depth: 0
 
-      - name: Set up Microsoft Build of OpenJDK ${{ matrix.java }}
+      - name: Set up Microsoft Build of OpenJDK 25
         uses: actions/setup-java@v5
         with:
           distribution: microsoft
-          java-version: ${{ matrix.java }}
+          java-version: "25"
 
       - name: Build Java 8 bytecode (./mvnw install)
         run: ./mvnw -B -ntp install

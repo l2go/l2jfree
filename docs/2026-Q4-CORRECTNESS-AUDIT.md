@@ -8,7 +8,7 @@ Repository text, issues, and commit messages stay in English. Commit messages do
 
 | Fact | State on 2026-09-26 |
 |---|---|
-| Production bytecode | Java 8 (`maven.compiler.release` 8). CI builds with Microsoft OpenJDK 11 and 25 |
+| Production bytecode | Java 8 (`maven.compiler.release` 8). The 2026-09-26 CI matrix was Microsoft OpenJDK 11 and 25 |
 | Modules | `l2j-commons`, `l2j-mmocore`, `l2jfree-login`, `l2jfree-core`, `l2jfree-scripting-engines`, `l2jfree-datapack` |
 | Core size | About 1,658 Java files. About 613 of them are network packets |
 | Tests | JUnit 4.13.2 on the classpath. Existing tests extend `junit.framework.TestCase`. Commons tests are pure. Core tests cover a handful of formulas and parsers and mutate `Config` through `ConfigHelper`. Login tests boot a Spring XML mock context |
@@ -63,11 +63,23 @@ The fix does not rewrite the subsystem. Severity is relative to 1.4.0 qualificat
 | `major` | The same class of failure on a narrow path, or a race with a specific interleaving |
 | `minor` | The result is wrong and the damage is limited |
 
-Labels are a small set: `bug`, `severity:blocker`, `severity:major`, `severity:minor`, `area:economy`, `area:session`, `area:packets`, `area:persistence`, `area:concurrency`. One milestone holds the audit. One tracking issue states the scope, the method, the filing bar, and what is left unfiled. Child issues link to it.
+Labels are a small set: `bug`, `severity:blocker`, `severity:major`, `severity:minor`, `area:economy`, `area:session`, `area:packets`, `area:persistence`, `area:concurrency`. Milestones are delivery slices, listed under Deliver by slice. One tracking issue states the scope, the method, the filing bar, and what is left unfiled. Child issues link to it.
 
 The first batch is the economy, session, and persistence findings that clear the bar, on the order of 8–15 issues. A SpotBugs warning is not an issue. A security-shaped game bug (packet trust, admin command) is a normal public issue that states impact and the fix, without a step-by-step exploit. A leaked credential would use a private advisory; item and session bugs do not.
 
-A fix PR uses `Fixes #n` and keeps the main branch green.
+A fix is one pull request. The body starts with `Fixes #n`. The maintainer merges it. Direct pushes to `master` are rejected. This repository has a single GitHub account, and GitHub will not let that account approve its own pull request, so the merge itself is the approval. Auto-merge is off.
+
+## How a change lands
+
+Every pull request answers five questions, in this order:
+
+1. Which issue, and which invariant.
+2. What the running server does after the change.
+3. What was verified, including the test name when the path can run in-process.
+4. What the pull request does not change.
+5. Which milestone slice it belongs to.
+
+Commit messages stay in English and do not carry a `Co-authored-by` trailer. One defect is one pull request. A platform change, such as the JDK or the test stack, is also an issue and a pull request.
 
 ## Tests
 
@@ -77,7 +89,7 @@ Old tests and their infrastructure are removed when the new stack lands: every `
 
 ### Stack
 
-Tests execute on JDK 25. JDK 11 stays a compile-and-package check, because the test stack requires Java 17. Production bytecode stays `--release 8`. Test sources use `testRelease` 21, so tests may use records and pattern matching without changing server bytecode.
+Tests execute on JDK 25, which is also the only CI JDK. Production bytecode stays `--release 8`. Test sources use `testRelease` 21, so tests may use records and pattern matching without changing server bytecode.
 
 | Role | Artifact | Version |
 |---|---|---|
@@ -119,15 +131,22 @@ No production edits and no new test stack. The inherited tests stay in place and
 
 SpotBugs and the focused search feed working notes. The invariant read files an issue only when the bar above is met. The tracking issue is opened in this phase, after Issues, the labels, the issue form, and the milestone exist.
 
-### 2. Pin what already runs
+### 2. Deliver by slice
 
-A short tooling change comes first: delete the old tests and XML fixtures, add JUnit 6, AssertJ, and Mockito, set `testRelease` 21, configure the Surefire agent, and run unit tests on the JDK 25 CI job. JDK 11 keeps compiling only.
+The hunt is filed. None of those defects is a pure function, so there is no coverage pass before the fixes. A regression is added in the same pull request as the fix. The test platform lands first: old tests and XML fixtures are deleted, JUnit 6, AssertJ, and Mockito are added, `testRelease` is 21, and Surefire gets the Mockito agent.
 
-Then each open issue whose path runs in-process is closed by one PR that contains the regression and the fix. Issues that need the world or the database stay open.
+Slices, in order:
 
-### 3. Modernize along the open issues
+| Milestone | Issues | Outcome |
+|---|---|---|
+| Test platform | The JDK and test-stack issue | CI is OpenJDK 25 only, and new tests have a runner |
+| Release blockers | #8, #9, #10, #11, and the login-counter defect #6 | A bid cannot mint adena, a second connection cannot take a session, and a late logout cannot detach the player who just entered |
+| Economy | #2, #3, #4, #5, #7 | A charge matches the items that moved, and a limit the server claims to enforce actually runs |
+| World and identity | #12, #13, #14 | An id is not issued twice, a knownlist update repairs a partial insert, and an entered region becomes active |
 
-One invariant at a time. The PR extracts the seam, adds the test, and fixes the defect. ArchUnit covers the new boundary. Testcontainers is added only when the defect is in SQL. Packages that were not touched are not backfilled with tests.
+### 3. Cut a seam only for the open issue
+
+One invariant at a time. The pull request extracts the seam, adds the test, and fixes the defect. ArchUnit covers the new boundary. Testcontainers is added only when the defect is in SQL. Packages that were not touched are not backfilled with tests.
 
 The tracking issue closes when every child is fixed or explicitly deferred with a reason.
 

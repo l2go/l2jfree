@@ -11,7 +11,7 @@
 | Driver | Connector/J 26.7.0 (`com.mysql.cj.jdbc.Driver`) |
 | Release | `v1.4.0` prerelease candidate; promote the same ZIPs after qualification |
 
-The code and build configuration are prepared. On 2026-09-26, [CI run 36194342679](https://github.com/l2go/l2jfree/actions/runs/36194342679) was recorded as passing on Microsoft OpenJDK 11 and 25. CI compiles and packages on Ubuntu; Maven skips tests by default. Windows 10 operation, MySQL 8.4 integration, and the deployment image remain unqualified.
+The code and build configuration are prepared. On 2026-09-26, [CI run 36194342679](https://github.com/l2go/l2jfree/actions/runs/36194342679) passed on Microsoft OpenJDK 11 and 25. JDK 11 was the Windows 7 transition baseline and is no longer in the workflow. CI now compiles and packages on Ubuntu with Microsoft OpenJDK 25 only. Maven skips tests by default. Windows 10 operation, MySQL 8.4 integration, and the deployment image remain unqualified.
 
 Windows 10 left regular support on October 14, 2025. Limit public ports to game traffic, keep MySQL and administration private, restrict remote access, and maintain restorable offline backups. Oracle's supported-platform table does not list Windows 10 for MySQL 8.4. Run the database on a supported host if certification is required; otherwise qualify it on Windows 10 as a project-specific deployment.
 
