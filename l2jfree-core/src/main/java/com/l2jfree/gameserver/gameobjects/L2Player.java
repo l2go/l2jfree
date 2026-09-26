@@ -11076,6 +11076,16 @@ public final class L2Player extends L2Playable
 		if (getOnlineState() == ONLINE_STATE_DELETED)
 			return;
 		
+		// Publish the flag before the rest of the work, so a second deleteMe on this instance returns.
+		try
+		{
+			setOnlineStatus(false);
+		}
+		catch (Exception e)
+		{
+			_log.fatal(e.getMessage(), e);
+		}
+		
 		// Pause restrictions
 		ObjectRestrictions.getInstance().pauseTasks(getObjectId());
 		
@@ -11152,16 +11162,6 @@ public final class L2Player extends L2Playable
 			castle = CastleManager.getInstance().getCastleByOwner(getClan());
 			if (castle != null)
 				castle.destroyClanGate();
-		}
-		
-		// Set the online Flag to True or False and update the characters table of the database with online status and lastAccess (called when login and logout)
-		try
-		{
-			setOnlineStatus(false);
-		}
-		catch (Exception e)
-		{
-			_log.fatal(e.getMessage(), e);
 		}
 		
 		// Stop the HP/MP/CP Regeneration task (scheduled tasks)

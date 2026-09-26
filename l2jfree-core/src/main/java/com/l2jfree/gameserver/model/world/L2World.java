@@ -36,6 +36,7 @@ import com.l2jfree.tools.geometry.Point3D;
 import com.l2jfree.util.ArrayBunch;
 import com.l2jfree.util.concurrent.L2EntityMap;
 import com.l2jfree.util.concurrent.L2ReadWriteEntityMap;
+import com.l2jfree.util.concurrent.SameInstance;
 
 /**
  * This class ...
@@ -152,12 +153,15 @@ public final class L2World
 	
 	public void addOnlinePlayer(L2Player player)
 	{
-		_players.put(player.getName().toLowerCase(), player);
+		synchronized (_players)
+		{
+			_players.put(player.getName().toLowerCase(), player);
+		}
 	}
 	
 	public void removeOnlinePlayer(L2Player player)
 	{
-		_players.remove(player.getName().toLowerCase());
+		SameInstance.remove(_players, player.getName().toLowerCase(), player);
 	}
 	
 	public L2Object findObject(int objectId)

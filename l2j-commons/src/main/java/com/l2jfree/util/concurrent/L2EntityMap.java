@@ -89,12 +89,24 @@ public abstract class L2EntityMap<T extends L2Entity<Integer>>
 	{
 		init();
 		
-		_map.put(obj.getPrimaryKey(), obj);
+		synchronized (_map)
+		{
+			_map.put(obj.getPrimaryKey(), obj);
+		}
 	}
 	
 	public void remove(T obj)
 	{
-		_map.remove(obj.getPrimaryKey());
+		if (obj == null || !_initialized)
+			return;
+		
+		Integer id = obj.getPrimaryKey();
+		synchronized (_map)
+		{
+			// A newer instance may already own this id. Removing by id alone would detach it.
+			if (_map.get(id) == obj)
+				_map.remove(id);
+		}
 	}
 	
 	public void clear()
