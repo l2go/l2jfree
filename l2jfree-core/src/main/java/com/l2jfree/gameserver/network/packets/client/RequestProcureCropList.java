@@ -49,6 +49,11 @@ public class RequestProcureCropList extends L2ClientPacket
 	
 	private Crop[] _items = null;
 	
+	static boolean matchesClaimedCrop(L2ItemInstance item, int claimedItemId, long count)
+	{
+		return item != null && item.getItemId() == claimedItemId && item.getCount() >= count;
+	}
+
 	@Override
 	protected void readImpl()
 	{
@@ -177,7 +182,7 @@ public class RequestProcureCropList extends L2ClientPacket
 			
 			// check if player have correct items count
 			L2ItemInstance item = player.getInventory().getItemByObjectId(i.getObjectId());
-			if (item == null || item.getCount() < i.getCount())
+			if (!matchesClaimedCrop(item, i.getItemId(), i.getCount()))
 				continue;
 			
 			itemDel = player.getInventory().destroyItem("Manor", i.getObjectId(), i.getCount(), player, manager);
