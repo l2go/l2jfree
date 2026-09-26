@@ -33,6 +33,7 @@ import com.l2jfree.L2AutoInitialization;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.Disconnection;
+import com.l2jfree.gameserver.network.AuthLoginGuard;
 import com.l2jfree.gameserver.network.L2Client;
 import com.l2jfree.gameserver.network.L2Client.GameClientState;
 import com.l2jfree.gameserver.network.L2ClientSelectorThread;
@@ -80,6 +81,7 @@ public final class LoginServerThread extends NetworkThread
 	private final boolean _reserveHost;
 	private final Map<String, WaitingClient> _waitingClients;
 	private final Map<String, L2Client> _accountsInGameServer;
+	private final Object _accountLock = new Object();
 	private ServerStatus _status = ServerStatus.STATUS_AUTO;
 	private String _gameExternalHost; // External host for old login server
 	private String _gameInternalHost; // Internal host for old login server
@@ -116,11 +118,19 @@ public final class LoginServerThread extends NetworkThread
 		}
 	}
 	
-	public void addWaitingClientAndSendRequest(String acc, L2Client client, SessionKey key)
+	public boolean addWaitingClientAndSendRequest(String acc, L2Client client, SessionKey key)
 	{
-		_waitingClients.put(acc, new WaitingClient(client, key));
+		synchronized (_accountLock)
+		{
+			if (!AuthLoginGuard.canClaim(_waitingClients.containsKey(acc), _accountsInGameServer.containsKey(acc)))
+				return false;
+			
+			client.setAccountName(acc);
+			_waitingClients.put(acc, new WaitingClient(client, key));
+		}
 		
 		sendPacketQuietly(new PlayerAuthRequest(acc, key));
+		return true;
 	}
 	
 	public void sendLogout(String account)
@@ -128,8 +138,11 @@ public final class LoginServerThread extends NetworkThread
 		if (account == null || account.isEmpty())
 			return;
 		
-		_waitingClients.remove(account);
-		_accountsInGameServer.remove(account);
+		synchronized (_accountLock)
+		{
+			_waitingClients.remove(account);
+			_accountsInGameServer.remove(account);
+		}
 		
 		sendPacketQuietly(new PlayerLogout(account));
 	}
@@ -426,7 +439,19 @@ public final class LoginServerThread extends NetworkThread
 						case 0x03:
 						{
 							PlayerAuthResponse par = new PlayerAuthResponse(decrypt);
-							WaitingClient wcToRemove = _waitingClients.remove(par.getAccount());
+							WaitingClient wcToRemove = null;
+							synchronized (_accountLock)
+							{
+								WaitingClient waiting = _waitingClients.get(par.getAccount());
+								if (waiting != null
+										&& AuthLoginGuard.sameKey(waiting.session.playOkID1, waiting.session.playOkID2,
+												waiting.session.loginOkID1, waiting.session.loginOkID2, par.hasKey(),
+												par.getPlayOk1(), par.getPlayOk2(), par.getLoginOk1(), par.getLoginOk2()))
+								{
+									wcToRemove = waiting;
+									_waitingClients.remove(par.getAccount());
+								}
+							}
 							
 							if (wcToRemove != null)
 							{
@@ -451,7 +476,10 @@ public final class LoginServerThread extends NetworkThread
 									
 									client.getPacketQueue().execute(new AsyncCharSelectionInfo());
 									
-									_accountsInGameServer.put(client.getAccountName(), client);
+									synchronized (_accountLock)
+									{
+										_accountsInGameServer.put(client.getAccountName(), client);
+									}
 								}
 								else
 								{
