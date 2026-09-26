@@ -384,7 +384,7 @@ public class AuctionBBSManager extends BaseBBSManager
 					else
 						html.append("<td FIXWIDTH=380 align=left valign=top><a action=\"bypass _bbsauction_view "
 								+ lot.lotId + "\">" + item.getName() + "</a></td>");
-					html.append("<td FIXWIDTH=100 align=center valign=center>" + Util.formatAdena((int)currentBid)
+					html.append("<td FIXWIDTH=100 align=center valign=center>" + Util.formatAdena(currentBid)
 							+ "</td>");
 					html.append("<td FIXWIDTH=100 align=center valign=center>"
 							+ (lot.buyNow.equals(0) || currentBid >= lot.buyNow ? "-" : (lot.ownerId.equals(activeChar
@@ -427,7 +427,7 @@ public class AuctionBBSManager extends BaseBBSManager
 	private void showLotPage(L2Player activeChar, int lotId)
 	{
 		int count = 0;
-		int currentBid;
+		long currentBid;
 		int bidCount;
 		LotList lot;
 		try
@@ -525,7 +525,7 @@ public class AuctionBBSManager extends BaseBBSManager
 			html.append("<td FIXWIDTH=85></td>");
 			html.append("<td FIXWIDTH=200 align=center>" + getCharName(bid.bidderId) + "</td>");
 			html.append("<td FIXWIDTH=200 align=center>("
-					+ Util.formatAdena(bid.bidAmount.intValue())
+					+ Util.formatAdena(bid.bidAmount)
 					+ ") "
 					+ (lot.currency.equals(PlayerInventory.ADENA_ID) ? "Adena" : (lot.currency
 							.equals(PlayerInventory.ANCIENT_ADENA_ID) ? "Ancient Adena" : ItemTable.getInstance()
@@ -571,7 +571,7 @@ public class AuctionBBSManager extends BaseBBSManager
 			return;
 		}
 		L2Item item = ItemTable.getInstance().getTemplate(lot.itemId);
-		int currentBid = getHighestBid(lotId);
+		long currentBid = getHighestBid(lotId);
 		int bidCount = countBids(lot.lotId);
 		
 		if (currentBid == 0)
@@ -796,7 +796,7 @@ public class AuctionBBSManager extends BaseBBSManager
 			return;
 		}
 		L2Item item = ItemTable.getInstance().getTemplate(lot.itemId);
-		int currentBid = getHighestBid(lotId);
+		long currentBid = getHighestBid(lotId);
 		
 		if (currentBid == 0)
 			currentBid = lot.startingBid;
@@ -961,13 +961,13 @@ public class AuctionBBSManager extends BaseBBSManager
 								{
 									L2ItemInstance item =
 											player.getInventory().addItem("Auction Give Bid", lot.currency,
-													bid.bidAmount.intValue(), null, null);
+													bid.bidAmount, null, null);
 									InventoryUpdate iu = new InventoryUpdate();
 									iu.addItem(item);
 									player.sendPacket(iu);
 									SystemMessage sm = new SystemMessage(SystemMessageId.YOU_PICKED_UP_S1_S2);
 									sm.addItemName(item);
-									sm.addNumber(bid.bidAmount.intValue());
+									sm.addItemNumber(bid.bidAmount);
 									player.sendPacket(sm);
 									player.sendPacket(SystemMessageId.NEW_MAIL);
 									player.sendPacket(ExMailArrived.STATIC_PACKET);
@@ -987,7 +987,7 @@ public class AuctionBBSManager extends BaseBBSManager
 											+ (!lot.count.equals(1) ? "(" + Util.formatAdena(lot.count.intValue())
 													+ ")" : (itemWon.isEquipable() ? "+" : "Level ") + lot.enchantLevel)
 											+ " " + itemWon.getName() + "<br>Check your inventory for "
-											+ Util.formatAdena(bid.bidAmount.intValue()) + " "
+											+ Util.formatAdena(bid.bidAmount) + " "
 											+ ItemTable.getInstance().getTemplate(lot.currency));
 							
 							for (L2Player player : L2World.getInstance().getAllPlayers())
@@ -1102,8 +1102,16 @@ public class AuctionBBSManager extends BaseBBSManager
 	private boolean addBid(L2Player activeChar, int lotId, long bidIncrement, int currency, long bidAmount)
 	{
 		boolean playerWasOnline = false;
+		long charged = AuctionBidAmount.transferable(bidAmount);
+		if (charged == 0)
+		{
+			activeChar.sendMessage("Your bid must be a positive amount.");
+			return false;
+		}
+		
 		long currentBid = getHighestBid(lotId);
-		int prevBidderId, prevBidAmount;
+		int prevBidderId;
+		long prevBidAmount;
 		LotList lot = getLot(lotId);
 		int bidCount = countBids(lot.lotId);
 		
@@ -1116,9 +1124,9 @@ public class AuctionBBSManager extends BaseBBSManager
 			return false;
 		}
 		
-		if (bidAmount <= activeChar.getInventory().getInventoryItemCount(currency, 0))
+		if (charged <= activeChar.getInventory().getInventoryItemCount(currency, 0))
 		{
-			if (bidAmount > (bidCount != 0 ? currentBid + bidIncrement : (long)currentBid))
+			if (charged > (bidCount != 0 ? currentBid + bidIncrement : currentBid))
 			{
 				java.sql.Connection con = null;
 				try
@@ -1131,7 +1139,7 @@ public class AuctionBBSManager extends BaseBBSManager
 					if (result.next())
 					{
 						prevBidderId = result.getInt("bidderId");
-						prevBidAmount = result.getInt("bidAmount");
+						prevBidAmount = result.getLong("bidAmount");
 						statement.close();
 						
 						for (L2Player player : L2World.getInstance().getAllPlayers())
@@ -1145,7 +1153,7 @@ public class AuctionBBSManager extends BaseBBSManager
 								player.sendPacket(iu);
 								SystemMessage sm = new SystemMessage(SystemMessageId.YOU_PICKED_UP_S1_S2);
 								sm.addItemName(item);
-								sm.addNumber(prevBidAmount);
+								sm.addItemNumber(prevBidAmount);
 								player.sendPacket(sm);
 								player.sendPacket(SystemMessageId.NEW_MAIL);
 								player.sendPacket(ExMailArrived.STATIC_PACKET);
@@ -1166,21 +1174,21 @@ public class AuctionBBSManager extends BaseBBSManager
 							con.prepareStatement("INSERT INTO auction_bids (lotId, bidderId, bidAmount, bidDate) VALUES (?,?,?,?)");
 					statement.setInt(1, lotId);
 					statement.setInt(2, activeChar.getObjectId());
-					statement.setLong(3, bidAmount);
+					statement.setLong(3, charged);
 					statement.setLong(4, System.currentTimeMillis());
 					statement.execute();
 					statement.close();
 					if (currency == PlayerInventory.ADENA_ID)
-						activeChar.reduceAdena("Auction Bid", (int)bidAmount, activeChar, true);
+						activeChar.reduceAdena("Auction Bid", charged, activeChar, true);
 					else if (currency == PlayerInventory.ANCIENT_ADENA_ID)
-						activeChar.reduceAncientAdena("Auction Bid", (int)bidAmount, activeChar, true);
+						activeChar.reduceAncientAdena("Auction Bid", charged, activeChar, true);
 					else
-						activeChar.destroyItemByItemId("Auction Bid", currency, (int)bidAmount, activeChar, true);
+						activeChar.destroyItemByItemId("Auction Bid", currency, charged, activeChar, true);
 					activeChar.sendMessage("Your bid has been placed.");
 					
 					if (activeChar.isGM() && Config.GM_AUDIT)
 						GMAudit.auditGMAction(activeChar, "auction", "_bbsauction_bid", lotId + " - " + currency
-								+ " - " + (int)bidAmount);
+								+ " - " + charged);
 					
 				}
 				catch (Exception e)
@@ -1290,9 +1298,9 @@ public class AuctionBBSManager extends BaseBBSManager
 		return count;
 	}
 	
-	private int getHighestBid(int lotId)
+	private long getHighestBid(int lotId)
 	{
-		int bidAmount = 0;
+		long bidAmount = 0;
 		
 		java.sql.Connection con = null;
 		try
@@ -1303,7 +1311,7 @@ public class AuctionBBSManager extends BaseBBSManager
 			statement.setInt(1, lotId);
 			ResultSet result = statement.executeQuery();
 			result.next();
-			bidAmount = result.getInt(1);
+			bidAmount = result.getLong(1);
 			result.close();
 			statement.close();
 		}
