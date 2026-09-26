@@ -19,6 +19,7 @@ import com.l2jfree.gameserver.LoginServerThread;
 import com.l2jfree.gameserver.LoginServerThread.SessionKey;
 import com.l2jfree.gameserver.network.L2Client;
 import com.l2jfree.gameserver.network.packets.L2ClientPacket;
+import com.l2jfree.gameserver.network.packets.server.LoginFail;
 
 /**
  * This class represents the packet that is sent by the client when the server
@@ -68,8 +69,12 @@ public class AuthLogin extends L2ClientPacket
 		// avoid potential exploits
 		if (client.getAccountName() == null)
 		{
-			client.setAccountName(_loginName);
-			LoginServerThread.getInstance().addWaitingClientAndSendRequest(_loginName, client, key);
+			if (!LoginServerThread.getInstance().addWaitingClientAndSendRequest(_loginName, client, key))
+			{
+				client.sendPacket(new LoginFail(LoginFail.ACOUNT_ALREADY_IN_USE));
+				client.closeNow();
+				return;
+			}
 		}
 	}
 	

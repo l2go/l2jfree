@@ -14,13 +14,20 @@
  */
 package com.l2jfree.loginserver.network.loginserverpackets;
 
+import com.l2jfree.loginserver.beans.SessionKey;
+
 public final class PlayerAuthResponse extends LoginToGamePacket
 {
-	public PlayerAuthResponse(String account, boolean response, String host)
+	public PlayerAuthResponse(String account, boolean response, String host, SessionKey key)
 	{
 		super(0x03);
 		writeS(account);
 		writeC(response ? 1 : 0);
 		writeS(host);
+		// The game server authenticates only the client that presented this key.
+		writeD(key.playOkID1);
+		writeD(key.playOkID2);
+		writeD(key.loginOkID1);
+		writeD(key.loginOkID2);
 	}
 }
