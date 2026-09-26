@@ -133,18 +133,27 @@ public final class LoginServerThread extends NetworkThread
 		return true;
 	}
 	
-	public void sendLogout(String account)
+	public void sendLogout(String account, L2Client client)
 	{
 		if (account == null || account.isEmpty())
 			return;
 		
+		boolean notifyLoginServer = true;
 		synchronized (_accountLock)
 		{
-			_waitingClients.remove(account);
-			_accountsInGameServer.remove(account);
+			WaitingClient waiting = _waitingClients.get(account);
+			if (waiting != null && waiting.gameClient == client)
+				_waitingClients.remove(account);
+			
+			L2Client current = _accountsInGameServer.get(account);
+			if (current == client)
+				_accountsInGameServer.remove(account);
+			else if (current != null || (waiting != null && waiting.gameClient != client))
+				notifyLoginServer = false;
 		}
 		
-		sendPacketQuietly(new PlayerLogout(account));
+		if (notifyLoginServer)
+			sendPacketQuietly(new PlayerLogout(account));
 	}
 	
 	public void sendAccessLevel(String account, int level)
@@ -476,10 +485,13 @@ public final class LoginServerThread extends NetworkThread
 									
 									client.getPacketQueue().execute(new AsyncCharSelectionInfo());
 									
+									L2Client previous;
 									synchronized (_accountLock)
 									{
-										_accountsInGameServer.put(client.getAccountName(), client);
+										previous = _accountsInGameServer.put(client.getAccountName(), client);
 									}
+									if (previous != null && previous != client)
+										previous.closeNow();
 								}
 								else
 								{
