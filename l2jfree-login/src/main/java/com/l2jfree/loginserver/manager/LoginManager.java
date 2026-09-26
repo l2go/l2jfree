@@ -616,7 +616,7 @@ public class LoginManager
 		// of users that mistype their passwords once every day :)
 		if (address != null)
 		{
-			_hackProtection.remove(address.getHostAddress());
+			_hackProtection.remove(address);
 		}
 		if (_logLogin.isDebugEnabled())
 			_logLogin.debug("login successfull for '" + user + "' "
