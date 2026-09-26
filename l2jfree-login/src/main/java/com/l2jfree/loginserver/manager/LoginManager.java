@@ -249,6 +249,41 @@ public class LoginManager
 		return null;
 	}
 	
+	/**
+	 * Publishes {@code account} on {@code gameServerAccounts} and drops the login-server session.
+	 * Callers must not send {@code PlayerAuthResponse} until this returns.
+	 *
+	 * @return {@code false} when the account is already on a game server
+	 */
+	public boolean beginPlaySession(String account, java.util.Set<String> gameServerAccounts)
+	{
+		synchronized (_loginServerClients)
+		{
+			if (!PlaySessionAdmission.reserveGameServer(isAccountInAnyGameServer(account)))
+				return false;
+			
+			gameServerAccounts.add(account);
+			_loginServerClients.remove(account);
+			return true;
+		}
+	}
+	
+	public void confirmPlaySession(String account, java.util.Set<String> gameServerAccounts)
+	{
+		synchronized (_loginServerClients)
+		{
+			gameServerAccounts.add(account);
+		}
+	}
+	
+	public void endPlaySession(String account, java.util.Set<String> gameServerAccounts)
+	{
+		synchronized (_loginServerClients)
+		{
+			gameServerAccounts.remove(account);
+		}
+	}
+	
 	public boolean isAccountInAnyGameServer(String account)
 	{
 		Collection<GameServerInfo> serverList = GameServerManager.getInstance().getRegisteredGameServers().values();
@@ -283,21 +318,23 @@ public class LoginManager
 			// check auth
 			if (loginValid(account, password, client))
 			{
-				// login was successful, verify presence on Gameservers
-				ret = AuthLoginResult.ALREADY_ON_GS;
-				if (!isAccountInAnyGameServer(account))
+				// The game-server check and the login-server map share one lock with beginPlaySession.
+				synchronized (_loginServerClients)
 				{
-					// account isnt on any GS, verify LS itself
-					ret = AuthLoginResult.ALREADY_ON_LS;
-					// don't allow 2 simultaneous login
-					synchronized (_loginServerClients)
+					boolean onGameServer = isAccountInAnyGameServer(account);
+					boolean onLoginServer = _loginServerClients.containsKey(account);
+					if (!PlaySessionAdmission.mayAuthenticate(onGameServer, onLoginServer))
 					{
-						if (!_loginServerClients.containsKey(account))
-						{
-							_loginServerClients.put(account, client);
-							ret = AuthLoginResult.AUTH_SUCCESS;
-						}
+						ret = onGameServer ? AuthLoginResult.ALREADY_ON_GS : AuthLoginResult.ALREADY_ON_LS;
 					}
+					else
+					{
+						_loginServerClients.put(account, client);
+						ret = AuthLoginResult.AUTH_SUCCESS;
+					}
+				}
+				if (ret == AuthLoginResult.AUTH_SUCCESS || ret == AuthLoginResult.ALREADY_ON_LS)
+				{
 					Accounts acc = _service.getAccountById(account);
 					// keep access level in the L2LoginClient
 					client.setAccessLevel(acc.getAccessLevel());

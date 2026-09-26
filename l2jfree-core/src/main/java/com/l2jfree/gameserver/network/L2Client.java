@@ -411,7 +411,7 @@ public final class L2Client extends MMOConnection<L2Client, L2ClientPacket, L2Se
 	
 	void setDisconnected()
 	{
-		LoginServerThread.getInstance().sendLogout(getAccountName());
+		LoginServerThread.getInstance().sendLogout(getAccountName(), this);
 		
 		_disconnected = true;
 	}

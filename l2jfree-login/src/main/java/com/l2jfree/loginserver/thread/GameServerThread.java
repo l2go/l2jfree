@@ -183,7 +183,7 @@ public class GameServerThread extends NetworkThread
 			PlayerInGame pig = new PlayerInGame(data);
 			for (String account : pig.getAccounts())
 			{
-				_accountsOnGameServer.add(account);
+				LoginManager.getInstance().confirmPlaySession(account, _accountsOnGameServer);
 				if (_log.isDebugEnabled())
 					_log.info("Account " + account + " logged in GameServer: " + getServerInfo());
 				
@@ -199,7 +199,7 @@ public class GameServerThread extends NetworkThread
 		if (isAuthed())
 		{
 			PlayerLogout plo = new PlayerLogout(data);
-			_accountsOnGameServer.remove(plo.getAccount());
+			LoginManager.getInstance().endPlaySession(plo.getAccount(), _accountsOnGameServer);
 			if (_log.isDebugEnabled())
 				_log.info("Player " + plo.getAccount() + " logged out from gameserver " + getServerInfo());
 			
@@ -238,11 +238,11 @@ public class GameServerThread extends NetworkThread
 				_log.info("auth request received for Player " + par.getAccount());
 			SessionKey key = LoginManager.getInstance().getKeyForAccount(par.getAccount());
 			String host = LoginManager.getInstance().getHostForAccount(par.getAccount());
-			if (key != null && key.equals(par.getKey()))
+			if (key != null && key.equals(par.getKey())
+					&& LoginManager.getInstance().beginPlaySession(par.getAccount(), _accountsOnGameServer))
 			{
 				if (_log.isDebugEnabled())
 					_log.info("auth request: OK");
-				LoginManager.getInstance().removeAuthedLoginClient(par.getAccount());
 				authResponse = new PlayerAuthResponse(par.getAccount(), true, host, par.getKey());
 			}
 			else
