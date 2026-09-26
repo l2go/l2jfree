@@ -28,7 +28,7 @@ cd l2jfree
 
 On Windows, run `mvnw.cmd install`. The wrapper downloads checksum-verified Maven 3.9.16. Distribution ZIPs appear in the `target` directories of `l2jfree-login`, `l2jfree-core`, and `l2jfree-datapack`.
 
-CI builds with Microsoft OpenJDK 25. The output uses Java 8 bytecode. Tests are skipped by default.
+CI builds with Microsoft OpenJDK 25 and runs unit tests on that JDK. The output uses Java 8 bytecode. Test sources compile at release 21.
 
 ## Windows 10 upgrade
 
