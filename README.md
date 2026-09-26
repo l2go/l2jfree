@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/l2jfree-hero.png" alt="A dawn-lit mountain citadel traced with subtle connections between server nodes" width="100%">
+
 # L2JFree
 
 **Gracia Final · Protocol 83**
