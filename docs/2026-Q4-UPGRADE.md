@@ -68,7 +68,7 @@ The first release carrying this upgrade is prepared as **1.4.0** (`v1.4.0`). Its
 
 ### 8. Qualify and promote the exact deploy image
 
-Build `l2jfree-deploy` from the three `v1.4.0` prerelease ZIPs in a clean staging tree. Add the qualified Java 25 / MySQL 8.4 runtime and site-specific data/configuration, and verify that the image contains no stale 1.3.0 JARs or MySQL 5.7 components. Run the deployment smoke and persistence checks against this exact image. After it passes, promote the existing GitHub prerelease to stable; do not rebuild or replace its ZIP assets.
+Build a clean deployment image from the three `v1.4.0` prerelease ZIPs. Add the qualified Java 25 / MySQL 8.4 runtime and required deployment data/configuration, and verify that the image contains no stale 1.3.0 JARs or MySQL 5.7 components. Run the deployment smoke and persistence checks against this exact image. After it passes, promote the existing GitHub prerelease to stable; do not rebuild or replace its ZIP assets.
 
 ### 9. Cut over and observe
 
@@ -78,19 +78,19 @@ Schedule a maintenance window, stop both server processes cleanly, take a final 
 
 After the observation period, record the exact Windows, Java, Maven, database, JDBC, and VC++ versions used by the qualified release and deploy image. State clearly that the profile is Windows 10 x64 with no ESU, and record the post-support OS constraint and the MySQL Windows 10 qualification limitation.
 
-## `l2jfree-deploy` consumer handoff
+## Deployment package handoff
 
-The current `repos/l2jfree-deploy` tree is the 1.3.0 deployment baseline: it contains JRE 11, MySQL 5.7.37, Connector/J 5.1.49, and 1.3.0 module JARs. It cannot be used unchanged with the 1.4.0 release because Connector/J 26.7 supports MySQL Server 8.4 and later. Rebuild the deploy image from the three `v1.4.0` release ZIPs in a clean staging tree and then apply only the intended site configuration and data. Do not overlay the release onto the old tree: obsolete JARs and Windows 7-era launch settings would remain. Qualify the database host separately because Oracle's supported-platform matrix does not list Windows 10 for MySQL 8.4.
+Assemble deployment images from the three `v1.4.0` release ZIPs in a clean staging tree, then add only the required runtime and deployment data/configuration. Connector/J 26.7 supports MySQL Server 8.4 and later. Qualify the database host separately because Oracle's supported-platform matrix does not list Windows 10 for MySQL 8.4.
 
 ## Verification snapshot (2026-09-26)
 
 - GitHub Actions run [36194342679](https://github.com/l2go/l2jfree/actions/runs/36194342679) passed both build matrix jobs using Microsoft Build of OpenJDK 11 and 25. The workflow runs `./mvnw -B -ntp install`; tests remain skipped by default, so this run verifies compilation and packaging, not the test suites.
-- Windows 10 runtime qualification, MySQL 8.4 integration, and the site-specific `l2jfree-deploy` image have not been qualified. Build that image from the exact prerelease ZIPs and record its smoke and persistence results before promoting the prerelease to stable.
+- Windows 10 runtime qualification, MySQL 8.4 integration, and the deployment image have not been qualified. Build the image from the exact prerelease ZIPs and record its smoke and persistence results before promoting the prerelease to stable.
 
 ## Exit criteria
 
 - A clean Windows 10 x64 host can install and start the server after reboot without a developer workstation or manual IDE steps.
-- `l2jfree-deploy` is assembled from the exact 1.4.0 release ZIPs in a clean staging tree and contains no 1.3.0 application JARs, Java 11 runtime, MySQL 5.7 server, or Connector/J 5.1 driver.
+- The deployment image is assembled from the exact 1.4.0 release ZIPs in a clean staging tree and contains no 1.3.0 application JARs, Java 11 runtime, MySQL 5.7 server, or Connector/J 5.1 driver.
 - CI produces release candidate archives with checksums using the pinned JDK and Maven versions; the exact candidate passes deploy-image qualification before promotion to a stable release.
 - Login, gameplay entry, representative quests/scripts, persistence, backup, clean shutdown, restart, and rollback all pass on the qualification deployment.
 - The explicitly enabled legacy test suites pass, or every remaining failure has a documented release disposition before the prerelease is promoted to stable.

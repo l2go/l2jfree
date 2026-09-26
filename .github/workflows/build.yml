@@ -83,4 +83,4 @@ jobs:
           gh release create "${{ github.ref_name }}" release-artifacts/* \
             --title "${{ github.ref_name }}" \
             --prerelease \
-            --notes "Portable JVM build with Java 8 bytecode, built by the Microsoft OpenJDK 25 CI package job. This prerelease requires Windows 10 runtime and l2jfree-deploy qualification before stable promotion. Not a platform-specific/Windows binary. See the 2026 Q4 Upgrade plan and SHA256SUMS.txt."
+            --notes "Portable JVM build with Java 8 bytecode, built by the Microsoft OpenJDK 25 CI package job. This prerelease requires Windows 10 runtime and deployment-image qualification before stable promotion. Not a platform-specific/Windows binary. See the 2026 Q4 Upgrade plan and SHA256SUMS.txt."
