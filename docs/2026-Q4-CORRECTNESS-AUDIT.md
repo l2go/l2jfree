@@ -14,7 +14,7 @@ Repository text, issues, and commit messages stay in English. Commit messages do
 | Tests | JUnit 4.13.2 on the classpath. Existing tests extend `junit.framework.TestCase`. Commons tests are pure. Core tests cover a handful of formulas and parsers and mutate `Config` through `ConfigHelper`. Login tests boot a Spring XML mock context |
 | Surefire | `skipTests` defaults to `true` at the start of the audit. The test-platform change removes it |
 | Static analysis | No SpotBugs, PMD, Error Prone, or Checkstyle |
-| Tracker | GitHub Issues are disabled on `l2go/l2jfree`. Labels are the GitHub defaults. There are no milestones |
+| Tracker | Before audit setup, GitHub Issues were disabled on `l2go/l2jfree`; labels and milestones were not configured |
 | Hot path | `ItemContainer` calls `ItemTable`, `L2World`, and `L2DatabaseFactory`. `GameServer.main` loads config and the database immediately |
 
 Inherited Jython 2.2.1, Spring 2.0.2, and Hibernate 3.2.2 stay as they are for this audit. A dependency upgrade is separate work.
@@ -63,11 +63,13 @@ The fix does not rewrite the subsystem. Severity is relative to 1.4.0 qualificat
 | `major` | The same class of failure on a narrow path, or a race with a specific interleaving |
 | `minor` | The result is wrong and the damage is limited |
 
-Labels are a small set: `bug`, `severity:blocker`, `severity:major`, `severity:minor`, `area:economy`, `area:session`, `area:packets`, `area:persistence`, `area:concurrency`. Milestones are delivery slices, listed under Deliver by slice. One tracking issue states the scope, the method, the filing bar, and what is left unfiled. Child issues link to it.
+Labels are a small set: `bug`, `severity:blocker`, `severity:major`, `severity:minor`, `area:economy`, `area:session`, `area:packets`, `area:persistence`, `area:concurrency`, and `area:commons`. Milestones are delivery slices, listed under Deliver by slice. One tracking issue states the scope, the method, the filing bar, and what is left unfiled. Child issues use the GitHub parent issue relationship.
 
-The first batch is the economy, session, and persistence findings that clear the bar, on the order of 8–15 issues. A SpotBugs warning is not an issue. A security-shaped game bug (packet trust, admin command) is a normal public issue that states impact and the fix, without a step-by-step exploit. A leaked credential would use a private advisory; item and session bugs do not.
+The [1.4.0 Project](https://github.com/users/l2go/projects/1) is the live queue. Every filed defect receives a severity label, an area label, a milestone, a project status, and a priority. Severity measures impact; priority sets execution order. P0 protects release safety and item or session integrity, P1 is planned correctness work, and P2 is bounded robustness work. A changed priority needs a reason recorded on the issue. The project is the source of current status; this document records the policy.
 
-A fix is one pull request. The body starts with `Fixes #n`. The maintainer merges it. Direct pushes to `master` are rejected. This repository has a single GitHub account, and GitHub will not let that account approve its own pull request, so the merge itself is the approval. Auto-merge is off.
+Findings that clear the bar are filed as they are confirmed; the program has no issue quota. A SpotBugs warning is not an issue. A security-shaped game bug (packet trust, admin command) is a normal public issue that states impact and the fix, without a step-by-step exploit. A leaked credential would use a private advisory; item and session bugs do not.
+
+A fix is one pull request. The body starts with `Fixes #n`. The author leaves it open for maintainer review. The maintainer merges only after the `build` check is green and review threads are resolved. Direct pushes to `master` are rejected. This repository has a single GitHub account, and GitHub will not let that account approve its own pull request, so the manual merge itself is the approval. Auto-merge is off.
 
 ## How a change lands
 
@@ -75,9 +77,9 @@ Every pull request answers five questions, in this order:
 
 1. Which issue, and which invariant.
 2. What the running server does after the change.
-3. What was verified, including the test name when the path can run in-process.
-4. What the pull request does not change.
-5. Which milestone slice it belongs to.
+3. What was verified, including the test name, command, result, and any live-server limit.
+4. Why the fix is scoped this way and what could regress.
+5. What the pull request does not change and which milestone slice it belongs to.
 
 Commit messages stay in English and do not carry a `Co-authored-by` trailer. One defect is one pull request. A platform change, such as the JDK or the test stack, is also an issue and a pull request.
 
@@ -140,9 +142,10 @@ Slices, in order:
 | Milestone | Issues | Outcome |
 |---|---|---|
 | Test platform | The JDK and test-stack issue | CI is OpenJDK 25 only, and new tests have a runner |
-| Release blockers | #8, #9, #10, #11, and the login-counter defect #6 | A bid cannot mint adena, a second connection cannot take a session, and a late logout cannot detach the player who just entered |
-| Economy | #2, #3, #4, #5, #7 | A charge matches the items that moved, and a limit the server claims to enforce actually runs |
+| Release blockers | #6, #8, #9, #10, #11, #27 | A bid cannot mint adena, a second connection cannot take a session, and a crop reward cannot be claimed with another item |
+| Economy | #2, #3, #4, #5, #7, #17, #18, #19 | A charge matches the items that moved, and item, stock, slot, and weight limits actually run |
 | World and identity | #12, #13, #14 | An id is not issued twice, a knownlist update repairs a partial insert, and an entered region becomes active |
+| Robustness | #22, #24, #25 | Malformed requests fail cleanly and shared utility mutations preserve their invariants |
 
 ### 3. Cut a seam only for the open issue
 
