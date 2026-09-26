@@ -12,7 +12,7 @@ An archived Lineage II server, maintained for modern builds and a documented Win
 [![License: GPLv3](https://img.shields.io/badge/license-GPLv3-2563eb)](LICENSE)
 ![Java: 8 bytecode](https://img.shields.io/badge/bytecode-Java%208-2ea44f)
 
-[Build](#quick-start) · [Upgrade](#windows-10-upgrade) · [Architecture](#architecture)
+[Build](#quick-start) · [Upgrade](#windows-10-upgrade) · [Architecture](#architecture) · [Correctness](#correctness-program)
 
 </div>
 
@@ -53,6 +53,10 @@ flowchart LR
     E[Scripting engines] --> D
     D --> F[Datapack]
 ```
+
+## Correctness program
+
+The [1.4.0 Project](https://github.com/users/l2go/projects/1) shows the live backlog, priorities, milestones, and pull requests. The [audit decision record](docs/2026-Q4-CORRECTNESS-AUDIT.md) explains the filing bar and review gate. Each defect has one issue and one pull request; the maintainer merges after CI and manual review.
 
 ## Provenance and license
 
