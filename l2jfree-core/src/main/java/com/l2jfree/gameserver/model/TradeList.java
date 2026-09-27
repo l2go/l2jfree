@@ -186,6 +186,13 @@ public class TradeList
 	private boolean _confirmed = false;
 	private boolean _locked = false;
 	
+	static int addCapacityRequirement(int total, long count, int perItem)
+	{
+		if (count < 0 || perItem < 0 || (perItem != 0 && count > (Integer.MAX_VALUE - total) / perItem))
+			return -1;
+		return total + (int)(count * perItem);
+	}
+
 	public TradeList(L2Player owner)
 	{
 		_items = new FastList<TradeItem>();
@@ -807,25 +814,38 @@ public class TradeList
 				return false;
 			}
 			
-			L2Item template = ItemTable.getInstance().getTemplate(item.getItemId());
+			L2Item template = oldItem.getItem();
 			if (template == null)
-				continue;
+			{
+				lock();
+				return false;
+			}
 			
-			weight += item.getCount() * template.getWeight();
+			weight = addCapacityRequirement(weight, item.getCount(), template.getWeight());
+			if (weight < 0)
+			{
+				player.sendPacket(SystemMessageId.WEIGHT_LIMIT_EXCEEDED);
+				return false;
+			}
 			
 			if (!template.isStackable())
-				slots += item.getCount();
-			else if (playerInventory.getItemByItemId(item.getItemId()) == null)
-				slots++;
+				slots = addCapacityRequirement(slots, item.getCount(), 1);
+			else if (playerInventory.getItemByItemId(oldItem.getItemId()) == null)
+				slots = addCapacityRequirement(slots, 1, 1);
+			if (slots < 0)
+			{
+				player.sendPacket(SystemMessageId.SLOTS_FULL);
+				return false;
+			}
 		}
 		
-		if (!playerInventory.validateWeight(weight))
+		if (weight > (long)player.getMaxLoad() - player.getCurrentLoad() || !playerInventory.validateWeight(weight))
 		{
 			player.sendPacket(SystemMessageId.WEIGHT_LIMIT_EXCEEDED);
 			return false;
 		}
 		
-		if (!playerInventory.validateCapacity(slots))
+		if (slots > (long)player.getInventoryLimit() - playerInventory.getSize() || !playerInventory.validateCapacity(slots))
 		{
 			player.sendPacket(SystemMessageId.SLOTS_FULL);
 			return false;
