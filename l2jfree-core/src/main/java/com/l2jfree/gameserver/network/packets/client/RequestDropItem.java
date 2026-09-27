@@ -82,6 +82,9 @@ public class RequestDropItem extends L2ClientPacket
 		}
 		
 		L2ItemInstance item = activeChar.checkItemManipulation(_objectId, _count, "Drop");
+		if (failIfItemMissing(item))
+			return;
+
 		if (_count > item.getCount() || _count < 1)
 		{
 			sendAF();
@@ -144,6 +147,15 @@ public class RequestDropItem extends L2ClientPacket
 		}
 	}
 	
+	boolean failIfItemMissing(final L2ItemInstance item)
+	{
+		if (item != null)
+			return false;
+
+		sendAF();
+		return true;
+	}
+
 	private final boolean canDrop(L2ItemInstance item)
 	{
 		L2Player activeChar = getActiveChar();
