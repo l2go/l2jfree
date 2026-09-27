@@ -82,6 +82,12 @@ public class RequestDropItem extends L2ClientPacket
 		}
 		
 		L2ItemInstance item = activeChar.checkItemManipulation(_objectId, _count, "Drop");
+		if (item == null)
+		{
+			sendAF();
+			return;
+		}
+
 		if (_count > item.getCount() || _count < 1)
 		{
 			sendAF();
