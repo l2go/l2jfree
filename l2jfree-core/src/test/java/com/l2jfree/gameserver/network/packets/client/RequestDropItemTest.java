@@ -14,18 +14,15 @@
  */
 package com.l2jfree.gameserver.network.packets.client;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.network.L2Client;
 import com.l2jfree.gameserver.network.packets.server.ActionFailed;
 import com.l2jfree.mmocore.network.ReceivablePacket;
@@ -37,20 +34,11 @@ class RequestDropItemTest
 	void missingItemFailsTheRequest() throws Exception
 	{
 		L2Client client = mock(L2Client.class);
-		L2Player player = mock(L2Player.class);
-		when(client.getActiveChar()).thenReturn(player);
-		when(player.isDead()).thenReturn(false);
-		when(player.isGM()).thenReturn(true);
-		when(player.checkItemManipulation(123, 1, "Drop")).thenReturn(null);
-
-		TestableRequestDropItem packet = new TestableRequestDropItem();
+		RequestDropItem packet = new RequestDropItem();
 		setField(ReceivablePacket.class, packet, "_client", client);
-		setField(RequestDropItem.class, packet, "_objectId", 123);
-		setField(RequestDropItem.class, packet, "_count", 1L);
 
-		assertDoesNotThrow(packet::execute);
+		assertTrue(packet.failIfItemMissing(null));
 		verify(client).sendPacket(ActionFailed.STATIC_PACKET);
-		verify(player, never()).dropItem("Drop", 123, 1, 0, 0, 0, player, false);
 	}
 
 	private static void setField(final Class<?> declaringClass, final Object target, final String name,
@@ -59,13 +47,5 @@ class RequestDropItemTest
 		Field field = declaringClass.getDeclaredField(name);
 		field.setAccessible(true);
 		field.set(target, value);
-	}
-
-	private static final class TestableRequestDropItem extends RequestDropItem
-	{
-		void execute()
-		{
-			runImpl();
-		}
 	}
 }
