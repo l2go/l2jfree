@@ -40,6 +40,11 @@ public class SetPrivateStoreListBuy extends L2ClientPacket
 	private static final int BATCH_LENGTH_FINAL = 40;
 	
 	private Item[] _items = null;
+
+	static long addCostWithinAdenaCap(long totalCost, long lineCost)
+	{
+		return lineCost < 0 || lineCost > MAX_ADENA - totalCost ? -1 : totalCost + lineCost;
+	}
 	
 	@Override
 	protected void readImpl()
@@ -115,7 +120,7 @@ public class SetPrivateStoreListBuy extends L2ClientPacket
 			return;
 		}
 		
-		int totalCost = 0;
+		long totalCost = 0;
 		for (Item i : _items)
 		{
 			if (!i.addToTradeList(tradeList))
@@ -124,8 +129,8 @@ public class SetPrivateStoreListBuy extends L2ClientPacket
 				return;
 			}
 			
-			totalCost += i.getCost();
-			if (totalCost > MAX_ADENA)
+			totalCost = addCostWithinAdenaCap(totalCost, i.getCost());
+			if (totalCost < 0)
 			{
 				requestFailed(SystemMessageId.YOU_HAVE_EXCEEDED_QUANTITY_THAT_CAN_BE_INPUTTED);
 				return;
