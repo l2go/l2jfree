@@ -71,7 +71,7 @@ public class RequestProcureCropList extends L2ClientPacket
 			int itemId = readD();
 			int manorId = readD();
 			long cnt = readCompQ();
-			if (objId < 1 || itemId < 1 || manorId < 0 || cnt < 0)
+			if (objId < 1 || itemId < 1 || manorId < 0 || cnt < 1)
 			{
 				_items = null;
 				return;
