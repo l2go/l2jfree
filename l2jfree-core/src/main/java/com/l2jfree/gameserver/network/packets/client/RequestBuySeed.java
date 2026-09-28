@@ -17,6 +17,9 @@ package com.l2jfree.gameserver.network.packets.client;
 import static com.l2jfree.gameserver.gameobjects.L2Npc.INTERACTION_DISTANCE;
 import static com.l2jfree.gameserver.gameobjects.itemcontainer.PlayerInventory.MAX_ADENA;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.ItemTable;
 import com.l2jfree.gameserver.gameobjects.L2Object;
@@ -107,11 +110,16 @@ public class RequestBuySeed extends L2ClientPacket
 		long totalPrice = 0;
 		int slots = 0;
 		int totalWeight = 0;
+		Map<Integer, Long> reservedSeeds = new HashMap<Integer, Long>();
 		
 		for (Seed i : _seeds)
 		{
 			if (!i.setProduction(castle))
 				return;
+			long reserved = reservedSeeds.containsKey(i.getSeedId()) ? reservedSeeds.get(i.getSeedId()) : 0;
+			if (!ManorStockReservation.canReserve(reserved, i.getCount(), i.getCanProduce()))
+				return;
+			reservedSeeds.put(i.getSeedId(), reserved + i.getCount());
 			
 			totalPrice += i.getPrice();
 			
@@ -216,6 +224,11 @@ public class RequestBuySeed extends L2ClientPacket
 			return _count;
 		}
 		
+		public long getCanProduce()
+		{
+			return _seed.getCanProduce();
+		}
+
 		public long getPrice()
 		{
 			return _seed.getPrice() * _count;
