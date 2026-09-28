@@ -277,6 +277,12 @@ public final class L2WorldRegion
 	{
 		return _active;
 	}
+
+	static boolean shouldStartActivation(final boolean gridsAlwaysOn, final boolean hasPlayables,
+			final boolean active)
+	{
+		return !gridsAlwaysOn && hasPlayables && !active;
+	}
 	
 	// check if all 9 neighbors (including self) are inactive or active but with no players.
 	// returns true if the above condition is met.
@@ -363,8 +369,8 @@ public final class L2WorldRegion
 		{
 			_playables.add((L2Playable)object);
 			
-			// if this is the first player to enter the region, activate self & neighbors
-			if (!Config.GRIDS_ALWAYS_ON && _playables.size() == 1)
+			// if an inactive region has a playable, activate self & neighbors
+			if (shouldStartActivation(Config.GRIDS_ALWAYS_ON, !_playables.isEmpty(), isActive()))
 				startActivation();
 		}
 		
