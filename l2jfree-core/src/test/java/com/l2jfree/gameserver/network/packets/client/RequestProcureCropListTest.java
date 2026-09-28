@@ -47,6 +47,15 @@ class RequestProcureCropListTest
 	}
 
 	@Test
+	@DisplayName("crop capacity uses the quantity that the exchange will reward")
+	void rewardCapacityUsesActualQuantityAndRejectsOverflow()
+	{
+		assertThat(RequestProcureCropList.addCapacityRequirement(0, 4, 100)).isEqualTo(400);
+		assertThat(RequestProcureCropList.addCapacityRequirement(Integer.MAX_VALUE - 100, 2, 100)).isEqualTo(-1);
+		assertThat(RequestProcureCropList.addCapacityRequirement(0, Long.MAX_VALUE, 100)).isEqualTo(-1);
+	}
+
+	@Test
 	@DisplayName("zero and negative crop quantities are rejected while decoding")
 	void invalidCropQuantityIsRejectedDuringDecoding() throws Exception
 	{

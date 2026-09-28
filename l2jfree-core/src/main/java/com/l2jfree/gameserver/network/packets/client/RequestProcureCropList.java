@@ -62,6 +62,13 @@ public class RequestProcureCropList extends L2ClientPacket
 		return item == null || item.getItemId() != rewardId;
 	}
 
+	static int addCapacityRequirement(int total, long count, int perItem)
+	{
+		if (count < 0 || perItem < 0 || (perItem != 0 && count > (Integer.MAX_VALUE - total) / perItem))
+			return -1;
+		return total + (int)(count * perItem);
+	}
+
 	@Override
 	protected void readImpl()
 	{
@@ -134,14 +141,30 @@ public class RequestProcureCropList extends L2ClientPacket
 			if (!ManorStockReservation.canReserve(reserved, i.getCount(), i.getAmount()))
 				return;
 			reservedCrops.put(stockKey, reserved + i.getCount());
-			
+
 			L2Item template = ItemTable.getInstance().getTemplate(i.getReward());
-			weight += i.getCount() * template.getWeight();
-			
+			long rewardPrice = template.getReferencePrice();
+			if (rewardPrice <= 0)
+				continue;
+			long rewardItemCount = i.getPrice() / rewardPrice;
+			if (rewardItemCount < 1)
+				continue;
+			weight = addCapacityRequirement(weight, rewardItemCount, template.getWeight());
+			if (weight < 0)
+			{
+				requestFailed(SystemMessageId.WEIGHT_LIMIT_EXCEEDED);
+				return;
+			}
+
 			if (!template.isStackable())
-				slots += i.getCount();
+				slots = addCapacityRequirement(slots, rewardItemCount, 1);
 			else if (needsAdditionalSlot(player.getInventory().getItemByItemId(i.getReward()), i.getReward()))
 				slots++;
+			if (slots < 0)
+			{
+				requestFailed(SystemMessageId.SLOTS_FULL);
+				return;
+			}
 		}
 		
 		if (!player.getInventory().validateWeight(weight))
@@ -166,7 +189,7 @@ public class RequestProcureCropList extends L2ClientPacket
 			
 			long fee = i.getFee(castleId); // fee for selling to other manors
 			long rewardPrice = ItemTable.getInstance().getTemplate(i.getReward()).getReferencePrice();
-			if (rewardPrice == 0)
+			if (rewardPrice <= 0)
 				continue;
 			
 			long rewardItemCount = i.getPrice() / rewardPrice;
