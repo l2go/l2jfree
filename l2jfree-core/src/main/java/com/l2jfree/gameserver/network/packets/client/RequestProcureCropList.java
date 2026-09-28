@@ -54,6 +54,11 @@ public class RequestProcureCropList extends L2ClientPacket
 		return item != null && item.getItemId() == claimedItemId && item.getCount() >= count;
 	}
 
+	static boolean needsAdditionalSlot(L2ItemInstance item, int rewardId)
+	{
+		return item == null || item.getItemId() != rewardId;
+	}
+
 	@Override
 	protected void readImpl()
 	{
@@ -126,7 +131,7 @@ public class RequestProcureCropList extends L2ClientPacket
 			
 			if (!template.isStackable())
 				slots += i.getCount();
-			else if (player.getInventory().getItemByItemId(i.getItemId()) == null)
+			else if (needsAdditionalSlot(player.getInventory().getItemByItemId(i.getReward()), i.getReward()))
 				slots++;
 		}
 		
