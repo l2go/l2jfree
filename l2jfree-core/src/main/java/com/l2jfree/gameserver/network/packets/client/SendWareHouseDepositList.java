@@ -23,6 +23,7 @@ import com.l2jfree.gameserver.gameobjects.L2Npc;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.gameobjects.itemcontainer.ItemContainer;
 import com.l2jfree.gameserver.gameobjects.itemcontainer.PlayerWarehouse;
+import com.l2jfree.gameserver.model.TradeList;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.L2ClientPacket;
@@ -124,6 +125,10 @@ public class SendWareHouseDepositList extends L2ClientPacket
 			return;
 		}
 		
+		// A deposit cannot proceed while the player is trading. Check before charging the fee.
+		if (hasActiveTrade(player.getActiveTradeList()))
+			return;
+
 		// Alt game - Karma punishment
 		if (!Config.ALT_GAME_KARMA_PLAYER_CAN_USE_WAREHOUSE && player.getKarma() > 0)
 		{
@@ -168,10 +173,6 @@ public class SendWareHouseDepositList extends L2ClientPacket
 			requestFailed(SystemMessageId.YOU_NOT_ENOUGH_ADENA);
 			return;
 		}
-		
-		// get current tradelist if any
-		if (player.getActiveTradeList() != null)
-			return;
 		
 		// Proceed to the transfer
 		InventoryUpdate playerIU = Config.FORCE_INVENTORY_UPDATE ? null : new InventoryUpdate();
@@ -223,6 +224,11 @@ public class SendWareHouseDepositList extends L2ClientPacket
 		sendAF();
 	}
 	
+	static boolean hasActiveTrade(final TradeList tradeList)
+	{
+		return tradeList != null;
+	}
+
 	private class WarehouseItem
 	{
 		private final int _objectId;
