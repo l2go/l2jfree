@@ -41,6 +41,11 @@ public class RequestBuyProcure extends L2ClientPacket
 	private static final String _C__C3_REQUESTBUYPROCURE = "[C] C3 RequestBuyProcure";
 	//private int _listId;
 	private Procure[] _items = null;
+
+	static boolean needsAdditionalSlot(L2ItemInstance item, int rewardId)
+	{
+		return item == null || item.getItemId() != rewardId;
+	}
 	
 	@Override
 	protected void readImpl()
@@ -115,7 +120,7 @@ public class RequestBuyProcure extends L2ClientPacket
 			
 			if (!template.isStackable())
 				slots += i.getCount();
-			else if (player.getInventory().getItemByItemId(i.getItemId()) == null)
+			else if (needsAdditionalSlot(player.getInventory().getItemByItemId(i.getReward()), i.getReward()))
 				slots++;
 		}
 		

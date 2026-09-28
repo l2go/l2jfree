@@ -41,6 +41,9 @@ class RequestProcureCropListTest
 		assertThat(RequestProcureCropList.matchesClaimedCrop(item, 5000, 11)).isFalse();
 		assertThat(RequestProcureCropList.matchesClaimedCrop(item, 5000, 10)).isTrue();
 		assertThat(RequestProcureCropList.matchesClaimedCrop(null, 5000, 5)).isFalse();
+		assertThat(RequestProcureCropList.needsAdditionalSlot(item, 5001)).isTrue();
+		assertThat(RequestProcureCropList.needsAdditionalSlot(item, 5000)).isFalse();
+		assertThat(RequestProcureCropList.needsAdditionalSlot(null, 5000)).isTrue();
 	}
 
 	@Test
