@@ -18,9 +18,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.l2jfree.Config;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
 
 class RequestProcureCropListTest
@@ -37,5 +41,47 @@ class RequestProcureCropListTest
 		assertThat(RequestProcureCropList.matchesClaimedCrop(item, 5000, 11)).isFalse();
 		assertThat(RequestProcureCropList.matchesClaimedCrop(item, 5000, 10)).isTrue();
 		assertThat(RequestProcureCropList.matchesClaimedCrop(null, 5000, 5)).isFalse();
+	}
+
+	@Test
+	@DisplayName("zero and negative crop quantities are rejected while decoding")
+	void invalidCropQuantityIsRejectedDuringDecoding() throws Exception
+	{
+		final boolean packetFinal = Config.PACKET_FINAL;
+		Config.PACKET_FINAL = false;
+		try
+		{
+			assertThat(decode(0)).isFalse();
+			assertThat(decode(-1)).isFalse();
+		}
+		finally
+		{
+			Config.PACKET_FINAL = packetFinal;
+		}
+	}
+
+	private static boolean decode(final int quantity) throws Exception
+	{
+		final TestableRequestProcureCropList packet = new TestableRequestProcureCropList();
+		final ByteBuffer buffer = ByteBuffer.allocate(20);
+		buffer.putInt(1).putInt(1).putInt(2).putInt(3).putInt(quantity).flip();
+
+		final Field bufferField = Class.forName("com.l2jfree.mmocore.network.AbstractPacket")
+				.getDeclaredField("_buf");
+		bufferField.setAccessible(true);
+		bufferField.set(packet, buffer);
+		packet.decode();
+
+		final Field itemsField = RequestProcureCropList.class.getDeclaredField("_items");
+		itemsField.setAccessible(true);
+		return itemsField.get(packet) != null;
+	}
+
+	private static final class TestableRequestProcureCropList extends RequestProcureCropList
+	{
+		void decode()
+		{
+			readImpl();
+		}
 	}
 }
