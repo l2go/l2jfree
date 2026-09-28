@@ -17,6 +17,9 @@ package com.l2jfree.gameserver.network.packets.client;
 import static com.l2jfree.gameserver.gameobjects.L2Npc.INTERACTION_DISTANCE;
 import static com.l2jfree.gameserver.gameobjects.itemcontainer.PlayerInventory.MAX_ADENA;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.ItemTable;
 import com.l2jfree.gameserver.gameobjects.L2Object;
@@ -120,11 +123,17 @@ public class RequestProcureCropList extends L2ClientPacket
 		// Calculate summary values
 		int slots = 0;
 		int weight = 0;
+		Map<Long, Long> reservedCrops = new HashMap<Long, Long>();
 		
 		for (Crop i : _items)
 		{
 			if (!i.getCrop())
 				continue;
+			long stockKey = (((long)i.getManorId()) << 32) ^ (i.getItemId() & 0xFFFFFFFFL);
+			long reserved = reservedCrops.containsKey(stockKey) ? reservedCrops.get(stockKey) : 0;
+			if (!ManorStockReservation.canReserve(reserved, i.getCount(), i.getAmount()))
+				return;
+			reservedCrops.put(stockKey, reserved + i.getCount());
 			
 			L2Item template = ItemTable.getInstance().getTemplate(i.getReward());
 			weight += i.getCount() * template.getWeight();
@@ -288,6 +297,16 @@ public class RequestProcureCropList extends L2ClientPacket
 			return _count;
 		}
 		
+		public int getManorId()
+		{
+			return _manorId;
+		}
+
+		public long getAmount()
+		{
+			return _crop.getAmount();
+		}
+
 		public int getReward()
 		{
 			return _reward;
