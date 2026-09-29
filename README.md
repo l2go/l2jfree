@@ -44,7 +44,7 @@ The deployment uses the three ZIP assets from the GitHub [v1.5.0 release](https:
 
 ## Infrastructure modernization
 
-[Issue #52](https://github.com/l2go/l2jfree/issues/52) starts the next stage by addressing the login server's Spring 2 and Hibernate 3 startup failure on JDK 25. The [modernization roadmap](docs/2026-Q4-INFRASTRUCTURE-MODERNIZATION.md) records the subsequent infrastructure slices and the runtime evidence required for each one.
+[Issue #52](https://github.com/l2go/l2jfree/issues/52) covers replacing the login server's Spring 2/Hibernate 3 persistence with JDBC and qualifying both login and game server database startup on JDK 25/MySQL 8.4. The game server already uses JDBC; its c3p0 connection checks must not depend on a separately created test table. The [modernization roadmap](docs/2026-Q4-INFRASTRUCTURE-MODERNIZATION.md) records later infrastructure slices and their runtime evidence.
 
 ## Architecture
 

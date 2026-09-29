@@ -30,15 +30,20 @@ jobs:
       - name: Build Java 8 bytecode (./mvnw install)
         run: ./mvnw -B -ntp install
 
-      - name: Verify login distribution excludes the removed ORM stack
+      - name: Verify release distributions exclude the removed ORM stack
         shell: bash
         run: |
-          archive="$(find l2jfree-login/target -maxdepth 1 -name 'l2jfree-login-*-dist.zip' -print -quit)"
-          test -n "$archive"
-          if unzip -Z1 "$archive" | grep -Eiq '/libs/[^/]*(spring|hibernate|cglib|ehcache)[^/]*\.jar$'; then
-            echo "The login distribution still contains jars from the removed ORM stack: $archive"
+          mapfile -t archives < <(find l2jfree-login/target l2jfree-core/target l2jfree-datapack/target -maxdepth 1 -name '*-dist.zip' -print)
+          if [[ ${#archives[@]} -ne 3 ]]; then
+            echo "Expected three release distributions, found ${#archives[@]}"
             exit 1
           fi
+          for archive in "${archives[@]}"; do
+            if unzip -Z1 "$archive" | grep -Eiq '/libs/[^/]*(spring|hibernate|cglib|ehcache)[^/]*\.jar$'; then
+              echo "Release distribution contains jars from the removed ORM stack: $archive"
+              exit 1
+            fi
+          done
 
   # Release archives contain Java 8 bytecode built with OpenJDK 25. They are
   # portable JVM packages, not Windows-specific binaries.

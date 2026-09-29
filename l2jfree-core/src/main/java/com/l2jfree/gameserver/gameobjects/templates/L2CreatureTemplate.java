@@ -107,7 +107,6 @@ public class L2CreatureTemplate
 	 * 
 	 * Be carefull, setter don't do the same verification that instantiation with statset {@link #L2CreatureTemplate(StatsSet)}
 	 * Don't use it !
-	 * This constructor is designed for hibernate
 	 */
 	public L2CreatureTemplate()
 	{
