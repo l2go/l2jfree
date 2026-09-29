@@ -6,7 +6,7 @@
 
 **Gracia Final · Protocol 83**
 
-An archived Lineage II server, maintained for modern builds and a documented Windows 10 migration.
+An archived Lineage II server, maintained for modern builds and Windows 10 deployment qualification.
 
 [![Build](https://github.com/l2go/l2jfree/actions/workflows/build.yml/badge.svg)](https://github.com/l2go/l2jfree/actions/workflows/build.yml)
 [![License: GPLv3](https://img.shields.io/badge/license-GPLv3-2563eb)](LICENSE)
@@ -32,15 +32,15 @@ On Windows, run `mvnw.cmd install`. The wrapper downloads checksum-verified Mave
 
 CI builds with Microsoft OpenJDK 25 and runs unit tests on that JDK. The output uses Java 8 bytecode. Test sources compile at release 21.
 
-## Windows 10 upgrade
+## Windows 10 deployment
 
 | Component | Target |
 |---|---|
 | Host | Windows 10 Pro 22H2 x64 |
 | Java | Microsoft OpenJDK 25 LTS x64 |
-| Database | MySQL 8.4 LTS with Connector/J 26.7.0 |
+| Database | MySQL Server 8.4 LTS installed as a Windows service; Connector/J 26.7.0 |
 
-Windows 10 is past regular support; this plan assumes no ESU. Oracle does not list Windows 10 as a supported MySQL 8.4 platform. The [upgrade plan](docs/2026-Q4-UPGRADE.md) covers qualification, supported database hosting, migration, and rollback.
+The deployment uses the three ZIP assets from the GitHub [v1.4.0 release](https://github.com/l2go/l2jfree/releases/tag/v1.4.0), verified with that release's SHA256SUMS.txt. The source build above creates artifacts from the checked-out source and is separate from assembling this pinned deployment image. The [deployment plan](docs/2026-Q4-UPGRADE.md) records the target and qualification steps.
 
 ## Architecture
 

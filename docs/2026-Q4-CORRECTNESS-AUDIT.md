@@ -8,7 +8,7 @@ Repository text, issues, and commit messages stay in English. Commit messages do
 
 | Fact | State on 2026-09-26 |
 |---|---|
-| Production bytecode | Java 8 (`maven.compiler.release` 8). The 2026-09-26 CI matrix was Microsoft OpenJDK 11 and 25 |
+| Production bytecode | Java 8 (`maven.compiler.release` 8). CI builds and tests with Microsoft OpenJDK 25 |
 | Modules | `l2j-commons`, `l2j-mmocore`, `l2jfree-login`, `l2jfree-core`, `l2jfree-scripting-engines`, `l2jfree-datapack` |
 | Core size | About 1,658 Java files. About 613 of them are network packets |
 | Tests | JUnit 4.13.2 on the classpath. Existing tests extend `junit.framework.TestCase`. Commons tests are pure. Core tests cover a handful of formulas and parsers and mutate `Config` through `ConfigHelper`. Login tests boot a Spring XML mock context |
@@ -69,7 +69,7 @@ The [1.4.0 Project](https://github.com/users/l2go/projects/1) is the live queue.
 
 Findings that clear the bar are filed as they are confirmed; the program has no issue quota. A SpotBugs warning is not an issue. A security-shaped game bug (packet trust, admin command) is a normal public issue that states impact and the fix, without a step-by-step exploit. A leaked credential would use a private advisory; item and session bugs do not.
 
-A fix is one pull request. The body starts with `Fixes #n`. The author leaves it open for maintainer review. The maintainer merges only after the `build` check is green and review threads are resolved. Direct pushes to `master` are rejected. This repository has a single GitHub account, and GitHub will not let that account approve its own pull request, so the manual merge itself is the approval. Auto-merge is off.
+A fix is one pull request. The body starts with `Fixes #n`. The author leaves it open for maintainer review. The maintainer merges only after the `build` check is green and review threads are resolved. Direct pushes to `main` are rejected. This repository has a single GitHub account, and GitHub will not let that account approve its own pull request, so the manual merge itself is the approval. Auto-merge is off.
 
 ## How a change lands
 
@@ -155,7 +155,7 @@ The tracking issue closes when every child is fixed or explicitly deferred with 
 
 ## Out of this audit
 
-- Windows 10 runtime qualification, the MySQL 8.4 migration rehearsal, and the deployment image. Those steps stay in the upgrade plan.
+- Windows 10 runtime qualification with the MySQL 8.4 service and the deployment image. Those steps stay in the deployment plan.
 - A project-wide coverage percentage.
 - A JUnit 5-to-6 side migration of the old tests. They are deleted.
 - Rewriting the server so that it is testable, ahead of a filed defect.
