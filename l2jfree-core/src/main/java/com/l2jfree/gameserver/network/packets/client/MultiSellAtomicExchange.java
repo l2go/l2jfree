@@ -53,6 +53,50 @@ final class MultiSellAtomicExchange
 {
 	private static final Log LOG = LogFactory.getLog(MultiSellAtomicExchange.class);
 
+	interface Resources
+	{
+		void flush(L2ItemInstance[] items);
+		L2Item template(int itemId);
+		int nextObjectId();
+		void releaseObjectId(int objectId);
+		Connection connection() throws SQLException;
+	}
+
+	private static final Resources DEFAULT_RESOURCES = new Resources()
+	{
+		@Override
+		public void flush(L2ItemInstance[] items)
+		{
+			for (L2ItemInstance item : items)
+				item.updateDatabase(true);
+			SQLQueue.getInstance().run();
+		}
+
+		@Override
+		public L2Item template(int itemId)
+		{
+			return ItemTable.getInstance().getTemplate(itemId);
+		}
+
+		@Override
+		public int nextObjectId()
+		{
+			return IdFactory.getInstance().getNextId();
+		}
+
+		@Override
+		public void releaseObjectId(int objectId)
+		{
+			IdFactory.getInstance().releaseId(objectId);
+		}
+
+		@Override
+		public Connection connection() throws SQLException
+		{
+			return L2DatabaseFactory.getInstance().getConnection();
+		}
+	};
+
 	private static final class TreasuryChange
 	{
 		final Castle castle;
@@ -75,9 +119,16 @@ final class MultiSellAtomicExchange
 	private final boolean _maintainEnchantment;
 	private final Castle _castle;
 	private final long _tax;
+	private final Resources _resources;
 
 	MultiSellAtomicExchange(L2Player player, MultiSellEntry entry, long amount,
 			boolean maintainEnchantment, Castle castle, long transactionTax)
+	{
+		this(player, entry, amount, maintainEnchantment, castle, transactionTax, DEFAULT_RESOURCES);
+	}
+
+	MultiSellAtomicExchange(L2Player player, MultiSellEntry entry, long amount,
+			boolean maintainEnchantment, Castle castle, long transactionTax, Resources resources)
 	{
 		_player = player;
 		_inventory = player.getInventory();
@@ -86,6 +137,7 @@ final class MultiSellAtomicExchange
 		_maintainEnchantment = maintainEnchantment;
 		_castle = castle;
 		_tax = transactionTax;
+		_resources = resources;
 	}
 
 	boolean execute()
@@ -95,9 +147,7 @@ final class MultiSellAtomicExchange
 		{
 			affected = affectedItems(_inventory.getItems());
 		}
-		for (L2ItemInstance item : affected)
-			item.updateDatabase(true);
-		SQLQueue.getInstance().run();
+		_resources.flush(affected);
 		Arrays.sort(affected, new Comparator<L2ItemInstance>()
 		{
 			@Override
@@ -285,7 +335,7 @@ final class MultiSellAtomicExchange
 				}
 				if (product.getItemId() == -200)
 					continue;
-				L2Item template = ItemTable.getInstance().getTemplate(product.getItemId());
+				L2Item template = _resources.template(product.getItemId());
 				if (template == null)
 					return false;
 				if (template.isStackable())
@@ -325,7 +375,7 @@ final class MultiSellAtomicExchange
 				long copies = template.isStackable() ? 1 : quantity;
 				for (long i = 0; i < copies; i++)
 				{
-					int objectId = IdFactory.getInstance().getNextId();
+					int objectId = _resources.nextObjectId();
 					stagedIds.add(objectId);
 					L2ItemInstance item = L2ItemInstance.prepareForMultisell(objectId, template);
 					stagedProducts.add(item);
@@ -354,12 +404,21 @@ final class MultiSellAtomicExchange
 			List<TreasuryChange> treasury = treasuryChanges();
 
 			MultiSellPersistence persistence = new MultiSellPersistence();
-			for (Map.Entry<L2ItemInstance, Long> change : finalCounts.entrySet())
+			List<L2ItemInstance> changedItems = new ArrayList<L2ItemInstance>(finalCounts.keySet());
+			Collections.sort(changedItems, new Comparator<L2ItemInstance>()
 			{
-				L2ItemInstance item = change.getKey();
-				if (change.getValue() != item.getCount())
+				@Override
+				public int compare(L2ItemInstance left, L2ItemInstance right)
+				{
+					return Integer.compare(left.getObjectId(), right.getObjectId());
+				}
+			});
+			for (L2ItemInstance item : changedItems)
+			{
+				long after = finalCounts.get(item);
+				if (after != item.getCount())
 					persistence.changeCount(item.getObjectId(), _player.getObjectId(),
-							item.getCount(), change.getValue());
+							item.getCount(), after);
 			}
 			for (L2ItemInstance item : stagedProducts)
 			{
@@ -386,7 +445,7 @@ final class MultiSellAtomicExchange
 			Connection connection = null;
 			try
 			{
-				connection = L2DatabaseFactory.getInstance().getConnection();
+				connection = _resources.connection();
 				persistence.commit(connection);
 				committed = true;
 			}
@@ -422,7 +481,7 @@ final class MultiSellAtomicExchange
 		{
 			if (!committed)
 				for (Integer objectId : stagedIds)
-					IdFactory.getInstance().releaseId(objectId);
+					_resources.releaseObjectId(objectId);
 		}
 	}
 }
