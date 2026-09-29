@@ -204,6 +204,21 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		_loc = ItemLocation.VOID;
 		_mana = _item.getDuration();
 	}
+
+	/** Creates a product without publishing or scheduling it before the exchange commits. */
+	public static L2ItemInstance prepareForMultisell(int objectId, L2Item template)
+	{
+		L2ItemInstance item = new L2ItemInstance(objectId, template);
+		item._time = template.getTime() == -1 ? -1 : System.currentTimeMillis() + template.getTime() * 60000L;
+		return item;
+	}
+
+	/** Attributes are persisted by the exchange's JDBC transaction. */
+	public void setPreparedMultisellAttributes(L2Augmentation augmentation, Elementals elementals)
+	{
+		_augmentation = augmentation;
+		_elementals = elementals;
+	}
 	
 	/**
 	 * Sets the ownerID of the item

@@ -18,6 +18,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
+
 import org.junit.jupiter.api.Test;
 
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
@@ -77,6 +79,21 @@ class MultiSellIngredientReservationTest
 		assertThat(plan.debits()).hasSize(2);
 		assertThat(plan.debits().get(0).count()).isEqualTo(2);
 		assertThat(plan.debits().get(1).count()).isEqualTo(2);
+	}
+
+	@Test
+	void exactRetainedIngredientAlsoSatisfiesAnyEnchantmentRequirement()
+	{
+		L2ItemInstance plain = item(100, 1, 0, false);
+		L2ItemInstance enchanted = item(101, 1, 5, false);
+		MultiSellIngredientReservation plan = new MultiSellIngredientReservation(
+				new L2ItemInstance[] { plain, enchanted });
+
+		assertThat(plan.reserveRetained(Arrays.asList(
+				new MultiSellIngredientReservation.Requirement(1, 0, 1),
+				new MultiSellIngredientReservation.Requirement(1, -1, 1)))).isTrue();
+		assertThat(plan.reserve(1, -1, 1)).isTrue();
+		assertThat(plan.debits().get(0).item()).isSameAs(enchanted);
 	}
 
 	private static L2ItemInstance item(int objectId, int itemId, int enchant, boolean stackable)

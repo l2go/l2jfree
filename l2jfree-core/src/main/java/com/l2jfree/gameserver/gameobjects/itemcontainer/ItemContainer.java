@@ -45,6 +45,7 @@ public abstract class ItemContainer
 	protected static final Log _log = LogFactory.getLog(ItemContainer.class);
 	
 	protected final FastList<L2ItemInstance> _items;
+	private final Object _itemSetLock = new Object();
 	
 	protected ItemContainer()
 	{
@@ -560,7 +561,10 @@ public abstract class ItemContainer
 	 */
 	protected void addItem(L2ItemInstance item)
 	{
-		_items.add(item);
+		synchronized (_itemSetLock)
+		{
+			_items.add(item);
+		}
 	}
 	
 	/**
@@ -569,7 +573,16 @@ public abstract class ItemContainer
 	 */
 	protected boolean removeItem(L2ItemInstance item)
 	{
-		return _items.remove(item);
+		synchronized (_itemSetLock)
+		{
+			return _items.remove(item);
+		}
+	}
+
+	/** Coordinates a prepared exchange with additions and removals in this container. */
+	public Object itemSetLock()
+	{
+		return _itemSetLock;
 	}
 	
 	/**

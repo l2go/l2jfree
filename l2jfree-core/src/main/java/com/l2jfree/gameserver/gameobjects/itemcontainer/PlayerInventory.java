@@ -19,6 +19,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javolution.util.FastList;
 
@@ -27,10 +28,12 @@ import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.ItemTable;
 import com.l2jfree.gameserver.gameobjects.L2Object;
 import com.l2jfree.gameserver.gameobjects.L2Player;
+import com.l2jfree.gameserver.idfactory.IdFactory;
 import com.l2jfree.gameserver.model.TradeList;
 import com.l2jfree.gameserver.model.TradeList.TradeItem;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
 import com.l2jfree.gameserver.model.items.L2ItemInstance.ItemLocation;
+import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.model.items.templates.L2EtcItemType;
 import com.l2jfree.gameserver.network.packets.server.InventoryUpdate;
 import com.l2jfree.gameserver.network.packets.server.ItemList;
@@ -568,6 +571,59 @@ public class PlayerInventory extends Inventory
 	{
 		super.refreshWeight();
 		getOwner().refreshOverloaded();
+	}
+
+	/** Publishes item rows already committed by a multisell JDBC transaction. */
+	public void publishCommittedMultisell(Map<L2ItemInstance, Long> finalCounts, List<L2ItemInstance> products)
+	{
+		synchronized (itemSetLock())
+		{
+			for (L2ItemInstance item : finalCounts.keySet())
+			{
+				if (!_items.contains(item))
+					throw new IllegalStateException("Committed multisell item is missing: " + item.getObjectId());
+			}
+			for (Map.Entry<L2ItemInstance, Long> change : finalCounts.entrySet())
+			{
+				L2ItemInstance item = change.getKey();
+				long after = change.getValue();
+				if (after == item.getCount())
+					continue;
+				if (after == 0)
+				{
+					if (!removeItem(item))
+						throw new IllegalStateException("Committed multisell item is missing: " + item.getObjectId());
+					item.setCount(0);
+					item.setOwnerId(0);
+					item.setLocation(ItemLocation.VOID);
+					item.setLastChange(L2ItemInstance.REMOVED);
+					item.markStoredAfterExchange(false);
+					L2World.getInstance().removeObject(item);
+					IdFactory.getInstance().releaseId(item.getObjectId());
+				}
+				else
+				{
+					item.setCount(after);
+					item.setLastChange(L2ItemInstance.MODIFIED);
+					item.markStoredAfterExchange(true);
+				}
+			}
+			for (L2ItemInstance product : products)
+			{
+				product.setOwnerId(getOwnerId());
+				product.setLocation(ItemLocation.INVENTORY);
+				product.setLastChange(L2ItemInstance.ADDED);
+				addItem(product);
+				product.markStoredAfterExchange(true);
+				L2World.getInstance().storeObject(product);
+				product.scheduleLifeTimeTask();
+				if (product.getItemId() == ADENA_ID)
+					_adena = product;
+				else if (product.getItemId() == ANCIENT_ADENA_ID)
+					_ancientAdena = product;
+			}
+		}
+		refreshWeight();
 	}
 	
 	/**

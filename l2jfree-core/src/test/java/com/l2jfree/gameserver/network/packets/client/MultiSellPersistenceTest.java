@@ -43,10 +43,10 @@ class MultiSellPersistenceTest
 			statement.execute("DROP TABLE IF EXISTS item_attributes");
 			statement.execute("DROP TABLE IF EXISTS items");
 			statement.execute("CREATE TABLE items (object_id INT PRIMARY KEY, owner_id INT, item_id INT, "
-					+ "count BIGINT, enchant_level INT, loc VARCHAR(10), loc_data INT)");
+					+ "count BIGINT, enchant_level INT, loc VARCHAR(10), loc_data INT, mana_left INT, time BIGINT)");
 			statement.execute("CREATE TABLE item_attributes (itemId INT PRIMARY KEY)");
 			statement.execute("CREATE TABLE pets (item_obj_id INT PRIMARY KEY)");
-			statement.execute("INSERT INTO items VALUES (10, 100, 1, 5, 0, 'INVENTORY', 0)");
+			statement.execute("INSERT INTO items VALUES (10, 100, 1, 5, 0, 'INVENTORY', 0, -1, 0)");
 		}
 	}
 

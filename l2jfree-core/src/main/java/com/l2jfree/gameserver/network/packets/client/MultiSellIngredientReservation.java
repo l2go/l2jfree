@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.network.packets.client;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,20 @@ import com.l2jfree.gameserver.model.items.L2ItemInstance;
 /** An exact, immutable selection of inventory instances for one exchange. */
 final class MultiSellIngredientReservation
 {
+	static final class Requirement
+	{
+		final int itemId;
+		final int enchantment;
+		final long count;
+
+		Requirement(int itemId, int enchantment, long count)
+		{
+			this.itemId = itemId;
+			this.enchantment = enchantment;
+			this.count = count;
+		}
+	}
+
 	static final class Debit
 	{
 		private final L2ItemInstance _item;
@@ -61,6 +76,65 @@ final class MultiSellIngredientReservation
 	}
 
 	boolean reserve(int itemId, int enchantment, long count)
+	{
+		return allocate(itemId, enchantment, count, true);
+	}
+
+	boolean reserveRetained(List<Requirement> requirements)
+	{
+		Map<Long, Long> maxima = new HashMap<Long, Long>();
+		for (Requirement requirement : requirements)
+		{
+			if (requirement.count <= 0)
+				return false;
+			long key = ((long)requirement.itemId << 32) | (requirement.enchantment & 0xffffffffL);
+			Long prior = maxima.get(key);
+			if (prior == null || prior < requirement.count)
+				maxima.put(key, requirement.count);
+		}
+
+		Map<L2ItemInstance, Long> original = new IdentityHashMap<L2ItemInstance, Long>(_available);
+		Map<Integer, Long> heldByItemId = new HashMap<Integer, Long>();
+		for (Requirement requirement : requirements)
+		{
+			if (requirement.enchantment < 0)
+				continue;
+			long key = ((long)requirement.itemId << 32) | (requirement.enchantment & 0xffffffffL);
+			Long needed = maxima.remove(key);
+			if (needed == null)
+				continue;
+			if (!allocate(requirement.itemId, requirement.enchantment, needed, false))
+			{
+				_available.clear();
+				_available.putAll(original);
+				return false;
+			}
+			Long held = heldByItemId.get(requirement.itemId);
+			long previous = held == null ? 0 : held;
+			heldByItemId.put(requirement.itemId,
+					previous > Long.MAX_VALUE - needed ? Long.MAX_VALUE : previous + needed);
+		}
+		for (Requirement requirement : requirements)
+		{
+			if (requirement.enchantment >= 0)
+				continue;
+			long key = ((long)requirement.itemId << 32) | 0xffffffffL;
+			Long needed = maxima.remove(key);
+			if (needed == null)
+				continue;
+			Long held = heldByItemId.get(requirement.itemId);
+			long extra = Math.max(0, needed - (held == null ? 0 : held));
+			if (extra > 0 && !allocate(requirement.itemId, -1, extra, false))
+			{
+				_available.clear();
+				_available.putAll(original);
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean allocate(int itemId, int enchantment, long count, boolean consume)
 	{
 		if (count <= 0)
 			return false;
@@ -101,7 +175,8 @@ final class MultiSellIngredientReservation
 		for (Debit debit : staged)
 		{
 			_available.put(debit.item(), _available.get(debit.item()) - debit.count());
-			_debits.add(debit);
+			if (consume)
+				_debits.add(debit);
 		}
 		return true;
 	}

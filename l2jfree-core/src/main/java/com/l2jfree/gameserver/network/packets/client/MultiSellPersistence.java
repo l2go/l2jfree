@@ -32,8 +32,15 @@ final class MultiSellPersistence
 
 	void debit(final int objectId, final int ownerId, final long before, final long after)
 	{
-		if (before <= 0 || after < 0 || after >= before)
+		if (after >= before)
 			throw new IllegalArgumentException("Invalid item debit");
+		changeCount(objectId, ownerId, before, after);
+	}
+
+	void changeCount(final int objectId, final int ownerId, final long before, final long after)
+	{
+		if (before <= 0 || after < 0 || after == before)
+			throw new IllegalArgumentException("Invalid item count change");
 
 		_changes.add(new Change()
 		{
@@ -66,6 +73,12 @@ final class MultiSellPersistence
 	void insert(final int objectId, final int ownerId, final int itemId, final long count,
 			final int enchantment)
 	{
+		insert(objectId, ownerId, itemId, count, enchantment, -1, 0);
+	}
+
+	void insert(final int objectId, final int ownerId, final int itemId, final long count,
+			final int enchantment, final int mana, final long time)
+	{
 		if (count <= 0)
 			throw new IllegalArgumentException("Invalid product count");
 		_changes.add(new Change()
@@ -74,14 +87,40 @@ final class MultiSellPersistence
 			public void write(Connection connection) throws SQLException
 			{
 				try (PreparedStatement statement = connection.prepareStatement(
-						"INSERT INTO items (owner_id,object_id,item_id,count,enchant_level,loc,loc_data) "
-								+ "VALUES (?,?,?,?,?,'INVENTORY',0)"))
+						"INSERT INTO items (owner_id,object_id,item_id,count,enchant_level,loc,loc_data,mana_left,time) "
+								+ "VALUES (?,?,?,?,?,'INVENTORY',0,?,?)"))
 				{
 					statement.setInt(1, ownerId);
 					statement.setInt(2, objectId);
 					statement.setInt(3, itemId);
 					statement.setLong(4, count);
 					statement.setInt(5, enchantment);
+					statement.setInt(6, mana);
+					statement.setLong(7, time);
+					statement.executeUpdate();
+				}
+			}
+		});
+	}
+
+	void insertAttributes(final int objectId, final int augmentation, final int skillId,
+			final int skillLevel, final byte element, final int elementValue)
+	{
+		_changes.add(new Change()
+		{
+			@Override
+			public void write(Connection connection) throws SQLException
+			{
+				try (PreparedStatement statement = connection.prepareStatement(
+						"INSERT INTO item_attributes (itemId,augAttributes,augSkillId,augSkillLevel,elemType,elemValue) "
+								+ "VALUES (?,?,?,?,?,?)"))
+				{
+					statement.setInt(1, objectId);
+					statement.setInt(2, augmentation);
+					statement.setInt(3, skillId);
+					statement.setInt(4, skillLevel);
+					statement.setByte(5, element);
+					statement.setInt(6, elementValue);
 					statement.executeUpdate();
 				}
 			}
