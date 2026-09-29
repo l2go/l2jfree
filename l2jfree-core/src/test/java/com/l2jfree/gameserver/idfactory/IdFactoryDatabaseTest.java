@@ -30,7 +30,7 @@ import org.testcontainers.mysql.MySQLContainer;
 class IdFactoryDatabaseTest
 {
 	@Container
-	private static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.4");
+	private static final MySQLContainer MYSQL = new MySQLContainer("mysql:8.4");
 
 	@BeforeEach
 	void createTables() throws Exception
