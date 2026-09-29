@@ -14,11 +14,9 @@
  */
 package com.l2jfree.gameserver.idfactory;
 
-import gnu.trove.TIntArrayList;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -283,67 +281,13 @@ public abstract class IdFactory
 		}
 	}
 	
-	/**
-	 * @return
-	 * @throws SQLException
-	 */
 	protected final int[] extractUsedObjectIDTable() throws SQLException
 	{
 		Connection con = null;
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
-			
-			Statement statement = con.createStatement();
-			
-			ResultSet rset = null;
-			int count = 0;
-			
-			rset = statement.executeQuery("SELECT COUNT(*) FROM characters");
-			rset.next();
-			count += rset.getInt(1);
-			
-			rset = statement.executeQuery("SELECT COUNT(*) FROM items");
-			rset.next();
-			count += rset.getInt(1);
-			
-			rset = statement.executeQuery("SELECT COUNT(*) FROM clan_data");
-			rset.next();
-			count += rset.getInt(1);
-			
-			rset = statement.executeQuery("SELECT COUNT(*) FROM itemsonground");
-			rset.next();
-			count += rset.getInt(1);
-			
-			final TIntArrayList temp = new TIntArrayList(count);
-			
-			rset = statement.executeQuery("SELECT charId FROM characters");
-			while (rset.next())
-			{
-				temp.add(rset.getInt(1));
-			}
-			
-			rset = statement.executeQuery("SELECT object_id FROM items");
-			while (rset.next())
-			{
-				temp.add(rset.getInt(1));
-			}
-			
-			rset = statement.executeQuery("SELECT clan_id FROM clan_data");
-			while (rset.next())
-			{
-				temp.add(rset.getInt(1));
-			}
-			
-			rset = statement.executeQuery("SELECT object_id FROM itemsonground");
-			while (rset.next())
-			{
-				temp.add(rset.getInt(1));
-			}
-			
-			temp.sort();
-			
-			return temp.toNativeArray();
+			return PersistedObjectIds.read(con);
 		}
 		finally
 		{
