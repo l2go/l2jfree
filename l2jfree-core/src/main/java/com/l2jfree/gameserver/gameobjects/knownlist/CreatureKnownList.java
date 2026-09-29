@@ -37,7 +37,7 @@ public class CreatureKnownList extends ObjectKnownList
 	}
 	
 	@Override
-	public boolean addKnownObject(L2Object object)
+	public synchronized boolean addKnownObject(L2Object object)
 	{
 		if (object == null || object == getActiveChar())
 			return false;
@@ -50,13 +50,11 @@ public class CreatureKnownList extends ObjectKnownList
 		if (!getActiveChar().isSameInstance(object))
 			return false;
 		
-		if (getKnownObjects().put(object.getObjectId(), object) != null)
-			return false;
-		
+		boolean added = getKnownObjects().put(object.getObjectId(), object) == null;
 		if (object instanceof L2Player)
 			getKnownPlayers().put(object.getObjectId(), (L2Player)object);
 		
-		return true;
+		return added;
 	}
 	
 	public final boolean knowsObject(L2Object object)
@@ -107,15 +105,16 @@ public class CreatureKnownList extends ObjectKnownList
 	}
 	
 	@Override
-	public boolean removeKnownObject(L2Object object)
+	public synchronized boolean removeKnownObject(L2Object object)
 	{
 		if (object == null)
 			return false;
 		
-		if (getKnownObjects().remove(object.getObjectId()) == null)
+		L2Object removed = getKnownObjects().remove(object.getObjectId());
+		if (removed == null)
 			return false;
 		
-		if (object instanceof L2Player)
+		if (object instanceof L2Player || removed instanceof L2Player)
 			getKnownPlayers().remove(object.getObjectId());
 		
 		// If object is targeted by the L2Creature, cancel Attack or Cast
