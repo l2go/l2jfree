@@ -46,7 +46,7 @@ public final class LoginDataSource implements AutoCloseable
 		pool.setMaxPoolSize(20);
 		pool.setMaxStatementsPerConnection(100);
 		pool.setAutoCommitOnClose(true);
-		pool.setAutomaticTestTable("connection_test_table");
+		pool.setPreferredTestQuery("SELECT 1");
 		pool.setTestConnectionOnCheckin(true);
 		pool.setNumHelperThreads(3);
 		dataSource = pool;
