@@ -67,25 +67,32 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           release_version="${RELEASE_TAG#v}"
+          artifact_version="${release_version%%-*}"
           project_version="$(./mvnw -q -N org.apache.maven.plugins:maven-help-plugin:3.5.1:evaluate -Dexpression=project.version -DforceStdout)"
-          test "$release_version" = "$project_version"
+          test "$artifact_version" = "$project_version"
 
       - name: Collect release artifacts and compute checksums
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           release_version="${RELEASE_TAG#v}"
+          artifact_version="${release_version%%-*}"
           mkdir -p release-artifacts
-          cp "l2jfree-login/target/l2jfree-login-${release_version}-dist.zip" release-artifacts/
-          cp "l2jfree-core/target/l2jfree-core-${release_version}-dist.zip" release-artifacts/
-          cp "l2jfree-datapack/target/l2jfree-datapack-${release_version}-dist.zip" release-artifacts/
+          cp "l2jfree-login/target/l2jfree-login-${artifact_version}-dist.zip" release-artifacts/
+          cp "l2jfree-core/target/l2jfree-core-${artifact_version}-dist.zip" release-artifacts/
+          cp "l2jfree-datapack/target/l2jfree-datapack-${artifact_version}-dist.zip" release-artifacts/
           ( cd release-artifacts && sha256sum *.zip > SHA256SUMS.txt )
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ github.ref_name }}" release-artifacts/* \
+          release_version="${{ github.ref_name }}"
+          release_flags=()
+          if [[ "$release_version" == *-* ]]; then
+            release_flags+=(--prerelease)
+          fi
+          gh release create "${{ github.ref_name }}" release-artifacts/* "${release_flags[@]}" \
             --title "${{ github.ref_name }}" \
             --generate-notes \
             --notes "GPLv3 archival fork. This release includes correctness fixes and test and build tooling updates; it adds no new gameplay features. Portable JVM distributions with Java 8 bytecode, built by the Microsoft OpenJDK 25 CI package job. Use SHA256SUMS.txt to verify the downloaded archives."
