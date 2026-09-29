@@ -98,13 +98,13 @@ public final class L2DatabaseFactory
 			// so taking more than one connection at once will make connection pooling
 			// more effective.
 			
-			// this "connection_test_table" is automatically created if not already there
-			_source.setAutomaticTestTable("connection_test_table");
+			// Avoid requiring a test table or CREATE TABLE permissions from the database user.
+			_source.setPreferredTestQuery("SELECT 1");
 			_source.setTestConnectionOnCheckin(false);
 			
 			// testing OnCheckin used with IdleConnectionTestPeriod is faster than testing on checkout
 			
-			_source.setIdleConnectionTestPeriod(3600); // test idle connection every 60 sec
+			_source.setIdleConnectionTestPeriod(3600); // test idle connections every hour
 			_source.setMaxIdleTime(1800); // 0 = idle connections never expire
 			// *THANKS* to connection testing configured above
 			// but I prefer to disconnect all connections not used
