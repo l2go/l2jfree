@@ -106,7 +106,10 @@ final class MultiSellAtomicExchange
 				return Integer.compare(left.getObjectId(), right.getObjectId());
 			}
 		});
-		return withItemLocks(affected, 0);
+		synchronized (_player)
+		{
+			return withItemLocks(affected, 0);
+		}
 	}
 
 	private boolean withItemLocks(L2ItemInstance[] items, int index)

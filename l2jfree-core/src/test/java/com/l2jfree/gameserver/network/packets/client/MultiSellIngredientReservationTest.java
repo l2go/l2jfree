@@ -96,6 +96,18 @@ class MultiSellIngredientReservationTest
 		assertThat(plan.debits().get(0).item()).isSameAs(enchanted);
 	}
 
+	@Test
+	void failedRetainedReservationRestoresAllCandidateBalances()
+	{
+		L2ItemInstance plain = item(100, 1, 0, false);
+		MultiSellIngredientReservation plan = new MultiSellIngredientReservation(new L2ItemInstance[] { plain });
+
+		assertThat(plan.reserveRetained(Arrays.asList(
+				new MultiSellIngredientReservation.Requirement(1, 0, 1),
+				new MultiSellIngredientReservation.Requirement(1, 5, 1)))).isFalse();
+		assertThat(plan.reserve(1, -1, 1)).isTrue();
+	}
+
 	private static L2ItemInstance item(int objectId, int itemId, int enchant, boolean stackable)
 	{
 		L2ItemInstance item = mock(L2ItemInstance.class);

@@ -7160,7 +7160,7 @@ public final class L2Player extends L2Playable
 			getInventory().updateDatabase();
 	}
 	
-	private void storeCharBase()
+	private synchronized void storeCharBase()
 	{
 		Connection con = null;
 		
@@ -13162,7 +13162,7 @@ public final class L2Player extends L2Playable
 	 * Set the Fame of this L2PcInstane <BR><BR>
 	 * @param fame
 	 */
-	public void setFame(int fame)
+	public synchronized void setFame(int fame)
 	{
 		if (fame > Config.MAX_PERSONAL_FAME_POINTS)
 			_fame = Config.MAX_PERSONAL_FAME_POINTS;
@@ -13174,7 +13174,7 @@ public final class L2Player extends L2Playable
 	 * Return the Fame of this L2Player <BR><BR>
 	 * @return
 	 */
-	public int getFame()
+	public synchronized int getFame()
 	{
 		return _fame;
 	}

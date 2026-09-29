@@ -154,6 +154,20 @@ class MultiSellPersistenceTest
 		assertThat(value("item_attributes", "elemValue", "itemId", 11)).isEqualTo(100);
 	}
 
+	@Test
+	void fameDebitUsesLockedLiveBalanceWhenDatabaseRowLags() throws Exception
+	{
+		MultiSellPersistence exchange = new MultiSellPersistence();
+		exchange.adjustFame(100, 70, 60);
+
+		try (Connection connection = connection())
+		{
+			exchange.commit(connection);
+		}
+
+		assertThat(value("characters", "fame", "charId", 100)).isEqualTo(60);
+	}
+
 	private static long count(int objectId) throws Exception
 	{
 		try (Connection connection = connection(); Statement statement = connection.createStatement();

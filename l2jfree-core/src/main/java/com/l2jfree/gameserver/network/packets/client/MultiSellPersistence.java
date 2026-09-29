@@ -129,7 +129,24 @@ final class MultiSellPersistence
 
 	void adjustFame(final int playerId, final int before, final int after)
 	{
-		adjustBalance("characters", "fame", "charId", playerId, before, after);
+		if (before == after)
+			return;
+		_changes.add(new Change()
+		{
+			@Override
+			public void write(Connection connection) throws SQLException
+			{
+				// Fame is normally persisted by periodic character stores, so its row can lag memory.
+				try (PreparedStatement statement = connection.prepareStatement(
+						"UPDATE characters SET fame=? WHERE charId=?"))
+				{
+					statement.setInt(1, after);
+					statement.setInt(2, playerId);
+					if (statement.executeUpdate() != 1)
+						throw new SQLException("Missing multisell character: " + playerId);
+				}
+			}
+		});
 	}
 
 	void adjustClanReputation(final int clanId, final int before, final int after)
