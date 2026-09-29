@@ -44,9 +44,9 @@ public final class AccountManager extends L2AutoInitialization
 	private AccountManager()
 	{
 		Config.load();
-		L2Registry.loadRegistry("spring.xml");
-		accountService = (AccountsServices)L2Registry.getBean("AccountsServices");
-		gameService = (GameserversServices)L2Registry.getBean("GameserversServicesXml");
+		L2Registry.loadRegistry();
+		accountService = L2Registry.getAccountsServices();
+		gameService = L2Registry.getGameserversServicesXml();
 	}
 	
 	private final int[] parseBirth(String s)

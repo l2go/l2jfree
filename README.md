@@ -12,7 +12,7 @@ An archived Lineage II server, maintained for modern builds and Windows 10 deplo
 [![License: GPLv3](https://img.shields.io/badge/license-GPLv3-2563eb)](LICENSE)
 ![Java: 8 bytecode](https://img.shields.io/badge/bytecode-Java%208-2ea44f)
 
-[Build](#quick-start) · [Upgrade](#windows-10-upgrade) · [Architecture](#architecture) · [Correctness](#correctness-program)
+[Build](#quick-start) · [Upgrade](#windows-10-upgrade) · [Infrastructure](#infrastructure-modernization) · [Architecture](#architecture) · [Correctness](#correctness-program)
 
 </div>
 
@@ -41,6 +41,10 @@ CI builds with Microsoft OpenJDK 25 and runs unit tests on that JDK. The output 
 | Database | MySQL Server 8.4 LTS installed as a Windows service; Connector/J 26.7.0 |
 
 The deployment uses the three ZIP assets from the GitHub [v1.5.0 release](https://github.com/l2go/l2jfree/releases/tag/v1.5.0), verified with that release's SHA256SUMS.txt. The source build above creates artifacts from the checked-out source and is separate from assembling this pinned deployment image. The [deployment plan](docs/2026-Q4-UPGRADE.md) records the target and qualification steps.
+
+## Infrastructure modernization
+
+[Issue #52](https://github.com/l2go/l2jfree/issues/52) starts the next stage by addressing the login server's Spring 2 and Hibernate 3 startup failure on JDK 25. The [modernization roadmap](docs/2026-Q4-INFRASTRUCTURE-MODERNIZATION.md) records the subsequent infrastructure slices and the runtime evidence required for each one.
 
 ## Architecture
 

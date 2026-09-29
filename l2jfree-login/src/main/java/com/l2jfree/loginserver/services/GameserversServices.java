@@ -14,16 +14,14 @@
  */
 package com.l2jfree.loginserver.services;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.orm.ObjectRetrievalFailureException;
-
 import com.l2jfree.loginserver.beans.Gameservers;
 import com.l2jfree.loginserver.dao.GameserversDAO;
+import com.l2jfree.loginserver.dao.LoginDataAccessException;
+import com.l2jfree.loginserver.dao.LoginObjectNotFoundException;
 
 /**
  * Account service to handle gameservers management
@@ -46,16 +44,7 @@ public class GameserversServices
 	 */
 	public List<Gameservers> getAllGameservers()
 	{
-		try
-		{
-			List<Gameservers> servers = __dao.getAllGameservers();
-			return servers;
-		}
-		catch (ObjectRetrievalFailureException e)
-		{
-			_log.warn("Unable to retrieve gameservers.", e);
-			return new ArrayList<Gameservers>();
-		}
+		return __dao.getAllGameservers();
 	}
 	
 	/**
@@ -69,7 +58,7 @@ public class GameserversServices
 		{
 			return __dao.getGameserverByServerId(id).getServerName();
 		}
-		catch (Exception e)
+		catch (LoginObjectNotFoundException e)
 		{
 			_log.warn("Unable to retrieve gameserver : " + id, e);
 			return null;
@@ -87,7 +76,7 @@ public class GameserversServices
 		{
 			return __dao.createGameserver(gs);
 		}
-		catch (DataAccessException e)
+		catch (LoginDataAccessException e)
 		{
 			_log.warn("Unable to create gameserver.", e);
 			return -1;
@@ -104,7 +93,7 @@ public class GameserversServices
 		{
 			__dao.removeGameserverByServerId(id);
 		}
-		catch (DataAccessException e)
+		catch (LoginDataAccessException e)
 		{
 			_log.warn("Error while deleting gameserver :" + e, e);
 		}

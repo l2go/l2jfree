@@ -48,6 +48,9 @@ public interface AccountsDAO
 	 * @param obj a transient instance containing updated state
 	 */
 	public void update(Object obj);
+
+	/** Update only the access level of an existing account. */
+	public boolean updateAccessLevel(String login, int accessLevel);
 	
 	/**
 	 * Delete an object.

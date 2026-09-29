@@ -122,7 +122,7 @@ public class LoginManager
 			
 			_keyPairs = new ScrambledKeyPair[10];
 			
-			_service = (AccountsServices)L2Registry.getBean("AccountsServices");
+			_service = L2Registry.getAccountsServices();
 			
 			_connections = new FastList<L2Client>();
 			

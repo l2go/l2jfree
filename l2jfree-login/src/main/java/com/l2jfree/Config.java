@@ -142,7 +142,6 @@ public final class Config
 		
 		// Initialize config properties for DB
 		// ----------------------------------
-		initDBProperties();
 	}
 	
 	// it has no instancies
@@ -150,15 +149,4 @@ public final class Config
 	{
 	}
 	
-	/**
-	 * To keep compatibility with old loginserver.properties, add db properties into system properties
-	 * Spring will use those values later
-	 */
-	public static void initDBProperties()
-	{
-		System.setProperty("com.l2jfree.db.driverclass", DATABASE_DRIVER);
-		System.setProperty("com.l2jfree.db.urldb", DATABASE_URL);
-		System.setProperty("com.l2jfree.db.user", DATABASE_LOGIN);
-		System.setProperty("com.l2jfree.db.password", DATABASE_PASSWORD);
-	}
 }

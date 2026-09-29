@@ -37,13 +37,15 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-
+import com.l2jfree.loginserver.dao.AccountsDAO;
+import com.l2jfree.loginserver.dao.GameserversDAO;
+import com.l2jfree.loginserver.dao.JdbcTransactions;
+import com.l2jfree.loginserver.dao.impl.AccountsDAOJdbc;
+import com.l2jfree.loginserver.dao.impl.GameserversDAOJdbc;
+import com.l2jfree.loginserver.dao.impl.GameserversDAOXml;
+import com.l2jfree.loginserver.db.LoginDataSource;
+import com.l2jfree.loginserver.services.AccountsServices;
+import com.l2jfree.loginserver.services.GameserversServices;
 import com.mchange.v2.c3p0.PooledDataSource;
 
 /**
@@ -51,7 +53,7 @@ import com.mchange.v2.c3p0.PooledDataSource;
  * Object registry for L2 LS.
  * 
  * The registry store singleton and is able to act as a factory.
- * All singleton and factory are declared in spring.xml
+ * The login persistence service graph is initialized here.
  * 
  * There is no risk to call the load method more than one time.
  * The first call initialize all singleton by IoC mechanism.
@@ -59,64 +61,75 @@ import com.mchange.v2.c3p0.PooledDataSource;
  */
 public class L2Registry
 {
-	private static final Log _log = LogFactory.getLog(L2Registry.class);
-	
-	private static ApplicationContext __ctx = null;
+	private static LoginDataSource __loginDataSource;
+	private static AccountsServices __accountsServices;
+	private static GameserversServices __gameserversServices;
+	private static GameserversServices __gameserversServicesXml;
 	
 	/**
-	 * Load registry from spring
-	 * The registry is a facade behind ApplicationContext from spring.
+	 * Initialize the login data source and its service graph once.
 	 */
-	public static void loadRegistry(String[] paths)
+	public static synchronized void loadRegistry()
 	{
+		if (__loginDataSource != null)
+		{
+			return;
+		}
 		try
 		{
-			// Load the context if it is not already loaded
-			if (__ctx == null)
-			{
-				// init properties for spring
-				__ctx = new ClassPathXmlApplicationContext(paths);
-			}
+			LoginDataSource loginDataSource = new LoginDataSource();
+			JdbcTransactions transactions = new JdbcTransactions(loginDataSource.getDataSource());
+			AccountsDAO accountsDAO = new AccountsDAOJdbc(transactions);
+			GameserversDAO gameserversDAO = new GameserversDAOJdbc(transactions);
+			AccountsServices accountsServices = new AccountsServices();
+			accountsServices.setAccountsDAO(accountsDAO);
+			GameserversServices gameserversServices = new GameserversServices();
+			gameserversServices.setGameserversDAO(gameserversDAO);
+			GameserversServices gameserversServicesXml = new GameserversServices();
+			gameserversServicesXml.setGameserversDAO(new GameserversDAOXml());
+
+			__loginDataSource = loginDataSource;
+			__accountsServices = accountsServices;
+			__gameserversServices = gameserversServices;
+			__gameserversServicesXml = gameserversServicesXml;
+			Runtime.getRuntime().addShutdownHook(new Thread(loginDataSource::close, "login-database-pool-shutdown"));
 		}
 		catch (RuntimeException e)
 		{
-			throw new Error("Unable to load registry, check that you update xml file in config folder !", e);
+			throw new IllegalStateException("Unable to initialize login registry", e);
 		}
 	}
-	
-	public static void loadRegistry(String path)
+
+	public static AccountsServices getAccountsServices()
 	{
-		loadRegistry(new String[] { path });
+		ensureInitialized();
+		return __accountsServices;
 	}
-	
-	/**
-	 * Retrieve a bean from registry
-	 * @param bean - the bean name
-	 * @return the Object
-	 */
-	public static Object getBean(String bean)
+
+	public static GameserversServices getGameserversServices()
 	{
-		if (__ctx == null)
+		ensureInitialized();
+		return __gameserversServices;
+	}
+
+	public static GameserversServices getGameserversServicesXml()
+	{
+		ensureInitialized();
+		return __gameserversServicesXml;
+	}
+
+	public static DataSource getDataSource()
+	{
+		ensureInitialized();
+		return __loginDataSource.getDataSource();
+	}
+
+	private static void ensureInitialized()
+	{
+		if (__loginDataSource == null)
 		{
-			_log.fatal("Registry was not initialized.");
-			return null;
+			throw new IllegalStateException("Login registry has not been initialized");
 		}
-		try
-		{
-			Object o = __ctx.getBean(bean);
-			return o;
-		}
-		catch (NoSuchBeanDefinitionException e)
-		{
-			_log.fatal("No such bean (" + bean + ") in context." + e.getMessage(), e);
-			return null;
-		}
-		catch (BeansException e)
-		{
-			_log.fatal("Unable to load bean : " + bean + " = " + e.getMessage(), e);
-			return null;
-		}
-		
 	}
 	
 	// =========================================================
@@ -185,42 +198,24 @@ public class L2Registry
 		{
 			try
 			{
-				con = ((DataSource)__ctx.getBean("dataSource")).getConnection();
-			}
-			catch (BeansException e)
-			{
-				_log.fatal("Unable to retrieve connection : " + e.getMessage(), e);
+				con = getDataSource().getConnection();
 			}
 			catch (SQLException e)
 			{
-				_log.fatal("Unable to retrieve connection : " + e.getMessage(), e);
+				throw new IllegalStateException("Unable to retrieve login database connection", e);
 			}
 		}
 		return con;
 	}
 	
-	public static ApplicationContext getApplicationContext()
-	{
-		return __ctx;
-	}
-	
-	/**
-	 * Give ability to overload application context (for test purpose)
-	 * @param ctx
-	 */
-	public static void setApplicationContext(ApplicationContext ctx)
-	{
-		__ctx = ctx;
-	}
-	
 	public int getBusyConnectionCount() throws SQLException
 	{
-		return ((PooledDataSource)__ctx.getBean("dataSource")).getNumBusyConnectionsDefaultUser();
+		return ((PooledDataSource)getDataSource()).getNumBusyConnectionsDefaultUser();
 	}
-	
+
 	public int getIdleConnectionCount() throws SQLException
 	{
-		return ((PooledDataSource)__ctx.getBean("dataSource")).getNumIdleConnectionsDefaultUser();
+		return ((PooledDataSource)getDataSource()).getNumIdleConnectionsDefaultUser();
 	}
 	
 }
