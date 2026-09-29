@@ -19,6 +19,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javolution.util.FastList;
 
@@ -27,10 +28,12 @@ import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.ItemTable;
 import com.l2jfree.gameserver.gameobjects.L2Object;
 import com.l2jfree.gameserver.gameobjects.L2Player;
+import com.l2jfree.gameserver.idfactory.IdFactory;
 import com.l2jfree.gameserver.model.TradeList;
 import com.l2jfree.gameserver.model.TradeList.TradeItem;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
 import com.l2jfree.gameserver.model.items.L2ItemInstance.ItemLocation;
+import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.model.items.templates.L2EtcItemType;
 import com.l2jfree.gameserver.network.packets.server.InventoryUpdate;
 import com.l2jfree.gameserver.network.packets.server.ItemList;
@@ -50,6 +53,42 @@ public class PlayerInventory extends Inventory
 	public PlayerInventory(L2Player owner)
 	{
 		_owner = owner;
+	}
+
+	@Override
+	public synchronized L2ItemInstance addWearItem(String process, int itemId, L2Player actor, L2Object reference)
+	{
+		return super.addWearItem(process, itemId, actor, reference);
+	}
+
+	@Override
+	public synchronized void equipItem(L2ItemInstance item)
+	{
+		super.equipItem(item);
+	}
+
+	@Override
+	public synchronized L2ItemInstance[] equipItemAndRecord(L2ItemInstance item)
+	{
+		return super.equipItemAndRecord(item);
+	}
+
+	@Override
+	public synchronized L2ItemInstance unEquipItemInSlot(int slot)
+	{
+		return super.unEquipItemInSlot(slot);
+	}
+
+	@Override
+	public synchronized L2ItemInstance[] unEquipItemInSlotAndRecord(int slot)
+	{
+		return super.unEquipItemInSlotAndRecord(slot);
+	}
+
+	@Override
+	public synchronized L2ItemInstance[] unEquipItemInBodySlotAndRecord(int slot)
+	{
+		return super.unEquipItemInBodySlotAndRecord(slot);
 	}
 	
 	@Override
@@ -355,7 +394,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the new item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance addItem(String process, L2ItemInstance item, L2Player actor, L2Object reference)
+	public synchronized L2ItemInstance addItem(String process, L2ItemInstance item, L2Player actor, L2Object reference)
 	{
 		item = super.addItem(process, item, actor, reference);
 		
@@ -378,7 +417,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the new item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance addItem(String process, int itemId, long count, L2Player actor, L2Object reference)
+	public synchronized L2ItemInstance addItem(String process, int itemId, long count, L2Player actor, L2Object reference)
 	{
 		L2ItemInstance item = super.addItem(process, itemId, count, actor, reference);
 		
@@ -424,7 +463,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the destroyed item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance destroyItem(String process, L2ItemInstance item, L2Player actor, L2Object reference)
+	public synchronized L2ItemInstance destroyItem(String process, L2ItemInstance item, L2Player actor, L2Object reference)
 	{
 		return this.destroyItem(process, item, item.getCount(), actor, reference);
 	}
@@ -438,7 +477,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the destroyed item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance destroyItem(String process, L2ItemInstance item, long count, L2Player actor,
+	public synchronized L2ItemInstance destroyItem(String process, L2ItemInstance item, long count, L2Player actor,
 			L2Object reference)
 	{
 		item = super.destroyItem(process, item, count, actor, reference);
@@ -462,7 +501,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the destroyed item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance destroyItem(String process, int objectId, long count, L2Player actor, L2Object reference)
+	public synchronized L2ItemInstance destroyItem(String process, int objectId, long count, L2Player actor, L2Object reference)
 	{
 		L2ItemInstance item = getItemByObjectId(objectId);
 		if (item == null)
@@ -482,7 +521,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the destroyed item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance destroyItemByItemId(String process, int itemId, long count, L2Player actor,
+	public synchronized L2ItemInstance destroyItemByItemId(String process, int itemId, long count, L2Player actor,
 			L2Object reference)
 	{
 		L2ItemInstance item = getItemByItemId(itemId);
@@ -502,7 +541,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the destroyed item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance dropItem(String process, L2ItemInstance item, L2Player actor, L2Object reference)
+	public synchronized L2ItemInstance dropItem(String process, L2ItemInstance item, L2Player actor, L2Object reference)
 	{
 		item = super.dropItem(process, item, actor, reference);
 		
@@ -525,7 +564,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the destroyed item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance dropItem(String process, int objectId, long count, L2Player actor, L2Object reference)
+	public synchronized L2ItemInstance dropItem(String process, int objectId, long count, L2Player actor, L2Object reference)
 	{
 		L2ItemInstance item = super.dropItem(process, objectId, count, actor, reference);
 		
@@ -568,6 +607,59 @@ public class PlayerInventory extends Inventory
 	{
 		super.refreshWeight();
 		getOwner().refreshOverloaded();
+	}
+
+	/** Publishes item rows already committed by a multisell JDBC transaction. */
+	public void publishCommittedMultisell(Map<L2ItemInstance, Long> finalCounts, List<L2ItemInstance> products)
+	{
+		synchronized (itemSetLock())
+		{
+			for (L2ItemInstance item : finalCounts.keySet())
+			{
+				if (!_items.contains(item))
+					throw new IllegalStateException("Committed multisell item is missing: " + item.getObjectId());
+			}
+			for (Map.Entry<L2ItemInstance, Long> change : finalCounts.entrySet())
+			{
+				L2ItemInstance item = change.getKey();
+				long after = change.getValue();
+				if (after == item.getCount())
+					continue;
+				if (after == 0)
+				{
+					if (!removeItem(item))
+						throw new IllegalStateException("Committed multisell item is missing: " + item.getObjectId());
+					item.setCount(0);
+					item.setOwnerId(0);
+					item.setLocation(ItemLocation.VOID);
+					item.setLastChange(L2ItemInstance.REMOVED);
+					item.markStoredAfterExchange(false);
+					L2World.getInstance().removeObject(item);
+					IdFactory.getInstance().releaseId(item.getObjectId());
+				}
+				else
+				{
+					item.setCount(after);
+					item.setLastChange(L2ItemInstance.MODIFIED);
+					item.markStoredAfterExchange(true);
+				}
+			}
+			for (L2ItemInstance product : products)
+			{
+				product.setOwnerId(getOwnerId());
+				product.setLocation(ItemLocation.INVENTORY);
+				product.setLastChange(L2ItemInstance.ADDED);
+				addItem(product);
+				product.markStoredAfterExchange(true);
+				L2World.getInstance().storeObject(product);
+				product.scheduleLifeTimeTask();
+				if (product.getItemId() == ADENA_ID)
+					_adena = product;
+				else if (product.getItemId() == ANCIENT_ADENA_ID)
+					_ancientAdena = product;
+			}
+		}
+		refreshWeight();
 	}
 	
 	/**

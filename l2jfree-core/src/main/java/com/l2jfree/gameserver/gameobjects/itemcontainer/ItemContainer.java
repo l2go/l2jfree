@@ -353,7 +353,7 @@ public abstract class ItemContainer
 	 * @param reference : L2Object Object referencing current action like NPC selling item or previous item in transformation
 	 * @return L2ItemInstance corresponding to the new item or the updated item in inventory
 	 */
-	public L2ItemInstance transferItem(String process, int objectId, long count, ItemContainer target,
+	public synchronized L2ItemInstance transferItem(String process, int objectId, long count, ItemContainer target,
 			L2Player actor, L2Object reference)
 	{
 		if (target == null)
@@ -558,7 +558,7 @@ public abstract class ItemContainer
 	 * Adds item to inventory for further adjustments.
 	 * @param item : L2ItemInstance to be added from inventory
 	 */
-	protected void addItem(L2ItemInstance item)
+	protected synchronized void addItem(L2ItemInstance item)
 	{
 		_items.add(item);
 	}
@@ -567,9 +567,15 @@ public abstract class ItemContainer
 	 * Removes item from inventory for further adjustments.
 	 * @param item : L2ItemInstance to be removed from inventory
 	 */
-	protected boolean removeItem(L2ItemInstance item)
+	protected synchronized boolean removeItem(L2ItemInstance item)
 	{
 		return _items.remove(item);
+	}
+
+	/** Coordinates a prepared exchange with additions and removals in this container. */
+	public Object itemSetLock()
+	{
+		return this;
 	}
 	
 	/**

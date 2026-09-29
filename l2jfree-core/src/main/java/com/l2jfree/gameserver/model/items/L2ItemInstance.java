@@ -204,6 +204,21 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		_loc = ItemLocation.VOID;
 		_mana = _item.getDuration();
 	}
+
+	/** Creates a product without publishing or scheduling it before the exchange commits. */
+	public static L2ItemInstance prepareForMultisell(int objectId, L2Item template)
+	{
+		L2ItemInstance item = new L2ItemInstance(objectId, template);
+		item._time = template.getTime() == -1 ? -1 : System.currentTimeMillis() + template.getTime() * 60000L;
+		return item;
+	}
+
+	/** Attributes are persisted by the exchange's JDBC transaction. */
+	public void setPreparedMultisellAttributes(L2Augmentation augmentation, Elementals elementals)
+	{
+		_augmentation = augmentation;
+		_elementals = elementals;
+	}
 	
 	/**
 	 * Sets the ownerID of the item
@@ -296,7 +311,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	* Sets the quantity of the item.<BR><BR>
 	* @param count the new count to set
 	*/
-	public void setCount(long count)
+	public synchronized void setCount(long count)
 	{
 		if (getCount() == count)
 		{
@@ -335,7 +350,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	 * @param reference :
 	 *            L2Object Object referencing current action like NPC selling item or previous item in transformation
 	 */
-	public void changeCount(String process, long count, L2Player creator, L2Object reference)
+	public synchronized void changeCount(String process, long count, L2Player creator, L2Object reference)
 	{
 		if (count == 0)
 			return;
@@ -1280,22 +1295,32 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		@Override
 		public void execute(Connection con)
 		{
-			switch (getUpdateMode(true))
+			synchronized (L2ItemInstance.this)
 			{
-				case INSERT:
-					insertIntoDb(con);
-					break;
-				
-				case UPDATE:
-					updateInDb(con);
-					break;
-				
-				case REMOVE:
-					removeFromDb(con);
-					break;
+				switch (getUpdateMode(true))
+				{
+					case INSERT:
+						insertIntoDb(con);
+						break;
+
+					case UPDATE:
+						updateInDb(con);
+						break;
+
+					case REMOVE:
+						removeFromDb(con);
+						break;
+				}
 			}
 		}
 	};
+
+	/** Records a successful synchronous exchange write before queued writers inspect this item. */
+	public synchronized void markStoredAfterExchange(boolean exists)
+	{
+		_existsInDb = exists;
+		_storedInDb = true;
+	}
 	
 	private UpdateMode getUpdateMode(boolean force)
 	{
