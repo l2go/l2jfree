@@ -14,6 +14,9 @@
  */
 package com.l2jfree.gameserver.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
@@ -204,6 +207,24 @@ public class TradeList
 			return addCapacityRequirement(total, count, 1);
 		return inventory.getItemByItemId(item.getItemId()) == null
 			? addCapacityRequirement(total, 1, 1) : total;
+	}
+
+	static boolean hasRepeatedObjectIds(ItemRequest[] items)
+	{
+		Set<Integer> objectIds = new HashSet<Integer>();
+		for (ItemRequest item : items)
+			if (!objectIds.add(item.getObjectId()))
+				return true;
+		return false;
+	}
+
+	static void settlePrivateStoreSale(PlayerInventory buyerInventory, PlayerInventory ownerInventory,
+			long totalPrice, long deliveredPrice, L2Player buyer, L2Player owner)
+	{
+		if (totalPrice > deliveredPrice)
+			buyerInventory.addAdena("PrivateStore", totalPrice - deliveredPrice, buyer, owner);
+		if (deliveredPrice > 0)
+			ownerInventory.addAdena("PrivateStore", deliveredPrice, owner, buyer);
 	}
 
 	public TradeList(L2Player owner)
@@ -761,7 +782,7 @@ public class TradeList
 	 */
 	public synchronized boolean privateStoreBuy(L2Player player, ItemRequest[] items)
 	{
-		if (_locked)
+		if (_locked || hasRepeatedObjectIds(items))
 			return false;
 		
 		if (!validate())
@@ -873,11 +894,9 @@ public class TradeList
 		
 		final L2ItemInstance adenaItem = playerInventory.getAdenaInstance();
 		playerInventory.reduceAdena("PrivateStore", totalPrice, player, _owner);
-		playerIU.addItem(adenaItem);
-		ownerInventory.addAdena("PrivateStore", totalPrice, _owner, player);
-		ownerIU.addItem(ownerInventory.getAdenaInstance());
 		
 		boolean ok = true;
+		long deliveredPrice = 0;
 		
 		// Transfer items
 		for (ItemRequest item : items)
@@ -904,6 +923,7 @@ public class TradeList
 				ok = false;
 				break;
 			}
+			deliveredPrice += item.getCount() * item.getPrice();
 			removeItem(item.getObjectId(), -1, item.getCount());
 			
 			// Add changes to inventory update packets
@@ -945,6 +965,15 @@ public class TradeList
 			}
 		}
 		
+		// Settle only transferred lines; refund the rest if a transfer failed.
+		settlePrivateStoreSale(playerInventory, ownerInventory, totalPrice, deliveredPrice, player, _owner);
+		L2ItemInstance buyerAdena = playerInventory.getAdenaInstance();
+		if (buyerAdena == null)
+			playerIU.addRemovedItem(adenaItem);
+		else
+			playerIU.addItem(buyerAdena);
+		ownerIU.addItem(ownerInventory.getAdenaInstance());
+
 		// Send inventory update packet
 		_owner.sendPacket(ownerIU);
 		player.sendPacket(playerIU);
