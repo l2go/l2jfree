@@ -137,8 +137,10 @@ public final class AccountManager extends L2AutoInitialization
 					acc.setBirthMonth(birth[1]);
 					acc.setBirthDay(birth[2]);
 				}
-				else if (id.equals("-gs") || id.equals("-a"))
+				else if (id.equals("-gs"))
 					acc.setLastServerId(parseInt(st.nextToken(), id));
+				else if (id.equals("-a"))
+					acc.setAccessLevel(Integer.valueOf(parseInt(st.nextToken(), id)));
 			}
 			try
 			{

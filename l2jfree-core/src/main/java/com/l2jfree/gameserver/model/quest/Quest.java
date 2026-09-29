@@ -996,7 +996,7 @@ public class Quest extends ManagedScript
 			statement.setString(1, getName());
 			statement.setString(2, var);
 			ResultSet rs = statement.executeQuery();
-			if (rs.first())
+			if (rs.next())
 				result = rs.getString(1);
 			rs.close();
 			statement.close();

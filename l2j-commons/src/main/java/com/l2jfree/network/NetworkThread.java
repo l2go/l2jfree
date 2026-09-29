@@ -105,11 +105,15 @@ public abstract class NetworkThread extends Thread
 	
 	protected final byte[] read()
 	{
+		final BufferedInputStream in = _in;
+		if (in == null)
+			return null;
+
 		int length = -1;
 		try
 		{
-			final int lengthLo = _in.read();
-			final int lengthHi = _in.read();
+			final int lengthLo = in.read();
+			final int lengthHi = in.read();
 			
 			length = lengthHi * 256 + lengthLo;
 		}
@@ -137,7 +141,7 @@ public abstract class NetworkThread extends Thread
 			int newBytes = -1;
 			try
 			{
-				newBytes = _in.read(data, receivedBytes, data.length - receivedBytes);
+				newBytes = in.read(data, receivedBytes, data.length - receivedBytes);
 			}
 			catch (SocketException e)
 			{
