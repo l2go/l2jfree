@@ -14,11 +14,9 @@
  */
 package com.l2jfree.gameserver.idfactory;
 
-import gnu.trove.TIntArrayList;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -283,28 +281,13 @@ public abstract class IdFactory
 		}
 	}
 	
-	private static final String[] USED_OBJECT_ID_QUERIES = {
-		"SELECT charId FROM characters",
-		"SELECT object_id FROM items",
-		"SELECT clan_id FROM clan_data",
-		"SELECT crest_id FROM clan_data",
-		"SELECT crest_large_id FROM clan_data",
-		"SELECT ally_crest_id FROM clan_data",
-		"SELECT id FROM couples",
-		"SELECT object_id FROM itemsonground"
-	};
-
-	/**
-	 * @return all persisted object ids
-	 * @throws SQLException if a query fails
-	 */
 	protected final int[] extractUsedObjectIDTable() throws SQLException
 	{
 		Connection con = null;
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
-			return readUsedObjectIds(con);
+			return PersistedObjectIds.read(con);
 		}
 		finally
 		{
@@ -312,28 +295,6 @@ public abstract class IdFactory
 		}
 	}
 	
-	static int[] readUsedObjectIds(Connection con) throws SQLException
-	{
-		TIntArrayList ids = new TIntArrayList();
-		try (Statement statement = con.createStatement())
-		{
-			for (String query : USED_OBJECT_ID_QUERIES)
-			{
-				try (ResultSet rows = statement.executeQuery(query))
-				{
-					while (rows.next())
-					{
-						int id = rows.getInt(1);
-						if (id > 0)
-							ids.add(id);
-					}
-				}
-			}
-		}
-		ids.sort();
-		return ids.toNativeArray();
-	}
-
 	public boolean isInitialized()
 	{
 		return _initialized;

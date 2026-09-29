@@ -64,7 +64,7 @@ class IdFactoryDatabaseTest
 			statement.executeUpdate("INSERT INTO itemsonground VALUES (" + (first + 8) + ")");
 			statement.executeUpdate("INSERT INTO clan_data VALUES (" + (first + 9) + ", 0, NULL, 0)");
 
-			assertThat(IdFactory.readUsedObjectIds(con)).containsExactly(
+			assertThat(PersistedObjectIds.read(con)).containsExactly(
 					first + 1, first + 2, first + 3, first + 4, first + 5,
 					first + 6, first + 7, first + 8, first + 9);
 		}
@@ -82,7 +82,7 @@ class IdFactoryDatabaseTest
 			statement.executeUpdate("UPDATE clan_data SET crest_id = NULL");
 			statement.executeUpdate("DELETE FROM couples");
 
-			assertThat(IdFactory.readUsedObjectIds(con)).containsExactly(first + 1);
+			assertThat(PersistedObjectIds.read(con)).containsExactly(first + 1);
 		}
 	}
 
