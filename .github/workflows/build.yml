@@ -78,4 +78,4 @@ jobs:
           gh release create "${{ github.ref_name }}" release-artifacts/* \
             --title "${{ github.ref_name }}" \
             --generate-notes \
-            --notes "GPLv3 archival fork — build tooling only, no gameplay changes. Portable JVM distributions with Java 8 bytecode, built by the Microsoft OpenJDK 25 CI package job. Use SHA256SUMS.txt to verify the downloaded archives."
+            --notes "GPLv3 archival fork. This release includes correctness fixes and test and build tooling updates; it adds no new gameplay features. Portable JVM distributions with Java 8 bytecode, built by the Microsoft OpenJDK 25 CI package job. Use SHA256SUMS.txt to verify the downloaded archives."
