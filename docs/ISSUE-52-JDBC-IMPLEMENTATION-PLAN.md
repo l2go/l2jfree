@@ -1,37 +1,48 @@
-# Issue #52: replace login ORM with JDBC
+# Issue #52: login ORM removal and both-server JDBC qualification
 
 Implementation handoff for GPT-6 Luna. The agreed decision is to remove Spring
-2.0.2 and Hibernate 3.2.2 from the login module and use JDBC for its two
-database tables. Work only on [issue #52](https://github.com/l2go/l2jfree/issues/52)
-in this slice. The broader sequence is in
+2.0.2 and Hibernate 3.2.2 from the login module and use JDBC for its `accounts`
+and `gameservers` tables. Issue #52 also covers startup and database
+qualification of the game server. Its persistence already uses JDBC through
+`L2DatabaseFactory`; do not describe it as an ORM migration. Work only on
+[issue #52](https://github.com/l2go/l2jfree/issues/52) in this slice. The
+broader sequence is in
 [the infrastructure roadmap](2026-Q4-INFRASTRUCTURE-MODERNIZATION.md).
 
 ## Target and boundaries
 
-- Make `register_gameserver.bat`, `loginserver_launcher.bat`, and
-  `account_manager.bat` start on the installed Microsoft JDK 25 without
-  `--add-opens` or another JDK. The target machine has no other JDK; do not
-  ask the maintainer to confirm its version again.
+- Make `register_gameserver.bat`, `loginserver_launcher.bat`,
+  `account_manager.bat`, and `gameserver_launcher.bat` start on the installed
+  Microsoft JDK 25 without `--add-opens` or another JDK. The target machine has
+  no other JDK; do not ask the maintainer to confirm its version again.
 - Preserve the existing `accounts` and `gameservers` tables, public service
   behavior, login protocol, password format, and released Java 8 bytecode
   target. Do not perform a schema migration in this issue.
-- Keep c3p0 as the data source for this slice. Pool replacement, Jython, ECJ,
-  and game server dependencies belong to later issues.
+- Keep c3p0 as the data source for this slice. Remove the dependency on
+  `connection_test_table` from both c3p0 pools by using a table-independent
+  connection test query. Broader pool replacement, Jython, and ECJ belong to
+  later issues.
 - Keep the XML server-name catalog (`servername.xml`) distinct from the
   `gameservers` database table. It is not an ORM mapping.
 - Do not close #52 after a successful build alone. Target Windows 10, JDK 25,
   MySQL 8.4, and the assembled release image require runtime qualification.
 
-## Current seams
+## Original migration seams
 
 | Concern | Current location | Replacement responsibility |
 |---|---|---|
 | Startup wiring | `L2Registry` and `src/main/resources/spring.xml` | Construct one pool, two JDBC DAOs, their services, and the XML catalog; initialize once and close the pool on shutdown. Keep clear startup causes. |
 | Account persistence | `AccountsDAOHib`, `BaseRootDAOHib`, `Accounts.hbm.xml` | Parameterized JDBC over the existing `AccountsDAO` contract and all nine SQL columns. |
 | Game server persistence | `GameserversDAOHib`, `BaseRootDAOHib`, `Gameservers.hbm.xml` | Parameterized JDBC over `GameserversDAO`, ordered by `server_id` where the old DAO orders by id. |
+| Game server database pool | `L2DatabaseFactory` | Retain the existing JDBC DAO layer and ensure c3p0 startup/connection checks do not require a synthetic table or DDL permission. |
 | Transactions | Spring `TransactionInterceptor` on `AccountsServices` and `GameserversServices` | Explicit transaction boundaries for operations containing multiple SQL statements; commit on success and roll back on failure. |
 | Server names | `GameserversDAOXml` | Retain the catalog, but remove its Spring exception type and account for its dom4j dependency. |
 | Packaging | `l2jfree-login/pom.xml`, `distribution.xml` | Remove the ORM stack and check the actual ZIP contents, including transitive jars. |
+
+PR #53 removed the login ORM. The game server already used JDBC and had no
+Hibernate/Spring persistence dependency. PR #55 changed both c3p0 pools to use
+`SELECT 1` instead of relying on `connection_test_table`. Only target-host
+qualification remains before #52 can close.
 
 `L2Registry.getBean` is used by `LoginManager`, `GameServerManager`, and
 `AccountManager`; the three startup paths load it through `loadRegistry`.
@@ -111,10 +122,10 @@ existing `servername.xml` format. Inspect the effective dependency tree and
 the distribution ZIP; the packaged `libs` directory must not retain Spring 2,
 Hibernate 3, CGLIB, or obsolete cache jars from this stack.
 
-### 5. Qualify and deliver
+### 5. Qualify both servers and deliver
 
-First compile and inspect the packaged login ZIP. Then verify against a
-disposable copy of the repository SQL schema and MySQL 8.4:
+Build through GitHub Actions and inspect the assembled release ZIPs. Then
+verify against a disposable copy of the repository SQL schemas and MySQL 8.4:
 
 1. Start `register_gameserver.bat` on Microsoft JDK 25 without module-opening
    flags; list server names, register an id, restart the utility, and confirm
@@ -124,9 +135,12 @@ disposable copy of the repository SQL schema and MySQL 8.4:
 3. Start the login server and account manager from the assembled image. Create,
    read, update, list, and delete an account; verify the password format,
    birthday fields, last active time, access level, and last server id.
-4. Exercise login with an existing account and auto-create behavior where
-   enabled. Restart and confirm persisted state, then check pool shutdown.
-5. Confirm the ZIP contains no old ORM jars and record the exact JDK, MySQL,
+4. Start the game server from the same image and verify database initialization,
+   connection to the login server, and normal startup without
+   `connection_test_table` or extra DDL privileges.
+5. Exercise login with an existing account and auto-create behavior where
+   enabled. Restart both servers and confirm persisted state and pool shutdown.
+6. Confirm the ZIP contains no old ORM jars and record the exact JDK, MySQL,
    archive checksum, and observed results in the issue or release notes.
 
 If target Windows qualification is unavailable, leave #52 open and report the
@@ -134,15 +148,7 @@ precise unverified checks. Do not claim the issue is fixed based on CI alone.
 
 ## Existing work and handoff rules
 
-The workspace already has local, uncommitted changes: README and the
-infrastructure roadmap, plus a one-line `L2Registry` diagnostic improvement.
-Preserve them and inspect `git status` before editing. Untracked `.DS_Store`
-files and `.mvn/wrapper/maven-wrapper.jar` also predate this handoff; do not
-delete or add them casually. The Java files use CRLF, so account for that when
-reviewing whitespace checks.
-
-Keep the implementation scoped to #52 and explain any necessary deviations in
-the PR. Report what was built and run, what was observed, and what remains for
-target-host qualification. Do not advance the later infrastructure slices in
-this PR. Run every `gh` command outside the sandbox (`require_escalated`);
-GitHub CLI access fails from the sandbox in this workspace.
+Keep issue #52 open until the exact release image passes target Windows/MySQL
+qualification. Do not close it based on CI alone. Run every `gh` command
+outside the sandbox (`require_escalated`); GitHub CLI access fails from the
+sandbox in this workspace.
