@@ -189,10 +189,6 @@ final class MultiSellPersistence
 			}
 			throw failure;
 		}
-		finally
-		{
-			connection.setAutoCommit(true);
-		}
 	}
 
 	private static void deleteByItemId(Connection connection, String table, String column, int objectId)

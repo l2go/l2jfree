@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.l2jfree.gameserver.gameobjects.itemcontainer.PlayerInventory;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
 
 class MultiSellChooseIngredientTest
@@ -91,6 +92,19 @@ class MultiSellChooseIngredientTest
 
 		assertThat(MultiSellChoose.hasRequiredIngredientCount(new L2ItemInstance[] { first, second },
 				Long.MAX_VALUE)).isTrue();
+	}
+
+	@Test
+	@DisplayName("temporary wear copies do not count as a persistent reward stack")
+	void ignoresWearStackForProductCapacity()
+	{
+		PlayerInventory inventory = mock(PlayerInventory.class);
+		L2ItemInstance worn = item(0);
+		when(worn.isStackable()).thenReturn(true);
+		when(worn.isWear()).thenReturn(true);
+		when(inventory.getAllItemsByItemId(57)).thenReturn(new L2ItemInstance[] { worn });
+
+		assertThat(MultiSellChoose.hasPersistentStack(inventory, 57)).isFalse();
 	}
 
 	private static L2ItemInstance item(int enchantment)

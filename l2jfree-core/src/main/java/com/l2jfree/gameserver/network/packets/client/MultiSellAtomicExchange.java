@@ -298,7 +298,15 @@ final class MultiSellAtomicExchange
 						stagedStack.setCount(after);
 						continue;
 					}
-					L2ItemInstance existing = _inventory.getItemByItemId(product.getItemId());
+					L2ItemInstance existing = null;
+					for (L2ItemInstance candidate : _inventory.getAllItemsByItemId(product.getItemId()))
+					{
+						if (!candidate.isWear() && candidate.isStackable())
+						{
+							existing = candidate;
+							break;
+						}
+					}
 					if (existing != null)
 					{
 						Long prior = finalCounts.get(existing);
@@ -372,11 +380,27 @@ final class MultiSellAtomicExchange
 			for (TreasuryChange change : treasury)
 				persistence.adjustCastleTreasury(change.castle.getCastleId(), change.before, change.after);
 
-			try (Connection connection = L2DatabaseFactory.getInstance().getConnection())
+			Connection connection = null;
+			try
 			{
+				connection = L2DatabaseFactory.getInstance().getConnection();
 				persistence.commit(connection);
+				committed = true;
 			}
-			committed = true;
+			finally
+			{
+				if (connection != null)
+				{
+					try
+					{
+						connection.close();
+					}
+					catch (SQLException closeFailure)
+					{
+						LOG.warn("Could not close multisell connection", closeFailure);
+					}
+				}
+			}
 			_inventory.publishCommittedMultisell(finalCounts, stagedProducts);
 			if (reputationDebit > 0)
 				clan.setReputationScore((int)(clan.getReputationScore() - reputationDebit), false);

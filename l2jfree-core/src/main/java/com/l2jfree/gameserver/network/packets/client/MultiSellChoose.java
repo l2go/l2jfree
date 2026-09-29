@@ -87,6 +87,14 @@ public final class MultiSellChoose extends L2ClientPacket
 		return eligible.length >= required;
 	}
 
+	static boolean hasPersistentStack(PlayerInventory inventory, int itemId)
+	{
+		for (L2ItemInstance item : inventory.getAllItemsByItemId(itemId))
+			if (!item.isWear() && item.isStackable())
+				return true;
+		return false;
+	}
+
 	@Override
 	protected void readImpl()
 	{
@@ -162,29 +170,43 @@ public final class MultiSellChoose extends L2ClientPacket
 		
 		MultiSellEntry entry = prepareEntry(merchant, templateEntry, applyTaxes, maintainEnchantment, enchantment);
 		
-		int slots = 0;
-		int weight = 0;
+		long slots = 0;
+		long weight = 0;
 		for (MultiSellIngredient e : entry.getProducts())
 		{
 			final L2Item template = ItemTable.getInstance().getTemplate(e.getItemId());
 			if (template == null)
 				continue;
-			
-			if (!template.isStackable())
-				slots += e.getItemCount() * _amount;
-			else if (player.getInventory().getItemByItemId(e.getItemId()) == null)
-				slots++;
-			
-			weight += e.getItemCount() * _amount * template.getWeight();
+			try
+			{
+				long count = Math.multiplyExact(e.getItemCount(), _amount);
+				if (count <= 0)
+					return;
+				if (!template.isStackable())
+					slots = Math.addExact(slots, count);
+				else if (!hasPersistentStack(inv, e.getItemId()))
+					slots = Math.addExact(slots, 1);
+				weight = Math.addExact(weight, Math.multiplyExact(count, template.getWeight()));
+			}
+			catch (ArithmeticException overflow)
+			{
+				sendPacket(SystemMessageId.YOU_HAVE_EXCEEDED_QUANTITY_THAT_CAN_BE_INPUTTED);
+				return;
+			}
 		}
-		
-		if (!inv.validateWeight(weight))
+		if (weight > Integer.MAX_VALUE || slots > Integer.MAX_VALUE)
+		{
+			sendPacket(SystemMessageId.YOU_HAVE_EXCEEDED_QUANTITY_THAT_CAN_BE_INPUTTED);
+			return;
+		}
+
+		if (!inv.validateWeight((int)weight))
 		{
 			sendPacket(SystemMessageId.WEIGHT_LIMIT_EXCEEDED);
 			return;
 		}
 		
-		if (!inv.validateCapacity(slots))
+		if (!inv.validateCapacity((int)slots))
 		{
 			sendPacket(SystemMessageId.SLOTS_FULL);
 			return;
