@@ -228,14 +228,18 @@ public class CreatureKnownList extends ObjectKnownList
 	
 	private long _lastUpdate;
 	
-	public synchronized final void updateKnownObjects()
+	public final void updateKnownObjects()
 	{
-		if (System.currentTimeMillis() - _lastUpdate < 100)
-			return;
+		final long now = System.currentTimeMillis();
+		synchronized (this)
+		{
+			if (now - _lastUpdate < 100)
+				return;
+			
+			_lastUpdate = now;
+		}
 		
 		tryRemoveObjects();
 		tryAddObjects(null);
-		
-		_lastUpdate = System.currentTimeMillis();
 	}
 }
