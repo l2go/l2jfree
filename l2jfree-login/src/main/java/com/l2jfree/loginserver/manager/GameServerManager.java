@@ -91,8 +91,8 @@ public class GameServerManager
 	{
 		// o Load DAO
 		// ---------
-		_gsServices = (GameserversServices)L2Registry.getBean("GameserversServices");
-		_gsServicesXml = (GameserversServices)L2Registry.getBean("GameserversServicesXml");
+		_gsServices = L2Registry.getGameserversServices();
+		_gsServicesXml = L2Registry.getGameserversServicesXml();
 		
 		// o Load Servers
 		// --------------
@@ -179,7 +179,10 @@ public class GameServerManager
 	public void registerServerOnDB(byte[] hexId, int id, String externalHost)
 	{
 		Gameservers gs = new Gameservers(id, HexUtil.hexToString(hexId), externalHost);
-		_gsServices.createGameserver(gs);
+		if (_gsServices.createGameserver(gs) != id)
+		{
+			throw new IllegalStateException("Unable to persist registered gameserver " + id);
+		}
 	}
 	
 	public String getServerNameById(int id)

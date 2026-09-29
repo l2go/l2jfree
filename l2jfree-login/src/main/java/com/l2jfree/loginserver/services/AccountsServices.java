@@ -21,11 +21,10 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.orm.ObjectRetrievalFailureException;
-
 import com.l2jfree.loginserver.beans.Accounts;
 import com.l2jfree.loginserver.dao.AccountsDAO;
+import com.l2jfree.loginserver.dao.LoginDataAccessException;
+import com.l2jfree.loginserver.dao.LoginObjectNotFoundException;
 import com.l2jfree.loginserver.services.exception.AccountModificationException;
 import com.l2jfree.tools.codec.Base64;
 
@@ -128,7 +127,7 @@ public class AccountsServices
 			if (_log.isDebugEnabled())
 				_log.info("Account " + acc.getLogin() + " has been updated.");
 		}
-		catch (DataAccessException e)
+		catch (LoginDataAccessException e)
 		{
 			throw new AccountModificationException("Unable to create account.", e);
 		}
@@ -143,20 +142,13 @@ public class AccountsServices
 	 */
 	public void changeAccountLevel(String account, String level) throws AccountModificationException
 	{
-		// Search account
-		// ---------------
-		Accounts acc = __accDAO.getAccountById(account);
-		
-		if (acc == null)
-			throw new AccountModificationException("Account " + account + " doesn't exist.");
-		
-		// Update account
-		// --------------
 		try
 		{
 			Integer iLevel = new Integer(level);
-			acc.setAccessLevel(iLevel);
-			__accDAO.createOrUpdate(acc);
+			if (!__accDAO.updateAccessLevel(account, iLevel.intValue()))
+			{
+				throw new AccountModificationException("Account " + account + " doesn't exist.");
+			}
 			if (_log.isDebugEnabled())
 				_log.debug("Account " + account + " has been updated.");
 		}
@@ -174,18 +166,10 @@ public class AccountsServices
 	 */
 	public void changeAccountLevel(String account, int level) throws AccountModificationException
 	{
-		// Search account
-		// ---------------
-		Accounts acc = __accDAO.getAccountById(account);
-		
-		if (acc == null)
+		if (!__accDAO.updateAccessLevel(account, level))
+		{
 			throw new AccountModificationException("Account " + account + " doesn't exist.");
-		
-		// Update account
-		// --------------
-		Integer iLevel = new Integer(level);
-		acc.setAccessLevel(iLevel);
-		__accDAO.update(acc);
+		}
 		if (_log.isDebugEnabled())
 			_log.debug("Account " + account + " has been updated.");
 	}
@@ -197,19 +181,15 @@ public class AccountsServices
 	 */
 	public void deleteAccount(String account) throws AccountModificationException
 	{
-		// Search and delete account
-		// ---------------
-		Accounts acc = null;
 		try
 		{
-			acc = __accDAO.getAccountById(account);
+			__accDAO.removeAccountById(account);
 		}
-		catch (ObjectRetrievalFailureException e)
+		catch (LoginObjectNotFoundException e)
 		{
 			throw new AccountModificationException("Unable to delete account : " + account
 					+ ". This account does not exist.");
 		}
-		__accDAO.removeAccount(acc);
 	}
 	
 	/**
@@ -233,15 +213,10 @@ public class AccountsServices
 			Accounts acc = __accDAO.getAccountById(id);
 			return acc;
 		}
-		catch (ObjectRetrievalFailureException e)
+		catch (LoginObjectNotFoundException e)
 		{
 			if (_log.isDebugEnabled())
 				_log.debug("Account not found in database: " + id, e);
-			return null;
-		}
-		catch (Exception e)
-		{
-			_log.warn("", e);
 			return null;
 		}
 	}
@@ -253,7 +228,7 @@ public class AccountsServices
 			__accDAO.getAccountById(accountName);
 			return true;
 		}
-		catch (ObjectRetrievalFailureException e)
+		catch (LoginObjectNotFoundException e)
 		{
 			return false;
 		}

@@ -40,7 +40,7 @@ public class GameServerRegister extends L2AutoInitialization
 		
 		// o Load registry
 		// ----------------
-		L2Registry.loadRegistry(new String[] { "spring.xml" });
+		L2Registry.loadRegistry();
 		
 		// Load Game server manager
 		// -------------------------

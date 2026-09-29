@@ -34,9 +34,9 @@ public final class LoginServer extends L2AutoInitialization
 		// ------------------
 		Config.load();
 		
-		// Initialize Application context (registry of beans)
-		// ---------------------------------------------------
-		L2Registry.loadRegistry(new String[] { "spring.xml" });
+		// Initialize JDBC services
+		// ------------------------
+		L2Registry.loadRegistry();
 		
 		// o Initialize LoginManager
 		// -------------------------
