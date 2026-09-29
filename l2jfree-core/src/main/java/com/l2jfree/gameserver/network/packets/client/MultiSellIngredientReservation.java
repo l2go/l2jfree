@@ -56,7 +56,7 @@ final class MultiSellIngredientReservation
 		for (L2ItemInstance item : inventory)
 		{
 			if (item != null && item.getCount() > 0 && !item.isEquipped() && !item.isWear())
-				_available.put(item, item.getCount());
+				_available.put(item, item.isStackable() ? item.getCount() : 1L);
 		}
 	}
 
@@ -86,7 +86,7 @@ final class MultiSellIngredientReservation
 		for (L2ItemInstance item : candidates)
 		{
 			long available = _available.get(item);
-			long taken = Math.min(remaining, item.isStackable() ? available : 1);
+			long taken = Math.min(remaining, available);
 			if (taken > 0)
 			{
 				staged.add(new Debit(item, taken));
