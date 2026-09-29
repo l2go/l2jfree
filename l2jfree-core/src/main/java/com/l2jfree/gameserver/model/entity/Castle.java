@@ -350,7 +350,7 @@ public class Castle extends Siegeable<Siege>
 	}
 	
 	/** Add amount to castle instance's treasury (warehouse), no tax paying. */
-	public boolean addToTreasuryNoTax(long amount)
+	public synchronized boolean addToTreasuryNoTax(long amount)
 	{
 		if (getOwnerId() <= 0)
 			return false;
@@ -938,6 +938,12 @@ public class Castle extends Siegeable<Siege>
 	public final long getTreasury()
 	{
 		return _treasury;
+	}
+
+	/** Publishes a treasury value already committed in the multisell transaction. */
+	public synchronized void publishCommittedTreasury(long value)
+	{
+		_treasury = value;
 	}
 	
 	public List<SeedProduction> getSeedProduction(int period)
