@@ -283,9 +283,20 @@ public abstract class IdFactory
 		}
 	}
 	
+	private static final String[] USED_OBJECT_ID_QUERIES = {
+		"SELECT charId FROM characters",
+		"SELECT object_id FROM items",
+		"SELECT clan_id FROM clan_data",
+		"SELECT crest_id FROM clan_data",
+		"SELECT crest_large_id FROM clan_data",
+		"SELECT ally_crest_id FROM clan_data",
+		"SELECT id FROM couples",
+		"SELECT object_id FROM itemsonground"
+	};
+
 	/**
-	 * @return
-	 * @throws SQLException
+	 * @return all persisted object ids
+	 * @throws SQLException if a query fails
 	 */
 	protected final int[] extractUsedObjectIDTable() throws SQLException
 	{
@@ -293,57 +304,7 @@ public abstract class IdFactory
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
-			
-			Statement statement = con.createStatement();
-			
-			ResultSet rset = null;
-			int count = 0;
-			
-			rset = statement.executeQuery("SELECT COUNT(*) FROM characters");
-			rset.next();
-			count += rset.getInt(1);
-			
-			rset = statement.executeQuery("SELECT COUNT(*) FROM items");
-			rset.next();
-			count += rset.getInt(1);
-			
-			rset = statement.executeQuery("SELECT COUNT(*) FROM clan_data");
-			rset.next();
-			count += rset.getInt(1);
-			
-			rset = statement.executeQuery("SELECT COUNT(*) FROM itemsonground");
-			rset.next();
-			count += rset.getInt(1);
-			
-			final TIntArrayList temp = new TIntArrayList(count);
-			
-			rset = statement.executeQuery("SELECT charId FROM characters");
-			while (rset.next())
-			{
-				temp.add(rset.getInt(1));
-			}
-			
-			rset = statement.executeQuery("SELECT object_id FROM items");
-			while (rset.next())
-			{
-				temp.add(rset.getInt(1));
-			}
-			
-			rset = statement.executeQuery("SELECT clan_id FROM clan_data");
-			while (rset.next())
-			{
-				temp.add(rset.getInt(1));
-			}
-			
-			rset = statement.executeQuery("SELECT object_id FROM itemsonground");
-			while (rset.next())
-			{
-				temp.add(rset.getInt(1));
-			}
-			
-			temp.sort();
-			
-			return temp.toNativeArray();
+			return readUsedObjectIds(con);
 		}
 		finally
 		{
@@ -351,6 +312,28 @@ public abstract class IdFactory
 		}
 	}
 	
+	static int[] readUsedObjectIds(Connection con) throws SQLException
+	{
+		TIntArrayList ids = new TIntArrayList();
+		try (Statement statement = con.createStatement())
+		{
+			for (String query : USED_OBJECT_ID_QUERIES)
+			{
+				try (ResultSet rows = statement.executeQuery(query))
+				{
+					while (rows.next())
+					{
+						int id = rows.getInt(1);
+						if (id > 0)
+							ids.add(id);
+					}
+				}
+			}
+		}
+		ids.sort();
+		return ids.toNativeArray();
+	}
+
 	public boolean isInitialized()
 	{
 		return _initialized;

@@ -27,6 +27,16 @@
 			<artifactId>l2jfree-scripting-engines</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-mysql</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<!-- Updating dependencies below is not necessary. -->
 		<dependency>
 			<groupId>org.schwering</groupId>
