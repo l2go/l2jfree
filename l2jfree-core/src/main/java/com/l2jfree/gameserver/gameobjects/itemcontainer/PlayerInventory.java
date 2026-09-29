@@ -54,6 +54,42 @@ public class PlayerInventory extends Inventory
 	{
 		_owner = owner;
 	}
+
+	@Override
+	public synchronized L2ItemInstance addWearItem(String process, int itemId, L2Player actor, L2Object reference)
+	{
+		return super.addWearItem(process, itemId, actor, reference);
+	}
+
+	@Override
+	public synchronized void equipItem(L2ItemInstance item)
+	{
+		super.equipItem(item);
+	}
+
+	@Override
+	public synchronized L2ItemInstance[] equipItemAndRecord(L2ItemInstance item)
+	{
+		return super.equipItemAndRecord(item);
+	}
+
+	@Override
+	public synchronized L2ItemInstance unEquipItemInSlot(int slot)
+	{
+		return super.unEquipItemInSlot(slot);
+	}
+
+	@Override
+	public synchronized L2ItemInstance[] unEquipItemInSlotAndRecord(int slot)
+	{
+		return super.unEquipItemInSlotAndRecord(slot);
+	}
+
+	@Override
+	public synchronized L2ItemInstance[] unEquipItemInBodySlotAndRecord(int slot)
+	{
+		return super.unEquipItemInBodySlotAndRecord(slot);
+	}
 	
 	@Override
 	public L2Player getOwner()
@@ -358,7 +394,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the new item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance addItem(String process, L2ItemInstance item, L2Player actor, L2Object reference)
+	public synchronized L2ItemInstance addItem(String process, L2ItemInstance item, L2Player actor, L2Object reference)
 	{
 		item = super.addItem(process, item, actor, reference);
 		
@@ -381,7 +417,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the new item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance addItem(String process, int itemId, long count, L2Player actor, L2Object reference)
+	public synchronized L2ItemInstance addItem(String process, int itemId, long count, L2Player actor, L2Object reference)
 	{
 		L2ItemInstance item = super.addItem(process, itemId, count, actor, reference);
 		
@@ -427,7 +463,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the destroyed item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance destroyItem(String process, L2ItemInstance item, L2Player actor, L2Object reference)
+	public synchronized L2ItemInstance destroyItem(String process, L2ItemInstance item, L2Player actor, L2Object reference)
 	{
 		return this.destroyItem(process, item, item.getCount(), actor, reference);
 	}
@@ -441,7 +477,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the destroyed item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance destroyItem(String process, L2ItemInstance item, long count, L2Player actor,
+	public synchronized L2ItemInstance destroyItem(String process, L2ItemInstance item, long count, L2Player actor,
 			L2Object reference)
 	{
 		item = super.destroyItem(process, item, count, actor, reference);
@@ -465,7 +501,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the destroyed item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance destroyItem(String process, int objectId, long count, L2Player actor, L2Object reference)
+	public synchronized L2ItemInstance destroyItem(String process, int objectId, long count, L2Player actor, L2Object reference)
 	{
 		L2ItemInstance item = getItemByObjectId(objectId);
 		if (item == null)
@@ -485,7 +521,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the destroyed item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance destroyItemByItemId(String process, int itemId, long count, L2Player actor,
+	public synchronized L2ItemInstance destroyItemByItemId(String process, int itemId, long count, L2Player actor,
 			L2Object reference)
 	{
 		L2ItemInstance item = getItemByItemId(itemId);
@@ -505,7 +541,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the destroyed item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance dropItem(String process, L2ItemInstance item, L2Player actor, L2Object reference)
+	public synchronized L2ItemInstance dropItem(String process, L2ItemInstance item, L2Player actor, L2Object reference)
 	{
 		item = super.dropItem(process, item, actor, reference);
 		
@@ -528,7 +564,7 @@ public class PlayerInventory extends Inventory
 	 * @return L2ItemInstance corresponding to the destroyed item or the updated item in inventory
 	 */
 	@Override
-	public L2ItemInstance dropItem(String process, int objectId, long count, L2Player actor, L2Object reference)
+	public synchronized L2ItemInstance dropItem(String process, int objectId, long count, L2Player actor, L2Object reference)
 	{
 		L2ItemInstance item = super.dropItem(process, objectId, count, actor, reference);
 		

@@ -62,6 +62,58 @@ final class MultiSellAtomicExchange
 		Connection connection() throws SQLException;
 	}
 
+	interface Actor
+	{
+		PlayerInventory inventory();
+		int objectId();
+		L2Clan clan();
+		boolean isClanLeader();
+		int fame();
+		void setFame(int fame);
+	}
+
+	private static Actor actor(final L2Player player)
+	{
+		return new Actor()
+		{
+			@Override
+			public PlayerInventory inventory()
+			{
+				return player.getInventory();
+			}
+
+			@Override
+			public int objectId()
+			{
+				return player.getObjectId();
+			}
+
+			@Override
+			public L2Clan clan()
+			{
+				return player.getClan();
+			}
+
+			@Override
+			public boolean isClanLeader()
+			{
+				return player.isClanLeader();
+			}
+
+			@Override
+			public int fame()
+			{
+				return player.getFame();
+			}
+
+			@Override
+			public void setFame(int fame)
+			{
+				player.setFame(fame);
+			}
+		};
+	}
+
 	private static final Resources DEFAULT_RESOURCES = new Resources()
 	{
 		@Override
@@ -112,7 +164,7 @@ final class MultiSellAtomicExchange
 		}
 	}
 
-	private final L2Player _player;
+	private final Actor _actor;
 	private final PlayerInventory _inventory;
 	private final MultiSellEntry _entry;
 	private final long _amount;
@@ -130,8 +182,14 @@ final class MultiSellAtomicExchange
 	MultiSellAtomicExchange(L2Player player, MultiSellEntry entry, long amount,
 			boolean maintainEnchantment, Castle castle, long transactionTax, Resources resources)
 	{
-		_player = player;
-		_inventory = player.getInventory();
+		this(actor(player), entry, amount, maintainEnchantment, castle, transactionTax, resources);
+	}
+
+	MultiSellAtomicExchange(Actor actor, MultiSellEntry entry, long amount,
+			boolean maintainEnchantment, Castle castle, long transactionTax, Resources resources)
+	{
+		_actor = actor;
+		_inventory = actor.inventory();
 		_entry = entry;
 		_amount = amount;
 		_maintainEnchantment = maintainEnchantment;
@@ -156,7 +214,7 @@ final class MultiSellAtomicExchange
 				return Integer.compare(left.getObjectId(), right.getObjectId());
 			}
 		});
-		synchronized (_player)
+		synchronized (_actor)
 		{
 			return withItemLocks(affected, 0);
 		}
@@ -228,7 +286,7 @@ final class MultiSellAtomicExchange
 			parent = CastleManager.getInstance().getCastleByName("Aden");
 		if (parent != null)
 		{
-			long share = (long)(amount * (parent.getTaxPercent() / 100.));
+			long share = Math.multiplyExact(amount, parent.getTaxPercent()) / 100;
 			if (share < 0 || share > amount)
 				throw new IllegalArgumentException("Invalid castle tax share");
 			if (parent.getOwnerId() > 0)
@@ -382,7 +440,7 @@ final class MultiSellAtomicExchange
 					if (template.isStackable())
 						stagedStacks.put(product.getItemId(), item);
 					item.setCount(template.isStackable() ? quantity : 1);
-					item.setOwnerId(_player.getObjectId());
+						item.setOwnerId(_actor.objectId());
 					item.setLocation(ItemLocation.INVENTORY);
 					if (_maintainEnchantment && !template.isStackable())
 					{
@@ -393,11 +451,11 @@ final class MultiSellAtomicExchange
 				}
 			}
 
-			L2Clan clan = _player.getClan();
-			if (reputationDebit > 0 && (clan == null || !_player.isClanLeader()
+			L2Clan clan = _actor.clan();
+			if (reputationDebit > 0 && (clan == null || !_actor.isClanLeader()
 					|| reputationDebit > clan.getReputationScore()))
 				return false;
-			long newFame = Math.addExact(_player.getFame(), fameDelta);
+			long newFame = Math.addExact(_actor.fame(), fameDelta);
 			if (newFame < 0 || newFame > Integer.MAX_VALUE)
 				return false;
 			newFame = Math.min(newFame, Config.MAX_PERSONAL_FAME_POINTS);
@@ -417,12 +475,12 @@ final class MultiSellAtomicExchange
 			{
 				long after = finalCounts.get(item);
 				if (after != item.getCount())
-					persistence.changeCount(item.getObjectId(), _player.getObjectId(),
+					persistence.changeCount(item.getObjectId(), _actor.objectId(),
 							item.getCount(), after);
 			}
 			for (L2ItemInstance item : stagedProducts)
 			{
-				persistence.insert(item.getObjectId(), _player.getObjectId(), item.getItemId(),
+					persistence.insert(item.getObjectId(), _actor.objectId(), item.getItemId(),
 						item.getCount(), item.getEnchantLevel(), item.getMana(), item.getTime());
 				L2Augmentation augmentation = item.getAugmentation();
 				Elementals elemental = item.getElementals();
@@ -438,7 +496,7 @@ final class MultiSellAtomicExchange
 				persistence.adjustClanReputation(clan.getClanId(), clan.getReputationScore(),
 						(int)(clan.getReputationScore() - reputationDebit));
 			if (fameDelta != 0)
-				persistence.adjustFame(_player.getObjectId(), _player.getFame(), (int)newFame);
+				persistence.adjustFame(_actor.objectId(), _actor.fame(), (int)newFame);
 			for (TreasuryChange change : treasury)
 				persistence.adjustCastleTreasury(change.castle.getCastleId(), change.before, change.after);
 
@@ -467,14 +525,14 @@ final class MultiSellAtomicExchange
 			if (reputationDebit > 0)
 				clan.setReputationScore((int)(clan.getReputationScore() - reputationDebit), false);
 			if (fameDelta != 0)
-				_player.setFame((int)newFame);
+				_actor.setFame((int)newFame);
 			for (TreasuryChange change : treasury)
 				change.castle.publishCommittedTreasury(change.after);
 			return true;
 		}
 		catch (SQLException | ArithmeticException | IllegalArgumentException failure)
 		{
-			LOG.warn("Multisell exchange rejected for player " + _player.getObjectId(), failure);
+			LOG.warn("Multisell exchange rejected for player " + _actor.objectId(), failure);
 			return false;
 		}
 		finally

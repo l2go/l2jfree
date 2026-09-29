@@ -37,7 +37,7 @@ import org.testcontainers.mysql.MySQLContainer;
 
 import com.l2jfree.gameserver.datatables.MultisellTable.MultiSellEntry;
 import com.l2jfree.gameserver.datatables.MultisellTable.MultiSellIngredient;
-import com.l2jfree.gameserver.gameobjects.L2Player;
+import com.l2jfree.gameserver.model.clan.L2Clan;
 import com.l2jfree.gameserver.gameobjects.itemcontainer.PlayerInventory;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
 import com.l2jfree.gameserver.model.items.templates.L2Item;
@@ -97,14 +97,11 @@ class MultiSellAtomicExchangeTest
 
 	private static Fixture fixture() throws Exception
 	{
-		L2Player player = mock(L2Player.class);
 		PlayerInventory inventory = mock(PlayerInventory.class);
 		L2ItemInstance ingredient = item(10, 1, 5);
 		L2ItemInstance reward = item(20, 2, 1);
 		L2Item template = mock(L2Item.class);
 		when(template.isStackable()).thenReturn(true);
-		when(player.getInventory()).thenReturn(inventory);
-		when(player.getObjectId()).thenReturn(100);
 		when(inventory.itemSetLock()).thenReturn(new Object());
 		when(inventory.getItems()).thenReturn(new L2ItemInstance[] { ingredient, reward });
 		when(inventory.getAllItemsByItemId(2)).thenReturn(new L2ItemInstance[] { reward });
@@ -142,8 +139,45 @@ class MultiSellAtomicExchangeTest
 				return DriverManager.getConnection(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword());
 			}
 		};
+		MultiSellAtomicExchange.Actor actor = new MultiSellAtomicExchange.Actor()
+		{
+			@Override
+			public PlayerInventory inventory()
+			{
+				return inventory;
+			}
+
+			@Override
+			public int objectId()
+			{
+				return 100;
+			}
+
+			@Override
+			public L2Clan clan()
+			{
+				return null;
+			}
+
+			@Override
+			public boolean isClanLeader()
+			{
+				return false;
+			}
+
+			@Override
+			public int fame()
+			{
+				return 0;
+			}
+
+			@Override
+			public void setFame(int fame)
+			{
+			}
+		};
 		return new Fixture(inventory, ingredient, reward,
-				new MultiSellAtomicExchange(player, entry, 1, false, null, 0, resources));
+				new MultiSellAtomicExchange(actor, entry, 1, false, null, 0, resources));
 	}
 
 	private static L2ItemInstance item(int objectId, int itemId, long count)
