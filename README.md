@@ -40,7 +40,7 @@ CI builds with Microsoft OpenJDK 25 and runs unit tests on that JDK. The output 
 | Java | Microsoft OpenJDK 25 LTS x64 |
 | Database | MySQL Server 8.4 LTS installed as a Windows service; Connector/J 26.7.0 |
 
-The deployment uses the three ZIP assets from the GitHub [v1.4.0 release](https://github.com/l2go/l2jfree/releases/tag/v1.4.0), verified with that release's SHA256SUMS.txt. The source build above creates artifacts from the checked-out source and is separate from assembling this pinned deployment image. The [deployment plan](docs/2026-Q4-UPGRADE.md) records the target and qualification steps.
+The deployment uses the three ZIP assets from the GitHub [v1.5.0 release](https://github.com/l2go/l2jfree/releases/tag/v1.5.0), verified with that release's SHA256SUMS.txt. The source build above creates artifacts from the checked-out source and is separate from assembling this pinned deployment image. The [deployment plan](docs/2026-Q4-UPGRADE.md) records the target and qualification steps.
 
 ## Architecture
 

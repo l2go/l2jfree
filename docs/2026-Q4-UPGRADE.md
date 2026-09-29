@@ -9,7 +9,7 @@
 | Build | Maven Wrapper 3.9.16 with a pinned SHA-256 checksum |
 | Database | MySQL 8.4 LTS, latest patch available at deployment |
 | Driver | Connector/J 26.7.0 (`com.mysql.cj.jdbc.Driver`) |
-| Release | GitHub `v1.4.0` release; qualify the three release ZIPs before deployment |
+| Release | GitHub `v1.5.0` release; qualify the three release ZIPs before deployment |
 
 The code and build configuration are prepared. On 2026-09-26, [CI run 36194342679](https://github.com/l2go/l2jfree/actions/runs/36194342679) passed with Microsoft OpenJDK 25. CI compiles and packages on Ubuntu with that JDK. Maven skips tests by default. Windows 10 operation, the MySQL 8.4 service integration, and the deployment image remain to be qualified on the target host.
 
@@ -27,8 +27,8 @@ Connector/J 26.7 requires MySQL Server 8.4 or later. Keep Jython 2.2.1, Spring 2
 3. **Validate the database copy.** Restore a logical backup into MySQL 8.4. Check SQL modes, character sets, indexes,
    stored objects, authentication, and repository SQL. Preserve the original database backup for rollback.
 4. **Qualify the release image.** Assemble the server from the three ZIPs in the GitHub
-   [v1.4.0 release](https://github.com/l2go/l2jfree/releases/tag/v1.4.0), verify them with `SHA256SUMS.txt`,
-   and stage the image under `dist/l2jfree-1.4.0-win10-x64-mysql8.4-r1/`. Install it at `C:\l2jfree\`.
+   [v1.5.0 release](https://github.com/l2go/l2jfree/releases/tag/v1.5.0), verify them with `SHA256SUMS.txt`,
+   and stage the image under `dist/l2jfree-1.5.0-win10-x64-mysql8.4-r1/`. Install it at `C:\l2jfree\`.
 5. **Qualify runtime behavior.** Run the login and game servers with OpenJDK 25 and the MySQL 8.4 service.
    Check script loading, login, gameplay entry, database writes, scheduled events, sustained load, shutdown, and restart.
    Resolve Java and SQL errors before release.
