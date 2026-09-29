@@ -296,7 +296,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	* Sets the quantity of the item.<BR><BR>
 	* @param count the new count to set
 	*/
-	public void setCount(long count)
+	public synchronized void setCount(long count)
 	{
 		if (getCount() == count)
 		{
@@ -335,7 +335,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	 * @param reference :
 	 *            L2Object Object referencing current action like NPC selling item or previous item in transformation
 	 */
-	public void changeCount(String process, long count, L2Player creator, L2Object reference)
+	public synchronized void changeCount(String process, long count, L2Player creator, L2Object reference)
 	{
 		if (count == 0)
 			return;
@@ -1280,22 +1280,32 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		@Override
 		public void execute(Connection con)
 		{
-			switch (getUpdateMode(true))
+			synchronized (L2ItemInstance.this)
 			{
-				case INSERT:
-					insertIntoDb(con);
-					break;
-				
-				case UPDATE:
-					updateInDb(con);
-					break;
-				
-				case REMOVE:
-					removeFromDb(con);
-					break;
+				switch (getUpdateMode(true))
+				{
+					case INSERT:
+						insertIntoDb(con);
+						break;
+
+					case UPDATE:
+						updateInDb(con);
+						break;
+
+					case REMOVE:
+						removeFromDb(con);
+						break;
+				}
 			}
 		}
 	};
+
+	/** Records a successful synchronous exchange write before queued writers inspect this item. */
+	public synchronized void markStoredAfterExchange(boolean exists)
+	{
+		_existsInDb = exists;
+		_storedInDb = true;
+	}
 	
 	private UpdateMode getUpdateMode(boolean force)
 	{

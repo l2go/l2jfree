@@ -15,6 +15,8 @@
 package com.l2jfree.gameserver.network.packets.client;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.ItemTable;
@@ -50,6 +52,43 @@ public final class MultiSellChoose extends L2ClientPacket
 	private int _enchantment;
 	private long _transactionTax; // local handling of taxation
 	
+	static L2ItemInstance[] eligibleIngredients(L2ItemInstance[] candidates, int enchantLevel)
+	{
+		ArrayList<L2ItemInstance> eligible = new ArrayList<L2ItemInstance>();
+		for (L2ItemInstance item : candidates)
+			if (!item.isEquipped() && !item.isWear()
+					&& (enchantLevel < 0 || item.getEnchantLevel() == enchantLevel))
+				eligible.add(item);
+		L2ItemInstance[] result = eligible.toArray(new L2ItemInstance[eligible.size()]);
+		Arrays.sort(result, new Comparator<L2ItemInstance>()
+		{
+			@Override
+			public int compare(L2ItemInstance left, L2ItemInstance right)
+			{
+				return Integer.compare(left.getEnchantLevel(), right.getEnchantLevel());
+			}
+		});
+		return result;
+	}
+
+	static boolean hasRequiredIngredientCount(L2ItemInstance[] eligible, long required)
+	{
+		if (required <= 0 || eligible.length == 0)
+			return false;
+		if (eligible[0].isStackable())
+		{
+			long remaining = required;
+			for (L2ItemInstance item : eligible)
+			{
+				remaining -= Math.min(remaining, item.getCount());
+				if (remaining == 0)
+					return true;
+			}
+			return false;
+		}
+		return eligible.length >= required;
+	}
+
 	@Override
 	protected void readImpl()
 	{
@@ -230,9 +269,11 @@ public final class MultiSellChoose extends L2ClientPacket
 				{
 					// if this is not a list that maintains enchantment, check the count of all items that have the given id.
 					// otherwise, check only the count of items with exactly the needed enchantment level
-					if (inv.getInventoryItemCount(e.getItemId(), maintainEnchantment ? e.getEnchantmentLevel() : -1,
-							false) < ((Config.ALT_BLACKSMITH_USE_RECIPES || !e.getMaintainIngredient()) ? (e
-							.getItemCount() * _amount) : e.getItemCount()))
+					L2ItemInstance[] eligible = eligibleIngredients(inv.getAllItemsByItemId(e.getItemId()),
+							maintainEnchantment ? e.getEnchantmentLevel() : -1);
+					long required = (Config.ALT_BLACKSMITH_USE_RECIPES || !e.getMaintainIngredient())
+							? e.getItemCount() * _amount : e.getItemCount();
+					if (!hasRequiredIngredientCount(eligible, required))
 					{
 						sendPacket(SystemMessageId.NOT_ENOUGH_REQUIRED_ITEMS);
 						_ingredientsList.clear();
@@ -276,7 +317,9 @@ public final class MultiSellChoose extends L2ClientPacket
 				}
 				default:
 				{
-					L2ItemInstance itemToTake = inv.getItemByItemId(e.getItemId()); // initialize and initial guess for the item to take.
+					L2ItemInstance[] eligible = eligibleIngredients(inv.getAllItemsByItemId(e.getItemId()),
+							maintainEnchantment ? e.getEnchantmentLevel() : -1);
+					L2ItemInstance itemToTake = eligible.length == 0 ? null : eligible[0];
 					if (itemToTake == null)
 					{ //this is a cheat, transaction will be aborted and if any items already taken will not be returned back to inventory!
 						_log.fatal("Character: " + player.getName() + " is trying to cheat in multisell, merchant id:"
@@ -321,8 +364,7 @@ public final class MultiSellChoose extends L2ClientPacket
 							if (maintainEnchantment)
 							{
 								// loop through this list and remove (one by one) each item until the required amount is taken.
-								L2ItemInstance[] inventoryContents =
-										inv.getAllItemsByItemId(e.getItemId(), e.getEnchantmentLevel());
+								L2ItemInstance[] inventoryContents = eligible;
 								for (int i = 0; i < (e.getItemCount() * _amount); i++)
 								{
 									if (inventoryContents[i].isAugmented())
@@ -374,7 +416,7 @@ public final class MultiSellChoose extends L2ClientPacket
 								// choice 1.  Small number of items exchanged.  No sorting.
 								for (int i = 1; i <= (e.getItemCount() * _amount); i++)
 								{
-									L2ItemInstance[] inventoryContents = inv.getAllItemsByItemId(e.getItemId());
+									L2ItemInstance[] inventoryContents = eligibleIngredients(inv.getAllItemsByItemId(e.getItemId()), -1);
 									
 									itemToTake = inventoryContents[0];
 									// get item with the LOWEST enchantment level  from the inventory...
