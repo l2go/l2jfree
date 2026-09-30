@@ -18,8 +18,8 @@ import java.util.Set;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
@@ -44,7 +44,7 @@ import com.l2jfree.util.L2FastSet;
 
 public class Duel
 {
-	private final static Log _log = LogFactory.getLog(Duel.class);
+	private final static Logger _log = LoggerFactory.getLogger(Duel.class);
 	
 	public static final int DUELSTATE_NODUEL = 0;
 	public static final int DUELSTATE_DUELLING = 1;

@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.model.world.spawn;
 import java.lang.reflect.Constructor;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -52,7 +52,7 @@ import com.l2jfree.tools.random.Rnd;
  */
 public class L2Spawn
 {
-	protected static final Log _log = LogFactory.getLog(L2Spawn.class);
+	protected static final Logger _log = LoggerFactory.getLogger(L2Spawn.class);
 	
 	/** The link on the L2NpcTemplate object containing generic and static properties of this spawn (ex : RewardExp, RewardSP, AggroRange...) */
 	private final L2NpcTemplate _template;
@@ -178,7 +178,7 @@ public class L2Spawn
 		}
 		catch (NoSuchMethodException e)
 		{
-			_log.fatal("", e);
+			_log.error("", e);
 		}
 	}
 	

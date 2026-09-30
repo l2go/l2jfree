@@ -21,8 +21,8 @@ import java.sql.ResultSet;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 
@@ -32,7 +32,7 @@ import com.l2jfree.L2DatabaseFactory;
  */
 public class Faction
 {
-	private static final Log _log = LogFactory.getLog(Faction.class);
+	private static final Logger _log = LoggerFactory.getLogger(Faction.class);
 	
 	private int _Id = 0;
 	private String _name = null;

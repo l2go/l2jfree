@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.model.world.spawn;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.datatables.SpawnTable;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
@@ -34,7 +34,7 @@ import com.l2jfree.tools.random.Rnd;
  */
 public final class MobGroup
 {
-	private static final Log _log = LogFactory.getLog(MobGroup.class);
+	private static final Logger _log = LoggerFactory.getLogger(MobGroup.class);
 	
 	private final L2NpcTemplate _npcTemplate;
 	private final int _groupId;

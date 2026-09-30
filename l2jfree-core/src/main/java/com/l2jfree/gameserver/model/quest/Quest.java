@@ -26,8 +26,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -80,7 +80,7 @@ public class Quest extends ManagedScript
 	public static final int ATTACK_SINGLE = 1;
 	public static final int ATTACK_MULTIPLE = 2;
 	
-	protected static final Log _log = LogFactory.getLog(Quest.class);
+	protected static final Logger _log = LoggerFactory.getLogger(Quest.class);
 	
 	/** HashMap containing events from String value of the event */
 	private static Map<String, Quest> _allEventsS = new FastMap<String, Quest>();
@@ -1088,7 +1088,7 @@ public class Quest extends ManagedScript
 		}
 		catch (Exception e)
 		{
-			_log.fatal("could not insert char quest:", e);
+			_log.error("could not insert char quest:", e);
 		}
 		finally
 		{
@@ -1128,7 +1128,7 @@ public class Quest extends ManagedScript
 		}
 		catch (Exception e)
 		{
-			_log.fatal("could not update char quest:", e);
+			_log.error("could not update char quest:", e);
 		}
 		finally
 		{
@@ -1184,7 +1184,7 @@ public class Quest extends ManagedScript
 		}
 		catch (Exception e)
 		{
-			_log.fatal("could not delete char quest:", e);
+			_log.error("could not delete char quest:", e);
 		}
 		finally
 		{
@@ -1639,7 +1639,7 @@ public class Quest extends ManagedScript
 				// default spawn location, which is at the player's loc.
 				if ((x == 0) && (y == 0))
 				{
-					_log.fatal("Failed to adjust bad locks for quest spawn!  Spawn aborted!");
+					_log.error("Failed to adjust bad locks for quest spawn!  Spawn aborted!");
 					return null;
 				}
 				if (randomOffset)

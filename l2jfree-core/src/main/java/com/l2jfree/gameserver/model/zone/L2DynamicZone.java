@@ -137,7 +137,7 @@ public class L2DynamicZone extends L2Zone
 		Condition old = _cond;
 		
 		if (old != null)
-			_log.fatal("Replaced " + old + " condition with " + cond + " condition at zone: " + this);
+			_log.error("Replaced " + old + " condition with " + cond + " condition at zone: " + this);
 		
 		_cond = cond;
 	}

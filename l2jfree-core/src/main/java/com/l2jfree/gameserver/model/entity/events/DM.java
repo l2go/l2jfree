@@ -25,8 +25,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -74,7 +74,7 @@ public class DM
 		}
 	}
 	
-	private final static Log _log = LogFactory.getLog(DM.class);
+	private final static Logger _log = LoggerFactory.getLogger(DM.class);
 	public static String _eventName = "", _eventDesc = "", _joiningLocationName = "";
 	public static CopyOnWriteArrayList<String> _savePlayers = new CopyOnWriteArrayList<String>();
 	public static CopyOnWriteArrayList<L2Player> _players = new CopyOnWriteArrayList<L2Player>();

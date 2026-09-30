@@ -22,8 +22,8 @@ import java.util.Set;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -56,7 +56,7 @@ import com.l2jfree.util.L2FastSet;
  */
 public final class CCHSiege extends AbstractSiege
 {
-	private final static Log _log = LogFactory.getLog(CCHSiege.class);
+	private final static Logger _log = LoggerFactory.getLogger(CCHSiege.class);
 	
 	private final ClanHall _hideout;
 	private final ContestableHideoutGuardManager _guardManager;

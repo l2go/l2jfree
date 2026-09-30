@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.model.entity;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -28,7 +28,7 @@ import com.l2jfree.gameserver.model.clan.L2Clan;
  */
 public class CastleUpdater implements Runnable
 {
-	private final static Log _log = LogFactory.getLog(CastleUpdater.class);
+	private final static Logger _log = LoggerFactory.getLogger(CastleUpdater.class);
 	
 	private final L2Clan _clan;
 	private int _runCount = 0;

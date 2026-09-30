@@ -25,8 +25,8 @@ import javolution.util.FastList;
 import javolution.util.FastMap;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.ItemTable;
@@ -39,7 +39,7 @@ import com.l2jfree.gameserver.model.items.templates.L2Item;
 
 public class L2Manor
 {
-	private final static Log _log = LogFactory.getLog(L2Manor.class);
+	private final static Logger _log = LoggerFactory.getLogger(L2Manor.class);
 	
 	private static FastMap<Integer, SeedData> _seeds;
 	

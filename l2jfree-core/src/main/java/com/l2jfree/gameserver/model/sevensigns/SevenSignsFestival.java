@@ -24,8 +24,8 @@ import java.util.Map;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -66,7 +66,7 @@ import com.l2jfree.util.L2Timer;
 // FIXME: Archer mobs should target healer characters over other party members.
 public class SevenSignsFestival implements SpawnListener
 {
-	protected static Log _log = LogFactory.getLog(SevenSignsFestival.class);
+	protected static Logger _log = LoggerFactory.getLogger(SevenSignsFestival.class);
 	
 	private static final String GET_CLAN_NAME =
 			"SELECT clan_name FROM clan_data WHERE clan_id = (SELECT clanid FROM characters WHERE char_name = ?)";
@@ -791,7 +791,7 @@ public class SevenSignsFestival implements SpawnListener
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("SevenSignsFestival: Failed to load configuration: ", e);
+			_log.error("SevenSignsFestival: Failed to load configuration: ", e);
 		}
 		finally
 		{
@@ -873,7 +873,7 @@ public class SevenSignsFestival implements SpawnListener
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("SevenSignsFestival: Failed to save configuration: ", e);
+			_log.error("SevenSignsFestival: Failed to save configuration: ", e);
 		}
 		finally
 		{

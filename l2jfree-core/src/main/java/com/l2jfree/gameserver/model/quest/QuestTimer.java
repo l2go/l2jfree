@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.model.quest;
 
 import java.util.concurrent.ScheduledFuture;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.gameobjects.L2Npc;
@@ -25,7 +25,7 @@ import com.l2jfree.gameserver.gameobjects.L2Player;
 
 public class QuestTimer
 {
-	protected final static Log _log = LogFactory.getLog(QuestTimer.class);
+	protected final static Logger _log = LoggerFactory.getLogger(QuestTimer.class);
 	
 	// =========================================================
 	// Schedule Task

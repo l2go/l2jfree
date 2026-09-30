@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.model.restriction.global;
 
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Npc;
@@ -36,7 +36,7 @@ import com.l2jfree.gameserver.model.skills.effects.L2Effect;
  */
 public abstract class AbstractRestriction implements GlobalRestriction
 {
-	static final Log _log = LogFactory.getLog(AbstractRestriction.class);
+	static final Logger _log = LoggerFactory.getLogger(AbstractRestriction.class);
 	
 	public void activate()
 	{

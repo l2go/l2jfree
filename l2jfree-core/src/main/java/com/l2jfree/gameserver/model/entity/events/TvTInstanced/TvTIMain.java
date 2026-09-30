@@ -22,8 +22,8 @@ package com.l2jfree.gameserver.model.entity.events.TvTInstanced;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -52,7 +52,7 @@ public class TvTIMain
 		//TvTiRestriction.getInstance().activate(); // TODO: must be checked to be able to activate it
 	}
 	
-	private final static Log _log = LogFactory.getLog(TvTIMain.class);
+	private final static Logger _log = LoggerFactory.getLogger(TvTIMain.class);
 	private static String _eventTitle = new String();
 	private static String _eventDesc = new String();
 	private static String _joinLocName = new String();

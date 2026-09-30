@@ -253,7 +253,7 @@ public class Castle extends Siegeable<Siege>
 			}
 			catch (Exception e)
 			{
-				_log.fatal(
+				_log.error(
 						"Exception: Castle.updateFunctions(int type, int lvl, int lease, long rate, long time, boolean addNew): "
 								+ e.getMessage(), e);
 			}
@@ -1399,7 +1399,7 @@ public class Castle extends Siegeable<Siege>
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Exception: Castle.loadFunctions(): " + e.getMessage(), e);
+			_log.error("Exception: Castle.loadFunctions(): " + e.getMessage(), e);
 		}
 		finally
 		{
@@ -1424,7 +1424,7 @@ public class Castle extends Siegeable<Siege>
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Exception: Castle.removeFunctions(int functionType): " + e.getMessage(), e);
+			_log.error("Exception: Castle.removeFunctions(int functionType): " + e.getMessage(), e);
 		}
 		finally
 		{

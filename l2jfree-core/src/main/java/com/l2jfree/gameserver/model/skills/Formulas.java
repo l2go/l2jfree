@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.model.skills;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
@@ -66,7 +66,7 @@ import com.l2jfree.tools.random.Rnd;
 public final class Formulas
 {
 	/** Regen Task period */
-	protected static final Log _log = LogFactory.getLog(L2Creature.class);
+	protected static final Logger _log = LoggerFactory.getLogger(L2Creature.class);
 	private static final int HP_REGENERATE_PERIOD = 3000; // 3 secs
 	
 	public static final byte SHIELD_DEFENSE_FAILED = 0; // no shield defense
