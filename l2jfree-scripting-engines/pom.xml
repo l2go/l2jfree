@@ -20,7 +20,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.python</groupId>
-			<artifactId>jython</artifactId>
+			<artifactId>${jython.artifactId}</artifactId>
 			<version>${jython.version}</version>
 		</dependency>
 	</dependencies>
