@@ -21,8 +21,8 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.instance.L2AirShipControllerInstance;
@@ -33,7 +33,7 @@ import com.l2jfree.gameserver.templates.StatsSet;
 
 public class AirShipManager
 {
-	private final static Log _log = LogFactory.getLog(AirShipManager.class);
+	private final static Logger _log = LoggerFactory.getLogger(AirShipManager.class);
 	
 	private L2AirShipInstance _airShip = null;
 	

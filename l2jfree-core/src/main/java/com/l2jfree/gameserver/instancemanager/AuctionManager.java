@@ -22,15 +22,15 @@ import java.util.List;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.model.entity.Auction;
 
 public class AuctionManager
 {
-	protected static Log _log = LogFactory.getLog(AuctionManager.class);
+	protected static Logger _log = LoggerFactory.getLogger(AuctionManager.class);
 	private final List<Auction> _auctions;
 	
 	private static final String[] ITEM_INIT_DATA = {
@@ -110,7 +110,7 @@ public class AuctionManager
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("Exception: AuctionManager.load(): " + e.getMessage(), e);
+			_log.error("Exception: AuctionManager.load(): " + e.getMessage(), e);
 		}
 		finally
 		{
@@ -173,7 +173,7 @@ public class AuctionManager
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Exception: Auction.initNPC(): " + e.getMessage(), e);
+			_log.error("Exception: Auction.initNPC(): " + e.getMessage(), e);
 		}
 		finally
 		{

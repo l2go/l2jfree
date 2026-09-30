@@ -23,8 +23,8 @@ import java.util.concurrent.TimeUnit;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.Announcements;
@@ -70,7 +70,7 @@ import com.l2jfree.tools.random.Rnd;
  */
 public class AutoSpawnManager
 {
-	protected static Log _log = LogFactory.getLog(AutoSpawnManager.class);
+	protected static Logger _log = LoggerFactory.getLogger(AutoSpawnManager.class);
 	
 	private static final int DEFAULT_INITIAL_SPAWN = 30000; // 30 seconds after registration
 	private static final int DEFAULT_RESPAWN = 3600000; //1 hour in millisecs

@@ -29,8 +29,8 @@ import javolution.xml.stream.XMLStreamConstants;
 import javolution.xml.stream.XMLStreamException;
 import javolution.xml.stream.XMLStreamReaderImpl;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -46,7 +46,7 @@ import com.l2jfree.util.LookupTable;
  */
 public class InstanceManager
 {
-	private final static Log _log = LogFactory.getLog(InstanceManager.class);
+	private final static Logger _log = LoggerFactory.getLogger(InstanceManager.class);
 	
 	private final FastMap<Integer, Instance> _instanceList = new FastMap<Integer, Instance>();
 	private final FastMap<Integer, InstanceWorld> _instanceWorlds = new FastMap<Integer, InstanceWorld>();

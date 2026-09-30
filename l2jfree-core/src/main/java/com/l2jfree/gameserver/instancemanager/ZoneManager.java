@@ -22,8 +22,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javolution.util.FastMap;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -36,7 +36,7 @@ import com.l2jfree.gameserver.util.Util;
 
 public final class ZoneManager
 {
-	private static final Log _log = LogFactory.getLog(ZoneManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(ZoneManager.class);
 	
 	public static ZoneManager getInstance()
 	{
@@ -91,7 +91,7 @@ public final class ZoneManager
 			}
 			catch (Exception e)
 			{
-				_log.fatal("ZoneManager: Error loading file " + f.getAbsolutePath(), e);
+				_log.error("ZoneManager: Error loading file " + f.getAbsolutePath(), e);
 				continue;
 			}
 			try
@@ -100,7 +100,7 @@ public final class ZoneManager
 			}
 			catch (Exception e)
 			{
-				_log.fatal("ZoneManager: Error in file " + f.getAbsolutePath(), e);
+				_log.error("ZoneManager: Error in file " + f.getAbsolutePath(), e);
 				continue;
 			}
 			_log.info("ZoneManager: " + f.getName() + " loaded with " + count + " zones");

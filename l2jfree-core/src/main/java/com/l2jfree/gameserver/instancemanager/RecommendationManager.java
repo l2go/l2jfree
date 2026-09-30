@@ -20,8 +20,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Calendar;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -49,7 +49,7 @@ public final class RecommendationManager
 	private static final String RESTORE_RECOMMENDATION_RESTRICTIONS =
 			"SELECT target_id FROM character_recommends WHERE charId=?";
 	
-	private static final Log _log = LogFactory.getLog(RecommendationManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(RecommendationManager.class);
 	private static final long DAY = 24 * 3600 * 1000;
 	
 	private long nextUpdate;

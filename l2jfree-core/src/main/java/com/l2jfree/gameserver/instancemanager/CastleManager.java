@@ -21,8 +21,8 @@ import java.sql.SQLException;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Object;
@@ -34,7 +34,7 @@ import com.l2jfree.gameserver.model.items.L2ItemInstance;
 
 public class CastleManager implements InstanceListManager
 {
-	protected static Log _log = LogFactory.getLog(CastleManager.class);
+	protected static Logger _log = LoggerFactory.getLogger(CastleManager.class);
 	
 	private FastMap<Integer, Castle> _castles;
 	

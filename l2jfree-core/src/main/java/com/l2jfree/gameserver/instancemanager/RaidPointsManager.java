@@ -25,8 +25,8 @@ import java.util.Map.Entry;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -36,7 +36,7 @@ import com.l2jfree.gameserver.gameobjects.L2Player;
  */
 public final class RaidPointsManager
 {
-	private static final Log _log = LogFactory.getLog(RaidPointsManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(RaidPointsManager.class);
 	
 	private static final Map<Integer, Map<Integer, Integer>> _list = new FastMap<Integer, Map<Integer, Integer>>()
 			.setShared(true);
@@ -101,7 +101,7 @@ public final class RaidPointsManager
 		}
 		catch (Exception e)
 		{
-			_log.fatal("could not update char raid points:", e);
+			_log.error("could not update char raid points:", e);
 		}
 		finally
 		{
@@ -143,7 +143,7 @@ public final class RaidPointsManager
 		}
 		catch (Exception e)
 		{
-			_log.fatal("could not clean raid points: ", e);
+			_log.error("could not clean raid points: ", e);
 		}
 		finally
 		{

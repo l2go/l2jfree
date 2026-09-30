@@ -20,8 +20,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Calendar;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -38,7 +38,7 @@ public class Lottery
 	public static final long SECOND = 1000;
 	public static final long MINUTE = 60000;
 	
-	protected static Log _log = LogFactory.getLog(Lottery.class);
+	protected static Logger _log = LoggerFactory.getLogger(Lottery.class);
 	
 	private static final String INSERT_LOTTERY =
 			"INSERT INTO games(id, idnr, enddate, prize, newprize) VALUES (?, ?, ?, ?, ?)";

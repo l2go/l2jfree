@@ -25,8 +25,8 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.Announcements;
@@ -42,7 +42,7 @@ import com.l2jfree.lang.L2Thread;
 
 public final class GameTimeManager
 {
-	private static final Log _log = LogFactory.getLog(GameTimeManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(GameTimeManager.class);
 	
 	public static final int TICKS_PER_SECOND = 10;
 	public static final int MILLIS_IN_TICK = 1000 / TICKS_PER_SECOND;

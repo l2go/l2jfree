@@ -21,8 +21,8 @@ import java.sql.Statement;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -40,7 +40,7 @@ import com.l2jfree.gameserver.model.world.L2World;
  */
 public class ItemsOnGroundManager
 {
-	protected static Log _log = LogFactory.getLog(ItemsOnGroundManager.class);
+	protected static Logger _log = LoggerFactory.getLogger(ItemsOnGroundManager.class);
 	
 	protected FastList<L2ItemInstance> _items = null;
 	
@@ -88,7 +88,7 @@ public class ItemsOnGroundManager
 			}
 			catch (Exception e)
 			{
-				_log.fatal("error while updating table ItemsOnGround " + e, e);
+				_log.error("error while updating table ItemsOnGround " + e, e);
 			}
 			finally
 			{
@@ -138,7 +138,7 @@ public class ItemsOnGroundManager
 			}
 			catch (Exception e)
 			{
-				_log.fatal("error while loading ItemsOnGround " + e, e);
+				_log.error("error while loading ItemsOnGround " + e, e);
 			}
 		}
 		finally
@@ -186,7 +186,7 @@ public class ItemsOnGroundManager
 		}
 		catch (Exception e1)
 		{
-			_log.fatal("error while cleaning table ItemsOnGround " + e1, e1);
+			_log.error("error while cleaning table ItemsOnGround " + e1, e1);
 		}
 		finally
 		{
@@ -245,7 +245,7 @@ public class ItemsOnGroundManager
 				}
 				catch (Exception e)
 				{
-					_log.fatal("error while inserting into table ItemsOnGround " + e, e);
+					_log.error("error while inserting into table ItemsOnGround " + e, e);
 				}
 				finally
 				{

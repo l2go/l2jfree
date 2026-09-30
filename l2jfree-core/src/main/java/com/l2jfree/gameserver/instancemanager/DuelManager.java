@@ -18,8 +18,8 @@ import java.util.Map;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.entity.Duel;
@@ -30,7 +30,7 @@ import com.l2jfree.gameserver.network.packets.L2ServerPacket;
 
 public class DuelManager
 {
-	private final static Log _log = LogFactory.getLog(DuelManager.class);
+	private final static Logger _log = LoggerFactory.getLogger(DuelManager.class);
 	
 	private static final class SingletonHolder
 	{

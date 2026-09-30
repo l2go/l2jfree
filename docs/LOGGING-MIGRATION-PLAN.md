@@ -78,10 +78,11 @@ unreviewable bulk replacement.
   throwable arguments are preserved. LoginServer no longer logs the local or
   supplied player session key on failed authentication.
 - In progress: SLF4J 2.0.20, Logback 1.5, and the JCL-to-SLF4J compatibility
-  bridge are configured. The `l2j-commons`, LoginServer, and GameServer
-  datatables application callers use SLF4J. Remaining GameServer, mmocore,
-  scripting, and IRC callers still use Commons Logging and are routed through
-  the compatibility bridge; package-sized migrations are pending. Logback
+  bridge are configured. Application callers in `l2j-commons` and LoginServer
+  use SLF4J. GameServer datatables and 45 instance-manager classes are
+  migrated. Remaining GameServer, mmocore, scripting, and IRC callers still
+  use Commons Logging and are routed through the compatibility bridge;
+  package-sized migrations are pending. Logback
   declares dedicated appenders for audit, chat, IRC, item,
   login, login-attempt, and failed-login logger names at the existing
   `log/.../*.log` paths. Each appender appends to the active file and has a

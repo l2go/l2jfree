@@ -20,8 +20,8 @@ import java.sql.ResultSet;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -35,7 +35,7 @@ import com.l2jfree.gameserver.model.world.L2World;
  */
 public class CoupleManager
 {
-	private static final Log _log = LogFactory.getLog(CoupleManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(CoupleManager.class);
 	
 	public static final CoupleManager getInstance()
 	{

@@ -18,8 +18,8 @@ import java.util.concurrent.ScheduledFuture;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -38,7 +38,7 @@ import com.l2jfree.tools.random.Rnd;
  */
 public abstract class BossSpawnManager
 {
-	protected final static Log _log = LogFactory.getLog(BossSpawnManager.class);
+	protected final static Logger _log = LoggerFactory.getLogger(BossSpawnManager.class);
 	
 	protected final FastMap<Integer, L2Boss> _bosses;
 	protected final FastMap<Integer, L2Spawn> _spawns;

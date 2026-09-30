@@ -27,8 +27,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -58,7 +58,7 @@ import com.l2jfree.gameserver.network.packets.server.SystemMessage;
  */
 public class CursedWeaponsManager
 {
-	private static final Log _log = LogFactory.getLog(CursedWeaponsManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(CursedWeaponsManager.class);
 	
 	public static final CursedWeaponsManager getInstance()
 	{
@@ -408,7 +408,7 @@ public class CursedWeaponsManager
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("CursedWeaponsManager: Failed to remove data: ", e);
+			_log.error("CursedWeaponsManager: Failed to remove data: ", e);
 		}
 		finally
 		{

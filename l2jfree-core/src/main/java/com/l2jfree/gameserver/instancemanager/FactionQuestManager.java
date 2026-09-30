@@ -20,8 +20,8 @@ import java.sql.ResultSet;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.model.entity.faction.FactionQuest;
@@ -32,7 +32,7 @@ import com.l2jfree.gameserver.model.entity.faction.FactionQuest;
  */
 public class FactionQuestManager
 {
-	private static final Log _log = LogFactory.getLog(FactionQuestManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(FactionQuestManager.class);
 	
 	private static final class SingletonHolder
 	{

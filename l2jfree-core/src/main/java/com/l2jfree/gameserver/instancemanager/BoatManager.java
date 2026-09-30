@@ -25,8 +25,8 @@ import java.util.StringTokenizer;
 import javolution.util.FastMap;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.instance.L2BoatInstance;
@@ -36,7 +36,7 @@ import com.l2jfree.gameserver.templates.StatsSet;
 
 public class BoatManager
 {
-	private final static Log _log = LogFactory.getLog(BoatManager.class);
+	private final static Logger _log = LoggerFactory.getLogger(BoatManager.class);
 	
 	public static final BoatManager getInstance()
 	{
