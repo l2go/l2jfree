@@ -49,6 +49,14 @@ jobs:
           -cp "$RUNNER_TEMP/jython-standalone-${{ matrix.jython-version }}.jar"
           org.python.util.jython tools/ci/validate-jython-candidate.py l2jfree-datapack/data/scripts
 
+      - name: Compile the embedded script engine and exercise its JSR-223 bridge
+        run: >-
+          ./mvnw -B -ntp
+          -Djython.version=${{ matrix.jython-version }}
+          -Djython.artifactId=jython-standalone
+          -Djfr.argLine=--enable-native-access=ALL-UNNAMED
+          -pl l2jfree-scripting-engines -am test
+
   graalpy-experiment:
     # This prototype checks GraalPy embedding and inventories Python 3 parse
     # compatibility; it does not replace the production script engine.
