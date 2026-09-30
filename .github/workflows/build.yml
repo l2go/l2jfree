@@ -165,7 +165,7 @@ jobs:
           cache: maven
 
       - name: Package distributions on Windows
-        run: .\mvnw.cmd -B -ntp -Dmaven.test.skip=true "-Dl2jfree.build.revision=$env:GITHUB_SHA" install
+        run: .\mvnw.cmd -B -ntp "-Dmaven.test.skip=true" "-Dl2jfree.build.revision=$env:GITHUB_SHA" install
 
       - name: Verify Windows release archives
         shell: pwsh
