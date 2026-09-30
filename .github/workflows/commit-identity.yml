@@ -23,8 +23,11 @@ jobs:
               pull_number: context.issue.number,
             });
 
+            const allowedEmail = "131531301+l2go@users.noreply.github.com";
             const invalid = commits.filter(({ author, commit }) =>
-              author?.login !== "l2go" || /^co-authored-by:/im.test(commit.message)
+              author?.login !== "l2go" ||
+              commit.author?.email !== allowedEmail ||
+              /^co-authored-by:/im.test(commit.message)
             );
 
             if (invalid.length > 0) {
