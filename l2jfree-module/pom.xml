@@ -23,7 +23,8 @@
 		<testcontainers.version>2.0.5</testcontainers.version>
 		<liquibase.version>4.33.0</liquibase.version>
 		<jython.version>2.2.1</jython.version>
-		<graalpy.version>25.3.4.1</graalpy.version>
+		<jython.artifactId>jython</jython.artifactId>
+		<graalpy.version>25.4.4.1.1</graalpy.version>
 		<jfr.argLine></jfr.argLine>
 	</properties>
 	<scm>
