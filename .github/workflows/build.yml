@@ -36,8 +36,18 @@ jobs:
           java-version: "25"
           cache: maven
 
-      - name: Compile and syntax-check datapack with Jython ${{ matrix.jython-version }}
-        run: ./mvnw -B -ntp -Djython.version=${{ matrix.jython-version }} -pl l2jfree-datapack -am test
+      - name: Download Jython ${{ matrix.jython-version }} standalone runtime
+        shell: bash
+        run: |
+          curl --fail --location --silent --show-error \
+            "https://repo.maven.apache.org/maven2/org/python/jython/${{ matrix.jython-version }}/jython-${{ matrix.jython-version }}.jar" \
+            --output "$RUNNER_TEMP/jython-${{ matrix.jython-version }}.jar"
+
+      - name: Scan datapack scripts and check Java interop
+        run: >-
+          java --enable-native-access=ALL-UNNAMED
+          -cp "$RUNNER_TEMP/jython-${{ matrix.jython-version }}.jar"
+          org.python.util.jython tools/ci/validate-jython-candidate.py l2jfree-datapack/data/scripts
 
   graalpy-experiment:
     # This prototype checks GraalPy embedding and inventories Python 3 parse
@@ -58,7 +68,7 @@ jobs:
           cache: maven
 
       - name: Probe GraalPy on Microsoft OpenJDK 25
-        run: ./mvnw -B -ntp -Pgraalpy-experiment -pl l2jfree-scripting-engines -am test
+        run: ./mvnw -B -ntp -Dgraalpy.experiment=true -Pgraalpy-experiment -pl l2jfree-scripting-engines -am test
 
   build:
     runs-on: ubuntu-24.04
@@ -76,8 +86,18 @@ jobs:
           java-version: "25"
           cache: maven
 
-      - name: Build and test with Java 25 (./mvnw install)
-        run: ./mvnw -B -ntp -Dl2jfree.build.revision=${{ github.sha }} install
+      - name: Build and test with Java 25 while recording JFR
+        run: >-
+          ./mvnw -B -ntp -Dl2jfree.build.revision=${{ github.sha }}
+          "-Djfr.argLine=-XX:StartFlightRecording=filename=target/l2jfree-ci.jfr,settings=profile,dumponexit=true"
+          install
+
+      - name: Upload baseline JFR recordings
+        uses: actions/upload-artifact@v4
+        with:
+          name: l2jfree-jfr-baseline
+          if-no-files-found: warn
+          path: "**/target/l2jfree-ci.jfr"
 
       - name: Generate aggregate CycloneDX SBOM
         run: ./mvnw -B -ntp org.cyclonedx:cyclonedx-maven-plugin:2.9.2:makeAggregateBom

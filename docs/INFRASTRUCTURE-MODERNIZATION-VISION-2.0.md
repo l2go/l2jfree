@@ -133,8 +133,8 @@ The 2.0.0 infrastructure should provide:
 - Add an integration CI job using MySQL 8.4 and Microsoft JDK 25.
 - Run non-blocking candidate jobs for Jython 2.7.4, Jython 2.7.5b1, and GraalPy
   on Microsoft OpenJDK 25; retain Jython 2.2.1 as the comparison baseline.
-- Start JFR and OpenTelemetry measurements for representative startup and
-  integration scenarios.
+- Capture JFR recordings for CI test processes and start OpenTelemetry
+  measurements for representative startup and integration scenarios.
 - Capture baseline startup time, script load results, pool metrics, GC behavior,
   and representative gameplay load.
 - Scan the generated runtime dependency SBOM and publish the vulnerability

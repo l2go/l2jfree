@@ -24,6 +24,7 @@
 		<liquibase.version>4.33.0</liquibase.version>
 		<jython.version>2.2.1</jython.version>
 		<graalpy.version>25.3.4.1</graalpy.version>
+		<jfr.argLine></jfr.argLine>
 	</properties>
 	<scm>
 		<connection>scm:git:https://github.com/l2go/l2jfree.git</connection>
@@ -120,7 +121,7 @@
 					<!-- Modules with no tests yet must not fail the build. l2j-commons carries the platform test. -->
 					<failIfNoTests>false</failIfNoTests>
 					<!-- JDK 21+ refuses Mockito's self-attach. The agent is declared explicitly. -->
-					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar ${jfr.argLine}</argLine>
 				</configuration>
 			</plugin>
 			<plugin>

@@ -60,9 +60,9 @@ unless a later reviewed change promotes them.
 
 | Area | Candidate | CI / qualification status |
 |---|---|---|
-| Python 2 compatibility | Jython 2.7.4 | Candidate matrix added; check datapack compilation and syntax on Microsoft JDK 25. |
-| Python 2 compatibility | Jython 2.7.5b1 | Beta candidate matrix added; check Java 25 compatibility and datapack syntax before runtime qualification on Windows. |
-| Python 3 migration | GraalPy 25.3.4.1 / Python 3.13 | Isolated test profile probes embedding and Java interop on Microsoft OpenJDK 25 and reports the existing Python 2 script parse gap. |
+| Python 2 compatibility | Jython 2.7.4 | Candidate probe scans all datapack Python files and checks Java interop on Microsoft JDK 25; server JSR-223 bridge compatibility remains separate. |
+| Python 2 compatibility | Jython 2.7.5b1 | Beta probe scans all datapack Python files and checks Java interop on Microsoft JDK 25; server JSR-223 bridge compatibility remains separate. |
+| Python 3 migration | GraalPy 25.3.4.1 / Python 3.13 | Isolated test profile probes embedding and Java interop on Microsoft OpenJDK 25 and inventories Python 2 syntax gaps. |
 | Network I/O | Netty 4.2.18.Final | Initial prototype candidate; protocol replay and load comparison remain outstanding. Recheck security patches before adoption. |
 | Blocking I/O concurrency | JDK 25 virtual threads | Benchmark candidate; no production executor changes until pinning, tail latency, and shutdown are measured. |
 | Runtime diagnostics | JFR and OpenTelemetry Java agent / SDK | Begin baseline capture in CI; measure instrumentation overhead before adding release defaults. |
