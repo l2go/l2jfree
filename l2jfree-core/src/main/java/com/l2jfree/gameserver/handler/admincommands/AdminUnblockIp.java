@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.handler.admincommands;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.handler.IAdminCommandHandler;
@@ -31,7 +31,7 @@ import com.l2jfree.gameserver.handler.IAdminCommandHandler;
 public class AdminUnblockIp implements IAdminCommandHandler
 {
 	
-	private static final Log _log = LogFactory.getLog(AdminTeleport.class);
+	private static final Logger _log = LoggerFactory.getLogger(AdminTeleport.class);
 	
 	private static final String[] ADMIN_COMMANDS = { "admin_unblockip" };
 	

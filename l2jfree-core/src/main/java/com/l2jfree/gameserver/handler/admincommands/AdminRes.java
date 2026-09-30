@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.handler.admincommands;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Object;
@@ -34,7 +34,7 @@ import com.l2jfree.gameserver.taskmanager.DecayTaskManager;
  */
 public class AdminRes implements IAdminCommandHandler
 {
-	private final static Log _log = LogFactory.getLog(AdminRes.class);
+	private final static Logger _log = LoggerFactory.getLogger(AdminRes.class);
 	private static final String[] ADMIN_COMMANDS = { "admin_res", "admin_res_monster" };
 	
 	@Override
