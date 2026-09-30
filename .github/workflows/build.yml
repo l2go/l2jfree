@@ -210,7 +210,7 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           release_version="${RELEASE_TAG#v}"
-          artifact_version="${release_version%%-*}"
+          artifact_version="${release_version}"
           test -s "release-artifacts/l2jfree-login-${artifact_version}-dist.zip"
           test -s "release-artifacts/l2jfree-core-${artifact_version}-dist.zip"
           test -s "release-artifacts/l2jfree-datapack-${artifact_version}-dist.zip"
