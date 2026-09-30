@@ -73,7 +73,7 @@ GraalPy and Python 3 migration are excluded.
 
 | Area | Candidate | CI / qualification status |
 |---|---|---|
-| Python 2 compatibility | Jython 2.7.5b1 | The required CI check scans datapack Python files, checks Java interop, compiles the embedded engine, and exercises its JSR-223 bridge on Microsoft JDK 25; full GameServer script loading and behavior remain unqualified. |
+| Python 2 compatibility | Jython 2.7.5b1 | Runtime upgrade is a separate modernization track. Script compatibility and embedded bridge tests will be rewritten and expanded in the dedicated test modernization phase; no test evidence is claimed during the current build-and-package phase. |
 | Runtime diagnostics | JFR and OpenTelemetry Java agent / SDK | Begin baseline capture in CI; measure instrumentation overhead before adding release defaults. |
 
 See the [approved qualification tracks](INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md#experimental-qualification-tracks)

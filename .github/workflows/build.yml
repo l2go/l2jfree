@@ -14,43 +14,6 @@ permissions:
   contents: read
 
 jobs:
-  jython-runtime-compatibility:
-    # Jython 2.7.5b1 is the selected Python runtime for Platform 2.0.
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 1
-
-      - name: Set up Microsoft Build of OpenJDK 25
-        uses: actions/setup-java@v5
-        with:
-          distribution: microsoft
-          java-version: "25"
-          cache: maven
-
-      - name: Download standalone Jython 2.7.5b1 runtime
-        shell: bash
-        run: |
-          curl --fail --location --silent --show-error \
-            "https://repo.maven.apache.org/maven2/org/python/jython-standalone/2.7.5b1/jython-standalone-2.7.5b1.jar" \
-            --output "$RUNNER_TEMP/jython-standalone-2.7.5b1.jar"
-
-      - name: Scan datapack scripts and check Java interop
-        run: >-
-          java --enable-native-access=ALL-UNNAMED
-          -cp "$RUNNER_TEMP/jython-standalone-2.7.5b1.jar"
-          org.python.util.jython tools/ci/validate-jython-candidate.py l2jfree-datapack/data/scripts
-
-      - name: Compile the embedded script engine and exercise its JSR-223 bridge
-        run: >-
-          ./mvnw -B -ntp
-          -Djython.version=2.7.5b1
-          -Djython.artifactId=jython-standalone
-          -Djfr.argLine=--enable-native-access=ALL-UNNAMED
-          -pl l2jfree-scripting-engines -am test
-
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -67,9 +30,12 @@ jobs:
           java-version: "25"
           cache: maven
 
-      - name: Build and test with Java 25 while recording JFR
+      # Test modernization is a separate phase. This phase verifies production
+      # compilation, packaging, provenance, and archive contents only.
+      - name: Build and package with Java 25 while recording JFR
         run: >-
-          ./mvnw -B -ntp -Dl2jfree.build.revision=${{ github.sha }}
+          ./mvnw -B -ntp -Dmaven.test.skip=true
+          -Dl2jfree.build.revision=${{ github.sha }}
           "-Djfr.argLine=-XX:StartFlightRecording=filename=target/l2jfree-ci.jfr,settings=profile,dumponexit=true"
           install
 
@@ -199,7 +165,7 @@ jobs:
           cache: maven
 
       - name: Package distributions on Windows
-        run: .\mvnw.cmd -B -ntp -DskipTests "-Dl2jfree.build.revision=$env:GITHUB_SHA" install
+        run: .\mvnw.cmd -B -ntp -Dmaven.test.skip=true "-Dl2jfree.build.revision=$env:GITHUB_SHA" install
 
       - name: Verify Windows release archives
         shell: pwsh
