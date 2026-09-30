@@ -27,12 +27,37 @@
 			<groupId>com.zaxxer</groupId>
 			<artifactId>HikariCP</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-mysql</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+			<version>${liquibase.version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<defaultGoal>package</defaultGoal>
 		<testResources>
 			<testResource>
+				<directory>src/test/resources</directory>
+			</testResource>
+			<testResource>
 				<directory>config</directory>
+			</testResource>
+			<testResource>
+				<directory>sql</directory>
+				<includes>
+					<include>accounts.sql</include>
+				</includes>
 			</testResource>
 		</testResources>
 		<plugins>
