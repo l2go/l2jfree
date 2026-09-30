@@ -89,7 +89,7 @@ public final class MemoryJavaFileManager extends EclipseFileManager
 		
 		StringInputBuffer(String name, String code)
 		{
-			super(toURI(name), Kind.SOURCE);
+			super(toSourceURI(name), Kind.SOURCE);
 			this.code = code;
 		}
 		
@@ -174,6 +174,29 @@ public final class MemoryJavaFileManager extends EclipseFileManager
 			{
 				return URI.create("file:///com/sun/script/java/java_source");
 			}
+		}
+	}
+
+	private static URI toSourceURI(String name)
+	{
+		File file = new File(name);
+		if (file.exists())
+		{
+			return file.toURI();
+		}
+
+		String sourceName = name.replace('\\', '/');
+		while (sourceName.startsWith("/"))
+		{
+			sourceName = sourceName.substring(1);
+		}
+		try
+		{
+			return new URI("string", null, "/" + sourceName, null);
+		}
+		catch (Exception exception)
+		{
+			return URI.create("string:///java_source.java");
 		}
 	}
 }

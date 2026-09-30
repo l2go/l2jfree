@@ -121,7 +121,9 @@ public class JavaCompiler
 				PrintWriter perr = new PrintWriter(err);
 				for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
 				{
-					perr.println(diagnostic.getMessage(null));
+					perr.println(diagnostic.getKind() + " " + diagnostic.getCode() + ": line "
+							+ diagnostic.getLineNumber() + ", column " + diagnostic.getColumnNumber() + ": "
+							+ diagnostic.getMessage(null));
 				}
 				perr.flush();
 				return null;
