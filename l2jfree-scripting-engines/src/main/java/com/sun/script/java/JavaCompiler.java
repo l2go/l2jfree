@@ -96,7 +96,8 @@ public class JavaCompiler
 		options.add("-Xlint:all");
 		options.add("-g");
 		options.add("-deprecation");
-		options.add("-1.8");
+		options.add("--release");
+		options.add(Integer.toString(Runtime.version().feature()));
 		if (sourcePath != null)
 		{
 			options.add("-sourcepath");
@@ -113,26 +114,30 @@ public class JavaCompiler
 		javax.tools.JavaCompiler.CompilationTask task =
 				tool.getTask(err, manager, diagnostics, options, null, compUnits);
 		
-		if (task.call() == false)
-		{
-			PrintWriter perr = new PrintWriter(err);
-			for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
-			{
-				perr.println(diagnostic.getMessage(null));
-			}
-			perr.flush();
-			return null;
-		}
-		
-		Map<String, byte[]> classBytes = manager.getClassBytes();
 		try
 		{
-			manager.close();
+			if (task.call() == false)
+			{
+				PrintWriter perr = new PrintWriter(err);
+				for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
+				{
+					perr.println(diagnostic.getMessage(null));
+				}
+				perr.flush();
+				return null;
+			}
+			return manager.getClassBytes();
 		}
-		catch (IOException exp)
+		finally
 		{
+			try
+			{
+				manager.close();
+			}
+			catch (IOException exp)
+			{
+				// The in-memory file manager owns no persistent resources.
+			}
 		}
-		
-		return classBytes;
 	}
 }

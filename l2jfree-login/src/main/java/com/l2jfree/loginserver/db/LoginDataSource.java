@@ -6,65 +6,80 @@
  */
 package com.l2jfree.loginserver.db;
 
-import java.beans.PropertyVetoException;
-import java.sql.SQLException;
+import java.util.Locale;
+
+import javax.sql.DataSource;
 
 import com.l2jfree.Config;
-import com.mchange.v2.c3p0.ComboPooledDataSource;
-import com.mchange.v2.c3p0.PooledDataSource;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariPoolMXBean;
 
-/** Owns the login server's c3p0 connection pool. */
+/** Owns the login server's JDBC connection pool. */
 public final class LoginDataSource implements AutoCloseable
 {
-	private final ComboPooledDataSource dataSource;
+	private final HikariDataSource dataSource;
 
 	public LoginDataSource()
 	{
-		ComboPooledDataSource pool = new ComboPooledDataSource();
-		try
-		{
-			pool.setDriverClass(Config.DATABASE_DRIVER);
-		}
-		catch (PropertyVetoException e)
-		{
-			pool.close();
-			throw new IllegalStateException("Unable to load login database driver " + Config.DATABASE_DRIVER, e);
-		}
-
+		HikariConfig pool = new HikariConfig();
+		pool.setPoolName("l2jfree-loginserver");
+		pool.setDriverClassName(Config.DATABASE_DRIVER);
 		pool.setJdbcUrl(Config.DATABASE_URL);
-		pool.setUser(Config.DATABASE_LOGIN);
+		pool.setUsername(Config.DATABASE_LOGIN);
 		pool.setPassword(Config.DATABASE_PASSWORD);
-		pool.setAcquireIncrement(5);
-		pool.setAcquireRetryAttempts(0);
-		pool.setAcquireRetryDelay(500);
-		pool.setIdleConnectionTestPeriod(600);
-		pool.setMaxIdleTime(1800);
-		pool.setBreakAfterAcquireFailure(false);
-		pool.setCheckoutTimeout(0);
-		pool.setInitialPoolSize(3);
-		pool.setMinPoolSize(1);
-		pool.setMaxPoolSize(20);
-		pool.setMaxStatementsPerConnection(100);
-		pool.setAutoCommitOnClose(true);
-		pool.setPreferredTestQuery("SELECT 1");
-		pool.setTestConnectionOnCheckin(true);
-		pool.setNumHelperThreads(3);
-		dataSource = pool;
+		pool.setAutoCommit(true);
+		pool.setMinimumIdle(1);
+		pool.setMaximumPoolSize(20);
+		pool.setConnectionTimeout(30_000);
+		pool.setValidationTimeout(5_000);
+		if (Config.DATABASE_DRIVER.toLowerCase(Locale.ROOT).contains("mysql"))
+		{
+			pool.addDataSourceProperty("cachePrepStmts", "true");
+			pool.addDataSourceProperty("prepStmtCacheSize", "100");
+			pool.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+		}
+		pool.setInitializationFailTimeout(30_000);
+		dataSource = createDataSource(pool);
 	}
 
-	public ComboPooledDataSource getDataSource()
+	LoginDataSource(HikariConfig pool)
+	{
+		dataSource = createDataSource(pool);
+	}
+
+	private static HikariDataSource createDataSource(HikariConfig pool)
+	{
+		return new HikariDataSource(pool);
+	}
+
+	public DataSource getDataSource()
 	{
 		return dataSource;
 	}
 
-	public int getBusyConnectionCount() throws SQLException
+	public int getBusyConnectionCount()
 	{
-		return ((PooledDataSource)dataSource).getNumBusyConnectionsDefaultUser();
+		HikariPoolMXBean pool = dataSource.getHikariPoolMXBean();
+		return pool == null ? 0 : pool.getActiveConnections();
 	}
 
-	public int getIdleConnectionCount() throws SQLException
+	public int getIdleConnectionCount()
 	{
-		return ((PooledDataSource)dataSource).getNumIdleConnectionsDefaultUser();
+		HikariPoolMXBean pool = dataSource.getHikariPoolMXBean();
+		return pool == null ? 0 : pool.getIdleConnections();
+	}
+
+	public String getPoolStatus()
+	{
+		HikariPoolMXBean pool = dataSource.getHikariPoolMXBean();
+		if (pool == null)
+		{
+			return "closed";
+		}
+		return "active=" + pool.getActiveConnections() + ", idle=" + pool.getIdleConnections() + ", total="
+				+ pool.getTotalConnections() + ", waiting=" + pool.getThreadsAwaitingConnection() + ", max="
+				+ dataSource.getMaximumPoolSize();
 	}
 
 	@Override

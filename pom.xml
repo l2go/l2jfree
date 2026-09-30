@@ -3,12 +3,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<!--
-		This file did not exist in the upstream pack: `l2jfree-module/pom.xml` already
-		aggregates every module, but as the *parent* POM, not the repository root, so
-		`mvn install` only worked from inside `l2jfree-module/`. This is a thin,
-		build-tooling-only entry point so `mvn install` also works from the repository
-		root, as most tooling (including CI) expects. It adds no build logic of its own
-		and changes nothing about how any module compiles or behaves.
+		This thin root entry point makes `mvn install` work from the repository root,
+		as CI expects. It also configures the aggregate release SBOM goal; application
+		code and module runtime behavior remain owned by the child projects.
 	-->
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.l2jfree</groupId>
@@ -19,4 +16,21 @@
 	<modules>
 		<module>l2jfree-module</module>
 	</modules>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.cyclonedx</groupId>
+				<artifactId>cyclonedx-maven-plugin</artifactId>
+				<version>2.9.2</version>
+				<configuration>
+					<projectType>application</projectType>
+					<outputFormat>json</outputFormat>
+					<outputName>bom</outputName>
+					<outputDirectory>${project.build.directory}</outputDirectory>
+					<outputReactorProjects>false</outputReactorProjects>
+					<skipAttach>true</skipAttach>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

@@ -6,6 +6,7 @@ echo.
 
 SET OLDCLASSPATH=%CLASSPATH%
 call setenv.bat
+if ERRORLEVEL 1 goto error
 
 REM -------------------------------------
 REM Default parameters for a basic server.

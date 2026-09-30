@@ -52,7 +52,8 @@ public class LauncherGS extends AbstractDBLauncher
 		if ((args != null) && (args.length > 0))
 		{
 			new DBInstallerConsole(defDatabase, dir, cleanUpScript, getArg("-h", args), getArg("-p", args), getArg(
-					"-u", args), getArg("-pw", args), getArg("-d", args), getArg("-m", args));
+					"-u", args), getArg("-pw", args), getArg("-d", args), getArg("-m", args),
+					getArg("-confirm-clean", args));
 			return;
 		}
 		

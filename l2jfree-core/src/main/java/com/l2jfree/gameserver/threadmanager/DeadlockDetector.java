@@ -68,7 +68,13 @@ public final class DeadlockDetector extends L2Thread
 		
 		for (long id : ids)
 			if (_logged.add(id))
-				deadlocked.add(findThreadById(id));
+			{
+				Thread thread = findThreadById(id);
+				if (thread != null)
+					deadlocked.add(thread);
+				else
+					_log.warn("Deadlocked thread terminated before diagnostic capture: " + id);
+			}
 		
 		if (!deadlocked.isEmpty())
 		{
@@ -104,10 +110,9 @@ public final class DeadlockDetector extends L2Thread
 	private Thread findThreadById(long id)
 	{
 		for (Thread thread : Thread.getAllStackTraces().keySet())
-			if (thread.getId() == id)
+			if (thread.threadId() == id)
 				return thread;
-		
-		throw new IllegalStateException("Deadlocked Thread not found!");
+		return null;
 	}
 	
 	private static final class Halt extends Thread

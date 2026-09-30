@@ -16,12 +16,12 @@ package com.l2jfree.network;
 
 import java.io.UnsupportedEncodingException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class ReceivableBasePacket
 {
-	protected static final Log _log = LogFactory.getLog(ReceivableBasePacket.class);
+	protected static final Logger _log = LoggerFactory.getLogger(ReceivableBasePacket.class);
 	
 	private final byte[] _data;
 	private int _off;

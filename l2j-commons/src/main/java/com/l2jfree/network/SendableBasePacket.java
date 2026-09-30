@@ -17,12 +17,12 @@ package com.l2jfree.network;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class SendableBasePacket
 {
-	protected static final Log _log = LogFactory.getLog(SendableBasePacket.class);
+	protected static final Logger _log = LoggerFactory.getLogger(SendableBasePacket.class);
 	
 	private final ByteArrayOutputStream _bao = new ByteArrayOutputStream();
 	

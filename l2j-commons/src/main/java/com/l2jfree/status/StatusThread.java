@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.status.commands.ClassStats;
 import com.l2jfree.status.commands.GC;
@@ -37,7 +37,7 @@ import com.l2jfree.util.HandlerRegistry;
  */
 public abstract class StatusThread extends Thread
 {
-	protected static final Log _log = LogFactory.getLog(StatusThread.class);
+	protected static final Logger _log = LoggerFactory.getLogger(StatusThread.class);
 	
 	private final StatusServer _server;
 	private final Socket _socket;

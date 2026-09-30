@@ -62,16 +62,7 @@ public class DBDumper
 				dump.createNewFile();
 				
 				_frame.appendToProgressArea("Writing dump " + dump.getName());
-				if (rset.last())
-				{
-					int rows = rset.getRow();
-					rset.beforeFirst();
-					if (rows > 0)
-					{
-						_frame.setProgressIndeterminate(false);
-						_frame.setProgressMaximum(rows);
-					}
-				}
+				_frame.setProgressIndeterminate(true);
 				
 				try (
 					FileWriter fileWriter = new FileWriter(dump);

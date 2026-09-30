@@ -65,8 +65,8 @@ public final class GameserversDAOJdbc implements GameserversDAO
 	{
 		transactions.withConnection(connection -> {
 			try (PreparedStatement statement = connection.prepareStatement("INSERT INTO gameservers "
-					+ "(server_id, hexid, host) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE "
-					+ "hexid=VALUES(hexid), host=VALUES(host)"))
+					+ "(server_id, hexid, host) VALUES (?, ?, ?) AS new ON DUPLICATE KEY UPDATE "
+					+ "hexid=new.hexid, host=new.host"))
 			{
 				bind(statement, gameserver);
 				statement.executeUpdate();
@@ -80,8 +80,8 @@ public final class GameserversDAOJdbc implements GameserversDAO
 	{
 		transactions.inTransaction(connection -> {
 			try (PreparedStatement statement = connection.prepareStatement("INSERT INTO gameservers "
-					+ "(server_id, hexid, host) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE "
-					+ "hexid=VALUES(hexid), host=VALUES(host)"))
+					+ "(server_id, hexid, host) VALUES (?, ?, ?) AS new ON DUPLICATE KEY UPDATE "
+					+ "hexid=new.hexid, host=new.host"))
 			{
 				for (Object entity : entities)
 				{

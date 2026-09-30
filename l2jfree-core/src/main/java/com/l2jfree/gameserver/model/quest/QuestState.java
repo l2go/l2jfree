@@ -420,7 +420,7 @@ public final class QuestState
 			statement.setInt(1, _player.getObjectId());
 			statement.setString(2, var);
 			ResultSet rs = statement.executeQuery();
-			if (rs.first())
+			if (rs.next())
 				result = rs.getString(1);
 			rs.close();
 			statement.close();

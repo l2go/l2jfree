@@ -38,9 +38,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Jdk14Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.config.ConfigProperty;
 import com.l2jfree.config.L2Properties;
@@ -64,7 +62,7 @@ public abstract class L2AutoInitialization
 	
 	public static Level EXTENDED_LOG_LEVEL = Level.OFF;
 	
-	protected static final Log _log;
+	protected static final org.slf4j.Logger _log;
 	protected static final Logger _logger;
 	
 	public static final PrintStream out = System.out;
@@ -168,8 +166,6 @@ public abstract class L2AutoInitialization
 		
 		System.setProperty("line.separator", "\r\n");
 		System.setProperty("file.encoding", "UTF-8");
-		System.setProperty("org.apache.commons.logging.LogFactory", "org.apache.commons.logging.impl.LogFactoryImpl");
-		System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.Jdk14Logger");
 		System.setProperty("java.util.logging.manager", "com.l2jfree.util.logging.L2LogManager");
 		
 		FileInputStream fis = null;
@@ -196,9 +192,9 @@ public abstract class L2AutoInitialization
 			IOUtils.closeQuietly(fis);
 		}
 		
-		_log = LogFactory.getLog(L2AutoInitialization.class);
+		_log = LoggerFactory.getLogger(L2AutoInitialization.class);
 		_log.info("logging initialized");
-		_logger = ((Jdk14Logger)_log).getLogger();
+		_logger = Logger.getLogger(L2AutoInitialization.class.getName());
 		
 		System.setOut(new PrintStream(new BufferedRedirectingOutputStream() {
 			@Override
@@ -324,7 +320,7 @@ public abstract class L2AutoInitialization
 			}
 			catch (Exception e)
 			{
-				_log.fatal("Failed to load '" + getFileName() + "'!", e);
+				_log.error("Failed to load '" + getFileName() + "'!", e);
 				
 				throw new Exception("Failed to load '" + getFileName() + "'!");
 			}

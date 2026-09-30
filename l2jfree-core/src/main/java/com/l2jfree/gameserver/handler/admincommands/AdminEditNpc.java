@@ -1045,9 +1045,8 @@ public class AdminEditNpc implements IAdminCommandHandler
 			stmt.setInt(2, itemID);
 			stmt.setLong(3, price);
 			ResultSet rs = stmt.executeQuery();
-			rs.first();
-			
-			order = rs.getInt("order");
+			if (rs.next())
+				order = rs.getInt("order");
 			
 			stmt.close();
 			rs.close();
@@ -1147,9 +1146,8 @@ public class AdminEditNpc implements IAdminCommandHandler
 					con.prepareStatement("SELECT * FROM custom_merchant_buylists WHERE `shop_id`='" + tradeListID
 							+ "' AND `item_id` ='" + itemID + "' AND `price` = '" + price + "'");
 			ResultSet rs = stmt.executeQuery();
-			rs.first();
-			
-			order = rs.getInt("order");
+			if (rs.next())
+				order = rs.getInt("order");
 			
 			stmt.close();
 			rs.close();

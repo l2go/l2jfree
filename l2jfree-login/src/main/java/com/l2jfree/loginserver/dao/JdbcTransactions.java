@@ -8,6 +8,7 @@ package com.l2jfree.loginserver.dao;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Objects;
 
 import javax.sql.DataSource;
 
@@ -18,7 +19,7 @@ public final class JdbcTransactions
 
 	public JdbcTransactions(DataSource dataSource)
 	{
-		this.dataSource = dataSource;
+		this.dataSource = Objects.requireNonNull(dataSource, "dataSource");
 	}
 
 	public <T> T withConnection(SqlWork<T> work)
@@ -39,6 +40,7 @@ public final class JdbcTransactions
 		{
 			boolean originalAutoCommit = connection.getAutoCommit();
 			connection.setAutoCommit(false);
+			boolean restoreAutoCommit = true;
 			try
 			{
 				T result = work.execute(connection);
@@ -54,6 +56,7 @@ public final class JdbcTransactions
 				catch (SQLException rollbackFailure)
 				{
 					e.addSuppressed(rollbackFailure);
+					restoreAutoCommit = false;
 				}
 				if (e instanceof SQLException)
 				{
@@ -63,13 +66,16 @@ public final class JdbcTransactions
 			}
 			finally
 			{
-				try
+				if (restoreAutoCommit)
 				{
-					connection.setAutoCommit(originalAutoCommit);
-				}
-				catch (SQLException ignored)
-				{
-					// The connection is closed immediately after this method.
+					try
+					{
+						connection.setAutoCommit(originalAutoCommit);
+					}
+					catch (SQLException ignored)
+					{
+						// The connection is closed immediately after this method.
+					}
 				}
 			}
 		}

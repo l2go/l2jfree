@@ -14,9 +14,9 @@
 	<packaging>jar</packaging>
 	<dependencies>
 		<dependency>
-			<groupId>org.eclipse.jdt.core.compiler</groupId>
+			<groupId>org.eclipse.jdt</groupId>
 			<artifactId>ecj</artifactId>
-			<version>4.4.2</version>
+			<version>3.44.0</version>
 		</dependency>
 		<!-- Updating Jython to a newer version is NOT recommend. -->
 		<dependency>
