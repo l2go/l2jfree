@@ -18,8 +18,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.config.L2Properties;
 
@@ -31,7 +31,7 @@ import com.l2jfree.config.L2Properties;
  */
 public class DynamicExtension
 {
-	private static Log _log = LogFactory.getLog(DynamicExtension.class);
+	private static Logger _log = LoggerFactory.getLogger(DynamicExtension.class);
 	private JarClassLoader classLoader;
 	private static final String CONFIG = "config/extensions.properties";
 	private L2Properties _prop;

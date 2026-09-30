@@ -10,8 +10,8 @@ Version values marked as properties are maintained in
 
 | Module | Dependency | Current version | Scope | Purpose and status |
 |---|---|---:|---|---|
-| `l2j-commons` | Commons Logging API | 1.2 | Provided | Compile compatibility for unmigrated modules; the runtime JCL bridge routes legacy callers to SLF4J. |
-| `l2j-commons`, LoginServer | SLF4J API | 2.0.20 | Runtime | Application logging API for the migrated common and login modules; the existing JUL provider remains during transition. |
+| `l2j-commons`, GameServer, MMOCore | SLF4J API | 2.0.20 | Runtime | Application logging API; modules declare it directly where source code uses it and LoginServer receives it through `l2j-commons`. |
+| Runtime distributions | JCL-to-SLF4J bridge | 2.0.20 | Runtime | Routes third-party Commons Logging calls to SLF4J pending a dependency and script audit. |
 | `l2j-commons` | Apache Commons Lang | 3.20.0 | Runtime | General utility library. |
 | `l2j-commons` | Apache Commons IO | 2.22.0 | Runtime | File and stream utilities. |
 | `l2j-commons` | MySQL Connector/J | 26.7.0 | Runtime | JDBC driver for the fixed MySQL 8.4 platform. |

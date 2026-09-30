@@ -19,8 +19,8 @@ import java.util.Map;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author mkizub <BR>
@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class StatsSet
 {
-	private static final Log _log = LogFactory.getLog(StatsSet.class);
+	private static final Logger _log = LoggerFactory.getLogger(StatsSet.class);
 	
 	private final Map<String, Object> _set = new FastMap<String, Object>();
 	

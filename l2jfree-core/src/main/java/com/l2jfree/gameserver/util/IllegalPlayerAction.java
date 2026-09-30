@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.GmListTable;
@@ -28,7 +28,7 @@ import com.l2jfree.gameserver.network.SystemMessageId;
  */
 public final class IllegalPlayerAction implements Runnable
 {
-	private static final Log _logAudit = LogFactory.getLog("audit");
+	private static final Logger _logAudit = LoggerFactory.getLogger("audit");
 	
 	protected String _message;
 	protected int _punishment;

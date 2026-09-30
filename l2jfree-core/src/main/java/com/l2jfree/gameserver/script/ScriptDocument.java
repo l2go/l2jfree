@@ -21,8 +21,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -32,7 +32,7 @@ import org.xml.sax.SAXException;
  */
 public class ScriptDocument
 {
-	private final static Log _log = LogFactory.getLog(ScriptDocument.class);
+	private final static Logger _log = LoggerFactory.getLogger(ScriptDocument.class);
 	private Document _document = null;
 	private String _name = null;
 	

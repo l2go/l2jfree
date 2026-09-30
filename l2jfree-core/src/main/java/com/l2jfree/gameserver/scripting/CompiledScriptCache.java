@@ -32,8 +32,8 @@ import javax.script.ScriptException;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Cache of Compiled Scripts
@@ -47,7 +47,7 @@ public class CompiledScriptCache implements Serializable
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	private static final Log _log = LogFactory.getLog(CompiledScriptCache.class);
+	private static final Logger _log = LoggerFactory.getLogger(CompiledScriptCache.class);
 	
 	private final Map<String, CompiledScriptHolder> _compiledScriptCache = new FastMap<String, CompiledScriptHolder>();
 	private transient boolean _modified = false;

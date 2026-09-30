@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.taskmanager.tasks;
 
 import java.util.concurrent.ScheduledFuture;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.taskmanager.tasks.TaskManager.ExecutedTask;
 
@@ -26,7 +26,7 @@ import com.l2jfree.gameserver.taskmanager.tasks.TaskManager.ExecutedTask;
  */
 abstract class TaskHandler
 {
-	static final Log _log = LogFactory.getLog(TaskHandler.class);
+	static final Logger _log = LoggerFactory.getLogger(TaskHandler.class);
 	
 	final String getName()
 	{

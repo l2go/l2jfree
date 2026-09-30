@@ -20,8 +20,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -36,7 +36,7 @@ import com.l2jfree.gameserver.util.TableOptimizer.ItemRelatedTable;
  */
 public abstract class IdFactory
 {
-	private final static Log _log = LogFactory.getLog(IdFactory.class);
+	private final static Logger _log = LoggerFactory.getLogger(IdFactory.class);
 	
 	protected static final String[] ID_UPDATES = {
 			"UPDATE items                 SET owner_id = ?    WHERE owner_id = ?",

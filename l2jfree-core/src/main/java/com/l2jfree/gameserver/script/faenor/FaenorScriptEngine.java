@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
 import com.l2jfree.Config;
@@ -40,7 +40,7 @@ import com.l2jfree.gameserver.script.ScriptPackage;
  */
 public class FaenorScriptEngine extends ScriptEngine
 {
-	private static Log _log = LogFactory.getLog(GameServer.class);
+	private static Logger _log = LoggerFactory.getLogger(GameServer.class);
 	public static String PACKAGE_DIRECTORY = "data/faenor/";
 	
 	private LinkedList<ScriptDocument> _scripts;

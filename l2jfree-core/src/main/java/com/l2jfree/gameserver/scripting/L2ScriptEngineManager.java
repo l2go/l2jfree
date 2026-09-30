@@ -50,8 +50,8 @@ import javax.script.SimpleScriptContext;
 import javolution.util.FastMap;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 
@@ -62,7 +62,7 @@ import com.l2jfree.Config;
  */
 public final class L2ScriptEngineManager
 {
-	private static final Log _log = LogFactory.getLog(L2ScriptEngineManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(L2ScriptEngineManager.class);
 	
 	public final static File SCRIPT_FOLDER;
 	

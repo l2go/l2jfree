@@ -21,8 +21,8 @@ import java.util.StringTokenizer;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -34,7 +34,7 @@ import com.l2jfree.lang.L2TextBuilder;
  */
 public class UpdateBBSManager extends BaseBBSManager
 {
-	private final static Log _log = LogFactory.getLog(UpdateBBSManager.class);
+	private final static Logger _log = LoggerFactory.getLogger(UpdateBBSManager.class);
 	
 	public class UpdateItem
 	{

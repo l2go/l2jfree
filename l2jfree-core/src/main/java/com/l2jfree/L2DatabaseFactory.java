@@ -20,12 +20,12 @@ import java.util.Locale;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class L2DatabaseFactory
 {
-	private static final Log _log = LogFactory.getLog(L2DatabaseFactory.class);
+	private static final Logger _log = LoggerFactory.getLogger(L2DatabaseFactory.class);
 	
 	public static enum ProviderType
 	{
@@ -173,7 +173,7 @@ public final class L2DatabaseFactory
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("L2DatabaseFactory: Failed to retrieve database connection", e);
+			_log.error("L2DatabaseFactory: Failed to retrieve database connection", e);
 			throw new IllegalStateException("Unable to acquire a database connection", e);
 		}
 	}

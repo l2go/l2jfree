@@ -23,8 +23,8 @@ import java.util.Map;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.communitybbs.Manager.ForumsBBSManager;
@@ -44,7 +44,7 @@ public class Forum
 	public static final int CLANMEMBERONLY = 2;
 	public static final int OWNERONLY = 3;
 	
-	private final static Log _log = LogFactory.getLog(Forum.class);
+	private final static Logger _log = LoggerFactory.getLogger(Forum.class);
 	
 	private final List<Forum> _children;
 	private final Map<Integer, Topic> _topic;

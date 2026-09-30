@@ -32,8 +32,8 @@ import java.util.Set;
 import javolution.util.FastMap;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2AutoInitialization;
@@ -45,7 +45,7 @@ import com.l2jfree.gameserver.util.Util;
  */
 public final class HtmCache
 {
-	private static final Log _log = LogFactory.getLog(HtmCache.class);
+	private static final Logger _log = LoggerFactory.getLogger(HtmCache.class);
 	
 	private static final FileFilter HTM_FILTER = file -> {
 		if (L2AutoInitialization.isIDEMode() && file.toURI().getPath().contains("target/classes"))
@@ -124,7 +124,7 @@ public final class HtmCache
 			parseDir(Config.DATAPACK_ROOT);
 		}
 		
-		_log.info(this);
+		_log.info(String.valueOf(this));
 		
 		if (cacheFile.exists())
 		{
@@ -154,7 +154,7 @@ public final class HtmCache
 				}
 			}
 			
-			_log.info(this);
+			_log.info(String.valueOf(this));
 		}
 		
 		if (cacheFile.exists())

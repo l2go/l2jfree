@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.taskmanager;
 
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.lang.management.StartupManager;
@@ -29,7 +29,7 @@ import com.l2jfree.tools.random.Rnd;
  */
 abstract class AbstractPeriodicTaskManager implements Runnable, StartupHook
 {
-	static final Log _log = LogFactory.getLog(AbstractPeriodicTaskManager.class);
+	static final Logger _log = LoggerFactory.getLogger(AbstractPeriodicTaskManager.class);
 	
 	private final ReentrantReadWriteLock _lock = new ReentrantReadWriteLock();
 	private final ReentrantReadWriteLock.ReadLock _readLock = _lock.readLock();

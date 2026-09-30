@@ -20,8 +20,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Stack;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -33,7 +33,7 @@ import com.l2jfree.L2DatabaseFactory;
  */
 public class StackIDFactory extends IdFactory
 {
-	private final static Log _log = LogFactory.getLog(IdFactory.class);
+	private final static Logger _log = LoggerFactory.getLogger(IdFactory.class);
 	
 	private int _curOID;
 	private int _tempOID;
@@ -71,7 +71,7 @@ public class StackIDFactory extends IdFactory
 		}
 		catch (Exception e1)
 		{
-			_log.fatal("ID Factory could not be initialized correctly:" + e1, e1);
+			_log.error("ID Factory could not be initialized correctly:" + e1, e1);
 		}
 		finally
 		{
@@ -100,7 +100,7 @@ public class StackIDFactory extends IdFactory
 				if (rs.next())
 				{
 					int badId = rs.getInt(1);
-					_log.fatal("Bad ID " + badId + " in DB found by: " + check);
+					_log.error("Bad ID " + badId + " in DB found by: " + check);
 					throw new RuntimeException();
 				}
 				rs.close();

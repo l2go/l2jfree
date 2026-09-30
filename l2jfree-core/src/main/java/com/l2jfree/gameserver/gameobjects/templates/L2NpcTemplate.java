@@ -24,8 +24,8 @@ import javolution.util.FastList;
 import javolution.util.FastMap;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.gameobjects.base.ClassId;
 import com.l2jfree.gameserver.model.L2MinionData;
@@ -66,7 +66,7 @@ public final class L2NpcTemplate extends L2CreatureTemplate
 	/**
 	 * Logger
 	 */
-	private final static Log _log = LogFactory.getLog(L2NpcTemplate.class);
+	private final static Logger _log = LoggerFactory.getLogger(L2NpcTemplate.class);
 	
 	private int _npcId;
 	private int _idTemplate;

@@ -18,15 +18,15 @@ import java.util.Map;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author NB4L1
  */
 public class ValidatingStatsSet extends StatsSet
 {
-	private static final Log _log = LogFactory.getLog(ValidatingStatsSet.class);
+	private static final Logger _log = LoggerFactory.getLogger(ValidatingStatsSet.class);
 	
 	private final Map<String, Object> _nonRequestedStats = new FastMap<String, Object>();
 	

@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.geodata;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.L2Object;
@@ -30,7 +30,7 @@ import com.l2jfree.tools.geometry.Point3D;
  */
 public class GeoData
 {
-	protected static final Log _log = LogFactory.getLog(GeoData.class);
+	protected static final Logger _log = LoggerFactory.getLogger(GeoData.class);
 	
 	private static final class SingletonHolder
 	{

@@ -56,7 +56,7 @@ public final class CharacterSelected extends L2ClientPacket
 		
 		if (cha == null)
 		{
-			_log.fatal(getClient() + ": character couldn't be loaded (slot:" + _charSlot + ")");
+			_log.error(getClient() + ": character couldn't be loaded (slot:" + _charSlot + ")");
 			sendPacket(ActionFailed.STATIC_PACKET);
 			return;
 		}

@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.Shutdown;
@@ -151,7 +151,7 @@ import com.l2jfree.util.LazyFastSet;
  */
 public abstract class L2Creature extends L2Object
 {
-	public final static Log _log = LogFactory.getLog(L2Creature.class);
+	public final static Logger _log = LoggerFactory.getLogger(L2Creature.class);
 	
 	// =========================================================
 	// Data Field
@@ -750,7 +750,7 @@ public abstract class L2Creature extends L2Object
 		
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		return safeFallHeight;
@@ -2082,7 +2082,7 @@ public abstract class L2Creature extends L2Object
 		}
 		catch (Exception e)
 		{
-			_log.fatal("", e);
+			_log.error("", e);
 		}
 		
 		getAttackByList().clear();

@@ -18,8 +18,8 @@ import java.util.Map;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -30,7 +30,7 @@ import com.l2jfree.gameserver.gameobjects.L2Player;
  */
 public final class WarehouseCacheManager implements Runnable
 {
-	private static final Log _log = LogFactory.getLog(WarehouseCacheManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(WarehouseCacheManager.class);
 	
 	public static WarehouseCacheManager getInstance()
 	{

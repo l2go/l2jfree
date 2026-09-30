@@ -25,8 +25,8 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.geodata.GeoData;
@@ -43,7 +43,7 @@ import com.l2jfree.util.LookupTable;
  */
 public final class GeoPathFinding extends PathFinding
 {
-	private static final Log _log = LogFactory.getLog(GeoPathFinding.class);
+	private static final Logger _log = LoggerFactory.getLogger(GeoPathFinding.class);
 	
 	private static final class SingletonHolder
 	{

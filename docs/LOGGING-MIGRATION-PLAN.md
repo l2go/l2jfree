@@ -3,10 +3,10 @@
 ## Current logging architecture
 
 The source tree originally contained 274 Java files that depended on Apache
-Commons Logging. The initial staged migration has moved the `l2j-commons`
-application callers to SLF4J 2.x. Source code no longer casts to Commons
-Logging's `Jdk14Logger` adapter; the named `chat` channel now uses its JUL
-logger directly.
+Commons Logging. All first-party Java callers have since moved to SLF4J 2.x or
+a specialized logging adapter. Source code no longer casts to Commons
+Logging's `Jdk14Logger` adapter; the named `chat` channel uses its JUL logger
+directly where JUL record parameters are required.
 At the same time, LoginServer and GameServer load separate JUL
 `logging.properties` files and use custom handlers and formatters.
 
@@ -18,11 +18,10 @@ formatting.
 
 The JDBC modernization adds SLF4J's JUL provider to both server distributions
 as a transition step. This sends HikariCP diagnostics through the existing JUL
-configuration. The first source migration slice uses SLF4J in `l2j-commons`;
-remaining application callers still use Commons Logging's existing JUL route.
-No JUL-to-SLF4J bridge is installed, so the transition does not create a
-logging feedback cycle. The final logging backend remains a separate, gated
-migration.
+configuration. The JCL-to-SLF4J bridge remains for third-party libraries and
+dynamically loaded scripts while those are audited. No JUL-to-SLF4J bridge is
+installed, so the transition does not create a logging feedback cycle. The
+final logging backend remains a separate, gated migration.
 
 ## Target
 
@@ -41,15 +40,16 @@ every output channel.
    common startup class uses SLF4J and retains the matching JUL logger name
    for redirected standard output and error; the `chat` channel obtains its
    JUL logger directly and keeps the same channel name.
-3. Introduce SLF4J and Logback as an isolated CI-qualified logging slice. Use
-   one-way bridges for remaining Commons Logging callers and JUL callers;
+3. Introduce SLF4J and Logback as an isolated CI-qualified logging slice. Keep
+   only one-way adapters for third-party Commons Logging and JUL callers;
    exclude conflicting bindings and prevent bridge cycles.
 4. Route the existing named channels to separate appenders with equivalent
    filters, formatters, and retention. Preserve distinct audit and
    authentication-failure access controls.
-5. Migrate application call sites from Commons Logging in reviewable packages.
-   Remove the Commons Logging bridge only after all production callers and
-   third-party dependencies have a supported route.
+5. Migrate application call sites from Commons Logging. Completed for
+   first-party Java sources. Remove the Commons Logging bridge only after all
+   production dependencies and dynamically loaded scripts have a supported
+   route.
 6. Test routing, level changes, exception stack traces, rotation, restart
    append behavior, and concurrent writes in GitHub Actions. Requalify output
    and access controls on the Windows target.
@@ -73,18 +73,16 @@ unreviewable bulk replacement.
 
 ## Migration progress
 
-- Completed: application loggers in `l2j-commons` and LoginServer now use the
-  SLF4J API. Fatal messages map to SLF4J error level; other levels and
-  throwable arguments are preserved. LoginServer no longer logs the local or
-  supplied player session key on failed authentication.
+- Completed: all first-party Java application callers across `l2j-commons`,
+  LoginServer, GameServer, and MMOCore use SLF4J or a specialized logging
+  adapter. Fatal-level calls map to SLF4J error level; throwable arguments and
+  the existing audit, chat, and IRC logger names are preserved. LoginServer
+  no longer logs the local or supplied player session key on failed
+  authentication. The core and MMOCore modules no longer need the Commons
+  Logging API as a compile dependency.
 - In progress: SLF4J 2.0.20, Logback 1.5, and the JCL-to-SLF4J compatibility
-  bridge are configured. Application callers in `l2j-commons` and LoginServer
-  use SLF4J. GameServer datatables, 45 instance-manager classes, 21
-  admin-command handlers, and 8 other handler classes are migrated. Remaining
-  GameServer, mmocore, scripting, and IRC callers still use Commons Logging
-  and are routed through
-  the compatibility bridge;
-  package-sized migrations are pending. Logback
+  bridge are configured. The bridge remains on the runtime classpath pending
+  an audit of third-party libraries and dynamically loaded scripts. Logback
   declares dedicated appenders for audit, chat, IRC, item,
   login, login-attempt, and failed-login logger names at the existing
   `log/.../*.log` paths. Each appender appends to the active file and has a
@@ -101,5 +99,5 @@ unreviewable bulk replacement.
   concurrency, and Windows permissions in GitHub Actions and on the target
   host. Keep JUL handlers until that parity gate passes.
 - The SLF4J/JCL runtime bridge replaces the Commons Logging implementation in
-  the runtime classpath. Commons Logging remains compile-only where the
-  unconverted mmocore and legacy core callers require its API.
+  the runtime classpath. The remaining bridge requirement is limited to
+  third-party libraries and dynamically loaded scripts, pending inventory.

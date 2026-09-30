@@ -286,11 +286,12 @@ accept or invoke that destructive operation.
 These tests execute in the GitHub Actions test job.
 Logging inventory originally found 274 Java files using Commons Logging and
 two direct `Jdk14Logger` casts, alongside specialized JUL handlers for audit,
-chat, IRC, item, login-attempt, and failed-login output. The first migration
-slice moves `l2j-commons` application loggers to SLF4J and removes both casts;
-256 Java files still use Commons Logging. The [logging migration plan](LOGGING-MIGRATION-PLAN.md)
-tracks remaining migrations and requires preserving all channels before
-switching the backend.
+chat, IRC, item, login-attempt, and failed-login output. First-party Java
+callers have now migrated to SLF4J or a specialized logging adapter, and both
+casts have been removed. The JCL-to-SLF4J runtime bridge remains pending an
+audit of third-party libraries and dynamically loaded scripts. The
+[logging migration plan](LOGGING-MIGRATION-PLAN.md) tracks the remaining
+backend parity and runtime qualification gates.
 Login persistence upserts use MySQL's row aliases instead of the deprecated
 `VALUES(column)` form, matching the fixed MySQL 8.4 target.
 The old Commons Lang 3.4 dependency is upgraded to 3.20.0 and its version is

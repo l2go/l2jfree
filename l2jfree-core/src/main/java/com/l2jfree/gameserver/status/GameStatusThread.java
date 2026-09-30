@@ -27,8 +27,8 @@ import java.sql.SQLException;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2AutoInitialization;
@@ -86,7 +86,7 @@ import com.l2jfree.util.logging.ListeningLog.LogListener;
 
 public final class GameStatusThread extends Thread
 {
-	private static final Log _log = LogFactory.getLog(GameStatusThread.class);
+	private static final Logger _log = LoggerFactory.getLogger(GameStatusThread.class);
 	
 	private String _gm;
 	

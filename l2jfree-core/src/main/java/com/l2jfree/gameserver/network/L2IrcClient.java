@@ -23,8 +23,8 @@ import java.util.StringTokenizer;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.schwering.irc.lib.IRCConnection;
 import org.schwering.irc.lib.IRCEventListener;
 import org.schwering.irc.lib.IRCModeParser;
@@ -51,8 +51,8 @@ import com.l2jfree.tools.random.Rnd;
 public class L2IrcClient extends Thread
 {
 	
-	private final static Log _log = LogFactory.getLog(L2IrcClient.class);
-	private static Log _logChat = LogFactory.getLog("irc");
+	private final static Logger _log = LoggerFactory.getLogger(L2IrcClient.class);
+	private static Logger _logChat = LoggerFactory.getLogger("irc");
 	
 	private IRCConnection conn;
 	private final String channel;

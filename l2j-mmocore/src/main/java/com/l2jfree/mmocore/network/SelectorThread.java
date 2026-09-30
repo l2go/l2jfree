@@ -19,7 +19,7 @@ import java.net.InetAddress;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 import com.l2jfree.mmocore.network.FloodManager.ErrorMode;
 import com.l2jfree.mmocore.network.FloodManager.Result;
@@ -30,7 +30,7 @@ import com.l2jfree.mmocore.network.FloodManager.Result;
  */
 public abstract class SelectorThread<T extends MMOConnection<T, RP, SP>, RP extends ReceivablePacket<T, RP, SP>, SP extends SendablePacket<T, RP, SP>>
 {
-	protected static final Log _log = new MMOLogger(SelectorThread.class, 1000);
+	protected static final MMOLogger _log = new MMOLogger(SelectorThread.class, 1000);
 	
 	private final AcceptorThread<T, RP, SP> _acceptorThread;
 	private final ReadWriteThread<T, RP, SP>[] _readWriteThreads;

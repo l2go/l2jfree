@@ -22,8 +22,8 @@ import java.rmi.server.UnicastRemoteObject;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.Announcements;
@@ -50,7 +50,7 @@ import com.l2jfree.tools.random.Rnd;
 
 public class RemoteAdministrationImpl extends UnicastRemoteObject implements IRemoteAdministration
 {
-	private final static Log _log = LogFactory.getLog(RemoteAdministrationImpl.class.getName());
+	private final static Logger _log = LoggerFactory.getLogger(RemoteAdministrationImpl.class.getName());
 	private static final long serialVersionUID = -8523099127883669758L;
 	private static RemoteAdministrationImpl _instance;
 	private IRemoteAdministration _obj;
