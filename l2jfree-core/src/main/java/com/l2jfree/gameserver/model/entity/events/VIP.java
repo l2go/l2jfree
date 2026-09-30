@@ -25,8 +25,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -76,7 +76,7 @@ public class VIP
 		}
 	}
 	
-	private final static Log _log = LogFactory.getLog(VIP.class);
+	private final static Logger _log = LoggerFactory.getLogger(VIP.class);
 	public static String _teamName = "", _joinArea = "", _theVIPName = "";
 	
 	public static int _time = 0, _winners = 0, _minPlayers = Config.VIP_MIN_PARTICIPANTS, _vipReward = 0,

@@ -22,8 +22,8 @@ package com.l2jfree.gameserver.model.entity.events;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -50,7 +50,7 @@ public class SH
 		SHRestriction.getInstance().activate(); // TODO: must be checked
 	}
 	
-	private final static Log _log = LogFactory.getLog(SH.class);
+	private final static Logger _log = LoggerFactory.getLogger(SH.class);
 	private static String _eventTitle = new String();
 	private static String _eventDesc = new String();
 	private static String _location = new String();

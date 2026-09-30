@@ -22,8 +22,8 @@ import java.util.concurrent.ScheduledFuture;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -53,7 +53,7 @@ public final class AutomatedTvT
 		AutomatedTvTRestriction.getInstance().activate(); // TODO: must be checked
 	}
 	
-	private static final Log _log = LogFactory.getLog(AutomatedTvT.class);
+	private static final Logger _log = LoggerFactory.getLogger(AutomatedTvT.class);
 	
 	private static final String evtName = "Team versus team";
 	
@@ -160,7 +160,7 @@ public final class AutomatedTvT
 					tpm.scheduleGeneral(task, Config.AUTO_TVT_DELAY_BETWEEN_EVENTS);
 					break;
 				default:
-					_log.fatal("Incorrect status set in Automated " + evtName + ", terminating the event!");
+					_log.error("Incorrect status set in Automated " + evtName + ", terminating the event!");
 			}
 		}
 	}

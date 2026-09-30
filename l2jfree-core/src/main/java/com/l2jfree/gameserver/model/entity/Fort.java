@@ -223,7 +223,7 @@ public class Fort extends Siegeable<FortSiege>
 			}
 			catch (Exception e)
 			{
-				_log.fatal(
+				_log.error(
 						"Exception: Fort.updateFunctions(int type, int lvl, int lease, long rate, long time, boolean addNew): "
 								+ e.getMessage(), e);
 			}
@@ -554,7 +554,7 @@ public class Fort extends Siegeable<FortSiege>
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Exception: Fort.loadFunctions(): " + e.getMessage(), e);
+			_log.error("Exception: Fort.loadFunctions(): " + e.getMessage(), e);
 		}
 		finally
 		{
@@ -579,7 +579,7 @@ public class Fort extends Siegeable<FortSiege>
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Exception: Fort.removeFunctions(int functionType): " + e.getMessage(), e);
+			_log.error("Exception: Fort.removeFunctions(int functionType): " + e.getMessage(), e);
 		}
 		finally
 		{

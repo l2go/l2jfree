@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.model.entity.faction;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -30,7 +30,7 @@ import com.l2jfree.gameserver.gameobjects.L2Player;
  */
 public class FactionQuest
 {
-	protected static Log _log = LogFactory.getLog(FactionQuest.class);
+	protected static Logger _log = LoggerFactory.getLogger(FactionQuest.class);
 	
 	private final int _questId;
 	private static int _factionId;

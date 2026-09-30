@@ -21,8 +21,8 @@ import java.sql.ResultSet;
 import javolution.util.FastList;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.DoorTable;
@@ -38,7 +38,7 @@ import com.l2jfree.gameserver.model.world.spawn.SpawnData;
  */
 public final class TowerOfNaiaRoom
 {
-	private static Log _log = LogFactory.getLog(TowerOfNaiaRoom.class);
+	private static Logger _log = LoggerFactory.getLogger(TowerOfNaiaRoom.class);
 	
 	private int[] _preOpenDoorIds = null;
 	private int[] _preCloseDoorIds = null;
