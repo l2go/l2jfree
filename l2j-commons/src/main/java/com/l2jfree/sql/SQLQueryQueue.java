@@ -19,15 +19,15 @@ import java.sql.SQLException;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author DiezelMax, NB4L1
  */
 public abstract class SQLQueryQueue implements Runnable
 {
-	private static final Log _log = LogFactory.getLog(SQLQueryQueue.class);
+	private static final Logger _log = LoggerFactory.getLogger(SQLQueryQueue.class);
 	
 	private final FastList<SQLQuery> _queue = new FastList<SQLQuery>();
 	
@@ -82,13 +82,13 @@ public abstract class SQLQueryQueue implements Runnable
 				}
 				catch (Exception e)
 				{
-					_log.fatal("", e);
+					_log.error("", e);
 				}
 			}
 		}
 		catch (Exception e)
 		{
-			_log.fatal("", e);
+			_log.error("", e);
 		}
 		finally
 		{

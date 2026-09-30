@@ -15,7 +15,7 @@
 package com.l2jfree.gameserver.scripting;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import javax.script.ScriptException;
 
@@ -49,7 +49,7 @@ public abstract class ManagedScript
 			L2ScriptEngineManager.getInstance().executeScript(getScriptFile());
 			return true;
 		}
-		catch (FileNotFoundException e)
+		catch (IOException e)
 		{
 			return false;
 		}

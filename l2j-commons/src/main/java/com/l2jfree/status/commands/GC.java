@@ -38,17 +38,6 @@ public final class GC extends StatusCommand
 		
 		printMemoryStatistics();
 		
-		println();
-		println("##################################");
-		print("Finalizing...                ");
-		long begin2 = System.currentTimeMillis();
-		System.runFinalization();
-		println("[OK]");
-		println("\tDuration: " + (System.currentTimeMillis() - begin2) + "msec");
-		println("##################################");
-		println();
-		
-		printMemoryStatistics();
 	}
 	
 	private static final String[] COMMANDS = { "gc" };
@@ -62,6 +51,6 @@ public final class GC extends StatusCommand
 	@Override
 	protected String getDescription()
 	{
-		return "garbage collection and finalization";
+		return "garbage collection";
 	}
 }

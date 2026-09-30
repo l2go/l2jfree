@@ -222,16 +222,16 @@ public final class AccountsDAOJdbc implements AccountsDAO
 		addColumn(columns, "lastIP", account.getLastIp());
 		StringBuilder sql = new StringBuilder("INSERT INTO accounts (");
 		sql.append(String.join(", ", columns)).append(") VALUES (").append(placeholders(columns.size()))
-				.append(") ON DUPLICATE KEY UPDATE ");
+				.append(") AS new ON DUPLICATE KEY UPDATE ");
 		List<String> updates = new ArrayList<String>();
 		for (int i = 1; i < columns.size(); i++)
 		{
 			String column = columns.get(i);
-			updates.add(column + " = VALUES(" + column + ")");
+			updates.add(column + " = new." + column);
 		}
 		if (updates.isEmpty())
 		{
-			updates.add("login = VALUES(login)");
+			updates.add("login = new.login");
 		}
 		sql.append(String.join(", ", updates));
 		try (PreparedStatement statement = connection.prepareStatement(sql.toString()))

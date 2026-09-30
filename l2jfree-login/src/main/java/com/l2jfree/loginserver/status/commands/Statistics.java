@@ -16,6 +16,7 @@ package com.l2jfree.loginserver.status.commands;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.l2jfree.L2Registry;
 import com.l2jfree.loginserver.manager.GameServerManager;
 import com.l2jfree.status.StatusCommand;
 
@@ -32,8 +33,7 @@ public final class Statistics extends StatusCommand
 		println("\t...ids: "
 				+ StringUtils
 						.join(GameServerManager.getInstance().getRegisteredGameServers().keySet().iterator(), ", "));
-		
-		// TODO: add more details
+		println("Database pool: " + L2Registry.getInstance().getConnectionPoolStatus());
 	}
 	
 	private static final String[] COMMANDS = { "status", "stats" };

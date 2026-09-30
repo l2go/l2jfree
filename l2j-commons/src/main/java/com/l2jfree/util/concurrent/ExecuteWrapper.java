@@ -16,8 +16,8 @@ package com.l2jfree.util.concurrent;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.lang.L2TextBuilder;
 
@@ -26,7 +26,7 @@ import com.l2jfree.lang.L2TextBuilder;
  */
 public class ExecuteWrapper implements Runnable
 {
-	private static final Log _log = LogFactory.getLog(ExecuteWrapper.class);
+	private static final Logger _log = LoggerFactory.getLogger(ExecuteWrapper.class);
 	
 	private final Runnable _runnable;
 	

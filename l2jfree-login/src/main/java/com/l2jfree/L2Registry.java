@@ -46,7 +46,6 @@ import com.l2jfree.loginserver.dao.impl.GameserversDAOXml;
 import com.l2jfree.loginserver.db.LoginDataSource;
 import com.l2jfree.loginserver.services.AccountsServices;
 import com.l2jfree.loginserver.services.GameserversServices;
-import com.mchange.v2.c3p0.PooledDataSource;
 
 /**
  * 
@@ -210,12 +209,18 @@ public class L2Registry
 	
 	public int getBusyConnectionCount() throws SQLException
 	{
-		return ((PooledDataSource)getDataSource()).getNumBusyConnectionsDefaultUser();
+		return __loginDataSource.getBusyConnectionCount();
 	}
 
 	public int getIdleConnectionCount() throws SQLException
 	{
-		return ((PooledDataSource)getDataSource()).getNumIdleConnectionsDefaultUser();
+		return __loginDataSource.getIdleConnectionCount();
+	}
+
+	public String getConnectionPoolStatus()
+	{
+		ensureInitialized();
+		return __loginDataSource.getPoolStatus();
 	}
 	
 }

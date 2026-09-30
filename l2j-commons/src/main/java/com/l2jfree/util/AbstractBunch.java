@@ -16,8 +16,8 @@ package com.l2jfree.util;
 
 import java.lang.reflect.Array;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author NB4L1
@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
 @SuppressWarnings("unchecked")
 public abstract class AbstractBunch<E> implements Bunch<E>
 {
-	protected static final Log _log = LogFactory.getLog(AbstractBunch.class);
+	protected static final Logger _log = LoggerFactory.getLogger(AbstractBunch.class);
 	
 	@Override
 	public boolean isEmpty()

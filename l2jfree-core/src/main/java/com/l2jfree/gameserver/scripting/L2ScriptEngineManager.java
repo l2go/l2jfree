@@ -17,9 +17,6 @@ package com.l2jfree.gameserver.scripting;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.InvalidClassException;
@@ -27,9 +24,14 @@ import java.io.LineNumberReader;
 import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.LongAdder;
 
 import javax.script.Compilable;
 import javax.script.CompiledScript;
@@ -75,7 +77,10 @@ public final class L2ScriptEngineManager
 	
 	private final CompiledScriptCache _cache;
 	
-	private File _currentLoadingScript;
+	private final ThreadLocal<File> _currentLoadingScript = new ThreadLocal<>();
+	private final LongAdder _scriptLoadAttempts = new LongAdder();
+	private final LongAdder _scriptLoadSuccesses = new LongAdder();
+	private final LongAdder _scriptLoadFailures = new LongAdder();
 	
 	// Configs
 	// TODO move to config file
@@ -180,11 +185,15 @@ public final class L2ScriptEngineManager
 	
 	public void executeScriptList(File list) throws IOException
 	{
+		long attemptsBefore = _scriptLoadAttempts.sum();
+		long successesBefore = _scriptLoadSuccesses.sum();
+		long failuresBefore = _scriptLoadFailures.sum();
 		if (list.isFile())
 		{
-			LineNumberReader lnr = new LineNumberReader(new FileReader(list));
-			String line;
-			File file;
+			try (LineNumberReader lnr = new LineNumberReader(Files.newBufferedReader(list.toPath(), StandardCharsets.UTF_8)))
+			{
+				String line;
+				File file;
 			
 			while ((line = lnr.readLine()) != null)
 			{
@@ -231,12 +240,15 @@ public final class L2ScriptEngineManager
 					}
 				}
 			}
-			lnr.close();
+			}
 		}
 		else
 		{
 			throw new IllegalArgumentException("Argument must be an file containing a list of scripts to be loaded");
 		}
+		_log.info("Script loading summary: " + (_scriptLoadSuccesses.sum() - successesBefore) + " loaded, "
+				+ (_scriptLoadFailures.sum() - failuresBefore) + " failed from "
+				+ (_scriptLoadAttempts.sum() - attemptsBefore) + " attempted.");
 	}
 	
 	public void executeAllScriptsInDirectory(File dir)
@@ -253,7 +265,15 @@ public final class L2ScriptEngineManager
 	{
 		if (dir.isDirectory())
 		{
-			for (File file : dir.listFiles())
+			File[] files = dir.listFiles();
+			if (files == null)
+			{
+				_log.warn("Unable to list script directory: " + dir.getAbsolutePath());
+				return;
+			}
+			Arrays.sort(files, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER)
+					.thenComparing(File::getName));
+			for (File file : files)
 			{
 				if (file.isDirectory() && recurseDown && maxDepth > currentDepth)
 				{
@@ -280,7 +300,7 @@ public final class L2ScriptEngineManager
 							}
 						}
 					}
-					catch (FileNotFoundException e)
+					catch (IOException e)
 					{
 						// should never happen
 						_log.error(e.getMessage(), e);
@@ -343,7 +363,7 @@ public final class L2ScriptEngineManager
 		return null;
 	}
 	
-	public void executeScript(File file) throws ScriptException, FileNotFoundException
+	public void executeScript(File file) throws ScriptException, IOException
 	{
 		String name = file.getName();
 		int lastIndex = name.lastIndexOf('.');
@@ -365,7 +385,7 @@ public final class L2ScriptEngineManager
 		this.executeScript(engine, file);
 	}
 	
-	public void executeScript(String engineName, File file) throws FileNotFoundException, ScriptException
+	public void executeScript(String engineName, File file) throws IOException, ScriptException
 	{
 		ScriptEngine engine = getEngineByName(engineName);
 		if (engine == null)
@@ -374,11 +394,14 @@ public final class L2ScriptEngineManager
 		this.executeScript(engine, file);
 	}
 	
-	public void executeScript(ScriptEngine engine, File file) throws FileNotFoundException, ScriptException
+	public void executeScript(ScriptEngine engine, File file) throws IOException, ScriptException
 	{
-		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-		
-		if (VERBOSE_LOADING)
+		_scriptLoadAttempts.increment();
+		boolean loaded = false;
+		try (BufferedReader reader = new BufferedReader(
+				new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)))
+		{
+			if (VERBOSE_LOADING)
 		{
 			_log.info("Loading Script: " + file.getAbsolutePath());
 		}
@@ -399,7 +422,7 @@ public final class L2ScriptEngineManager
 			context.setAttribute("mainClass", getClassForFile(file).replace('/', '.').replace('\\', '.'),
 					ScriptContext.ENGINE_SCOPE);
 			context.setAttribute(ScriptEngine.FILENAME, file.getName(), ScriptContext.ENGINE_SCOPE);
-			context.setAttribute("classpath", SCRIPT_FOLDER.getAbsolutePath(), ScriptContext.ENGINE_SCOPE);
+			context.setAttribute("classpath", getScriptClassPath(), ScriptContext.ENGINE_SCOPE);
 			context.setAttribute("sourcepath", SCRIPT_FOLDER.getAbsolutePath(), ScriptContext.ENGINE_SCOPE);
 			context.setAttribute("parentLoader", ClassLoader.getSystemClassLoader(), ScriptContext.ENGINE_SCOPE);
 			
@@ -435,7 +458,7 @@ public final class L2ScriptEngineManager
 			context.setAttribute("mainClass", getClassForFile(file).replace('/', '.').replace('\\', '.'),
 					ScriptContext.ENGINE_SCOPE);
 			context.setAttribute(ScriptEngine.FILENAME, file.getName(), ScriptContext.ENGINE_SCOPE);
-			context.setAttribute("classpath", SCRIPT_FOLDER.getAbsolutePath(), ScriptContext.ENGINE_SCOPE);
+			context.setAttribute("classpath", getScriptClassPath(), ScriptContext.ENGINE_SCOPE);
 			context.setAttribute("sourcepath", SCRIPT_FOLDER.getAbsolutePath(), ScriptContext.ENGINE_SCOPE);
 			context.setAttribute("parentLoader", ClassLoader.getSystemClassLoader(), ScriptContext.ENGINE_SCOPE);
 			setCurrentLoadingScript(file);
@@ -450,10 +473,22 @@ public final class L2ScriptEngineManager
 				engine.getContext().removeAttribute("mainClass", ScriptContext.ENGINE_SCOPE);
 				engine.getContext().removeAttribute("parentLoader", ScriptContext.ENGINE_SCOPE);
 			}
-			
+			}
+			loaded = true;
+		}
+		finally
+		{
+			if (loaded)
+			{
+				_scriptLoadSuccesses.increment();
+			}
+			else
+			{
+				_scriptLoadFailures.increment();
+			}
 		}
 	}
-	
+
 	public static String getClassForFile(File script)
 	{
 		String path = script.getAbsolutePath();
@@ -464,6 +499,17 @@ public final class L2ScriptEngineManager
 			return path.substring(scpPath.length() + 1, idx);
 		}
 		return null;
+	}
+
+	private static String getScriptClassPath()
+	{
+		String runtimeClassPath = System.getProperty("java.class.path", "");
+		String scriptFolder = SCRIPT_FOLDER.getAbsolutePath();
+		if (runtimeClassPath.isEmpty())
+		{
+			return scriptFolder;
+		}
+		return runtimeClassPath + File.pathSeparator + scriptFolder;
 	}
 	
 	public ScriptContext getScriptContext(ScriptEngine engine)
@@ -513,7 +559,7 @@ public final class L2ScriptEngineManager
 	
 	public void reportScriptFileError(File script, ScriptException e)
 	{
-		_log.warn("Failed executing script: " + script.getPath() + ".");
+		_log.warn("Failed executing script: " + script.getPath() + " - " + e.getMessage());
 		
 		final StringWriter sw = new StringWriter();
 		final PrintWriter pw = new PrintWriter(sw);
@@ -524,25 +570,18 @@ public final class L2ScriptEngineManager
 		pw.close();
 		
 		final String report = sw.toString();
-		
-		FileOutputStream fos = null;
+
 		try
 		{
 			String fileName = script.getName() + ".error.log";
-			
-			fos = new FileOutputStream(new File(script.getParent(), fileName));
-			fos.write(report.getBytes());
-			
+			Files.writeString(new File(script.getParent(), fileName).toPath(), report, StandardCharsets.UTF_8);
+
 			_log.warn("See " + fileName + " for details.");
 		}
 		catch (IOException ioe)
 		{
 			_log.warn("Additionally failed when trying to write an error report on script directory.", ioe);
 			_log.info(report);
-		}
-		finally
-		{
-			IOUtils.closeQuietly(fos);
 		}
 	}
 	
@@ -567,7 +606,14 @@ public final class L2ScriptEngineManager
 	 */
 	protected void setCurrentLoadingScript(File currentLoadingScript)
 	{
-		_currentLoadingScript = currentLoadingScript;
+		if (currentLoadingScript == null)
+		{
+			_currentLoadingScript.remove();
+		}
+		else
+		{
+			_currentLoadingScript.set(currentLoadingScript);
+		}
 	}
 	
 	/**
@@ -575,7 +621,7 @@ public final class L2ScriptEngineManager
 	 */
 	protected File getCurrentLoadingScript()
 	{
-		return _currentLoadingScript;
+		return _currentLoadingScript.get();
 	}
 	
 	@SuppressWarnings("synthetic-access")

@@ -9,23 +9,28 @@
 	<packaging>pom</packaging>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<l2jfree.build.revision>unknown</l2jfree.build.revision>
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
-		<maven.compiler.release>8</maven.compiler.release>
-		<maven.compiler.testRelease>21</maven.compiler.testRelease>
+		<maven.compiler.release>25</maven.compiler.release>
+		<maven.compiler.testRelease>25</maven.compiler.testRelease>
 		<junit.version>6.1.3</junit.version>
 		<assertj.version>3.27.7</assertj.version>
 		<mockito.version>5.24.0</mockito.version>
 		<mysql-connector-j.version>26.7.0</mysql-connector-j.version>
+		<hikaricp.version>7.1.0</hikaricp.version>
+		<slf4j.version>2.0.20</slf4j.version>
+		<commons-lang3.version>3.20.0</commons-lang3.version>
 		<testcontainers.version>2.0.5</testcontainers.version>
+		<liquibase.version>4.33.0</liquibase.version>
 	</properties>
 	<scm>
-		<connection>scm:git:ssh://git@bitbucket.org/lord_rex/l2jfree-ct2.3.git</connection>
-		<developerConnection>scm:git:ssh://git@bitbucket.org/lord_rex/l2jfree-ct2.3.git</developerConnection>
-		<url>https://bitbucket.org/lord_rex/l2jfree-ct2.3</url>
+		<connection>scm:git:https://github.com/l2go/l2jfree.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/l2go/l2jfree.git</developerConnection>
+		<url>https://github.com/l2go/l2jfree</url>
 	</scm>
 	<issueManagement>
-		<system>bitbucket</system>
-		<url>http://bitbucket.org/lord_rex/l2jfree-ct2.3/issues</url>
+		<system>GitHub</system>
+		<url>https://github.com/l2go/l2jfree/issues</url>
 	</issueManagement>
 	<inceptionYear>2010</inceptionYear>
 	<dependencyManagement>
@@ -43,6 +48,26 @@
 				<version>${junit.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.zaxxer</groupId>
+				<artifactId>HikariCP</artifactId>
+				<version>${hikaricp.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-jdk14</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-lang3</artifactId>
+				<version>${commons-lang3.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -70,20 +95,6 @@
 		<finalName>${project.artifactId}-${project.version}</finalName>
 		<plugins>
 			<plugin>
-				<groupId>ru.concerteza.buildnumber</groupId>
-				<artifactId>maven-jgit-buildnumber-plugin</artifactId>
-				<version>1.2.10</version>
-				<executions>
-					<execution>
-						<id>git-buildnumber</id>
-						<goals>
-							<goal>extract-buildnumber</goal>
-						</goals>
-						<phase>prepare-package</phase>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.5.1</version>
@@ -93,7 +104,7 @@
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 						</manifest>
 						<manifestEntries>
-							<Implementation-Build>${git.commitsCount}</Implementation-Build>
+							<Implementation-Build>${l2jfree.build.revision}</Implementation-Build>
 							<Implementation-Time>${maven.build.timestamp}</Implementation-Time>
 						</manifestEntries>
 					</archive>
@@ -133,7 +144,6 @@
 					<skip>false</skip>
 					<quiet>false</quiet>
 
-					<javadocVersion>1.8</javadocVersion>
 					<charset>UTF-8</charset>
 					<docencoding>UTF-8</docencoding>
 					<!-- <encoding /> is derived from project.build.sourceEncoding -->
@@ -145,13 +155,9 @@
 					<detectLinks>true</detectLinks> <!-- Not maintained -->
 					<validateLinks>true</validateLinks>
 					<links>
-						<link>http://javolution.org/target/site/apidocs</link>
-						<link>http://www.mchange.com/projects/c3p0/apidocs</link>
-						<link>http://commons.apache.org/lang/api</link>
-						<link>http://commons.apache.org/io/apidocs</link>
-						<link>http://www.eclipse.org/eclipselink/api/2.3</link>
-						<link>http://help.eclipse.org/helios/topic/org.eclipse.jdt.doc.isv/reference/api</link>
-						<link>http://jdbc.postgresql.org/documentation/publicapi</link>
+						<link>https://commons.apache.org/proper/commons-lang/javadocs/api-release/</link>
+						<link>https://commons.apache.org/proper/commons-io/javadocs/api-release/</link>
+						<link>https://help.eclipse.org/latest/topic/org.eclipse.jdt.doc.isv/reference/api/</link>
 					</links>
 
 					<author>true</author>
@@ -162,12 +168,12 @@
 					<excludePackageNames>
 						com.sun.*</excludePackageNames>
 
-					<doctitle>L2JFree ${project.version} r${buildNumber} documentation</doctitle>
-					<windowtitle>L2JFree ${project.version} r${buildNumber}
+					<doctitle>L2JFree ${project.version} ${l2jfree.build.revision} documentation</doctitle>
+					<windowtitle>L2JFree ${project.version} ${l2jfree.build.revision}
 						documentation</windowtitle>
-					<header><![CDATA[<a href="https://bitbucket.org/lord_rex/l2jfree-ct2.3/commits/all" target="_top">L2JFree Homepage<a>]]></header>
-					<footer><![CDATA[<a href="https://bitbucket.org/lord_rex/l2jfree-ct2.3/commits/all" target="_top">L2JFree Homepage<a>]]></footer>
-					<packagesheader><![CDATA[<a href="https://bitbucket.org/lord_rex/l2jfree-ct2.3/commits/all" target="_top">L2JFree Homepage<a>]]></packagesheader>
+					<header><![CDATA[<a href="https://github.com/l2go/l2jfree" target="_top">L2JFree source</a>]]></header>
+					<footer><![CDATA[<a href="https://github.com/l2go/l2jfree" target="_top">L2JFree source</a>]]></footer>
+					<packagesheader><![CDATA[<a href="https://github.com/l2go/l2jfree" target="_top">L2JFree source</a>]]></packagesheader>
 				</configuration>
 			</plugin>
 			<plugin>

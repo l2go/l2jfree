@@ -105,9 +105,21 @@ public class DBInstallerConsole implements DBOutputInterface
 	public DBInstallerConsole(String defDatabase, String dir, String cleanUpScript, String host, String port,
 			String user, String pass, String database, String mode)
 	{
+		this(defDatabase, dir, cleanUpScript, host, port, user, pass, database, mode, null);
+	}
+
+	public DBInstallerConsole(String defDatabase, String dir, String cleanUpScript, String host, String port,
+			String user, String pass, String database, String mode, String cleanInstallConfirmation)
+	{
 		if ((database == null) || database.isEmpty())
 		{
 			database = defDatabase;
+		}
+		if ((mode != null) && "c".equalsIgnoreCase(mode) && !confirmsCleanInstall(database, cleanInstallConfirmation))
+		{
+			System.err.println("Refusing destructive clean install. Pass -confirm-clean " + database
+					+ " to confirm the exact target database.");
+			return;
 		}
 		
 		final MySqlConnect connector = new MySqlConnect(host, port, user, pass, database, true);
@@ -119,6 +131,11 @@ public class DBInstallerConsole implements DBOutputInterface
 			final RunTasks rt = new RunTasks(this, database, dir, cleanUpScript, "c".equalsIgnoreCase(mode));
 			rt.run();
 		}
+	}
+
+	static boolean confirmsCleanInstall(String database, String confirmation)
+	{
+		return database != null && database.equals(confirmation);
 	}
 	
 	@Override

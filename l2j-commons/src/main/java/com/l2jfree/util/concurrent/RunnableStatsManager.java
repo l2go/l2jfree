@@ -28,8 +28,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author NB4L1
@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
 @SuppressWarnings("unchecked")
 public final class RunnableStatsManager
 {
-	private static final Log _log = LogFactory.getLog(RunnableStatsManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(RunnableStatsManager.class);
 	
 	private static final Map<Class<?>, ClassStat> _classStats = new HashMap<Class<?>, ClassStat>();
 	

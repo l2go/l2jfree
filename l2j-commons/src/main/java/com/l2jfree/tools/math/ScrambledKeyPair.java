@@ -18,12 +18,12 @@ import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.interfaces.RSAPublicKey;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ScrambledKeyPair
 {
-	private final static Log _log = LogFactory.getLog(ScrambledKeyPair.class);
+	private final static Logger _log = LoggerFactory.getLogger(ScrambledKeyPair.class);
 	
 	private KeyPair pair;
 	private byte[] scrambledModulus;

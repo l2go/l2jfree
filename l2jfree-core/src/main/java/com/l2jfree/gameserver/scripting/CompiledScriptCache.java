@@ -17,12 +17,12 @@ package com.l2jfree.gameserver.scripting;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import javax.script.Compilable;
@@ -52,8 +52,7 @@ public class CompiledScriptCache implements Serializable
 	private final Map<String, CompiledScriptHolder> _compiledScriptCache = new FastMap<String, CompiledScriptHolder>();
 	private transient boolean _modified = false;
 	
-	public CompiledScript loadCompiledScript(ScriptEngine engine, File file) throws FileNotFoundException,
-			ScriptException
+	public CompiledScript loadCompiledScript(ScriptEngine engine, File file) throws IOException, ScriptException
 	{
 		int len = L2ScriptEngineManager.SCRIPT_FOLDER.getPath().length() + 1;
 		String relativeName = file.getPath().substring(len);
@@ -69,10 +68,12 @@ public class CompiledScriptCache implements Serializable
 		if (_log.isDebugEnabled())
 			_log.info("Compiling script: " + file);
 		Compilable eng = (Compilable)engine;
-		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-		
-		// TODO lock file
-		CompiledScript cs = eng.compile(reader);
+		CompiledScript cs;
+		try (BufferedReader reader = new BufferedReader(
+				new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)))
+		{
+			cs = eng.compile(reader);
+		}
 		if (cs instanceof Serializable)
 		{
 			synchronized (_compiledScriptCache)
@@ -109,10 +110,11 @@ public class CompiledScriptCache implements Serializable
 	{
 		synchronized (_compiledScriptCache)
 		{
-			ObjectOutputStream oos =
-					new ObjectOutputStream(new FileOutputStream(new File(L2ScriptEngineManager.SCRIPT_FOLDER,
-							"CompiledScripts.cache")));
-			oos.writeObject(this);
+			try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(
+					L2ScriptEngineManager.SCRIPT_FOLDER, "CompiledScripts.cache"))))
+			{
+				oos.writeObject(this);
+			}
 			_modified = false;
 		}
 	}

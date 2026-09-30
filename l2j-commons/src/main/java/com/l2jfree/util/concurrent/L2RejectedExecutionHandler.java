@@ -18,15 +18,15 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author NB4L1
  */
 public final class L2RejectedExecutionHandler implements RejectedExecutionHandler
 {
-	private static final Log _log = LogFactory.getLog(L2RejectedExecutionHandler.class);
+	private static final Logger _log = LoggerFactory.getLogger(L2RejectedExecutionHandler.class);
 	
 	@Override
 	public void rejectedExecution(Runnable r, ThreadPoolExecutor executor)

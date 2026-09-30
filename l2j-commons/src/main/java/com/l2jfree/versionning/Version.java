@@ -19,8 +19,8 @@ import java.io.IOException;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.lang.L2System;
 
@@ -31,7 +31,7 @@ public class Version
 	private String _buildJdk = "";
 	private String _buildTime = "";
 	
-	private static final Log _log = LogFactory.getLog(Version.class);
+	private static final Logger _log = LoggerFactory.getLogger(Version.class);
 	
 	static
 	{

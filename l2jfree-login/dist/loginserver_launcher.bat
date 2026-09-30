@@ -6,6 +6,7 @@ echo.
 
 SET OLDCLASSPATH=%CLASSPATH%
 call setenv.bat
+if ERRORLEVEL 1 goto error
 
 "%JAVA_CMD%" -Dfile.encoding=UTF-8 -Xmx64m com.l2jfree.loginserver.LoginServer
 

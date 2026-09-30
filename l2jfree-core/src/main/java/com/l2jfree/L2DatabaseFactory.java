@@ -16,9 +16,12 @@ package com.l2jfree;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Locale;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariPoolMXBean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 public final class L2DatabaseFactory
 {
@@ -56,73 +59,74 @@ public final class L2DatabaseFactory
 	}
 	
 	private final ProviderType _providerType;
-	private final ComboPooledDataSource _source;
+	private final HikariDataSource _source;
 	
 	private L2DatabaseFactory()
 	{
+		this(createPoolConfig(), Config.DATABASE_DRIVER.toLowerCase(Locale.ROOT).contains("microsoft")
+				? ProviderType.MsSql : ProviderType.MySql);
+	}
+
+	L2DatabaseFactory(HikariConfig poolConfig, ProviderType providerType)
+	{
+		HikariDataSource source = null;
 		try
 		{
-			if (Config.DATABASE_MAX_CONNECTIONS < 10)
+			source = new HikariDataSource(poolConfig);
+
+			/* Validate the pool before publishing it to the rest of the server. */
+			try (Connection connection = source.getConnection())
 			{
-				Config.DATABASE_MAX_CONNECTIONS = 10;
-				_log.warn("at least " + Config.DATABASE_MAX_CONNECTIONS + " db connections are required.");
+				// A successful checkout confirms the configured driver and database are usable.
 			}
-			
-			_source = new ComboPooledDataSource();
-			_source.setAutoCommitOnClose(true);
-			
-			_source.setInitialPoolSize(10);
-			_source.setMinPoolSize(10);
-			_source.setMaxPoolSize(Config.DATABASE_MAX_CONNECTIONS);
-			
-			_source.setAcquireRetryAttempts(0); // try to obtain connections indefinitely (0 = never quit)
-			_source.setAcquireRetryDelay(500); // 500 miliseconds wait before try to acquire connection again
-			_source.setCheckoutTimeout(0); // 0 = wait indefinitely for new connection
-			// if pool is exhausted
-			_source.setAcquireIncrement(5); // if pool is exhausted, get 5 more connections at a time
-			// cause there is a "long" delay on acquire connection
-			// so taking more than one connection at once will make connection pooling
-			// more effective.
-			
-			// Avoid requiring a test table or CREATE TABLE permissions from the database user.
-			_source.setPreferredTestQuery("SELECT 1");
-			_source.setTestConnectionOnCheckin(false);
-			
-			// testing OnCheckin used with IdleConnectionTestPeriod is faster than testing on checkout
-			
-			_source.setIdleConnectionTestPeriod(3600); // test idle connections every hour
-			_source.setMaxIdleTime(1800); // 0 = idle connections never expire
-			// *THANKS* to connection testing configured above
-			// but I prefer to disconnect all connections not used
-			// for more than 1 hour
-			
-			// enables statement caching, there is a "semi-bug" in c3p0 0.9.0 but in 0.9.0.2 and later it's fixed
-			_source.setMaxStatementsPerConnection(100);
-			
-			_source.setBreakAfterAcquireFailure(false); // never fail if any way possible
-			// setting this to true will make
-			// c3p0 "crash" and refuse to work
-			// till restart thus making acquire
-			// errors "FATAL" ... we don't want that
-			// it should be possible to recover
-			_source.setDriverClass(Config.DATABASE_DRIVER);
-			_source.setJdbcUrl(Config.DATABASE_URL);
-			_source.setUser(Config.DATABASE_LOGIN);
-			_source.setPassword(Config.DATABASE_PASSWORD);
-			
-			/* Test the connection */
-			_source.getConnection().close();
-			
-			if (Config.DATABASE_DRIVER.toLowerCase().contains("microsoft"))
-				_providerType = ProviderType.MsSql;
-			else
-				_providerType = ProviderType.MySql;
-			
+
+			_providerType = providerType;
+			_source = source;
 		}
 		catch (Exception e)
 		{
-			throw new Error("L2DatabaseFactory: Failed to init database connections: " + e, e);
+			if (source != null)
+			{
+				try
+				{
+					source.close();
+				}
+				catch (RuntimeException closeFailure)
+				{
+					e.addSuppressed(closeFailure);
+				}
+			}
+			throw new IllegalStateException("L2DatabaseFactory: Failed to initialize database connections", e);
 		}
+	}
+
+	private static HikariConfig createPoolConfig()
+	{
+		if (Config.DATABASE_MAX_CONNECTIONS < 10)
+		{
+			Config.DATABASE_MAX_CONNECTIONS = 10;
+			_log.warn("at least " + Config.DATABASE_MAX_CONNECTIONS + " db connections are required.");
+		}
+
+		HikariConfig poolConfig = new HikariConfig();
+		poolConfig.setPoolName("l2jfree-gameserver");
+		poolConfig.setDriverClassName(Config.DATABASE_DRIVER);
+		poolConfig.setJdbcUrl(Config.DATABASE_URL);
+		poolConfig.setUsername(Config.DATABASE_LOGIN);
+		poolConfig.setPassword(Config.DATABASE_PASSWORD);
+		poolConfig.setAutoCommit(true);
+		poolConfig.setMaximumPoolSize(Config.DATABASE_MAX_CONNECTIONS);
+		poolConfig.setMinimumIdle(10);
+		poolConfig.setConnectionTimeout(30_000);
+		poolConfig.setValidationTimeout(5_000);
+		if (Config.DATABASE_DRIVER.toLowerCase(Locale.ROOT).contains("mysql"))
+		{
+			poolConfig.addDataSourceProperty("cachePrepStmts", "true");
+			poolConfig.addDataSourceProperty("prepStmtCacheSize", "100");
+			poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+		}
+		poolConfig.setInitializationFailTimeout(30_000);
+		return poolConfig;
 	}
 	
 	public void shutdown() throws Exception
@@ -159,30 +163,43 @@ public final class L2DatabaseFactory
 	
 	public Connection getConnection(Connection con)
 	{
-		while (con == null)
+		if (con != null)
 		{
-			try
-			{
-				con = _source.getConnection();
-				//con = new L2DatabaseFactoryConnectionWrapper(_source.getConnection());
-			}
-			catch (SQLException e)
-			{
-				_log.fatal("L2DatabaseFactory: Failed to retrieve database connection!", e);
-			}
+			return con;
 		}
-		
-		return con;
+		try
+		{
+			return _source.getConnection();
+		}
+		catch (SQLException e)
+		{
+			_log.fatal("L2DatabaseFactory: Failed to retrieve database connection", e);
+			throw new IllegalStateException("Unable to acquire a database connection", e);
+		}
 	}
 	
 	public int getBusyConnectionCount() throws SQLException
 	{
-		return _source.getNumBusyConnectionsDefaultUser();
+		HikariPoolMXBean pool = _source.getHikariPoolMXBean();
+		return pool == null ? 0 : pool.getActiveConnections();
 	}
-	
+
 	public int getIdleConnectionCount() throws SQLException
 	{
-		return _source.getNumIdleConnectionsDefaultUser();
+		HikariPoolMXBean pool = _source.getHikariPoolMXBean();
+		return pool == null ? 0 : pool.getIdleConnections();
+	}
+
+	public String getConnectionPoolStatus()
+	{
+		HikariPoolMXBean pool = _source.getHikariPoolMXBean();
+		if (pool == null)
+		{
+			return "closed";
+		}
+		return "active=" + pool.getActiveConnections() + ", idle=" + pool.getIdleConnections() + ", total="
+				+ pool.getTotalConnections() + ", waiting=" + pool.getThreadsAwaitingConnection() + ", max="
+				+ _source.getMaximumPoolSize();
 	}
 	
 	public ProviderType getProviderType()

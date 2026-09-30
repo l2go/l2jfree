@@ -37,8 +37,13 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.CharBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.tools.FileObject;
@@ -57,6 +62,7 @@ public final class MemoryJavaFileManager extends EclipseFileManager
 	/** Java source file extension. */
 	private final static String EXT = ".java";
 	private Map<String, byte[]> classBytes;
+	private final List<Path> temporarySources = new ArrayList<Path>();
 	
 	public MemoryJavaFileManager()
 	{
@@ -73,6 +79,11 @@ public final class MemoryJavaFileManager extends EclipseFileManager
 	public void close() throws IOException
 	{
 		classBytes = new HashMap<String, byte[]>();
+		for (Path source : temporarySources)
+		{
+			Files.deleteIfExists(source);
+		}
+		temporarySources.clear();
 	}
 	
 	@Override
@@ -87,10 +98,16 @@ public final class MemoryJavaFileManager extends EclipseFileManager
 	{
 		final String code;
 		
-		StringInputBuffer(String name, String code)
+		StringInputBuffer(Path source, String code)
 		{
-			super(toURI(name), Kind.SOURCE);
+			super(source.toUri(), Kind.SOURCE);
 			this.code = code;
+		}
+
+		@Override
+		public String getName()
+		{
+			return new File(toUri()).getAbsolutePath();
 		}
 		
 		@Override
@@ -147,9 +164,17 @@ public final class MemoryJavaFileManager extends EclipseFileManager
 		}
 	}
 	
-	static JavaFileObject makeStringSource(String name, String code)
+	JavaFileObject makeStringSource(String name, String code) throws IOException
 	{
-		return new StringInputBuffer(name, code);
+		String sourceName = new File(name).getName();
+		if (!sourceName.endsWith(EXT))
+		{
+			sourceName += EXT;
+		}
+		Path source = Files.createTempFile("l2jfree-script-", "-" + sourceName);
+		temporarySources.add(source);
+		Files.writeString(source, code, StandardCharsets.UTF_8);
+		return new StringInputBuffer(source, code);
 	}
 	
 	static URI toURI(String name)

@@ -17,8 +17,8 @@ package com.l2jfree.status;
 import java.io.IOException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.lang.L2Thread;
 
@@ -27,7 +27,7 @@ import com.l2jfree.lang.L2Thread;
  */
 public abstract class StatusCommand
 {
-	protected static final Log _log = LogFactory.getLog(StatusCommand.class);
+	protected static final Logger _log = LoggerFactory.getLogger(StatusCommand.class);
 	
 	protected abstract void useCommand(String command, String params);
 	

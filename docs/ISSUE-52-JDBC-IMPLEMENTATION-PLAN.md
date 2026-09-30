@@ -1,6 +1,9 @@
 # Issue #52: login ORM removal and both-server JDBC qualification
 
-Implementation handoff for GPT-6 Luna. The agreed decision is to remove Spring
+> Historical implementation handoff. Issue #52 was completed in `v1.5.1`.
+> The broader modernization vision supersedes its Java 8 and c3p0 constraints.
+
+Historical implementation handoff for GPT-6 Luna. The agreed decision was to remove Spring
 2.0.2 and Hibernate 3.2.2 from the login module and use JDBC for its `accounts`
 and `gameservers` tables. Issue #52 also covers startup and database
 qualification of the game server. Its persistence already uses JDBC through
@@ -16,9 +19,9 @@ broader sequence is in
   Microsoft JDK 25 without `--add-opens` or another JDK. The target machine has
   no other JDK; do not ask the maintainer to confirm its version again.
 - Preserve the existing `accounts` and `gameservers` tables, public service
-  behavior, login protocol, password format, and released Java 8 bytecode
+  behavior, login protocol, and password format
   target. Do not perform a schema migration in this issue.
-- Keep c3p0 as the data source for this slice. Remove the dependency on
+- At the time of this slice, c3p0 remained the data source. Remove the dependency on
   `connection_test_table` from both c3p0 pools by using a table-independent
   connection test query. Broader pool replacement, Jython, and ECJ belong to
   later issues.
@@ -143,12 +146,10 @@ verify against a disposable copy of the repository SQL schemas and MySQL 8.4:
 6. Confirm the ZIP contains no old ORM jars and record the exact JDK, MySQL,
    archive checksum, and observed results in the issue or release notes.
 
-If target Windows qualification is unavailable, leave #52 open and report the
-precise unverified checks. Do not claim the issue is fixed based on CI alone.
+Issue #52 was closed after the exact release image passed target Windows and
+MySQL qualification in `v1.5.1`. This file is retained as historical context.
 
 ## Existing work and handoff rules
 
-Keep issue #52 open until the exact release image passes target Windows/MySQL
-qualification. Do not close it based on CI alone. Run every `gh` command
-outside the sandbox (`require_escalated`); GitHub CLI access fails from the
-sandbox in this workspace.
+Keep every GitHub CLI command outside the sandbox. The current infrastructure
+modernization is tracked by parent issue #59.

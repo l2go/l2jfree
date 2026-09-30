@@ -32,8 +32,8 @@ import java.util.TreeSet;
 import javolution.util.FastList;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.util.concurrent.RunnableStatsManager;
 
@@ -42,7 +42,7 @@ import com.l2jfree.util.concurrent.RunnableStatsManager;
  */
 public abstract class L2Thread extends Thread
 {
-	private static final Log _log = LogFactory.getLog(L2Thread.class);
+	private static final Logger _log = LoggerFactory.getLogger(L2Thread.class);
 	
 	protected L2Thread()
 	{
@@ -115,13 +115,28 @@ public abstract class L2Thread extends Thread
 	{
 		List<String> list = new FastList<String>();
 		
-		list.add(t.toString() + " - ID: " + t.getId());
+		long threadId = t.threadId();
+		list.add(t.toString() + " - ID: " + threadId);
 		list.add(" * State: " + t.getState());
 		list.add(" * Alive: " + t.isAlive());
 		list.add(" * Daemon: " + t.isDaemon());
 		list.add(" * Interrupted: " + t.isInterrupted());
-		for (ThreadInfo info : ManagementFactory.getThreadMXBean().getThreadInfo(new long[] { t.getId() }, true, true))
+		ThreadInfo[] threadInfos = ManagementFactory.getThreadMXBean().getThreadInfo(new long[] { threadId }, true, true);
+		for (ThreadInfo info : threadInfos)
 		{
+			if (info == null)
+			{
+				list.add(" * Thread information is no longer available.");
+				continue;
+			}
+			if (info.getLockInfo() != null)
+			{
+				list.add(" * Waiting on lock: " + info.getLockInfo());
+				if (info.getLockOwnerId() >= 0)
+				{
+					list.add(" * Lock owner: " + info.getLockOwnerName() + " (ID: " + info.getLockOwnerId() + ")");
+				}
+			}
 			for (MonitorInfo monitorInfo : info.getLockedMonitors())
 			{
 				list.add("==========");
@@ -204,7 +219,7 @@ public abstract class L2Thread extends Thread
 				if (st1.length != st2.length)
 					return Integer.valueOf(st1.length).compareTo(st2.length);
 				
-				return Long.valueOf(t1.getId()).compareTo(t2.getId());
+				return Long.valueOf(t1.threadId()).compareTo(t2.threadId());
 			}
 		});
 		threads.addAll(Thread.getAllStackTraces().keySet());

@@ -86,53 +86,63 @@ public class JavaCompiler
 		
 		// create a new memory JavaFileManager
 		MemoryJavaFileManager manager = new MemoryJavaFileManager();
-		
-		// prepare the compilation unit
-		List<JavaFileObject> compUnits = new ArrayList<JavaFileObject>(1);
-		compUnits.add(MemoryJavaFileManager.makeStringSource(fileName, source));
-		
-		// javac options
-		List<String> options = new ArrayList<String>();
-		options.add("-Xlint:all");
-		options.add("-g");
-		options.add("-deprecation");
-		options.add("-1.8");
-		if (sourcePath != null)
-		{
-			options.add("-sourcepath");
-			options.add(sourcePath);
-		}
-		
-		if (classPath != null)
-		{
-			options.add("-classpath");
-			options.add(classPath);
-		}
-		
-		// create a compilation task
-		javax.tools.JavaCompiler.CompilationTask task =
-				tool.getTask(err, manager, diagnostics, options, null, compUnits);
-		
-		if (task.call() == false)
-		{
-			PrintWriter perr = new PrintWriter(err);
-			for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
-			{
-				perr.println(diagnostic.getMessage(null));
-			}
-			perr.flush();
-			return null;
-		}
-		
-		Map<String, byte[]> classBytes = manager.getClassBytes();
 		try
 		{
-			manager.close();
+			// ECJ resolves source units from their file URI, so back the in-memory
+			// content with a temporary source file during the compilation task.
+			List<JavaFileObject> compUnits = new ArrayList<JavaFileObject>(1);
+			compUnits.add(manager.makeStringSource(fileName, source));
+
+			List<String> options = new ArrayList<String>();
+			options.add("-Xlint:all");
+			options.add("-g");
+			options.add("-deprecation");
+			options.add("--release");
+			options.add(Integer.toString(Runtime.version().feature()));
+			if (sourcePath != null)
+			{
+				options.add("-sourcepath");
+				options.add(sourcePath);
+			}
+			if (classPath != null)
+			{
+				options.add("-classpath");
+				options.add(classPath);
+			}
+
+			javax.tools.JavaCompiler.CompilationTask task =
+					tool.getTask(err, manager, diagnostics, options, null, compUnits);
+			if (task.call() == false)
+			{
+				PrintWriter perr = new PrintWriter(err);
+				for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
+				{
+					perr.println(diagnostic.getKind() + " " + diagnostic.getCode() + ": line "
+							+ diagnostic.getLineNumber() + ", column " + diagnostic.getColumnNumber() + ": "
+							+ diagnostic.getMessage(null));
+				}
+				perr.flush();
+				return null;
+			}
+			return manager.getClassBytes();
 		}
 		catch (IOException exp)
 		{
+			PrintWriter perr = new PrintWriter(err);
+			perr.println("ERROR: Unable to prepare temporary Java source: " + exp.getMessage());
+			perr.flush();
+			return null;
 		}
-		
-		return classBytes;
+		finally
+		{
+			try
+			{
+				manager.close();
+			}
+			catch (IOException exp)
+			{
+				// The in-memory file manager owns no persistent resources.
+			}
+		}
 	}
 }

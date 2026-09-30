@@ -1477,7 +1477,7 @@ public final class Olympiad
 			statement = con.prepareStatement("SELECT olympiad_points FROM olympiad_nobles_eom WHERE charId = ?");
 			statement.setInt(1, objId);
 			ResultSet rs = statement.executeQuery();
-			if (rs.first())
+			if (rs.next())
 				result = rs.getInt(1);
 			rs.close();
 			statement.close();

@@ -1,6 +1,6 @@
 # 2026 Q4 correctness audit
 
-Decision record for finding defects in the Java server, filing them, and proving the fixes. Windows 10, OpenJDK 25, and MySQL 8.4 qualification stays in [2026-Q4-UPGRADE.md](2026-Q4-UPGRADE.md). This audit does not change gameplay scope and does not replace that qualification.
+Historical decision record for finding defects in the Java server, filing them, and proving the fixes. Its baseline and testing rules describe the 2026-09-26 audit snapshot and are not the current modernization target. Follow [the 2.0.0 infrastructure vision](INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md) for the current stack and [deployment qualification](2026-Q4-UPGRADE.md) for release acceptance.
 
 Repository text, issues, and commit messages stay in English. Commit messages do not carry a `Co-authored-by` trailer.
 

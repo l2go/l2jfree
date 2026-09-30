@@ -5,17 +5,17 @@
 | Component | Target |
 |---|---|
 | Host | Windows 10 Pro 22H2 x64, final regular updates, no ESU |
-| Java | Microsoft OpenJDK 25 LTS x64; Java 8 bytecode (`--release 8`) |
+| Java | Microsoft Build of OpenJDK 25 x64; Java 25 bytecode (`--release 25`) |
 | Build | Maven Wrapper 3.9.16 with a pinned SHA-256 checksum |
 | Database | MySQL 8.4 LTS, latest patch available at deployment |
 | Driver | Connector/J 26.7.0 (`com.mysql.cj.jdbc.Driver`) |
-| Release | GitHub `v1.5.0` release; qualify the three release ZIPs before deployment |
+| Stable release | GitHub `v1.5.1`; the 2.0.0 infrastructure modernization is in progress |
 
-The code and build configuration are prepared. On 2026-09-26, [CI run 36194342679](https://github.com/l2go/l2jfree/actions/runs/36194342679) passed with Microsoft OpenJDK 25. CI compiles and packages on Ubuntu with that JDK. Maven skips tests by default. Windows 10 operation, the MySQL 8.4 service integration, and the deployment image remain to be qualified on the target host.
+Release `v1.5.1` was qualified on the target Windows 10 and MySQL 8.4 host. The 2.0.0 modernization changes the Java bytecode target and connection pool; qualify the resulting release image again before deployment. GitHub Actions remains the only build and automated verification environment.
 
 Windows 10 left regular support on October 14, 2025. Limit public ports to game traffic, keep MySQL and administration private, restrict remote access, and maintain restorable offline backups. Oracle's supported-platform table does not list Windows 10 for MySQL 8.4. Run the database on a supported host if certification is required; otherwise qualify it on Windows 10 as a project-specific deployment.
 
-Connector/J 26.7 requires MySQL Server 8.4 or later. Keep Jython 2.2.1, Spring 2.0.2, and Hibernate 3.2.2 unchanged during deployment qualification; verify their runtime behavior before a separate dependency upgrade.
+Connector/J 26.7 is the currently pinned driver. The modernization vision records the staged script engine and dependency replacements; do not treat the old `v1.5.1` deployment image as a 2.0.0 qualification.
 
 ## Qualification and deployment
 
@@ -27,8 +27,8 @@ Connector/J 26.7 requires MySQL Server 8.4 or later. Keep Jython 2.2.1, Spring 2
 3. **Validate the database copy.** Restore a logical backup into MySQL 8.4. Check SQL modes, character sets, indexes,
    stored objects, authentication, and repository SQL. Preserve the original database backup for rollback.
 4. **Qualify the release image.** Assemble the server from the three ZIPs in the GitHub
-   [v1.5.0 release](https://github.com/l2go/l2jfree/releases/tag/v1.5.0), verify them with `SHA256SUMS.txt`,
-   and stage the image under `dist/l2jfree-1.5.0-win10-x64-mysql8.4-r1/`. Install it at `C:\l2jfree\`.
+   [v1.5.1 release](https://github.com/l2go/l2jfree/releases/tag/v1.5.1), verify them with `SHA256SUMS.txt`,
+   and stage the image under `dist/l2jfree-deploy`. Install it at `C:\l2jfree\`.
 5. **Qualify runtime behavior.** Run the login and game servers with OpenJDK 25 and the MySQL 8.4 service.
    Check script loading, login, gameplay entry, database writes, scheduled events, sustained load, shutdown, and restart.
    Resolve Java and SQL errors before release.

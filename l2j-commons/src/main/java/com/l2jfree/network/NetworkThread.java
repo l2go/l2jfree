@@ -21,15 +21,15 @@ import java.net.Socket;
 import java.net.SocketException;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.tools.security.NewCrypt;
 import com.l2jfree.tools.util.HexUtil;
 
 public abstract class NetworkThread extends Thread
 {
-	protected static final Log _log = LogFactory.getLog(NetworkThread.class);
+	protected static final Logger _log = LoggerFactory.getLogger(NetworkThread.class);
 	
 	protected NetworkThread()
 	{

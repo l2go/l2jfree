@@ -401,6 +401,8 @@ public final class GameStatusThread extends Thread
 					_print.println("  +.......... L2Door: " + doorCount);
 					_print.println("  --->   Ingame Time: " + GameTimeManager.getInstance().getFormattedGameTime());
 					_print.println("  ---> Server Uptime: " + getUptime(_uptime));
+					_print.println("  --->  Database Pool: "
+							+ L2DatabaseFactory.getInstance().getConnectionPoolStatus());
 					_print.println("  --->	  GM Count: " + getOnlineGMS());
 					_print.println("  --->	   Threads: " + Thread.activeCount());
 					_print.println("  RAM Used: "

@@ -25,8 +25,8 @@ import java.util.Set;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2AutoInitialization;
 import com.l2jfree.config.L2Properties;
@@ -76,7 +76,7 @@ public abstract class StatusServer extends Thread
 		}
 	}
 	
-	protected static final Log _log = LogFactory.getLog(StatusServer.class);
+	protected static final Logger _log = LoggerFactory.getLogger(StatusServer.class);
 	
 	private final ServerSocket _socket;
 	private final List<Filter> _filters = new FastList<Filter>();

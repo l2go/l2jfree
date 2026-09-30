@@ -135,7 +135,7 @@ public final class TaskManager extends HandlerRegistry<String, TaskHandler>
 			}
 			catch (Exception e)
 			{
-				_log.warn(this, e);
+				_log.warn("Task {} failed", this, e);
 			}
 		}
 		
@@ -155,7 +155,7 @@ public final class TaskManager extends HandlerRegistry<String, TaskHandler>
 			}
 			catch (SQLException e)
 			{
-				_log.warn(this, e);
+				_log.warn("Task {} database update failed", this, e);
 			}
 			finally
 			{
@@ -168,7 +168,7 @@ public final class TaskManager extends HandlerRegistry<String, TaskHandler>
 			}
 			catch (Exception e)
 			{
-				_log.warn(this, e);
+				_log.warn("Task {} execution failed", this, e);
 			}
 			
 			if (_type == TYPE_SHEDULED || _type == TYPE_TIME)

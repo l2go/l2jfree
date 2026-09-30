@@ -19,15 +19,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author NB4L1
  */
 public class HandlerRegistry<K, V>
 {
-	protected static final Log _log = LogFactory.getLog(HandlerRegistry.class);
+	protected static final Logger _log = LoggerFactory.getLogger(HandlerRegistry.class);
 	
 	private final Map<K, V> _map;
 	
