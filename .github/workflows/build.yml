@@ -58,8 +58,8 @@ jobs:
             exit 1
           fi
           for archive in "${archives[@]}"; do
-            if unzip -Z1 "$archive" | grep -Eiq '(^|/)libs/[^/]*(spring|hibernate|cglib|ehcache|c3p0|mchange-commons)[^/]*\.jar$'; then
-              echo "Release distribution contains removed persistence or ORM libraries: $archive"
+            if unzip -Z1 "$archive" | grep -Eiq '(^|/)libs/[^/]*(spring|hibernate|cglib|ehcache|c3p0|mchange-commons|ecj)[^/]*\.jar$'; then
+              echo "Release distribution contains removed persistence, ORM, or compiler libraries: $archive"
               exit 1
             fi
 
@@ -126,8 +126,66 @@ jobs:
           artifact_version="$(./mvnw -q -N org.apache.maven.plugins:maven-help-plugin:3.5.1:evaluate -Dexpression=project.version -DforceStdout)"
           mkdir -p release-artifacts
           cp "l2jfree-login/target/l2jfree-login-${artifact_version}-dist.zip" release-artifacts/
-          cp "l2jfree-core/target/l2jfree-core-${artifact_version}-dist.zip" release-artifacts/
           cp "l2jfree-datapack/target/l2jfree-datapack-${artifact_version}-dist.zip" release-artifacts/
+          python3 - "l2jfree-core/target/l2jfree-core-${artifact_version}-dist.zip" \
+            "l2jfree-datapack/target/l2jfree-datapack-${artifact_version}-dist.zip" \
+            "release-artifacts/l2jfree-core-${artifact_version}-dist.zip" <<'PY'
+          import os
+          import re
+          import sys
+          import zipfile
+          from pathlib import Path
+
+          core_archive, datapack_archive, output_archive = map(Path, sys.argv[1:])
+          expected_revision = os.environ["GITHUB_SHA"]
+          scripts_root = Path("l2jfree-datapack/data/scripts")
+          metadata_path = "gameserver/config/versionning/datapack-infos.properties"
+          class_prefix = "gameserver/data/scripts/"
+
+          with zipfile.ZipFile(datapack_archive) as datapack:
+              metadata = datapack.read(metadata_path).decode("utf-8")
+              revision_match = re.search(r"(?m)^SourceRevision=([^\r\n]+)$", metadata)
+              if not revision_match or revision_match.group(1) != expected_revision:
+                  raise SystemExit("Datapack source revision does not match GITHUB_SHA")
+
+              bytecode = {
+                  entry.filename: (entry, datapack.read(entry))
+                  for entry in datapack.infolist()
+                  if entry.filename.startswith(class_prefix) and entry.filename.endswith(".class")
+              }
+              if not bytecode:
+                  raise SystemExit("Datapack distribution contains no compiled Java script classes")
+
+          sources = sorted(scripts_root.rglob("*.java"))
+          if not sources:
+              raise SystemExit("No Java script sources were found")
+          missing = []
+          for source in sources:
+              text = source.read_text(encoding="utf-8")
+              package = re.search(r"(?m)^\s*package\s+([\w.]+)\s*;", text)
+              package_path = package.group(1).replace(".", "/") + "/" if package else ""
+              expected_class = f"{class_prefix}{package_path}{source.stem}.class"
+              if expected_class not in bytecode:
+                  missing.append(expected_class)
+          if missing:
+              raise SystemExit("Java script sources missing packaged bytecode:\n" + "\n".join(missing))
+
+          output_archive.parent.mkdir(parents=True, exist_ok=True)
+          with zipfile.ZipFile(core_archive) as core, zipfile.ZipFile(output_archive, "w") as merged:
+              bytecode_names = set(bytecode)
+              for entry in core.infolist():
+                  if entry.filename not in bytecode_names:
+                      merged.writestr(entry, core.read(entry))
+              for name, (entry, contents) in bytecode.items():
+                  merged.writestr(entry, contents)
+
+          with zipfile.ZipFile(output_archive) as merged:
+              packaged = {entry.filename for entry in merged.infolist()}
+              missing = sorted(set(bytecode) - packaged)
+              if missing:
+                  raise SystemExit("Merged GameServer archive is missing compiled classes:\n" + "\n".join(missing))
+          print(f"Merged and verified {len(bytecode)} Java script classes for {expected_revision}")
+          PY
           zip -r "release-artifacts/l2jfree-${artifact_version}-docs.zip" LICENSE README.md \
             docs/INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md \
             docs/PLATFORM-3.0-VISION.md \
@@ -186,10 +244,10 @@ jobs:
             $zip = [System.IO.Compression.ZipFile]::OpenRead($archive.FullName)
             try {
               $removedRuntimeJars = @($zip.Entries | Where-Object {
-                $_.FullName -match '(^|/)libs/[^/]*(spring|hibernate|cglib|ehcache|c3p0|mchange-commons)[^/]*\.jar$'
+                $_.FullName -match '(^|/)libs/[^/]*(spring|hibernate|cglib|ehcache|c3p0|mchange-commons|ecj)[^/]*\.jar$'
               })
               if ($removedRuntimeJars.Count -gt 0) {
-                throw "Release distribution contains removed persistence libraries: $($archive.FullName)"
+                throw "Release distribution contains removed persistence or compiler libraries: $($archive.FullName)"
               }
 
               $entryNames = @($zip.Entries | ForEach-Object { $_.FullName })
@@ -235,6 +293,83 @@ jobs:
               $zip.Dispose()
             }
           }
+
+      - name: Merge and verify packaged Java scripts in Windows GameServer archive
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.IO.Compression
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $datapackArchive = Get-Item 'l2jfree-datapack/target/l2jfree-datapack-*-dist.zip'
+          $coreArchive = Get-Item 'l2jfree-core/target/l2jfree-core-*-dist.zip'
+          $datapackZip = [System.IO.Compression.ZipFile]::OpenRead($datapackArchive.FullName)
+          try {
+            $metadataEntry = $datapackZip.GetEntry('gameserver/config/versionning/datapack-infos.properties')
+            if ($null -eq $metadataEntry) { throw 'Datapack revision metadata is missing.' }
+            $reader = [System.IO.StreamReader]::new($metadataEntry.Open())
+            try { $metadata = $reader.ReadToEnd() } finally { $reader.Dispose() }
+            $revisionMatch = [regex]::Match($metadata, '(?m)^SourceRevision=([^\r\n]+)$')
+            if (-not $revisionMatch.Success -or $revisionMatch.Groups[1].Value -ne $env:GITHUB_SHA) {
+              throw 'Datapack source revision does not match GITHUB_SHA.'
+            }
+
+            $bytecodeEntries = @($datapackZip.Entries | Where-Object {
+              $_.FullName -like 'gameserver/data/scripts/*.class'
+            })
+            if ($bytecodeEntries.Count -eq 0) { throw 'Datapack distribution has no compiled Java script classes.' }
+            $bytecodeFiles = foreach ($entry in $bytecodeEntries) {
+              $inputStream = $entry.Open()
+              $memoryStream = [System.IO.MemoryStream]::new()
+              try {
+                $inputStream.CopyTo($memoryStream)
+                $classBytes = $memoryStream.ToArray()
+              }
+              finally { $memoryStream.Dispose(); $inputStream.Dispose() }
+              [pscustomobject]@{ FullName = $entry.FullName; Bytes = $classBytes }
+            }
+            $bytecodeNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+            foreach ($entry in $bytecodeFiles) { [void]$bytecodeNames.Add($entry.FullName) }
+
+            $javaSources = @(Get-ChildItem 'l2jfree-datapack/data/scripts' -Filter '*.java' -File -Recurse)
+            if ($javaSources.Count -eq 0) { throw 'No Java script sources were found.' }
+            foreach ($source in $javaSources) {
+              $sourceText = [System.IO.File]::ReadAllText($source.FullName)
+              $packageMatch = [regex]::Match($sourceText, '(?m)^\s*package\s+([\w.]+)\s*;')
+              $packagePath = if ($packageMatch.Success) { $packageMatch.Groups[1].Value.Replace('.', '/') + '/' } else { '' }
+              $expectedClass = "gameserver/data/scripts/${packagePath}$($source.BaseName).class"
+              if (-not $bytecodeNames.Contains($expectedClass)) {
+                throw "Java script source is missing packaged bytecode: $expectedClass"
+              }
+            }
+          }
+          finally { $datapackZip.Dispose() }
+
+          $coreZip = [System.IO.Compression.ZipFile]::Open($coreArchive.FullName, [System.IO.Compression.ZipArchiveMode]::Update)
+          try {
+            foreach ($sourceEntry in $bytecodeFiles) {
+              $existing = $coreZip.GetEntry($sourceEntry.FullName)
+              if ($null -ne $existing) { $existing.Delete() }
+              $targetEntry = $coreZip.CreateEntry($sourceEntry.FullName, [System.IO.Compression.CompressionLevel]::Optimal)
+              $targetStream = $targetEntry.Open()
+              try { $targetStream.Write($sourceEntry.Bytes, 0, $sourceEntry.Bytes.Length) }
+              finally { $targetStream.Dispose() }
+            }
+          }
+          finally { $coreZip.Dispose() }
+
+          $mergedZip = [System.IO.Compression.ZipFile]::OpenRead($coreArchive.FullName)
+          try {
+            $mergedNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+            foreach ($entry in $mergedZip.Entries) { [void]$mergedNames.Add($entry.FullName) }
+            foreach ($entry in $bytecodeFiles) {
+              if (-not $mergedNames.Contains($entry.FullName)) {
+                throw "Merged GameServer archive is missing compiled class: $($entry.FullName)"
+              }
+            }
+          }
+          finally { $mergedZip.Dispose() }
+          $digest = (Get-FileHash -Path $coreArchive.FullName -Algorithm SHA256).Hash
+          if ([string]::IsNullOrWhiteSpace($digest)) { throw 'Unable to checksum merged GameServer archive.' }
+          Write-Host "Merged and verified $($bytecodeFiles.Count) Java script classes for $env:GITHUB_SHA; SHA256 $digest"
 
   # Release archives contain Java 25 bytecode built with OpenJDK 25. They are
   # portable JVM packages, not Windows-specific binaries.
@@ -289,6 +424,7 @@ jobs:
             release_flags+=(--prerelease)
           fi
           gh release create "${{ github.ref_name }}" release-artifacts/* "${release_flags[@]}" \
+            --repo "${{ github.repository }}" \
             --title "${{ github.ref_name }}" \
             --generate-notes \
             --notes "GPLv3 archival fork. This release advances the Java 25 infrastructure modernization while preserving the existing game protocol and datapack behavior. Portable JVM distributions, a CycloneDX SBOM, and its vulnerability scan report are generated by GitHub Actions. Use SHA256SUMS.txt to verify every published artifact."

@@ -18,7 +18,7 @@ Version values marked as properties are maintained in
 | `l2j-commons` | Javolution | 5.4.1 | Runtime | Legacy collections and utility structures; replace selectively after profiling. |
 | LoginServer, GameServer | HikariCP | 7.1.0 | Runtime | JDBC connection pool replacing c3p0. |
 | LoginServer, GameServer | SLF4J JUL provider | 2.0.20 | Runtime | Routes HikariCP SLF4J diagnostics into the existing JUL configuration during migration. |
-| GameServer | ECJ | 3.44.0 | Runtime | Current runtime compiler; the 2.0 target compiles Java scripts in CI and removes ECJ from the release runtime. |
+| GameServer | ECJ | 3.44.0 | Provided compile dependency | Compiles datapack Java sources during the CI build; the release distribution must not include ECJ. |
 | GameServer | Jython | 2.2.1 | Runtime baseline | Current compatibility baseline while the embedded Jython 2.7.5b1 bridge and supported scripts are qualified for the 2.0 target. |
 | GameServer | irclib | 1.10 | Runtime | Optional IRC integration. |
 | GameServer | Trove4j | 2.1.0 | Runtime | Legacy primitive collections; replace selectively after profiling. |
