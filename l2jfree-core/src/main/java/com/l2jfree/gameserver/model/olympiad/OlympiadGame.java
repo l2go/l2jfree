@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.model.olympiad;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.HeroSkillTable;
@@ -49,7 +49,7 @@ import com.l2jfree.gameserver.templates.StatsSet;
  */
 public class OlympiadGame
 {
-	private static final Log _log = LogFactory.getLog(OlympiadGame.class);
+	private static final Logger _log = LoggerFactory.getLogger(OlympiadGame.class);
 	
 	protected final COMP_TYPE _type;
 	protected boolean _aborted;

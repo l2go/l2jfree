@@ -21,8 +21,8 @@ import java.util.Map;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -33,7 +33,7 @@ import com.l2jfree.gameserver.network.packets.server.ShortCutInit;
 
 public final class ShortCuts
 {
-	private static final Log _log = LogFactory.getLog(ShortCuts.class);
+	private static final Logger _log = LoggerFactory.getLogger(ShortCuts.class);
 	
 	private final Map<Integer, L2ShortCut> _shortCuts = new FastMap<Integer, L2ShortCut>().setShared(true);
 	private final L2Player _owner;

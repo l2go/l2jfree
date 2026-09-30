@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.model;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -27,7 +27,7 @@ import com.l2jfree.gameserver.gameobjects.L2Player;
 
 public class GMAudit
 {
-	private static final Log _log = LogFactory.getLog(GMAudit.class);
+	private static final Logger _log = LoggerFactory.getLogger(GMAudit.class);
 	
 	public static void auditGMAction(L2Player gm, String type, String action, String param)
 	{
@@ -65,7 +65,7 @@ public class GMAudit
 			}
 			catch (Exception e)
 			{
-				_log.fatal("", e);
+				_log.error("", e);
 			}
 			finally
 			{

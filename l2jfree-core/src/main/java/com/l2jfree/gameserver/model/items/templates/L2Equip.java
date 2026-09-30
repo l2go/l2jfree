@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.model.items.templates;
 import javolution.util.FastList;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.datatables.SkillTable;
 import com.l2jfree.gameserver.model.skills.L2Skill;
@@ -27,7 +27,7 @@ import com.l2jfree.gameserver.templates.StatsSet;
 
 public abstract class L2Equip extends L2Item
 {
-	protected static final Log _log = LogFactory.getLog(L2Equip.class);
+	protected static final Logger _log = LoggerFactory.getLogger(L2Equip.class);
 	private L2Skill[] _itemSkills = null;
 	private L2Skill[] _enchant4Skills = null; // skill that activates when item is enchanted +4 (for duals)
 	
