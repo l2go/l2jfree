@@ -216,5 +216,11 @@ public class L2Registry
 	{
 		return __loginDataSource.getIdleConnectionCount();
 	}
+
+	public String getConnectionPoolStatus()
+	{
+		ensureInitialized();
+		return __loginDataSource.getPoolStatus();
+	}
 	
 }

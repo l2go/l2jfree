@@ -48,7 +48,7 @@ public final class BlowFishKey extends GameToLoginPacket
 		}
 		catch (GeneralSecurityException e)
 		{
-			_log.fatal("Error While decrypting blowfish key (RSA)", e);
+			_log.error("Error While decrypting blowfish key (RSA)", e);
 		}
 	}
 	
