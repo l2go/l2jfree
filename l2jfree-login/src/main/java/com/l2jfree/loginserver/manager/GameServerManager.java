@@ -24,8 +24,8 @@ import java.util.Map;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2Registry;
 import com.l2jfree.loginserver.beans.GameServerInfo;
@@ -41,7 +41,7 @@ import com.l2jfree.tools.util.HexUtil;
  */
 public class GameServerManager
 {
-	private static final Log _log = LogFactory.getLog(GameServerManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(GameServerManager.class);
 	private static GameServerManager __instance = null;
 	
 	// Game Server from database
@@ -69,12 +69,12 @@ public class GameServerManager
 			}
 			catch (NoSuchAlgorithmException e)
 			{
-				_log.fatal("FATAL: Failed loading GameServerManager. Reason: " + e.getMessage(), e);
+				_log.error("FATAL: Failed loading GameServerManager. Reason: " + e.getMessage(), e);
 				System.exit(1);
 			}
 			catch (InvalidAlgorithmParameterException e)
 			{
-				_log.fatal("FATAL: Failed loading GameServerManager. Reason: " + e.getMessage(), e);
+				_log.error("FATAL: Failed loading GameServerManager. Reason: " + e.getMessage(), e);
 				System.exit(1);
 			}
 		}

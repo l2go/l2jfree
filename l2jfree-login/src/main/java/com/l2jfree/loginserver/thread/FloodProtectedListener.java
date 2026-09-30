@@ -22,8 +22,8 @@ import java.util.Map;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 
@@ -32,7 +32,7 @@ import com.l2jfree.Config;
  */
 public abstract class FloodProtectedListener extends Thread
 {
-	protected static final Log _log = LogFactory.getLog(FloodProtectedListener.class);
+	protected static final Logger _log = LoggerFactory.getLogger(FloodProtectedListener.class);
 	
 	private final Map<String, ForeignConnection> _floodProtection = new FastMap<String, ForeignConnection>();
 	private final ServerSocket _serverSocket;

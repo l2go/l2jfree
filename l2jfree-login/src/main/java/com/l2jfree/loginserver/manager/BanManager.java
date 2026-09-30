@@ -25,8 +25,8 @@ import java.util.Map.Entry;
 import javolution.util.FastMap;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.loginserver.beans.BanInfo;
 import com.l2jfree.tools.network.SubNet;
@@ -50,7 +50,7 @@ public class BanManager
 		return SingletonHolder.INSTANCE;
 	}
 	
-	private static final Log _log = LogFactory.getLog(BanManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(BanManager.class);
 	/** Banned ips */
 	private final FastMap<SubNet, BanInfo> _bannedIps = new FastMap<SubNet, BanInfo>().setShared(true);
 	private final FastMap<SubNet, BanInfo> _restrictedIps = new FastMap<SubNet, BanInfo>().setShared(true);

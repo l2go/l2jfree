@@ -10,8 +10,8 @@ Version values marked as properties are maintained in
 
 | Module | Dependency | Current version | Scope | Purpose and status |
 |---|---|---:|---|---|
-| `l2j-commons` | Commons Logging | 1.2 | Runtime | Retained while other production modules still call the legacy facade. |
-| `l2j-commons` | SLF4J API | 2.0.20 | Runtime | Application logging API for the first migrated module; uses the existing JUL provider during transition. |
+| `l2j-commons` | Commons Logging API | 1.2 | Provided | Compile compatibility for unmigrated modules; the runtime JCL bridge routes legacy callers to SLF4J. |
+| `l2j-commons`, LoginServer | SLF4J API | 2.0.20 | Runtime | Application logging API for the migrated common and login modules; the existing JUL provider remains during transition. |
 | `l2j-commons` | Apache Commons Lang | 3.20.0 | Runtime | General utility library. |
 | `l2j-commons` | Apache Commons IO | 2.22.0 | Runtime | File and stream utilities. |
 | `l2j-commons` | MySQL Connector/J | 26.7.0 | Runtime | JDBC driver for the fixed MySQL 8.4 platform. |

@@ -31,8 +31,8 @@ import javax.crypto.Cipher;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2Registry;
@@ -67,10 +67,10 @@ import com.l2jfree.tools.random.Rnd;
  */
 public class LoginManager
 {
-	private static final Log _log = LogFactory.getLog(LoginManager.class);
-	private static final Log _logLogin = LogFactory.getLog("login");
-	private static final Log _logLoginTries = LogFactory.getLog("login.try");
-	private static final Log _logLoginFailed = LogFactory.getLog("login.failed");
+	private static final Logger _log = LoggerFactory.getLogger(LoginManager.class);
+	private static final Logger _logLogin = LoggerFactory.getLogger("login");
+	private static final Logger _logLoginTries = LoggerFactory.getLogger("login.try");
+	private static final Logger _logLoginFailed = LoggerFactory.getLogger("login.failed");
 	
 	private static final class SingletonHolder
 	{
@@ -136,7 +136,7 @@ public class LoginManager
 			}
 			catch (GeneralSecurityException e)
 			{
-				_log.fatal("Error in RSA setup:", e);
+				_log.error("Error in RSA setup:", e);
 				_log.info("Server shutting down now");
 				System.exit(1);
 				return;
@@ -156,7 +156,7 @@ public class LoginManager
 		}
 		catch (GeneralSecurityException e)
 		{
-			_log.fatal("FATAL: Failed initializing LoginManager. Reason: " + e.getMessage(), e);
+			_log.error("FATAL: Failed initializing LoginManager. Reason: " + e.getMessage(), e);
 			System.exit(1);
 		}
 		

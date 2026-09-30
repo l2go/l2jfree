@@ -18,8 +18,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.security.MessageDigest;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.tools.codec.Base64;
 
@@ -31,7 +31,7 @@ import com.l2jfree.tools.codec.Base64;
  */
 public class AccountBean implements Serializable
 {
-	private static final Log _log = LogFactory.getLog(AccountBean.class);
+	private static final Logger _log = LoggerFactory.getLogger(AccountBean.class);
 	private static final long serialVersionUID = 4402116860273590029L;
 	
 	private String login;
