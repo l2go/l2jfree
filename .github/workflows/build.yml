@@ -72,7 +72,7 @@ jobs:
             }
             verify_logging_runtime() {
               local prefix="$1/libs/"
-              for artifact in slf4j-api logback-classic logback-core jcl-over-slf4j; do
+              for artifact in slf4j-api jul-to-slf4j logback-classic logback-core; do
                 local count
                 count="$(grep -Ec "^${prefix}${artifact}-[^/]+\.jar$" <<< "$entries" || true)"
                 if [[ "$count" -ne 1 ]]; then
@@ -80,7 +80,7 @@ jobs:
                   exit 1
                 fi
               done
-              if grep -Eiq "^${prefix}(slf4j-jdk14|commons-logging)-[^/]+\.jar$" <<< "$entries"; then
+              if grep -Eiq "^${prefix}(slf4j-jdk14|commons-logging|jcl-over-slf4j)-[^/]+\.jar$" <<< "$entries"; then
                 echo "Release distribution contains a conflicting logging runtime jar: $archive"
                 exit 1
               fi
@@ -273,7 +273,7 @@ jobs:
               }
               if ($archive.Name -like 'l2jfree-login-*-dist.zip' -or $archive.Name -like 'l2jfree-core-*-dist.zip') {
                 $runtimeRoot = if ($archive.Name -like 'l2jfree-login-*-dist.zip') { 'loginserver' } else { 'gameserver' }
-                foreach ($artifact in @('slf4j-api', 'logback-classic', 'logback-core', 'jcl-over-slf4j')) {
+                foreach ($artifact in @('slf4j-api', 'jul-to-slf4j', 'logback-classic', 'logback-core')) {
                   $runtimeJars = @($entryNames | Where-Object {
                     $_ -match "^$runtimeRoot/libs/$artifact-[^/]+\.jar$"
                   })
@@ -282,7 +282,7 @@ jobs:
                   }
                 }
                 $conflictingLoggingJars = @($entryNames | Where-Object {
-                  $_ -match "^$runtimeRoot/libs/(slf4j-jdk14|commons-logging)-[^/]+\.jar$"
+                  $_ -match "^$runtimeRoot/libs/(slf4j-jdk14|commons-logging|jcl-over-slf4j)-[^/]+\.jar$"
                 })
                 if ($conflictingLoggingJars.Count -gt 0) {
                   throw "Release distribution contains conflicting logging runtime jars: $($archive.FullName)"
