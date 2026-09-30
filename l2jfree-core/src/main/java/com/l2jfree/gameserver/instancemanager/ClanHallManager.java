@@ -23,8 +23,8 @@ import java.util.Map;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.ClanTable;
@@ -34,7 +34,7 @@ import com.l2jfree.gameserver.model.entity.ClanHall;
 
 public class ClanHallManager
 {
-	protected static final Log _log = LogFactory.getLog(ClanHallManager.class);
+	protected static final Logger _log = LoggerFactory.getLogger(ClanHallManager.class);
 	
 	private final Map<Integer, ClanHall> _clanHall;
 	private final Map<Integer, ClanHall> _freeClanHall;
@@ -154,7 +154,7 @@ public class ClanHallManager
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("Exception: ClanHallManager.load(): " + e.getMessage(), e);
+			_log.error("Exception: ClanHallManager.load(): " + e.getMessage(), e);
 		}
 		finally
 		{

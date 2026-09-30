@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.instancemanager;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.gameobjects.L2Boss;
 import com.l2jfree.gameserver.gameobjects.L2Npc;
@@ -34,7 +34,7 @@ import com.l2jfree.gameserver.model.world.spawn.L2Spawn;
 
 public class DayNightSpawnManager
 {
-	private final static Log _log = LogFactory.getLog(DayNightSpawnManager.class);
+	private final static Logger _log = LoggerFactory.getLogger(DayNightSpawnManager.class);
 	
 	private static final class SingletonHolder
 	{

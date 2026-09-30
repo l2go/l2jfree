@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.Announcements;
@@ -41,7 +41,7 @@ import com.l2jfree.util.L2FastSet;
  */
 public final class HellboundManager
 {
-	private static final Log _log = LogFactory.getLog(HellboundManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(HellboundManager.class);
 	
 	private static final int POINTS_TO_OPEN_WARPGATE = 100000;
 	

@@ -24,8 +24,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -51,7 +51,7 @@ import com.l2jfree.tools.random.Rnd;
 */
 public class DimensionalRiftManager
 {
-	protected static Log _log = LogFactory.getLog(DimensionalRiftManager.class);
+	protected static Logger _log = LoggerFactory.getLogger(DimensionalRiftManager.class);
 	
 	private final FastMap<Byte, FastMap<Byte, DimensionalRiftRoom>> _rooms =
 			new FastMap<Byte, FastMap<Byte, DimensionalRiftRoom>>();

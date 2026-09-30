@@ -22,8 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -35,7 +35,7 @@ import com.l2jfree.util.LazyFastSet;
  */
 public final class BlockListManager
 {
-	private static final Log _log = LogFactory.getLog(BlockListManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(BlockListManager.class);
 	
 	private static final String SELECT_QUERY = "SELECT charId, name FROM character_blocks";
 	private static final String INSERT_QUERY = "INSERT INTO character_blocks (charId, name) VALUES (?,?)";

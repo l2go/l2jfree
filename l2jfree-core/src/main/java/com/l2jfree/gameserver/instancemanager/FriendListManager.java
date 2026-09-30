@@ -23,8 +23,8 @@ import java.util.Set;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.lang.L2Integer;
@@ -35,7 +35,7 @@ import com.l2jfree.util.LazyFastSet;
  */
 public final class FriendListManager
 {
-	private static final Log _log = LogFactory.getLog(FriendListManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(FriendListManager.class);
 	
 	private static final String SELECT_QUERY =
 			"SELECT charId1, charId2 FROM character_friends WHERE charId1=? or charId2=?";

@@ -23,8 +23,8 @@ import java.util.concurrent.ScheduledFuture;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -49,7 +49,7 @@ import com.l2jfree.tools.random.Rnd;
  */
 public class AutoChatManager implements SpawnListener
 {
-	protected static Log _log = LogFactory.getLog(AutoChatManager.class);
+	protected static Logger _log = LoggerFactory.getLogger(AutoChatManager.class);
 	
 	private static final int DEFAULT_CHAT_RANGE = 1500;
 	

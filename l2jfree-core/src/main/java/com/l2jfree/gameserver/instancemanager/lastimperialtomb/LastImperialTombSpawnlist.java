@@ -21,8 +21,8 @@ import java.util.List;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.NpcTable;
@@ -36,7 +36,7 @@ import com.l2jfree.gameserver.model.world.spawn.L2Spawn;
 
 public class LastImperialTombSpawnlist
 {
-	private final static Log _log = LogFactory.getLog(LastImperialTombSpawnlist.class);
+	private final static Logger _log = LoggerFactory.getLogger(LastImperialTombSpawnlist.class);
 	
 	private static List<L2Spawn> _Room1SpawnList1st = new FastList<L2Spawn>();
 	private static List<L2Spawn> _Room1SpawnList2nd = new FastList<L2Spawn>();

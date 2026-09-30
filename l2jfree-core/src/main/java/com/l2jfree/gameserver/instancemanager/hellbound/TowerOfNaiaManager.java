@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.instancemanager.hellbound;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.DoorTable;
@@ -32,7 +32,7 @@ import com.l2jfree.gameserver.model.entity.hellbound.TowerOfNaiaRoom;
  */
 public final class TowerOfNaiaManager
 {
-	private static Log _log = LogFactory.getLog(TowerOfNaiaManager.class);
+	private static Logger _log = LoggerFactory.getLogger(TowerOfNaiaManager.class);
 	
 	// Bridge doors between Tully and Naia towers
 	public static final int[] TOWER_ENTER_DOOR_IDS = { 20250004, 20250005, 20250006, 20250007, 20250008, 20250009 };

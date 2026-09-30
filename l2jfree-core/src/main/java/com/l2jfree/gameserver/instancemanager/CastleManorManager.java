@@ -22,8 +22,8 @@ import java.util.concurrent.ScheduledFuture;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -48,7 +48,7 @@ import com.l2jfree.tools.random.Rnd;
 
 public class CastleManorManager
 {
-	private final static Log _log = LogFactory.getLog(CastleManorManager.class);
+	private final static Logger _log = LoggerFactory.getLogger(CastleManorManager.class);
 	
 	public static final int PERIOD_CURRENT = 0;
 	public static final int PERIOD_NEXT = 1;

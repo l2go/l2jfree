@@ -25,8 +25,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -60,7 +60,7 @@ import com.l2jfree.util.LookupTable;
  */
 public final class MapRegionManager
 {
-	private static final Log _log = LogFactory.getLog(MapRegionManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(MapRegionManager.class);
 	
 	private final LookupTable<L2MapRegionRestart> _mapRegionRestart = new LookupTable<L2MapRegionRestart>();
 	

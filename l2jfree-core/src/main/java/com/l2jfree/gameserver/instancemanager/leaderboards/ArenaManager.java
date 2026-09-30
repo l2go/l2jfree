@@ -26,8 +26,8 @@ import java.util.concurrent.Future;
 import javolution.util.FastMap;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.Announcements;
@@ -45,7 +45,7 @@ import com.l2jfree.gameserver.util.Util;
  */
 public class ArenaManager
 {
-	private static final Log _log = LogFactory.getLog(ArenaManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(ArenaManager.class);
 	
 	public Map<Integer, ArenaRank> _ranks = new FastMap<Integer, ArenaRank>();
 	protected Future<?> _actionTask = null;

@@ -23,8 +23,8 @@ import java.util.StringTokenizer;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2AutoInitialization;
@@ -47,7 +47,7 @@ import com.l2jfree.gameserver.util.Util;
 
 public class SiegeManager
 {
-	protected static Log _log = LogFactory.getLog(SiegeManager.class);
+	protected static Logger _log = LoggerFactory.getLogger(SiegeManager.class);
 	
 	public static final SiegeManager getInstance()
 	{

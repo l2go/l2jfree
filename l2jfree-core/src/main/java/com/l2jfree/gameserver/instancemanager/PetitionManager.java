@@ -20,8 +20,8 @@ import java.util.Date;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.GmListTable;
@@ -42,7 +42,7 @@ import com.l2jfree.lang.L2TextBuilder;
  */
 public final class PetitionManager
 {
-	protected static Log _log = LogFactory.getLog(PetitionManager.class);
+	protected static Logger _log = LoggerFactory.getLogger(PetitionManager.class);
 	
 	private static int _lastUsedId;
 	

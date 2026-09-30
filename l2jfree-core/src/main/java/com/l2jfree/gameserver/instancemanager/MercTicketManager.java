@@ -24,8 +24,8 @@ import java.util.concurrent.ScheduledFuture;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -61,7 +61,7 @@ import com.l2jfree.gameserver.network.packets.server.SystemMessage;
  */
 public class MercTicketManager
 {
-	protected static final Log _log = LogFactory.getLog(MercTicketManager.class);
+	protected static final Logger _log = LoggerFactory.getLogger(MercTicketManager.class);
 	
 	/** Represents all hireling positioning messages */
 	public static final String[] MESSAGES = { "To arms!", "I am ready to serve you my lord when the time comes.",
@@ -914,7 +914,7 @@ public class MercTicketManager
 		// By creating _handlerIds we guarantee we know all IDs that are handled
 		if (mi == null)
 		{
-			_log.fatal("A known mercenary is unknown? Item ID: " + ticket.getItemId());
+			_log.error("A known mercenary is unknown? Item ID: " + ticket.getItemId());
 			player.sendPacket(new SystemMessage(SystemMessageId.S1_DOES_NOT_EXIST).addItemName(ticket));
 			if (player.isGM())
 				player.sendMessage("The mercenary system is messed up. Please consult @ l2jfree.com");

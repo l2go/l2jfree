@@ -15,8 +15,8 @@
 package com.l2jfree.gameserver.instancemanager;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.CrownTable;
@@ -32,7 +32,7 @@ import com.l2jfree.gameserver.model.items.L2ItemInstance;
  */
 public final class CrownManager
 {
-	private static final Log _log = LogFactory.getLog(CrownManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(CrownManager.class);
 	
 	static
 	{

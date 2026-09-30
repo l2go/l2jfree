@@ -20,8 +20,8 @@ import java.sql.ResultSet;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.NpcTable;
@@ -35,7 +35,7 @@ import com.l2jfree.gameserver.model.world.spawn.L2Spawn;
  */
 public final class ContestableHideoutGuardManager
 {
-	private static final Log _log = LogFactory.getLog(ContestableHideoutGuardManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(ContestableHideoutGuardManager.class);
 	private static final String LOAD_SIEGE_GUARDS =
 			"SELECT id,npcId,x,y,z,heading,respawnDelay FROM clanhall_siege_guards WHERE hallId=?";
 	private final ClanHall _hideout;
