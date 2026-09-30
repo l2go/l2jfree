@@ -10,7 +10,7 @@ if ERRORLEVEL 1 goto error
 
 REM -------------------------------------
 REM Default parameters for a basic server.
-"%JAVA_CMD%" -Xms512m -Xmx1024m -server com.l2jfree.gameserver.GameServer
+"%JAVA_CMD%" %JAVA_AGENT_OPTS% -Xms512m -Xmx1024m -server com.l2jfree.gameserver.GameServer
 REM -------------------------------------
 
 SET CLASSPATH=%OLDCLASSPATH%

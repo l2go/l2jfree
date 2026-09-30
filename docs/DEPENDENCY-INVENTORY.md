@@ -17,6 +17,7 @@ Version values marked as properties are maintained in
 | `l2j-commons` | MySQL Connector/J | 26.7.0 | Runtime | JDBC driver for the fixed MySQL 8.4 platform. |
 | `l2j-commons` | Javolution | 5.4.1 | Runtime | Legacy collections and utility structures; replace selectively after profiling. |
 | LoginServer, GameServer | HikariCP | 7.1.0 | Runtime | JDBC connection pool replacing c3p0. |
+| LoginServer, GameServer | OpenTelemetry Java agent | 2.26.1 | Optional agent archive | Provides opt-in JVM, JDBC, and HikariCP metrics and traces through OTLP; packaged outside the application classpath and disabled by default. |
 | LoginServer, GameServer | SLF4J JUL provider | 2.0.20 | Runtime | Routes HikariCP SLF4J diagnostics into the existing JUL configuration during migration. |
 | GameServer | ECJ | 3.44.0 | Provided compile dependency | Compiles datapack Java sources during the CI build; the release distribution must not include ECJ. |
 | GameServer | Jython | 2.2.1 | Runtime baseline | Current compatibility baseline while the embedded Jython 2.7.5b1 bridge and supported scripts are qualified for the 2.0 target. |
@@ -72,7 +73,7 @@ GraalPy and Python 3 migration are excluded.
 | Area | Candidate | CI / qualification status |
 |---|---|---|
 | Python 2 compatibility | Jython 2.7.5b1 | Runtime upgrade is a separate modernization track. Script compatibility and embedded bridge tests will be rewritten and expanded in the dedicated test modernization phase; no test evidence is claimed during the current build-and-package phase. |
-| Runtime diagnostics | JFR and OpenTelemetry Java agent / SDK | Begin baseline capture in CI; measure instrumentation overhead before adding release defaults. |
+| Runtime diagnostics | JFR and OpenTelemetry Java agent 2.26.1 | The agent is included separately in both Windows distributions; launch only when explicitly enabled with a configured OTLP endpoint. Measure overhead and verify redaction before operational use. |
 
 See the [approved qualification tracks](INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md#experimental-qualification-tracks)
 for the promotion evidence required for Jython and runtime diagnostics.

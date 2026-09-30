@@ -20,3 +20,20 @@ if not "%JAVA_MAJOR%"=="25" (
 	echo Java 25 is required; Microsoft Build of OpenJDK 25 is the deployment target. Detected version: %JAVA_VERSION%
 	exit /b 1
 )
+
+set "JAVA_AGENT_OPTS="
+if /I "%L2JFREE_OTEL_ENABLED%"=="true" (
+	if not defined OTEL_EXPORTER_OTLP_ENDPOINT (
+		echo OpenTelemetry is enabled but OTEL_EXPORTER_OTLP_ENDPOINT is not set.
+		exit /b 1
+	)
+	if not exist "agents\opentelemetry-javaagent.jar" (
+		echo OpenTelemetry agent is missing from the LoginServer distribution.
+		exit /b 1
+	)
+	if not defined OTEL_SERVICE_NAME set "OTEL_SERVICE_NAME=l2jfree-loginserver"
+	set "OTEL_METRICS_EXPORTER=otlp"
+	set "OTEL_TRACES_EXPORTER=otlp"
+	set "OTEL_LOGS_EXPORTER=none"
+	set "JAVA_AGENT_OPTS=-javaagent:agents\opentelemetry-javaagent.jar"
+)

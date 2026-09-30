@@ -9,6 +9,14 @@
 	</formats>
 	<dependencySets>
 		<dependencySet>
+			<outputDirectory>loginserver/agents/</outputDirectory>
+			<includes>
+				<include>io.opentelemetry.javaagent:opentelemetry-javaagent</include>
+			</includes>
+			<outputFileNameMapping>opentelemetry-javaagent.jar</outputFileNameMapping>
+			<useTransitiveDependencies>false</useTransitiveDependencies>
+		</dependencySet>
+		<dependencySet>
 			<outputDirectory>loginserver/</outputDirectory>
 			<includes>
 				<include>com.l2jfree:l2jfree-login</include>
@@ -17,6 +25,7 @@
 		<dependencySet>
 			<outputDirectory>loginserver/libs/</outputDirectory>
 			<excludes>
+				<exclude>io.opentelemetry.javaagent:opentelemetry-javaagent</exclude>
 				<exclude>com.l2jfree:l2jfree-login</exclude>
 			</excludes>
 		</dependencySet>

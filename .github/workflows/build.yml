@@ -90,11 +90,13 @@ jobs:
                 require_entry "$archive" loginserver/loginserver_launcher.bat
                 require_entry "$archive" loginserver/config/loginserver.properties
                 require_entry "$archive" loginserver/sql/accounts.sql
+                require_entry "$archive" loginserver/agents/opentelemetry-javaagent.jar
                 verify_logging_runtime loginserver
                 ;;
               l2jfree-core-*-dist.zip)
                 require_entry "$archive" gameserver/gameserver_launcher.bat
                 require_entry "$archive" gameserver/config/server.properties
+                require_entry "$archive" gameserver/agents/opentelemetry-javaagent.jar
                 verify_logging_runtime gameserver
                 ;;
               l2jfree-datapack-*-dist.zip)
@@ -251,6 +253,16 @@ jobs:
               }
 
               $entryNames = @($zip.Entries | ForEach-Object { $_.FullName })
+              $agentPath = switch -Wildcard ($archive.Name) {
+                'l2jfree-login-*' { 'loginserver/agents/opentelemetry-javaagent.jar' }
+                'l2jfree-core-*' { 'gameserver/agents/opentelemetry-javaagent.jar' }
+              }
+              if ($agentPath -and $entryNames -notcontains $agentPath) {
+                throw "Release distribution is missing its optional OpenTelemetry agent: $($archive.FullName)"
+              }
+              if ($entryNames | Where-Object { $_ -match '(^|/)libs/opentelemetry-javaagent(-[^/]*)?\.jar$' }) {
+                throw "OpenTelemetry agent must not be added to the application classpath: $($archive.FullName)"
+              }
               $requiredEntries = switch -Wildcard ($archive.Name) {
                 'l2jfree-login-*-dist.zip' {
                   @('loginserver/loginserver_launcher.bat', 'loginserver/config/loginserver.properties', 'loginserver/sql/accounts.sql')

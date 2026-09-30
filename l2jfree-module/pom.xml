@@ -25,6 +25,7 @@
 		<liquibase.version>4.33.0</liquibase.version>
 		<jython.version>2.7.5b1</jython.version>
 		<jython.artifactId>jython-standalone</jython.artifactId>
+		<opentelemetry.javaagent.version>2.26.1</opentelemetry.javaagent.version>
 		<jfr.argLine></jfr.argLine>
 	</properties>
 	<scm>
@@ -39,6 +40,11 @@
 	<inceptionYear>2010</inceptionYear>
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>io.opentelemetry.javaagent</groupId>
+				<artifactId>opentelemetry-javaagent</artifactId>
+				<version>${opentelemetry.javaagent.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>org.testcontainers</groupId>
 				<artifactId>testcontainers-bom</artifactId>
