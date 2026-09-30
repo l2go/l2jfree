@@ -253,12 +253,11 @@ jobs:
               }
 
               $entryNames = @($zip.Entries | ForEach-Object { $_.FullName })
-              $agentPath = if ($archive.Name -like 'l2jfree-login-*') {
-                'loginserver/agents/opentelemetry-javaagent.jar'
-              } else {
-                'gameserver/agents/opentelemetry-javaagent.jar'
+              $agentPath = switch -Wildcard ($archive.Name) {
+                'l2jfree-login-*' { 'loginserver/agents/opentelemetry-javaagent.jar' }
+                'l2jfree-core-*' { 'gameserver/agents/opentelemetry-javaagent.jar' }
               }
-              if ($entryNames -notcontains $agentPath) {
+              if ($agentPath -and $entryNames -notcontains $agentPath) {
                 throw "Release distribution is missing its optional OpenTelemetry agent: $($archive.FullName)"
               }
               if ($entryNames | Where-Object { $_ -match '(^|/)libs/opentelemetry-javaagent(-[^/]*)?\.jar$' }) {
