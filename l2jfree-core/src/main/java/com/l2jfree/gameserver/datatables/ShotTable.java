@@ -14,15 +14,15 @@
  */
 package com.l2jfree.gameserver.datatables;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author NB4L1
  */
 public final class ShotTable
 {
-	private static final Log _log = LogFactory.getLog(ShotTable.class);
+	private static final Logger _log = LoggerFactory.getLogger(ShotTable.class);
 	
 	static
 	{

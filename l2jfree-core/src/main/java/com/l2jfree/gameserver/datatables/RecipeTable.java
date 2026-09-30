@@ -28,8 +28,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -66,7 +66,7 @@ public class RecipeTable
 {
 	private static final String RECIPES_FILE = "recipes.xml";
 	
-	private final static Log _log = LogFactory.getLog(RecipeTable.class);
+	private final static Logger _log = LoggerFactory.getLogger(RecipeTable.class);
 	private static final Map<L2Player, RecipeItemMaker> _activeMakers = Collections
 			.synchronizedMap(new WeakHashMap<L2Player, RecipeItemMaker>());
 	
@@ -89,7 +89,7 @@ public class RecipeTable
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Failed loading recipe list", e);
+			_log.error("Failed loading recipe list", e);
 		}
 		
 		_itemIds = new int[_lists.size()];
@@ -267,7 +267,7 @@ public class RecipeTable
 							att = attrs.getNamedItem("id");
 							if (att == null)
 							{
-								_log.fatal("Missing id for recipe item, skipping");
+								_log.error("Missing id for recipe item, skipping");
 								continue;
 							}
 							id = Integer.parseInt(att.getNodeValue());
@@ -276,7 +276,7 @@ public class RecipeTable
 							att = attrs.getNamedItem("recipeId");
 							if (att == null)
 							{
-								_log.fatal("Missing recipeId for recipe item id: " + id + ", skipping");
+								_log.error("Missing recipeId for recipe item id: " + id + ", skipping");
 								continue;
 							}
 							set.set("recipeId", Integer.parseInt(att.getNodeValue()));
@@ -284,7 +284,7 @@ public class RecipeTable
 							att = attrs.getNamedItem("name");
 							if (att == null)
 							{
-								_log.fatal("Missing name for recipe item id: " + id + ", skipping");
+								_log.error("Missing name for recipe item id: " + id + ", skipping");
 								continue;
 							}
 							set.set("recipeName", att.getNodeValue());
@@ -292,7 +292,7 @@ public class RecipeTable
 							att = attrs.getNamedItem("craftLevel");
 							if (att == null)
 							{
-								_log.fatal("Missing level for recipe item id: " + id + ", skipping");
+								_log.error("Missing level for recipe item id: " + id + ", skipping");
 								continue;
 							}
 							set.set("craftLevel", Integer.parseInt(att.getNodeValue()));
@@ -300,7 +300,7 @@ public class RecipeTable
 							att = attrs.getNamedItem("type");
 							if (att == null)
 							{
-								_log.fatal("Missing type for recipe item id: " + id + ", skipping");
+								_log.error("Missing type for recipe item id: " + id + ", skipping");
 								continue;
 							}
 							set.set("isDwarvenRecipe", att.getNodeValue().equalsIgnoreCase("dwarven"));
@@ -308,7 +308,7 @@ public class RecipeTable
 							att = attrs.getNamedItem("successRate");
 							if (att == null)
 							{
-								_log.fatal("Missing successRate for recipe item id: " + id + ", skipping");
+								_log.error("Missing successRate for recipe item id: " + id + ", skipping");
 								continue;
 							}
 							set.set("successRate", Integer.parseInt(att.getNodeValue()));
@@ -326,7 +326,7 @@ public class RecipeTable
 									}
 									catch (Exception e)
 									{
-										_log.fatal("Error in StatUse parameter for recipe item id: " + id
+										_log.error("Error in StatUse parameter for recipe item id: " + id
 												+ ", skipping", e);
 										continue recipesFile;
 									}
@@ -342,7 +342,7 @@ public class RecipeTable
 									}
 									catch (Exception e)
 									{
-										_log.fatal("Error in AltStatChange parameter for recipe item id: " + id
+										_log.error("Error in AltStatChange parameter for recipe item id: " + id
 												+ ", skipping", e);
 										continue recipesFile;
 									}
@@ -389,7 +389,7 @@ public class RecipeTable
 		}
 		else
 		{
-			_log.fatal("Recipes file (" + file.getAbsolutePath() + ") doesnt exists.");
+			_log.error("Recipes file (" + file.getAbsolutePath() + ") doesnt exists.");
 		}
 	}
 	

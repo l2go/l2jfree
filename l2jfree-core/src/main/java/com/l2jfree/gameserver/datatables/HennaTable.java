@@ -20,8 +20,8 @@ import java.sql.ResultSet;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.model.items.templates.L2Henna;
@@ -29,7 +29,7 @@ import com.l2jfree.gameserver.templates.StatsSet;
 
 public class HennaTable
 {
-	private static final Log _log = LogFactory.getLog(HennaTable.class);
+	private static final Logger _log = LoggerFactory.getLogger(HennaTable.class);
 	private static final String LOAD_HENNA =
 			"SELECT symbol_id,symbol_name,dye_id,dye_amount,price,mod_INT,mod_STR,mod_CON,mod_MEN,mod_DEX,mod_WIT FROM henna";
 	

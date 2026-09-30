@@ -23,8 +23,8 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
@@ -41,7 +41,7 @@ import com.l2jfree.gameserver.model.entity.Castle;
  */
 public class MerchantPriceConfigTable implements InstanceListManager
 {
-	private static final Log _log = LogFactory.getLog(MerchantPriceConfigTable.class);
+	private static final Logger _log = LoggerFactory.getLogger(MerchantPriceConfigTable.class);
 	
 	public static MerchantPriceConfigTable getInstance()
 	{
@@ -179,7 +179,7 @@ public class MerchantPriceConfigTable implements InstanceListManager
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Failed loading MerchantPriceConfigTable. Reason: " + e.getMessage(), e);
+			_log.error("Failed loading MerchantPriceConfigTable. Reason: " + e.getMessage(), e);
 		}
 	}
 	

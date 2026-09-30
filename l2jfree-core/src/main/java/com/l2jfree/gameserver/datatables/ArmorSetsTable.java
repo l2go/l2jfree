@@ -20,8 +20,8 @@ import java.sql.ResultSet;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.model.L2ArmorSet;
@@ -31,7 +31,7 @@ import com.l2jfree.gameserver.model.L2ArmorSet;
  */
 public final class ArmorSetsTable
 {
-	private static final Log _log = LogFactory.getLog(ArmorSetsTable.class);
+	private static final Logger _log = LoggerFactory.getLogger(ArmorSetsTable.class);
 	
 	private final FastMap<Integer, L2ArmorSet> _armorSets;
 	

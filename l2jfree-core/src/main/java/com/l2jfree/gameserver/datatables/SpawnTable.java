@@ -21,8 +21,8 @@ import java.util.Map;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -43,7 +43,7 @@ import com.l2jfree.gameserver.model.world.spawn.L2Spawn;
  */
 public class SpawnTable
 {
-	private final static Log _log = LogFactory.getLog(SpawnTable.class);
+	private final static Logger _log = LoggerFactory.getLogger(SpawnTable.class);
 	
 	private final FastMap<Integer, L2Spawn> _spawnTable = new FastMap<Integer, L2Spawn>(50000).setShared(true);
 	private int _npcSpawnCount;

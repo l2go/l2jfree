@@ -20,8 +20,8 @@ import java.util.Scanner;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.model.items.extractable.L2ExtractableItem;
@@ -32,7 +32,7 @@ import com.l2jfree.gameserver.model.items.extractable.L2ExtractableProductItem;
  */
 public class ExtractableItemsData
 {
-	private final static Log _log = LogFactory.getLog(ExtractableItemsData.class);
+	private final static Logger _log = LoggerFactory.getLogger(ExtractableItemsData.class);
 	
 	//          Map<itemid, L2ExtractableItem>
 	private final FastMap<Integer, L2ExtractableItem> _items = new FastMap<Integer, L2ExtractableItem>();

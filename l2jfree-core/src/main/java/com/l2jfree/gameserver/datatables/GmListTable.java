@@ -19,8 +19,8 @@ import java.util.List;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.network.SystemMessageId;
@@ -32,7 +32,7 @@ import com.l2jfree.gameserver.network.packets.server.SystemMessage;
  */
 public final class GmListTable
 {
-	private static final Log _log = LogFactory.getLog(GmListTable.class);
+	private static final Logger _log = LoggerFactory.getLogger(GmListTable.class);
 	private static final FastMap<L2Player, Boolean> _allGms = new FastMap<L2Player, Boolean>().setShared(true);
 	
 	/** Shouldn't be instantiated */

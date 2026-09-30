@@ -22,8 +22,8 @@ import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -42,7 +42,7 @@ import com.l2jfree.gameserver.util.Util;
  */
 public final class MultisellTable
 {
-	private static final Log _log = LogFactory.getLog(MultisellTable.class);
+	private static final Logger _log = LoggerFactory.getLogger(MultisellTable.class);
 	
 	public static MultisellTable getInstance()
 	{
@@ -679,7 +679,7 @@ public final class MultisellTable
 			}
 			catch (Exception e)
 			{
-				_log.fatal("Error in file " + f.getAbsolutePath(), e);
+				_log.error("Error in file " + f.getAbsolutePath(), e);
 			}
 		}
 	}

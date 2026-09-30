@@ -21,8 +21,8 @@ import java.util.ArrayList;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.model.L2NpcWalkerNode;
@@ -35,7 +35,7 @@ import com.l2jfree.gameserver.model.L2NpcWalkerNode;
  */
 public class NpcWalkerRoutesTable
 {
-	private final static Log _log = LogFactory.getLog(SpawnTable.class);
+	private final static Logger _log = LoggerFactory.getLogger(SpawnTable.class);
 	
 	private final FastList<L2NpcWalkerNode> _routes = new FastList<L2NpcWalkerNode>();
 	
@@ -84,7 +84,7 @@ public class NpcWalkerRoutesTable
 		}
 		catch (Exception e)
 		{
-			_log.fatal("WalkerRoutesTable: Error while loading Npc Walker Routes: " + e.getMessage(), e);
+			_log.error("WalkerRoutesTable: Error while loading Npc Walker Routes: " + e.getMessage(), e);
 		}
 		finally
 		{

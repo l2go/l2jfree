@@ -23,15 +23,15 @@ import java.util.Map;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Summon;
 
 public class PetSkillsTable
 {
-	private final static Log _log = LogFactory.getLog(PetSkillsTable.class);
+	private final static Logger _log = LoggerFactory.getLogger(PetSkillsTable.class);
 	
 	private final FastMap<Integer, Map<Integer, L2PetSkillLearn>> _skillTrees;
 	
@@ -99,13 +99,13 @@ public class PetSkillsTable
 			}
 			catch (Exception e)
 			{
-				_log.fatal("Error while creating pet skill tree (Pet ID " + npcId + "):", e);
+				_log.error("Error while creating pet skill tree (Pet ID " + npcId + "):", e);
 			}
 			_log.info("PetSkillsTable: Loaded " + count + " skills.");
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Error while loading pet skills tables ", e);
+			_log.error("Error while loading pet skills tables ", e);
 		}
 		finally
 		{

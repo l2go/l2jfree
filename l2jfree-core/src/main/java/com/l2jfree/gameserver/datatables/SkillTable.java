@@ -24,8 +24,8 @@ import java.util.TreeSet;
 
 import javolution.util.FastSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.document.DocumentEngine;
 import com.l2jfree.gameserver.model.skills.L2Skill;
@@ -36,7 +36,7 @@ import com.l2jfree.lang.L2Integer;
 
 public final class SkillTable
 {
-	private static final Log _log = LogFactory.getLog(SkillTable.class);
+	private static final Logger _log = LoggerFactory.getLogger(SkillTable.class);
 	
 	private static final class SingletonHolder
 	{
@@ -169,7 +169,7 @@ public final class SkillTable
 			}
 			catch (Exception e)
 			{
-				_log.warn(skill, e);
+				_log.warn("Failed to validate skill " + skill, e);
 			}
 		}
 		

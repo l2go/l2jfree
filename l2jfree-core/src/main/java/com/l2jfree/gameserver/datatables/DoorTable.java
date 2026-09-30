@@ -23,8 +23,8 @@ import java.util.StringTokenizer;
 import javolution.util.FastMap;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.instance.L2DoorInstance;
@@ -40,7 +40,7 @@ import com.l2jfree.gameserver.templates.StatsSet;
 
 public final class DoorTable
 {
-	private static final Log _log = LogFactory.getLog(DoorTable.class);
+	private static final Logger _log = LoggerFactory.getLogger(DoorTable.class);
 	
 	public static DoorTable getInstance()
 	{
@@ -170,11 +170,11 @@ public final class DoorTable
 				startOpen = Boolean.parseBoolean(st.nextToken());
 			
 			if (rangeXMin > rangeXMax)
-				_log.fatal("Error in door data, XMin > XMax, ID:" + id);
+				_log.error("Error in door data, XMin > XMax, ID:" + id);
 			if (rangeYMin > rangeYMax)
-				_log.fatal("Error in door data, YMin > YMax, ID:" + id);
+				_log.error("Error in door data, YMin > YMax, ID:" + id);
 			if (rangeZMin > rangeZMax)
-				_log.fatal("Error in door data, ZMin > ZMax, ID:" + id);
+				_log.error("Error in door data, ZMin > ZMax, ID:" + id);
 			
 			int collisionRadius; // (max) radius for movement checks
 			if (rangeXMax - rangeXMin > rangeYMax - rangeYMin)
