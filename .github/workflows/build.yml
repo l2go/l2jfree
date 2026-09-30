@@ -36,17 +36,17 @@ jobs:
           java-version: "25"
           cache: maven
 
-      - name: Download Jython ${{ matrix.jython-version }} standalone runtime
+      - name: Download standalone Jython ${{ matrix.jython-version }} runtime
         shell: bash
         run: |
           curl --fail --location --silent --show-error \
-            "https://repo.maven.apache.org/maven2/org/python/jython/${{ matrix.jython-version }}/jython-${{ matrix.jython-version }}.jar" \
-            --output "$RUNNER_TEMP/jython-${{ matrix.jython-version }}.jar"
+            "https://repo.maven.apache.org/maven2/org/python/jython-standalone/${{ matrix.jython-version }}/jython-standalone-${{ matrix.jython-version }}.jar" \
+            --output "$RUNNER_TEMP/jython-standalone-${{ matrix.jython-version }}.jar"
 
       - name: Scan datapack scripts and check Java interop
         run: >-
           java --enable-native-access=ALL-UNNAMED
-          -cp "$RUNNER_TEMP/jython-${{ matrix.jython-version }}.jar"
+          -cp "$RUNNER_TEMP/jython-standalone-${{ matrix.jython-version }}.jar"
           org.python.util.jython tools/ci/validate-jython-candidate.py l2jfree-datapack/data/scripts
 
   graalpy-experiment:
