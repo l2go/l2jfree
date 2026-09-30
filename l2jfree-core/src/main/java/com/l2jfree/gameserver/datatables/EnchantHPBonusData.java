@@ -19,8 +19,8 @@ import java.util.StringTokenizer;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -40,7 +40,7 @@ import com.l2jfree.util.LookupTable;
  */
 public final class EnchantHPBonusData
 {
-	private static final Log _log = LogFactory.getLog(EnchantHPBonusData.class);
+	private static final Logger _log = LoggerFactory.getLogger(EnchantHPBonusData.class);
 	
 	public static EnchantHPBonusData getInstance()
 	{

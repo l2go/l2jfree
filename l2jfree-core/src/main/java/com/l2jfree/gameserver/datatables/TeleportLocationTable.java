@@ -20,8 +20,8 @@ import java.sql.ResultSet;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -34,7 +34,7 @@ import com.l2jfree.gameserver.model.L2TeleportLocation;
  */
 public class TeleportLocationTable
 {
-	private final static Log _log = LogFactory.getLog(TeleportLocationTable.class);
+	private final static Logger _log = LoggerFactory.getLogger(TeleportLocationTable.class);
 	
 	private FastMap<Integer, L2TeleportLocation> _teleports;
 	

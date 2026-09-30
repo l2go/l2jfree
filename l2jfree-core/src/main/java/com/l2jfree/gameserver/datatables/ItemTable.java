@@ -25,8 +25,8 @@ import java.util.Map;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -52,8 +52,8 @@ import com.l2jfree.util.L2Collections;
 
 public final class ItemTable
 {
-	private static final Log _log = LogFactory.getLog(ItemTable.class);
-	private static final Log _logItems = LogFactory.getLog("item");
+	private static final Logger _log = LoggerFactory.getLogger(ItemTable.class);
+	private static final Logger _logItems = LoggerFactory.getLogger("item");
 	
 	private static final Map<String, Integer> _materials = new HashMap<String, Integer>();
 	private static final Map<String, Integer> _crystalTypes = new HashMap<String, Integer>();
@@ -317,7 +317,7 @@ public final class ItemTable
 			_allTemplates[item.getItemId()] = item;
 			
 			if (old != null)
-				_log.fatal("ItemTable: ID: " + old.getItemId() + " (" + old.getItemType() + " replaced with "
+				_log.error("ItemTable: ID: " + old.getItemId() + " (" + old.getItemType() + " replaced with "
 						+ item.getItemType() + ")");
 		}
 	}

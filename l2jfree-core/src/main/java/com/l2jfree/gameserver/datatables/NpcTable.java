@@ -25,8 +25,8 @@ import javolution.util.FastList;
 import javolution.util.FastMap;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -48,7 +48,7 @@ import com.l2jfree.util.LookupTable;
 
 public final class NpcTable
 {
-	private static final Log _log = LogFactory.getLog(NpcTable.class);
+	private static final Logger _log = LoggerFactory.getLogger(NpcTable.class);
 	
 	public static NpcTable getInstance()
 	{
@@ -79,7 +79,7 @@ public final class NpcTable
 			}
 			catch (Exception e)
 			{
-				_log.fatal("NPCTable: Error creating NPC table: ", e);
+				_log.error("NPCTable: Error creating NPC table: ", e);
 			}
 			
 			try
@@ -95,7 +95,7 @@ public final class NpcTable
 			}
 			catch (Exception e)
 			{
-				_log.fatal("NPCTable: Error creating custom NPC table: ", e);
+				_log.error("NPCTable: Error creating custom NPC table: ", e);
 			}
 			
 			try
@@ -142,7 +142,7 @@ public final class NpcTable
 			}
 			catch (Exception e)
 			{
-				_log.fatal("NPCTable: Error reading NPC skills table: ", e);
+				_log.error("NPCTable: Error reading NPC skills table: ", e);
 			}
 			
 			try
@@ -188,7 +188,7 @@ public final class NpcTable
 			}
 			catch (Exception e)
 			{
-				_log.fatal("NPCTable: Error reading custom NPC skills table: ", e);
+				_log.error("NPCTable: Error reading custom NPC skills table: ", e);
 			}
 			
 			try
@@ -203,7 +203,7 @@ public final class NpcTable
 					L2NpcTemplate npcDat = _npcs.get(mobId);
 					if (npcDat == null)
 					{
-						_log.fatal("NPCTable: Drop data for undefined NPC. npcId: " + mobId);
+						_log.error("NPCTable: Drop data for undefined NPC. npcId: " + mobId);
 						continue;
 					}
 					L2DropData dropDat = new L2DropData();
@@ -223,7 +223,7 @@ public final class NpcTable
 			}
 			catch (Exception e)
 			{
-				_log.fatal("NPCTable: Error reading NPC drop data: ", e);
+				_log.error("NPCTable: Error reading NPC drop data: ", e);
 			}
 			
 			try
@@ -238,7 +238,7 @@ public final class NpcTable
 					L2NpcTemplate npcDat = _npcs.get(mobId);
 					if (npcDat == null)
 					{
-						_log.fatal("NPCTable: Custom drop data for undefined NPC. npcId: " + mobId);
+						_log.error("NPCTable: Custom drop data for undefined NPC. npcId: " + mobId);
 						continue;
 					}
 					L2DropData dropDat = new L2DropData();
@@ -258,7 +258,7 @@ public final class NpcTable
 			}
 			catch (Exception e)
 			{
-				_log.fatal("NPCTable: Error reading custom NPC drop data: ", e);
+				_log.error("NPCTable: Error reading custom NPC drop data: ", e);
 			}
 			
 			try
@@ -287,7 +287,7 @@ public final class NpcTable
 			}
 			catch (Exception e)
 			{
-				_log.fatal("NPCTable: Error reading NPC trainer data: ", e);
+				_log.error("NPCTable: Error reading NPC trainer data: ", e);
 			}
 			
 			try
@@ -319,7 +319,7 @@ public final class NpcTable
 			}
 			catch (Exception e)
 			{
-				_log.fatal("Error loading minion data: ", e);
+				_log.error("Error loading minion data: ", e);
 			}
 		}
 		catch (Exception e)

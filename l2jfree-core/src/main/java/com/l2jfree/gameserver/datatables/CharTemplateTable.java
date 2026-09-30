@@ -19,8 +19,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -35,7 +35,7 @@ import com.l2jfree.gameserver.templates.StatsSet;
  */
 public class CharTemplateTable
 {
-	private final static Log _log = LogFactory.getLog(CharTemplateTable.class);
+	private final static Logger _log = LoggerFactory.getLogger(CharTemplateTable.class);
 	
 	public static final String[] CHAR_CLASSES = { "Human Fighter", "Warrior", "Gladiator", "Warlord", "Human Knight",
 			"Paladin", "Dark Avenger", "Rogue", "Treasure Hunter", "Hawkeye", "Human Mystic", "Human Wizard",
@@ -144,7 +144,7 @@ public class CharTemplateTable
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("Failed loading char templates", e);
+			_log.error("Failed loading char templates", e);
 		}
 		
 		try
@@ -198,7 +198,7 @@ public class CharTemplateTable
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("Failed loading char creation items.", e);
+			_log.error("Failed loading char creation items.", e);
 		}
 		finally
 		{

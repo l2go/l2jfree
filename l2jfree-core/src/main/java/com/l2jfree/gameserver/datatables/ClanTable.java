@@ -21,8 +21,8 @@ import java.util.Map;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -46,7 +46,7 @@ import com.l2jfree.gameserver.network.packets.server.UserInfo;
 
 public class ClanTable
 {
-	private static final Log _log = LogFactory.getLog(ClanTable.class);
+	private static final Logger _log = LoggerFactory.getLogger(ClanTable.class);
 	
 	private final Map<Integer, L2Clan> _clans;
 	

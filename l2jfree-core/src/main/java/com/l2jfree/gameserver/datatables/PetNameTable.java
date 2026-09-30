@@ -19,14 +19,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 
 public class PetNameTable
 {
-	private final static Log _log = LogFactory.getLog(PetNameTable.class);
+	private final static Logger _log = LoggerFactory.getLogger(PetNameTable.class);
 	
 	public static boolean doesPetNameExist(String name, int petNpcId)
 	{

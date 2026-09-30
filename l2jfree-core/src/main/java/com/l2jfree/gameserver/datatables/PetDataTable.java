@@ -20,8 +20,8 @@ import java.sql.ResultSet;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.instance.L2PetInstance;
@@ -29,7 +29,7 @@ import com.l2jfree.gameserver.model.L2PetData;
 
 public class PetDataTable
 {
-	private final static Log _log = LogFactory.getLog(L2PetInstance.class);
+	private final static Logger _log = LoggerFactory.getLogger(L2PetInstance.class);
 	
 	public final static int PET_WOLF_ID = 12077;
 	

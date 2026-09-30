@@ -20,8 +20,8 @@ import java.sql.ResultSet;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.base.ClassId;
@@ -49,7 +49,7 @@ public class LevelUpData
 	private static final String CP_BASE = "defaultcpbase";
 	private static final String CLASS_ID = "classid";
 	
-	private final static Log _log = LogFactory.getLog(LevelUpData.class);
+	private final static Logger _log = LoggerFactory.getLogger(LevelUpData.class);
 	
 	private final FastMap<Integer, L2LvlupData> _lvlTable;
 	

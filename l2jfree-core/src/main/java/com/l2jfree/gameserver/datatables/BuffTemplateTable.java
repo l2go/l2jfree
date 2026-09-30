@@ -22,8 +22,8 @@ import java.util.List;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.base.Experience;
@@ -36,7 +36,7 @@ import com.l2jfree.gameserver.templates.StatsSet;
  */
 public class BuffTemplateTable
 {
-	private final static Log _log = LogFactory.getLog(BuffTemplateTable.class);
+	private final static Logger _log = LoggerFactory.getLogger(BuffTemplateTable.class);
 	
 	/** The table containing all buff templates */
 	private final FastMap<Integer, TemplateList> _templates;

@@ -26,8 +26,8 @@ import java.util.Set;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -55,7 +55,7 @@ public class SkillTreeTable
 	public static final int CHANGE_ENCHANT_BOOK = 9626;
 	public static final int UNTRAIN_ENCHANT_BOOK = 9625;
 	
-	private final static Log _log = LogFactory.getLog(SkillTreeTable.class);
+	private final static Logger _log = LoggerFactory.getLogger(SkillTreeTable.class);
 	
 	private final Map<Integer, L2SkillLearn>[] _skillTrees = new Map[ClassId.values().length];
 	private FastList<L2SkillLearn> _fishingSkillTrees; // all common skills (teached by Fisherman)
@@ -91,7 +91,7 @@ public class SkillTreeTable
 			return learnMap.get(skillHashCode).getMinLevel();
 		}
 		
-		_log.fatal("Expertise not found for grade " + grade);
+		_log.error("Expertise not found for grade " + grade);
 		return 0;
 	}
 	
@@ -202,7 +202,7 @@ public class SkillTreeTable
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Error while creating skill tree (Class ID " + classId + "):", e);
+			_log.error("Error while creating skill tree (Class ID " + classId + "):", e);
 		}
 		
 		_log.info("SkillTreeTable:               Loaded " + count + " skills.");
@@ -253,7 +253,7 @@ public class SkillTreeTable
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Error while creating fishing skill table: ", e);
+			_log.error("Error while creating fishing skill table: ", e);
 		}
 		
 		int count4 = 0;
@@ -309,7 +309,7 @@ public class SkillTreeTable
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Error while creating enchant skill table: ", e);
+			_log.error("Error while creating enchant skill table: ", e);
 		}
 		
 		int count5 = 0;
@@ -349,7 +349,7 @@ public class SkillTreeTable
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Error while creating pledge skill table: ", e);
+			_log.error("Error while creating pledge skill table: ", e);
 		}
 		
 		int count6 = 0;
@@ -390,7 +390,7 @@ public class SkillTreeTable
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Error while creating Transformation skill table ", e);
+			_log.error("Error while creating Transformation skill table ", e);
 		}
 		
 		int count7 = 0;
@@ -428,7 +428,7 @@ public class SkillTreeTable
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Error while creating SpecialSkillTree skill table ", e);
+			_log.error("Error while creating SpecialSkillTree skill table ", e);
 		}
 		int count8 = 0;
 		try
@@ -464,7 +464,7 @@ public class SkillTreeTable
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Error while creating Certification skill table ", e);
+			_log.error("Error while creating Certification skill table ", e);
 		}
 		finally
 		{

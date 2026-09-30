@@ -21,8 +21,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -35,7 +35,7 @@ import com.l2jfree.gameserver.model.L2SummonItem;
  */
 public class SummonItemsData
 {
-	private static final Log _log = LogFactory.getLog(SummonItemsData.class);
+	private static final Logger _log = LoggerFactory.getLogger(SummonItemsData.class);
 	
 	private final FastMap<Integer, L2SummonItem> _summonitems;
 	

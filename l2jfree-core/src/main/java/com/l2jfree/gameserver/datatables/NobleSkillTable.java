@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.datatables;
 import java.util.ArrayList;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.model.skills.L2Skill;
 
@@ -27,7 +27,7 @@ import com.l2jfree.gameserver.model.skills.L2Skill;
  */
 public final class NobleSkillTable
 {
-	private static final Log _log = LogFactory.getLog(NobleSkillTable.class);
+	private static final Logger _log = LoggerFactory.getLogger(NobleSkillTable.class);
 	
 	private static final int[] NOBLE_SKILL_IDS = { 325, 326, 327, 1323, 1324, 1325, 1326, 1327 };
 	

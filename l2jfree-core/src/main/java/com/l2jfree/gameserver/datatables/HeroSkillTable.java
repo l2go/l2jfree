@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.datatables;
 import java.util.ArrayList;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.model.skills.L2Skill;
 
@@ -27,7 +27,7 @@ import com.l2jfree.gameserver.model.skills.L2Skill;
  */
 public final class HeroSkillTable
 {
-	private static final Log _log = LogFactory.getLog(HeroSkillTable.class);
+	private static final Logger _log = LoggerFactory.getLogger(HeroSkillTable.class);
 	
 	private static final int[] HERO_SKILL_IDS = { 395, 396, 1374, 1375, 1376 };
 	

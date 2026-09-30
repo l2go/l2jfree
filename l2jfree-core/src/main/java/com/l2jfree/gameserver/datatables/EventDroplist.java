@@ -18,8 +18,8 @@ import java.util.Date;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.script.DateRange;
 
@@ -33,7 +33,7 @@ import com.l2jfree.gameserver.script.DateRange;
 public class EventDroplist
 {
 	
-	private final static Log _log = LogFactory.getLog(EventDroplist.class);
+	private final static Logger _log = LoggerFactory.getLogger(EventDroplist.class);
 	
 	/** The table containing all DataDrop object */
 	private final FastList<DateDrop> _allNpcDateDrops;

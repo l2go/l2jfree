@@ -21,8 +21,8 @@ import java.util.List;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.model.FishData;
@@ -33,7 +33,7 @@ import com.l2jfree.gameserver.model.FishData;
  */
 public class FishTable
 {
-	private final static Log _log = LogFactory.getLog(SkillTreeTable.class);
+	private final static Logger _log = LoggerFactory.getLogger(SkillTreeTable.class);
 	
 	private static List<FishData> _fishsNormal;
 	private static List<FishData> _fishsEasy;
@@ -94,7 +94,7 @@ public class FishTable
 		}
 		catch (Exception e)
 		{
-			_log.fatal("error while creating fishes table", e);
+			_log.error("error while creating fishes table", e);
 		}
 		finally
 		{
