@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.handler.items;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.datatables.SkillTable;
@@ -38,7 +38,7 @@ import com.l2jfree.gameserver.network.packets.server.ActionFailed;
 
 public class SoulCrystals implements IItemHandler
 {
-	protected static Log _log = LogFactory.getLog(SoulCrystals.class);
+	protected static Logger _log = LoggerFactory.getLogger(SoulCrystals.class);
 	
 	// First line is for Red Soul Crystals, second is Green and third is Blue Soul Crystals,
 	// ordered by ascending level, from 0 to 16...
