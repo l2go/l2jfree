@@ -25,8 +25,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.cache.HtmCache;
@@ -49,7 +49,7 @@ import com.l2jfree.lang.L2TextBuilder;
  */
 public class Announcements
 {
-	private final static Log _log = LogFactory.getLog(Announcements.class);
+	private final static Logger _log = LoggerFactory.getLogger(Announcements.class);
 	
 	private final List<String> _announcements = new ArrayList<String>();
 	private final List<List<Object>> _eventAnnouncements = new ArrayList<List<Object>>();
@@ -170,7 +170,7 @@ public class Announcements
 		}
 		catch (IOException e1)
 		{
-			_log.fatal("Error reading announcements", e1);
+			_log.error("Error reading announcements", e1);
 		}
 		finally
 		{

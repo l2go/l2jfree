@@ -20,8 +20,8 @@ import java.sql.ResultSet;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -42,7 +42,7 @@ import com.l2jfree.gameserver.model.world.L2World;
  */
 public abstract class ItemContainer
 {
-	protected static final Log _log = LogFactory.getLog(ItemContainer.class);
+	protected static final Logger _log = LoggerFactory.getLogger(ItemContainer.class);
 	
 	protected final FastList<L2ItemInstance> _items;
 	
@@ -596,7 +596,7 @@ public abstract class ItemContainer
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		FastList<L2Object> items = new FastList<L2Object>(_items);

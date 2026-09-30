@@ -122,7 +122,7 @@ public final class RequestExEnchantSkillInfo extends L2ClientPacket
 				showChangeEnchantInfo(activeChar);
 				break;
 			default:
-				_log.fatal("Unknown skill enchant type: " + _type);
+				_log.error("Unknown skill enchant type: " + _type);
 				break;
 		}
 		

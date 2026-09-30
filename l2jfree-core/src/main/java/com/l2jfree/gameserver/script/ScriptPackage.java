@@ -22,8 +22,8 @@ import java.util.zip.ZipFile;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * ScriptPackage is able to read a zip file and extract a list of ScriptDocument from it
@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ScriptPackage
 {
-	private final static Log _log = LogFactory.getLog(ScriptPackage.class);
+	private final static Logger _log = LoggerFactory.getLogger(ScriptPackage.class);
 	
 	private final List<ScriptDocument> _scriptFiles;
 	private final String _name;

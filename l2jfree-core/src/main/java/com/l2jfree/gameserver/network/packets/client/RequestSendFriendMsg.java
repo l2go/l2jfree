@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.network.packets.client;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -38,7 +38,7 @@ import com.l2jfree.gameserver.network.packets.server.L2FriendSay;
 public class RequestSendFriendMsg extends L2ClientPacket
 {
 	private static final String _C__CC_REQUESTSENDMSG = "[C] CC RequestSendMsg";
-	private static Log _logChat = LogFactory.getLog("chat");
+	private static Logger _logChat = LoggerFactory.getLogger("chat");
 	
 	private String _message;
 	private String _receiver;

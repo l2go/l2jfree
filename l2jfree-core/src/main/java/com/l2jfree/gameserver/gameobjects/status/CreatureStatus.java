@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.gameobjects.status;
 
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
@@ -32,7 +32,7 @@ import com.l2jfree.util.LazyFastSet;
 
 public class CreatureStatus
 {
-	protected static final Log _log = LogFactory.getLog(CreatureStatus.class);
+	protected static final Logger _log = LoggerFactory.getLogger(CreatureStatus.class);
 	
 	protected final L2Creature _activeChar;
 	private final int _period;

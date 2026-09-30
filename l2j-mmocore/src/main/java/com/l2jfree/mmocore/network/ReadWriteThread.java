@@ -510,7 +510,7 @@ final class ReadWriteThread<T extends MMOConnection<T, RP, SP>, RP extends Recei
 		}
 		catch (RuntimeException e)
 		{
-			SelectorThread._log.fatal("Failed writing: " + client + " - " + sp.getType() + " - "
+			SelectorThread._log.error("Failed writing: " + client + " - " + sp.getType() + " - "
 					+ getSelectorThread().getVersionInfo(), e);
 		}
 		

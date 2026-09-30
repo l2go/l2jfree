@@ -20,8 +20,8 @@ import java.util.Set;
 import javolution.util.FastMap;
 import javolution.util.FastSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.NpcTable;
@@ -39,7 +39,7 @@ import com.l2jfree.util.L2FastSet;
  */
 public final class MinionList
 {
-	private final static Log _log = LogFactory.getLog(L2MonsterInstance.class);
+	private final static Logger _log = LoggerFactory.getLogger(L2MonsterInstance.class);
 	
 	/** List containing the current spawned minions for this L2MonsterInstance */
 	private final Set<L2MinionInstance> minionReferences = new L2FastSet<L2MinionInstance>().setShared(true);

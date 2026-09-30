@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.idfactory;
 import java.util.BitSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.tools.util.PrimeFinder;
@@ -32,7 +32,7 @@ import com.l2jfree.tools.util.PrimeFinder;
 
 public class BitSetIDFactory extends IdFactory
 {
-	private final static Log _log = LogFactory.getLog(BitSetIDFactory.class);
+	private final static Logger _log = LoggerFactory.getLogger(BitSetIDFactory.class);
 	
 	private BitSet _freeIds;
 	private AtomicInteger _freeIdCount;
@@ -96,7 +96,7 @@ public class BitSetIDFactory extends IdFactory
 		catch (Exception e)
 		{
 			_initialized = false;
-			_log.fatal("BitSet ID Factory could not be initialized correctly", e);
+			_log.error("BitSet ID Factory could not be initialized correctly", e);
 		}
 	}
 	

@@ -2871,7 +2871,7 @@ public final class L2Player extends L2Playable
 				}
 				catch (Exception e)
 				{
-					_log.fatal("clearDepositedFreight()", e);
+					_log.error("clearDepositedFreight()", e);
 				}
 			}
 		}
@@ -7460,7 +7460,7 @@ public final class L2Player extends L2Playable
 			// if something failed loading and do a lil log message
 			removeSkill(skill, false);
 			sendMessage("Skill " + skill.getName() + " removed and GM informed!");
-			_log.fatal("Cheater?! " + skill + " removed from " + getName() + " (" + getAccountName() + ")");
+			_log.error("Cheater?! " + skill + " removed from " + getName() + " (" + getAccountName() + ")");
 		}
 	}
 	
@@ -9641,7 +9641,7 @@ public final class L2Player extends L2Playable
 			}
 			catch (Exception e)
 			{
-				_log.fatal("Mounted Pet [NpcId: " + getMountNpcId() + "] a feed task error has occurred", e);
+				_log.error("Mounted Pet [NpcId: " + getMountNpcId() + "] a feed task error has occurred", e);
 			}
 		}
 	}
@@ -9783,7 +9783,7 @@ public final class L2Player extends L2Playable
 			}
 			catch (Exception e)
 			{
-				_log.fatal("Failed to store Pet [NpcId: " + petId + "] data", e);
+				_log.error("Failed to store Pet [NpcId: " + petId + "] data", e);
 			}
 			finally
 			{
@@ -10007,7 +10007,7 @@ public final class L2Player extends L2Playable
 		
 		if (t == null)
 		{
-			_log.fatal("Missing template for classId: " + classId);
+			_log.error("Missing template for classId: " + classId);
 			throw new Error();
 		}
 		
@@ -11083,7 +11083,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		// Pause restrictions
@@ -11099,7 +11099,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		try
@@ -11120,7 +11120,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		// If the L2Player has Pet, unsummon it
@@ -11171,7 +11171,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		GlobalRestrictions.playerDisconnected(this);
@@ -11182,7 +11182,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		// Stop crafting, if in progress
@@ -11192,7 +11192,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		try
@@ -11201,7 +11201,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		if (_throne != null)
@@ -11220,7 +11220,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		getEffects().stopAllEffects(true);
@@ -11237,7 +11237,7 @@ public final class L2Player extends L2Playable
 			}
 			catch (Exception e)
 			{
-				_log.fatal(e.getMessage(), e);
+				_log.error(e.getMessage(), e);
 			}
 		}
 		
@@ -11261,7 +11261,7 @@ public final class L2Player extends L2Playable
 			}
 			catch (Exception e)
 			{
-				_log.fatal(e.getMessage(), e);
+				_log.error(e.getMessage(), e);
 			}
 		}
 		else
@@ -11284,7 +11284,7 @@ public final class L2Player extends L2Playable
 			}
 			catch (Exception e)
 			{
-				_log.fatal(e.getMessage(), e);
+				_log.error(e.getMessage(), e);
 			}
 		}
 		
@@ -11303,7 +11303,7 @@ public final class L2Player extends L2Playable
 			}
 			catch (Exception e)
 			{
-				_log.fatal(e.getMessage(), e);
+				_log.error(e.getMessage(), e);
 			}
 		}
 		
@@ -11335,7 +11335,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		// Update database with items in its inventory and remove them from the world
@@ -11345,7 +11345,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		// Update database with items in its warehouse and remove them from the world
@@ -11355,7 +11355,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		if (Config.WAREHOUSE_CACHE)
@@ -11368,7 +11368,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		try
@@ -11377,7 +11377,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		// Remove all L2Object from _knownObjects and _knownPlayer of the L2Creature then cancel Attak or Cast and notify AI
@@ -11387,7 +11387,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal(e.getMessage(), e);
+			_log.error(e.getMessage(), e);
 		}
 		
 		untransform();
@@ -11434,7 +11434,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (RuntimeException e)
 		{
-			_log.fatal("deleteMe()", e);
+			_log.error("deleteMe()", e);
 		}
 		
 		RegionBBSManager.changeCommunityBoard(this, PlayerStateOnCommunity.NONE);
@@ -13004,7 +13004,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Transformation insert info: " + e, e);
+			_log.error("Transformation insert info: " + e, e);
 		}
 		finally
 		{
@@ -13034,7 +13034,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Transformation select info error:" + e.getMessage(), e);
+			_log.error("Transformation select info error:" + e.getMessage(), e);
 		}
 		finally
 		{
@@ -13212,7 +13212,7 @@ public final class L2Player extends L2Playable
 				}
 				catch (RuntimeException e)
 				{
-					_log.fatal("", e);
+					_log.error("", e);
 				}
 				
 				delay = period;
@@ -13945,7 +13945,7 @@ public final class L2Player extends L2Playable
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Failed restoring character teleport bookmark.", e);
+			_log.error("Failed restoring character teleport bookmark.", e);
 		}
 		finally
 		{

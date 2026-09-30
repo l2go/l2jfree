@@ -39,8 +39,8 @@ import javolution.util.FastMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2AutoInitialization.ConfigFileLoader;
 import com.l2jfree.L2AutoInitialization.ConfigLoader;
@@ -63,7 +63,7 @@ import com.l2jfree.util.L2FastSet;
  */
 public final class Config
 {
-	private static final Log _log = LogFactory.getLog(Config.class);
+	private static final Logger _log = LoggerFactory.getLogger(Config.class);
 	
 	static
 	{
@@ -979,7 +979,7 @@ public final class Config
 		}
 		catch (Exception e)
 		{
-			_log.error(e);
+			_log.error(String.valueOf(e));
 			throw new Error("Failed to Load " + ID_CONFIG_FILE + " File.");
 		}
 	}
@@ -2355,7 +2355,7 @@ public final class Config
 		}
 		catch (Exception e)
 		{
-			_log.error(e);
+			_log.error(String.valueOf(e));
 			throw new Error("Failed to Load " + DATETIME_FILE + " File.");
 		}
 	}
@@ -2380,7 +2380,7 @@ public final class Config
 		}
 		catch (Exception e)
 		{
-			_log.error(e);
+			_log.error(String.valueOf(e));
 			throw new Error("Failed to Load " + TELNET_FILE + " File.");
 		}
 	}

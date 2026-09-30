@@ -430,7 +430,7 @@ public class L2Attackable extends L2Npc
 		}
 		catch (Exception e)
 		{
-			_log.fatal("", e);
+			_log.error("", e);
 		}
 		
 		// Notify the Quest Engine of the L2Attackable death if necessary
@@ -460,7 +460,7 @@ public class L2Attackable extends L2Npc
 		}
 		catch (Exception e)
 		{
-			_log.fatal("", e);
+			_log.error("", e);
 		}
 		
 		setChampion(false);
@@ -816,7 +816,7 @@ public class L2Attackable extends L2Npc
 		}
 		catch (Exception e)
 		{
-			_log.fatal("", e);
+			_log.error("", e);
 		}
 	}
 	
@@ -846,7 +846,7 @@ public class L2Attackable extends L2Npc
 			}
 			catch (Exception e)
 			{
-				_log.fatal(e.getMessage(), e);
+				_log.error(e.getMessage(), e);
 			}
 		}
 	}

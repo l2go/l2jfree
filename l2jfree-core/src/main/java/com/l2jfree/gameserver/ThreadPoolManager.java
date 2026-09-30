@@ -24,8 +24,8 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.util.concurrent.ExecuteWrapper;
@@ -39,7 +39,7 @@ import com.l2jfree.util.concurrent.ScheduledFutureWrapper;
  */
 public final class ThreadPoolManager
 {
-	private static final Log _log = LogFactory.getLog(ThreadPoolManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(ThreadPoolManager.class);
 	
 	public static final long MAXIMUM_RUNTIME_IN_MILLISEC_WITHOUT_WARNING = 5000;
 	

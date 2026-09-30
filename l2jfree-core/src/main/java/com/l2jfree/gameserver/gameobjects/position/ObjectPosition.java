@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.gameobjects.position;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Object;
@@ -27,7 +27,7 @@ import com.l2jfree.gameserver.taskmanager.CoordRevalidator;
 
 public final class ObjectPosition
 {
-	private static final Log _log = LogFactory.getLog(ObjectPosition.class);
+	private static final Logger _log = LoggerFactory.getLogger(ObjectPosition.class);
 	
 	private final L2Object _activeObject;
 	

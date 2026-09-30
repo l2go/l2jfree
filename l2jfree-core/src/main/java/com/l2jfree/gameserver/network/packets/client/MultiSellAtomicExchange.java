@@ -27,8 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -51,7 +51,7 @@ import com.l2jfree.gameserver.taskmanager.SQLQueue;
 /** Prepares all exchange effects before the only durable commit. */
 final class MultiSellAtomicExchange
 {
-	private static final Log LOG = LogFactory.getLog(MultiSellAtomicExchange.class);
+	private static final Logger LOG = LoggerFactory.getLogger(MultiSellAtomicExchange.class);
 
 	interface Resources
 	{

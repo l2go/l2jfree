@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.network;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
@@ -17569,7 +17569,7 @@ public enum SystemMessageId
 		return _systemMessage;
 	}
 	
-	private static final Log _log = LogFactory.getLog(SystemMessageId.class);
+	private static final Logger _log = LoggerFactory.getLogger(SystemMessageId.class);
 	
 	private static final LookupTable<SystemMessageId> TABLE;
 	

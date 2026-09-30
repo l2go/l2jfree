@@ -344,7 +344,7 @@ public class L2Npc extends L2Creature
 		
 		if (template == null)
 		{
-			_log.fatal("No template for Npc. Please check your datapack is setup correctly.");
+			_log.error("No template for Npc. Please check your datapack is setup correctly.");
 			return;
 		}
 		
@@ -2780,7 +2780,7 @@ public class L2Npc extends L2Creature
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Failed decayMe().", e);
+			_log.error("Failed decayMe().", e);
 		}
 		
 		try
@@ -2794,7 +2794,7 @@ public class L2Npc extends L2Creature
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Failed deleteMe().", e);
+			_log.error("Failed deleteMe().", e);
 		}
 		
 		if (region != null)
@@ -2807,7 +2807,7 @@ public class L2Npc extends L2Creature
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Failed removing cleaning knownlist.", e);
+			_log.error("Failed removing cleaning knownlist.", e);
 		}
 	}
 	

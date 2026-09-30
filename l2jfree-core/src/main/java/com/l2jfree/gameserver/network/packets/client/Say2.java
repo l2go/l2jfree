@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.network.packets.client;
 
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -38,7 +38,7 @@ import com.l2jfree.gameserver.util.Util;
 public class Say2 extends L2ClientPacket
 {
 	private static final String _C__SAY2 = "[C] 49 Say2 c[sd|s|]";
-	private static final Log _logChat = LogFactory.getLog("chat");
+	private static final Logger _logChat = LoggerFactory.getLogger("chat");
 	
 	private String _text;
 	private SystemChatChannelId _type;

@@ -18,8 +18,8 @@ import java.io.File;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -37,7 +37,7 @@ import com.l2jfree.gameserver.model.skills.funcs.FuncTemplate;
  */
 abstract class DocumentBase
 {
-	static final Log _log = LogFactory.getLog(DocumentBase.class);
+	static final Logger _log = LoggerFactory.getLogger(DocumentBase.class);
 	
 	final File _file;
 	
@@ -57,7 +57,7 @@ abstract class DocumentBase
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Error in file: " + _file, e);
+			_log.error("Error in file: " + _file, e);
 		}
 	}
 	

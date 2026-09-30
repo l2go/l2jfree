@@ -21,8 +21,8 @@ import java.util.HashSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a class loader for the dynamic extensions used by DynamicExtension
@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JarClassLoader extends ClassLoader
 {
-	private static Log _log = LogFactory.getLog(JarClassLoader.class);
+	private static Logger _log = LoggerFactory.getLogger(JarClassLoader.class);
 	HashSet<String> _jars = new HashSet<String>();
 	
 	public void addJarFile(String filename)

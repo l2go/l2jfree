@@ -19,8 +19,8 @@ import static com.l2jfree.gameserver.gameobjects.ai.CtrlIntention.AI_INTENTION_C
 import static com.l2jfree.gameserver.gameobjects.ai.CtrlIntention.AI_INTENTION_FOLLOW;
 import static com.l2jfree.gameserver.gameobjects.ai.CtrlIntention.AI_INTENTION_IDLE;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Object;
@@ -52,7 +52,7 @@ import com.l2jfree.lang.L2System;
  */
 public abstract class AbstractAI implements Ctrl
 {
-	protected static final Log _log = LogFactory.getLog(AbstractAI.class);
+	protected static final Logger _log = LoggerFactory.getLogger(AbstractAI.class);
 	
 	private static final int FOLLOW_INTERVAL = 1000;
 	private static final int ATTACK_FOLLOW_INTERVAL = 500;

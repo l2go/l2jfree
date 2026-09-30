@@ -64,7 +64,7 @@ public class SiegeInfo extends L2ServerPacket
 		if (hideout.getSiege() == null)
 		{
 			_siegeTime = 0;
-			_log.fatal("Requested siege info for non-contestable hideout!");
+			_log.error("Requested siege info for non-contestable hideout!");
 		}
 		else
 			_siegeTime = (int)(hideout.getSiege().getSiegeDate().getTimeInMillis() / 1000);

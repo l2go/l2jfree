@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.datatables.SpawnTable;
@@ -43,7 +43,7 @@ import com.l2jfree.util.L2FastSet;
  */
 public final class LeakTaskManager
 {
-	private static final Log _log = LogFactory.getLog(LeakTaskManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(LeakTaskManager.class);
 	
 	private static final long MINIMUM_DELAY_BETWEEN_CLEANUPS = TimeUnit.MINUTES.toMillis(30);
 	private static final long MINIMUM_DELAY_BETWEEN_MEMORY_DUMPS = TimeUnit.HOURS.toMillis(4);

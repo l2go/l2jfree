@@ -22,14 +22,14 @@ import java.util.concurrent.Future;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 
 public final class AutoAnnouncements
 {
-	private static final Log _log = LogFactory.getLog(Announcements.class);
+	private static final Logger _log = LoggerFactory.getLogger(Announcements.class);
 	
 	public static AutoAnnouncements getInstance()
 	{
@@ -86,7 +86,7 @@ public final class AutoAnnouncements
 		}
 		catch (Exception e)
 		{
-			_log.fatal("AutoAnnoucements: Failed to load announcements data.", e);
+			_log.error("AutoAnnoucements: Failed to load announcements data.", e);
 		}
 		finally
 		{

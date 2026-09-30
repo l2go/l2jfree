@@ -18,15 +18,15 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Dezmond
  */
 public class GeoEditorListener extends Thread
 {
-	private static final Log _log = LogFactory.getLog(GeoEditorListener.class);
+	private static final Logger _log = LoggerFactory.getLogger(GeoEditorListener.class);
 	
 	private static final int PORT = 9011;
 	
@@ -51,7 +51,7 @@ public class GeoEditorListener extends Thread
 		}
 		catch (IOException e)
 		{
-			_log.fatal("Error creating geoeditor listener! ", e);
+			_log.error("Error creating geoeditor listener! ", e);
 			System.exit(1);
 		}
 		start();

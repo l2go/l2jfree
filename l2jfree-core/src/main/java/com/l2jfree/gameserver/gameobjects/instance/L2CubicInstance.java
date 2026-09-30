@@ -19,8 +19,8 @@ import java.util.concurrent.Future;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.datatables.SkillTable;
@@ -43,7 +43,7 @@ import com.l2jfree.tools.random.Rnd;
 
 public class L2CubicInstance
 {
-	protected static Log _log = LogFactory.getLog(L2CubicInstance.class);
+	protected static Logger _log = LoggerFactory.getLogger(L2CubicInstance.class);
 	
 	// Type of Cubics
 	public static final int STORM_CUBIC = 1;
@@ -499,7 +499,7 @@ public class L2CubicInstance
 		}
 		catch (Exception e)
 		{
-			_log.fatal("GetCubicTarget:", e);
+			_log.error("GetCubicTarget:", e);
 		}
 	}
 	

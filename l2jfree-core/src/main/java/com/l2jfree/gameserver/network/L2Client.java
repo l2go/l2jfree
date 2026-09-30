@@ -23,8 +23,8 @@ import java.sql.ResultSet;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -57,7 +57,7 @@ import com.l2jfree.util.concurrent.RunnableStatsManager;
  */
 public final class L2Client extends MMOConnection<L2Client, L2ClientPacket, L2ServerPacket>
 {
-	private static final Log _log = LogFactory.getLog(L2Client.class);
+	private static final Logger _log = LoggerFactory.getLogger(L2Client.class);
 	
 	/**
 	 * @author KenM

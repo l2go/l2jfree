@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.network;
 
 import java.nio.ByteBuffer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.network.L2Client.GameClientState;
@@ -42,7 +42,7 @@ import com.l2jfree.mmocore.network.IPacketHandler;
 public final class L2ClientPacketHandlerFinal implements
 		IPacketHandler<L2Client, L2ClientPacket, L2ServerPacket>
 {
-	private static final Log _log = LogFactory.getLog(L2ClientPacketHandlerFinal.class);
+	private static final Logger _log = LoggerFactory.getLogger(L2ClientPacketHandlerFinal.class);
 	
 	@Override
 	public L2ClientPacket handlePacket(ByteBuffer buf, L2Client client, final int opcode)

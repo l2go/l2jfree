@@ -21,12 +21,12 @@ import java.util.logging.Logger;
 import javolution.util.FastMap;
 import javolution.util.FastMap.Entry;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 /**
  * @author NB4L1
  */
-public final class MMOLogger implements Log
+public final class MMOLogger
 {
 	private static final class MMOLogEntry
 	{
@@ -45,8 +45,7 @@ public final class MMOLogger implements Log
 			_throwable = throwable;
 		}
 		
-		@Override
-		public boolean equals(Object obj)
+			public boolean equals(Object obj)
 		{
 			if (!(obj instanceof MMOLogEntry))
 				return false;
@@ -87,8 +86,7 @@ public final class MMOLogger implements Log
 			return o1.equals(o2);
 		}
 		
-		@Override
-		public int hashCode()
+			public int hashCode()
 		{
 			return hashCode(_level) // Level
 					+ hashCode(_className) // String
@@ -127,8 +125,7 @@ public final class MMOLogger implements Log
 		_logger = Logger.getLogger(clazz.getName());
 		
 		MMOFlusher.add(new Runnable() {
-			@Override
-			public void run()
+					public void run()
 			{
 				flush();
 			}
@@ -188,109 +185,91 @@ public final class MMOLogger implements Log
 		}
 	}
 	
-	@Override
 	public void debug(Object message)
 	{
 		log(Level.FINE, String.valueOf(message), null);
 	}
 	
-	@Override
 	public void debug(Object message, Throwable throwable)
 	{
 		log(Level.FINE, String.valueOf(message), throwable);
 	}
 	
-	@Override
 	public void error(Object message)
 	{
 		log(Level.SEVERE, String.valueOf(message), null);
 	}
 	
-	@Override
 	public void error(Object message, Throwable throwable)
 	{
 		log(Level.SEVERE, String.valueOf(message), throwable);
 	}
 	
-	@Override
 	public void fatal(Object message)
 	{
 		log(Level.SEVERE, String.valueOf(message), null);
 	}
 	
-	@Override
 	public void fatal(Object message, Throwable throwable)
 	{
 		log(Level.SEVERE, String.valueOf(message), throwable);
 	}
 	
-	@Override
 	public void info(Object message)
 	{
 		log(Level.INFO, String.valueOf(message), null);
 	}
 	
-	@Override
 	public void info(Object message, Throwable throwable)
 	{
 		log(Level.INFO, String.valueOf(message), throwable);
 	}
 	
-	@Override
 	public void trace(Object message)
 	{
 		log(Level.FINEST, String.valueOf(message), null);
 	}
 	
-	@Override
 	public void trace(Object message, Throwable throwable)
 	{
 		log(Level.FINEST, String.valueOf(message), throwable);
 	}
 	
-	@Override
 	public void warn(Object message)
 	{
 		log(Level.WARNING, String.valueOf(message), null);
 	}
 	
-	@Override
 	public void warn(Object message, Throwable throwable)
 	{
 		log(Level.WARNING, String.valueOf(message), throwable);
 	}
 	
-	@Override
 	public boolean isDebugEnabled()
 	{
 		return _logger.isLoggable(Level.FINE);
 	}
 	
-	@Override
 	public boolean isErrorEnabled()
 	{
 		return _logger.isLoggable(Level.SEVERE);
 	}
 	
-	@Override
 	public boolean isFatalEnabled()
 	{
 		return _logger.isLoggable(Level.SEVERE);
 	}
 	
-	@Override
 	public boolean isInfoEnabled()
 	{
 		return _logger.isLoggable(Level.INFO);
 	}
 	
-	@Override
 	public boolean isTraceEnabled()
 	{
 		return _logger.isLoggable(Level.FINEST);
 	}
 	
-	@Override
 	public boolean isWarnEnabled()
 	{
 		return _logger.isLoggable(Level.WARNING);

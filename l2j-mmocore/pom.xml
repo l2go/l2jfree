@@ -14,28 +14,8 @@
 	<packaging>jar</packaging>
 	<dependencies>
 		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging</artifactId>
-			<version>1.2</version>
-			<scope>provided</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.servlet</groupId>
-					<artifactId>servlet-api</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>avalon-framework</groupId>
-					<artifactId>avalon-framework</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>logkit</groupId>
-					<artifactId>logkit</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>log4j</groupId>
-					<artifactId>log4j</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>javolution</groupId>

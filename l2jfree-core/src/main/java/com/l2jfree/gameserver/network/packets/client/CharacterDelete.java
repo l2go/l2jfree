@@ -62,7 +62,7 @@ public class CharacterDelete extends L2ClientPacket
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Couldn't mark character for deletion!", e);
+			_log.error("Couldn't mark character for deletion!", e);
 		}
 		
 		sendPacket(new CharSelectionInfo(getClient()));

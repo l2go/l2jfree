@@ -85,7 +85,7 @@ public final class RequestExEnchantSkillInfoDetail extends L2ClientPacket
 					reqCount = 1;
 					break;
 				default:
-					_log.fatal("Unknown skill enchant type: " + _type);
+					_log.error("Unknown skill enchant type: " + _type);
 					sendPacket(ActionFailed.STATIC_PACKET);
 					return;
 			}

@@ -21,8 +21,8 @@ import java.util.Set;
 
 import javolution.util.FastSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.Shutdown;
@@ -32,7 +32,7 @@ import com.l2jfree.lang.L2Thread;
 
 public final class DeadlockDetector extends L2Thread
 {
-	private static final Log _log = LogFactory.getLog(DeadlockDetector.class);
+	private static final Logger _log = LoggerFactory.getLogger(DeadlockDetector.class);
 	
 	private static final class SingletonHolder
 	{
@@ -81,10 +81,10 @@ public final class DeadlockDetector extends L2Thread
 			Util.printSection("Deadlocked Thread(s)");
 			for (Thread thread : deadlocked)
 			{
-				_log.fatal("");
+				_log.error("");
 				
 				for (String line : L2Thread.getStats(thread))
-					_log.fatal(line);
+					_log.error(line);
 			}
 			
 			new Halt().start();
