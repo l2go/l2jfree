@@ -147,6 +147,7 @@ jobs:
           cp "l2jfree-datapack/target/l2jfree-datapack-${artifact_version}-dist.zip" release-artifacts/
           zip -r "release-artifacts/l2jfree-${artifact_version}-docs.zip" LICENSE README.md \
             docs/INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md \
+            docs/PLATFORM-3.0-VISION.md \
             docs/INFRASTRUCTURE-STACK.md \
             docs/DATABASE-MIGRATION-STRATEGY.md \
             docs/LOGGING-MIGRATION-PLAN.md \
@@ -154,6 +155,7 @@ jobs:
             docs/RELEASE-VERIFICATION.md
           unzip -Z1 "release-artifacts/l2jfree-${artifact_version}-docs.zip" | grep -Fxq docs/DATABASE-MIGRATION-STRATEGY.md
           unzip -Z1 "release-artifacts/l2jfree-${artifact_version}-docs.zip" | grep -Fxq docs/OPERATIONS-RUNBOOK.md
+          unzip -Z1 "release-artifacts/l2jfree-${artifact_version}-docs.zip" | grep -Fxq docs/PLATFORM-3.0-VISION.md
           cp target/bom.json "release-artifacts/l2jfree-${artifact_version}-sbom.json"
           cp target/vulnerability-report.json "release-artifacts/l2jfree-${artifact_version}-vulnerability-report.json"
 
