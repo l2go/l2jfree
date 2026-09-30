@@ -41,17 +41,15 @@ independently versioned datapack release.
 - Keep Maven and the Maven Wrapper; builds and tests run in GitHub Actions.
 - Keep HikariCP after pool lifecycle, timeout, recovery, and workload gates
   pass. Do not restore c3p0 or a Hibernate/Spring ORM runtime.
-- Move application logging to SLF4J 2.x and Logback only after preserving the
-  named JUL audit and gameplay channels described in the
-  [logging migration plan](LOGGING-MIGRATION-PLAN.md).
+- SLF4J 2.x and Logback now own application and JUL logging. Keep the named
+  audit and gameplay channels described in the
+  [logging migration plan](LOGGING-MIGRATION-PLAN.md), and qualify output and
+  access controls before stable release.
 - Place new MySQL schema changes in numbered SQL files and keep MySQL-specific
   syntax in the repository layer. Liquibase remains a test-only probe and is
   not the 2.0 release journal. Platform 3.0 uses Flyway for PostgreSQL.
 - Compile Java datapack scripts in CI and remove ECJ from the 2.0 runtime
   archives after the packaged bytecode has been qualified.
-- Move logging to SLF4J 2.0.20 and Logback 1.5 before 2.0 stable. Remove
-  Commons Logging and the `slf4j-jdk14` bridge while preserving named audit
-  and gameplay loggers.
 - Remove irclib before 2.0 stable. Use Kitteh IRC Client Library only if the
   admin IRC bridge remains a product feature; otherwise delete that feature.
 - Promote Jython 2.7.5b1 as the 2.0 runtime after the embedded bridge,

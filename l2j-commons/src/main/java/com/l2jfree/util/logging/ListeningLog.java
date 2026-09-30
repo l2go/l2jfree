@@ -14,12 +14,7 @@
  */
 package com.l2jfree.util.logging;
 
-import java.util.logging.LogRecord;
-import java.util.logging.StreamHandler;
-
 import org.apache.commons.lang3.ArrayUtils;
-
-import com.l2jfree.io.RedirectingOutputStream.BufferedRedirectingOutputStream;
 
 /**
  * @author NB4L1
@@ -42,35 +37,10 @@ public final class ListeningLog
 		_listeners = ArrayUtils.add(_listeners, listener);
 	}
 	
-	private static void writeToListeners(String s)
+	static void writeToListeners(String s)
 	{
 		for (LogListener listener : _listeners)
 			listener.write(s);
 	}
 	
-	public static final class Handler extends StreamHandler
-	{
-		public Handler()
-		{
-			setOutputStream(new BufferedRedirectingOutputStream() {
-				@Override
-				protected void handleLine(String line)
-				{
-					ListeningLog.writeToListeners(line);
-				}
-			});
-		}
-		
-		@Override
-		public synchronized void publish(LogRecord record)
-		{
-			super.publish(record);
-			
-			flush();
-		}
-	}
-	
-	public static final class Formatter extends L2RuntimeLogFormatter
-	{
-	}
 }

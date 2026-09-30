@@ -69,7 +69,7 @@ need.
 | Scripting | ECJ 3.44.0 compiles Java scripts in CI into the GameServer delivery; Jython 2.7.5b1 runs the Python 2 scripts from the same delivery revision | Remove ECJ and Jython 2.2.1 from the 2.0 runtime archives after the packaged output, bridge, and supported scripts pass qualification. Do not compile Java scripts during server startup. Platform 3.0 replaces b1 with final Jython 2.7; GraalPy and a Python 3 port are excluded. |
 | Network layer | Retain the existing custom MMO network core in 2.0 | Keep the established protocol, encryption, ordering, and disconnect behavior on the Windows acceptance host. Netty 4.2 with `io_uring` is a Platform 3.0 replacement, after migration to Linux; no Netty port is part of 2.0. |
 | Collections | Keep Javolution and Trove in 2.0; replace with JDK collections and fastutil on measured paths in Platform 3.0 | The current libraries are deeply embedded. Replacing them in 2.0 could regress the hottest world loops. Platform 3.0 uses Linux JFR to identify hot paths before moving cold paths to the JDK and measured primitive hot paths to fastutil. |
-| Logging | SLF4J 2.0.20 with Logback 1.5 writing to stdout; remove Commons Logging and the `slf4j-jdk14` bridge | Finish the in-progress migration before 2.0 stable. Preserve the existing audit and gameplay channels as named loggers, and keep credentials, passwords, and session secrets out of logs. See the [logging migration plan](LOGGING-MIGRATION-PLAN.md). |
+| Logging | SLF4J 2.0.20 and Logback 1.5 with named operational channels and a one-way JUL bridge | The unified backend and removal of Commons Logging/JUL handlers are implemented. Verify channel routing, rotation, Windows file permissions, and secret redaction before 2.0 stable. See the [logging migration plan](LOGGING-MIGRATION-PLAN.md). |
 | IRC integration | Kitteh IRC Client Library if the admin IRC bridge remains a supported feature; otherwise remove irclib and its code | irclib 1.10 is removed before stable either way. This optional admin integration is not part of login or gameplay protocol paths. |
 | Observability | OpenTelemetry Java SDK, JFR, structured logs, and health/readiness status | Operators need evidence for startup failures, deadlocks, DB pool pressure, script failures, GC pauses, and packet load. OpenTelemetry provides portable metrics and traces; JFR gives low-overhead JVM diagnostics available in the fixed runtime. |
 | Build and tests | Maven Wrapper, Microsoft JDK 25 in GitHub Actions, MySQL 8.4 integration service | Keep Maven unless a measured limitation appears. Run unit, integration, packaging, dependency, and archive-content checks in CI. Test the same MySQL major/minor family used by the deployment. |
@@ -284,14 +284,12 @@ The non-interactive legacy installer now refuses clean mode unless the operator
 repeats the exact database name with `-confirm-clean`; the update mode does not
 accept or invoke that destructive operation.
 These tests execute in the GitHub Actions test job.
-Logging inventory originally found 274 Java files using Commons Logging and
-two direct `Jdk14Logger` casts, alongside specialized JUL handlers for audit,
-chat, IRC, item, login-attempt, and failed-login output. First-party Java
-callers have now migrated to SLF4J or a specialized logging adapter, and both
-casts have been removed. The JCL-to-SLF4J runtime bridge remains pending an
-audit of third-party libraries and dynamically loaded scripts. The
-[logging migration plan](LOGGING-MIGRATION-PLAN.md) tracks the remaining
-backend parity and runtime qualification gates.
+The logging inventory began with 274 Java files using Commons Logging and two
+direct `Jdk14Logger` casts, alongside specialized JUL handlers. The later
+application migration converted first-party callers to SLF4J, unified JUL and
+SLF4J under Logback, and removed the legacy handlers and Commons Logging
+bridge. The [logging migration plan](LOGGING-MIGRATION-PLAN.md) records the
+resulting channel layout and remaining qualification gates.
 Login persistence upserts use MySQL's row aliases instead of the deprecated
 `VALUES(column)` form, matching the fixed MySQL 8.4 target.
 The old Commons Lang 3.4 dependency is upgraded to 3.20.0 and its version is
