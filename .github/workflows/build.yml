@@ -57,27 +57,6 @@ jobs:
           -Djfr.argLine=--enable-native-access=ALL-UNNAMED
           -pl l2jfree-scripting-engines -am test
 
-  graalpy-experiment:
-    # This prototype checks GraalPy embedding and inventories Python 3 parse
-    # compatibility; it does not replace the production script engine.
-    continue-on-error: true
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 1
-
-      - name: Set up Microsoft Build of OpenJDK 25
-        uses: actions/setup-java@v5
-        with:
-          distribution: microsoft
-          java-version: "25"
-          cache: maven
-
-      - name: Probe GraalPy on Microsoft OpenJDK 25
-        run: ./mvnw -B -ntp -Dgraalpy.experiment=true -Pgraalpy-experiment -pl l2jfree-scripting-engines -am test
-
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
