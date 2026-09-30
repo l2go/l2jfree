@@ -30,8 +30,10 @@ jobs:
           java-version: "25"
           cache: maven
 
-      # Test modernization is a separate phase. This phase verifies production
-      # compilation, packaging, provenance, and archive contents only.
+      # Keep all test compilation and execution disabled through stable 2.0.0.
+      # Test modernization and CI test execution are scheduled for 2.1.0.
+      # This workflow verifies production compilation, packaging, provenance,
+      # and archive contents only.
       - name: Build and package with Java 25 while recording JFR
         run: >-
           ./mvnw -B -ntp -Dmaven.test.skip=true

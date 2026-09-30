@@ -72,7 +72,7 @@ GraalPy and Python 3 migration are excluded.
 
 | Area | Candidate | CI / qualification status |
 |---|---|---|
-| Python 2 compatibility | Jython 2.7.5b1 | Runtime upgrade is a separate modernization track. Script compatibility and embedded bridge tests will be rewritten and expanded in the dedicated test modernization phase; no test evidence is claimed during the current build-and-package phase. |
+| Python 2 compatibility | Jython 2.7.5b1 | Runtime version is pinned for 2.0. Automated syntax, Java interop, and embedded bridge coverage is deferred to 2.1.0; Windows gameplay qualification remains before 2.0.0. |
 | Runtime diagnostics | JFR and OpenTelemetry Java agent 2.26.1 | The agent is included separately in both Windows distributions; launch only when explicitly enabled with a configured OTLP endpoint. Measure overhead and verify redaction before operational use. |
 
 See the [approved qualification tracks](INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md#experimental-qualification-tracks)

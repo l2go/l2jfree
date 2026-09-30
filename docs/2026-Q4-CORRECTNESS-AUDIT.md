@@ -4,6 +4,16 @@ Historical decision record for finding defects in the Java server, filing them, 
 
 Repository text, issues, and commit messages stay in English. Commit messages do not carry a `Co-authored-by` trailer.
 
+## Current test-execution status
+
+Decision updated 2026-09-30: do not compile or execute tests locally or in
+GitHub Actions before the stable 2.0.0 release. The test modernization and
+CI test jobs described below are deferred to 2.1.0. Until then, the 2.0.0 RC
+uses production build/package checks and operator qualification on the target
+Windows/MySQL host; no automated test evidence is claimed. The remaining test
+design in this historical audit is a proposal for the 2.1.0 phase, not a
+2.0.0 implementation or release gate.
+
 ## Baseline
 
 | Fact | State on 2026-09-26 |
