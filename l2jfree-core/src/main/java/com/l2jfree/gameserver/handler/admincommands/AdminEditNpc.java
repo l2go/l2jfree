@@ -28,8 +28,8 @@ import javolution.text.TextBuilder;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.cache.HtmCache;
@@ -56,7 +56,7 @@ import com.l2jfree.gameserver.templates.StatsSet;
  */
 public class AdminEditNpc implements IAdminCommandHandler
 {
-	private static Log _log = LogFactory.getLog(AdminEditNpc.class);
+	private static Logger _log = LoggerFactory.getLogger(AdminEditNpc.class);
 	private final static int PAGE_LIMIT = 7;
 	
 	private static final String[] ADMIN_COMMANDS = { "admin_edit_npc", "admin_save_npc", "admin_show_droplist",

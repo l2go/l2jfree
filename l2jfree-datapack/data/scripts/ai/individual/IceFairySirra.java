@@ -100,7 +100,7 @@ public class IceFairySirra extends L2AttackableAIScript
 			}
 			catch (RuntimeException e)
 			{
-				_log.fatal("IceFairySirraManager: Failed deleting mob.", e);
+				_log.error("IceFairySirraManager: Failed deleting mob.", e);
 			}
 		}
 		_allMobs.clear();
@@ -138,7 +138,7 @@ public class IceFairySirra extends L2AttackableAIScript
 			}
 			catch (RuntimeException e)
 			{
-				_log.fatal("IceFairySirraManager: Failed closing door", e);
+				_log.error("IceFairySirraManager: Failed closing door", e);
 			}
 		}
 	}
@@ -161,7 +161,7 @@ public class IceFairySirra extends L2AttackableAIScript
 			}
 			catch (RuntimeException e)
 			{
-				_log.fatal("IceFairySirraManager: Failed closing door", e);
+				_log.error("IceFairySirraManager: Failed closing door", e);
 			}
 		}
 	}

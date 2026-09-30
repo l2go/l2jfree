@@ -18,8 +18,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -28,7 +28,7 @@ import com.l2jfree.gameserver.model.skills.L2Skill;
 
 public class L2ClanMember
 {
-	private static final Log _log = LogFactory.getLog(L2ClanMember.class);
+	private static final Logger _log = LoggerFactory.getLogger(L2ClanMember.class);
 	
 	private final L2Clan _clan;
 	private int _objectId;

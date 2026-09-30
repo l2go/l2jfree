@@ -22,8 +22,8 @@ import java.util.List;
 import javolution.text.TextBuilder;
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.ItemTable;
@@ -61,7 +61,7 @@ import com.l2jfree.gameserver.network.packets.server.SystemMessage;
  */
 public class AdminSmartShop implements IAdminCommandHandler
 {
-	private final static Log _log = LogFactory.getLog(AdminSmartShop.class);
+	private final static Logger _log = LoggerFactory.getLogger(AdminSmartShop.class);
 	
 	private static final String[] ADMIN_COMMANDS = { "admin_smartshop" };
 	

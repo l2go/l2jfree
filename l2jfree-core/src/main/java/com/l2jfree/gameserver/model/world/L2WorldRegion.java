@@ -18,8 +18,8 @@ import java.util.Arrays;
 import java.util.concurrent.ScheduledFuture;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -41,7 +41,7 @@ import com.l2jfree.util.concurrent.L2ReadWriteEntityMap;
 
 public final class L2WorldRegion
 {
-	private static final Log _log = LogFactory.getLog(L2WorldRegion.class);
+	private static final Logger _log = LoggerFactory.getLogger(L2WorldRegion.class);
 	
 	public static final int MAP_MIN_X = -131072;
 	public static final int MAP_MAX_X = 228608;

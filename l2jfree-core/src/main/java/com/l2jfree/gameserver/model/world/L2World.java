@@ -20,8 +20,8 @@ import java.util.Map;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
@@ -45,7 +45,7 @@ import com.l2jfree.util.concurrent.SameInstance;
  */
 public final class L2World
 {
-	private static final Log _log = LogFactory.getLog(L2World.class);
+	private static final Logger _log = LoggerFactory.getLogger(L2World.class);
 	
 	public static final int SHIFT_BY = 12;
 	

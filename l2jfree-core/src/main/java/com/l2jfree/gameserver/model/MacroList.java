@@ -24,8 +24,8 @@ import javolution.text.TextBuilder;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -39,7 +39,7 @@ import com.l2jfree.gameserver.network.packets.server.SendMacroList;
  */
 public class MacroList
 {
-	private final static Log _log = LogFactory.getLog(MacroList.class);
+	private final static Logger _log = LoggerFactory.getLogger(MacroList.class);
 	
 	private final L2Player _owner;
 	private int _revision;

@@ -24,8 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -78,9 +78,9 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	@SuppressWarnings("hiding")
 	public static final L2ItemInstance[] EMPTY_ARRAY = new L2ItemInstance[0];
 	
-	protected static final Log _log = LogFactory.getLog(L2ItemInstance.class);
+	protected static final Logger _log = LoggerFactory.getLogger(L2ItemInstance.class);
 	
-	private static final Log _logItems = LogFactory.getLog("item");
+	private static final Logger _logItems = LoggerFactory.getLogger("item");
 	
 	/** Enumeration of locations for item */
 	public static enum ItemLocation
@@ -243,7 +243,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 			param.add(this);
 			param.add(creator);
 			param.add(reference);
-			_logItems.info(param);
+			_logItems.info(param.toString());
 		}
 	}
 	
@@ -374,7 +374,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 			param.add(this);
 			param.add(creator);
 			param.add(reference);
-			_logItems.info(param);
+			_logItems.info(param.toString());
 		}
 	}
 	
@@ -906,7 +906,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Could not remove augmentation for item: " + getObjectId() + " from DB:", e);
+			_log.error("Could not remove augmentation for item: " + getObjectId() + " from DB:", e);
 		}
 		finally
 		{
@@ -942,7 +942,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		}
 		catch (Exception e)
 		{
-			_log.fatal(
+			_log.error(
 					"Could not restore augmentation and elemental data for item " + getObjectId() + " from DB: "
 							+ e.getMessage(), e);
 		}
@@ -995,7 +995,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Could not remove elemental enchant for item: " + getObjectId() + " from DB:", e);
+			_log.error("Could not remove elemental enchant for item: " + getObjectId() + " from DB:", e);
 		}
 		finally
 		{
@@ -1087,7 +1087,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Could not remove elemental enchant for item: " + getObjectId() + " from DB:", e);
+			_log.error("Could not remove elemental enchant for item: " + getObjectId() + " from DB:", e);
 		}
 		finally
 		{
@@ -1386,13 +1386,13 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Could not restore an item owned by " + ownerId + " from DB:" + e.getMessage(), e);
+			_log.error("Could not restore an item owned by " + ownerId + " from DB:" + e.getMessage(), e);
 			return null;
 		}
 		L2Item item = ItemTable.getInstance().getTemplate(item_id);
 		if (item == null)
 		{
-			_log.fatal("Item item_id=" + item_id + " not known, object_id=" + objectId);
+			_log.error("Item item_id=" + item_id + " not known, object_id=" + objectId);
 			return null;
 		}
 		inst = new L2ItemInstance(objectId, item);
@@ -1521,7 +1521,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Could not update item " + getObjectId(), e);
+			_log.error("Could not update item " + getObjectId(), e);
 		}
 	}
 	
@@ -1553,7 +1553,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Could not insert item " + getObjectId(), e);
+			_log.error("Could not insert item " + getObjectId(), e);
 		}
 		
 		if (_elementals != null)
@@ -1583,7 +1583,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Could not delete item " + getObjectId(), e);
+			_log.error("Could not delete item " + getObjectId(), e);
 		}
 	}
 	

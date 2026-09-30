@@ -26,8 +26,8 @@ import java.util.StringTokenizer;
 
 import javolution.text.TextBuilder;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -79,7 +79,7 @@ import com.l2jfree.gameserver.util.Util;
  */
 public class AdminEditChar implements IAdminCommandHandler
 {
-	private final static Log _log = LogFactory.getLog(AdminEditChar.class);
+	private final static Logger _log = LoggerFactory.getLogger(AdminEditChar.class);
 	
 	private static final String[] ADMIN_COMMANDS = { "admin_edit_character", "admin_current_player", "admin_nokarma", // this is to remove karma from selected char...
 			"admin_setkarma", // sets karma of target char to any amount. //setkarma <karma>

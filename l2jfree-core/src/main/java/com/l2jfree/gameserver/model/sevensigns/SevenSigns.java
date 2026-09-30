@@ -23,8 +23,8 @@ import java.util.Map;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -50,7 +50,7 @@ import com.l2jfree.gameserver.templates.StatsSet;
 
 public class SevenSigns
 {
-	protected static Log _log = LogFactory.getLog(SevenSigns.class);
+	protected static Logger _log = LoggerFactory.getLogger(SevenSigns.class);
 	
 	// Basic Seven Signs Constants \\
 	public static final String SEVEN_SIGNS_DATA_FILE = "config/signs.properties";
@@ -152,7 +152,7 @@ public class SevenSigns
 		}
 		catch (Exception e)
 		{
-			_log.fatal("SevenSigns: Failed to load configuration: ", e);
+			_log.error("SevenSigns: Failed to load configuration: ", e);
 		}
 		
 		_log.info("SevenSigns: Currently in the " + getCurrentPeriodName() + " period!");
@@ -759,7 +759,7 @@ public class SevenSigns
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("SevenSigns: Unable to load Seven Signs data from database: ", e);
+			_log.error("SevenSigns: Unable to load Seven Signs data from database: ", e);
 		}
 		finally
 		{
@@ -863,7 +863,7 @@ public class SevenSigns
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("SevenSigns: Unable to save data to database: ", e);
+			_log.error("SevenSigns: Unable to save data to database: ", e);
 		}
 		finally
 		{
@@ -963,7 +963,7 @@ public class SevenSigns
 			}
 			catch (SQLException e)
 			{
-				_log.fatal("SevenSigns: Failed to save data: ", e);
+				_log.error("SevenSigns: Failed to save data: ", e);
 			}
 			finally
 			{
@@ -1508,7 +1508,7 @@ public class SevenSigns
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("SevenSigns: Failed to update certificate shops: ", e);
+			_log.error("SevenSigns: Failed to update certificate shops: ", e);
 		}
 		finally
 		{

@@ -19,8 +19,8 @@ import java.util.StringTokenizer;
 import javolution.text.TextBuilder;
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.NpcTable;
@@ -108,7 +108,7 @@ public class AdminSpawn implements IAdminCommandHandler
 					
 					"Spawn day creatures.", "Usage: //spawnday", } };
 	
-	public static Log _log = LogFactory.getLog(AdminSpawn.class);
+	public static Logger _log = LoggerFactory.getLogger(AdminSpawn.class);
 	
 	@Override
 	public boolean useAdminCommand(String command, L2Player activeChar)

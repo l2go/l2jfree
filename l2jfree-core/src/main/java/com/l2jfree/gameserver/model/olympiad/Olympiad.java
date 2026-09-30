@@ -31,8 +31,8 @@ import java.util.concurrent.ScheduledFuture;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -54,7 +54,7 @@ import com.l2jfree.gameserver.templates.StatsSet;
  */
 public final class Olympiad
 {
-	private static final Log _log = LogFactory.getLog(Olympiad.class);
+	private static final Logger _log = LoggerFactory.getLogger(Olympiad.class);
 	
 	private static Map<Integer, StatsSet> _nobles;
 	protected static FastList<StatsSet> _heroesToBe;
@@ -224,7 +224,7 @@ public final class Olympiad
 			}
 			catch (Exception e)
 			{
-				_log.fatal("Olympiad System: Error loading olympiad properties: ", e);
+				_log.error("Olympiad System: Error loading olympiad properties: ", e);
 				return;
 			}
 			
@@ -1112,7 +1112,7 @@ public final class Olympiad
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("Olympiad System: Failed to save noblesse data to database: ", e);
+			_log.error("Olympiad System: Failed to save noblesse data to database: ", e);
 		}
 		finally
 		{
@@ -1204,7 +1204,7 @@ public final class Olympiad
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("Olympiad System: Failed to update monthly noblese data: ", e);
+			_log.error("Olympiad System: Failed to update monthly noblese data: ", e);
 		}
 		finally
 		{

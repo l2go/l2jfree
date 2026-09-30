@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.handler.admincommands;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.CharNameTable;
@@ -27,7 +27,7 @@ import com.l2jfree.gameserver.handler.IAdminCommandHandler;
 
 public class AdminRepairChar implements IAdminCommandHandler
 {
-	private final static Log _log = LogFactory.getLog(AdminRepairChar.class);
+	private final static Logger _log = LoggerFactory.getLogger(AdminRepairChar.class);
 	
 	private static final String[] ADMIN_COMMANDS = { "admin_restore", "admin_repair" };
 	

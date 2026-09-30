@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.model.skills.funcs;
 
 import java.lang.reflect.Constructor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.model.skills.Stats;
 import com.l2jfree.gameserver.model.skills.conditions.Condition;
@@ -27,7 +27,7 @@ import com.l2jfree.gameserver.model.skills.conditions.Condition;
  */
 public final class FuncTemplate
 {
-	private final static Log _log = LogFactory.getLog(FuncTemplate.class);
+	private final static Logger _log = LoggerFactory.getLogger(FuncTemplate.class);
 	
 	private final Constructor<?> _constructor;
 	

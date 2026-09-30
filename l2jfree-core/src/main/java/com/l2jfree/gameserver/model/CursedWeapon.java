@@ -19,8 +19,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.concurrent.ScheduledFuture;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -48,7 +48,7 @@ import com.l2jfree.tools.random.Rnd;
 
 public class CursedWeapon
 {
-	private static final Log _log = LogFactory.getLog(CursedWeaponsManager.class);
+	private static final Logger _log = LoggerFactory.getLogger(CursedWeaponsManager.class);
 	
 	// _name is the name of the cursed weapon associated with its ID.
 	private final String _name;
