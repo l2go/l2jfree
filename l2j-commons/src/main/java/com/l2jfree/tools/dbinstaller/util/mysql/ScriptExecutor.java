@@ -73,39 +73,22 @@ public class ScriptExecutor
 	public void execSqlFile(File file, boolean skipErrors)
 	{
 		_frame.appendToProgressArea("Installing " + file.getName());
-		String line = "";
 		Connection con = _frame.getConnection();
 		try (Statement stmt = con.createStatement(); Scanner scn = new Scanner(file))
 		{
-			StringBuilder sb = new StringBuilder();
-			while (scn.hasNextLine())
+			for (String sql : SqlScriptParser.parse(scn))
 			{
-				line = scn.nextLine();
-				if (line.startsWith("--"))
-				{
-					continue;
-				}
-				else if (line.contains("--"))
-				{
-					line = line.split("--")[0];
-				}
-				
-				line = line.trim();
-				if (!line.isEmpty())
-				{
-					sb.append(line + System.getProperty("line.separator"));
-				}
-				
-				if (line.endsWith(";"))
-				{
-					stmt.execute(sb.toString());
-					sb = new StringBuilder();
-				}
+				stmt.execute(sql);
 			}
 		}
 		catch (FileNotFoundException e)
 		{
 			JOptionPane.showMessageDialog(null, "File Not Found!: " + e.getMessage(), "Installer Error",
+					JOptionPane.ERROR_MESSAGE);
+		}
+		catch (IllegalArgumentException e)
+		{
+			JOptionPane.showMessageDialog(null, "Invalid SQL Script: " + e.getMessage(), "Installer Error",
 					JOptionPane.ERROR_MESSAGE);
 		}
 		catch (SQLException e)
