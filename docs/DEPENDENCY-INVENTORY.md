@@ -19,7 +19,7 @@ Version values marked as properties are maintained in
 | LoginServer, GameServer | HikariCP | 7.1.0 | Runtime | JDBC connection pool replacing c3p0. |
 | LoginServer, GameServer | SLF4J JUL provider | 2.0.20 | Runtime | Routes HikariCP SLF4J diagnostics into the existing JUL configuration during migration. |
 | GameServer | ECJ | 3.44.0 | Runtime | Compiles datapack Java scripts at runtime. |
-| GameServer | Jython | 2.2.1 | Runtime | Executes legacy Python 2 datapack scripts; replacement is gated on script qualification. |
+| GameServer | Jython | 2.2.1 | Runtime baseline | Current compatibility baseline while the embedded Jython 2.7.5b1 bridge and supported scripts are qualified for the 2.0 target. |
 | GameServer | irclib | 1.10 | Runtime | Optional IRC integration. |
 | GameServer | Trove4j | 2.1.0 | Runtime | Legacy primitive collections; replace selectively after profiling. |
 | LoginServer, GameServer | Testcontainers JUnit Jupiter | 2.0.5 | Test | MySQL integration infrastructure in GitHub Actions. |
@@ -46,23 +46,24 @@ artifact and depends on GameServer code for its Java script sources.
 - Adopt a production migration framework only after MySQL 8.4 support and both
   database baselines are proven. Liquibase remains test-only until that
   decision and a complete transitive license review.
-- Retain Jython until supported Python scripts have replacements and behavior
-  checks. Retain the custom network core until a Netty prototype passes
+- Promote Jython 2.7.5b1 as the 2.0 runtime after the embedded bridge,
+  supported scripts, and target-host behavior pass qualification. Platform 3.0
+  advances to the final Jython 2.7 release. GraalPy and Python 3 migration are
+  excluded. Retain the custom network core until a Netty prototype passes
   protocol compatibility and comparative performance gates.
 - Replace Javolution and Trove only in measured, reviewable areas. Preserve the
   current game behavior and benchmark hot world paths before changing them.
 
 ## Experimental candidates
 
-The pre-production program runs candidates in isolated, non-blocking GitHub
-Actions jobs. These are experiments and are not included in release archives
-unless a later reviewed change promotes them.
+The pre-production program tests only candidates that remain in the approved
+modernization scope. Jython 2.7.5b1 is the selected runtime target for 2.0;
+GraalPy and Python 3 migration are excluded.
 
 | Area | Candidate | CI / qualification status |
 |---|---|---|
 | Python 2 compatibility | Jython 2.7.4 | Candidate CI scans all datapack Python files, checks Java interop, compiles the embedded engine, and exercises its JSR-223 bridge on Microsoft JDK 25; full GameServer script loading and behavior remain unqualified. |
 | Python 2 compatibility | Jython 2.7.5b1 | Beta candidate CI scans all datapack Python files, checks Java interop, compiles the embedded engine, and exercises its JSR-223 bridge on Microsoft JDK 25; full GameServer script loading and behavior remain unqualified. |
-| Python 3 migration | GraalPy 25.4.4 / Python 3.13 (Maven artifacts 25.4.4.1.1) | Isolated test profile probes embedding and Java interop on Microsoft OpenJDK 25 and inventories Python 2 syntax gaps. |
 | Network I/O | Netty 4.2.18.Final | Initial prototype candidate; protocol replay and load comparison remain outstanding. Recheck security patches before adoption. |
 | Blocking I/O concurrency | JDK 25 virtual threads | Benchmark candidate; no production executor changes until pinning, tail latency, and shutdown are measured. |
 | Runtime diagnostics | JFR and OpenTelemetry Java agent / SDK | Begin baseline capture in CI; measure instrumentation overhead before adding release defaults. |

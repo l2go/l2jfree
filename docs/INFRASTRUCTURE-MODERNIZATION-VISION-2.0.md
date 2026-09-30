@@ -64,7 +64,7 @@ need.
 | Database access | JDBC repositories, explicit transaction boundaries, MySQL Connector/J 26.7.x | Issue #52 removed the login ORM path. Both servers now use JDBC. Connector/J 26.7.0 is already present and officially supports MySQL 8.4 and Java 8+, so replacing it brings no immediate benefit. Pin a current patch when each change is implemented. |
 | Connection pools | HikariCP 7.1.0, with bounded waits, explicit lifecycle, and pool metrics | Replace c3p0 with a smaller, actively maintained pool. HikariCP 7.1.0 targets Java 11+, which fits the fixed runtime. Preserve current transaction semantics and qualify reconnect, idle validation, shutdown, and exhaustion behavior. |
 | Schema changes | Versioned SQL migrations, with Liquibase 4.33 as the test candidate | The legacy installer has 69 historical updates and records completion in machine-local Java Preferences; its clean-install path drops all tables. A migration ledger and repeatable CI validation can make future upgrades auditable, but replaying this history is unsafe. Liquibase 4.33 lists MySQL 8.4 and remains Apache-licensed; validate its checksum, repeatability, locking, licensing, and baseline behavior before production adoption. Never reset or destructively recreate an established world database. See the [database migration strategy](DATABASE-MIGRATION-STRATEGY.md). |
-| Scripting | ECJ 3.44.0 for legacy Java scripts; compile validated scripts in CI as part of a versioned datapack; migrate Python 2 scripts by domain | Jython 2.2.1 and ECJ 4.4.2 are prominent compatibility risks, and target logs showed widespread script execution failures. Jython 2.7.5 has Java 25 work but remains a beta; do not make it a production foundation until it is stable and passes the full datapack qualification. Validate scripts before deployment, expose a documented server scripting API, and retire the interpreter only as scripts have replacements. |
+| Scripting | ECJ 3.44.0 as the Java-script compiler; compile scripts in CI into a versioned datapack; move Python scripts to Jython 2.7.5b1 | Jython 2.2.1 is the current baseline. The selected 2.0 runtime is Jython 2.7.5b1, subject to qualification of its embedded bridge and supported datapack behavior. Platform 3.0 advances to the final Jython 2.7 release. GraalPy and a Python 3 port are excluded. |
 | Network layer | Retain the custom MMO core initially; prototype Netty 4.2 behind protocol compatibility tests | A mature event-driven framework could reduce custom buffer and selector maintenance. A wholesale replacement is high risk for framing, encryption, ordering, and latency. Compare throughput, tail latency, allocation, and disconnect behavior before making the decision. |
 | Collections | Replace Javolution and Trove selectively with JDK collections | The current libraries are deeply embedded. Replacing them mechanically could regress the hottest world loops. Migrate low-risk utilities first; use repeatable load and allocation measurements for hot paths. |
 | Logging | SLF4J 2.x API with a maintained Logback backend | One logging facade and backend provide structured fields, consistent levels, rotation, and better library integration. The 1.5.1 code had hundreds of Commons Logging callers and custom JUL audit/gameplay channels, so migrate in package-sized steps and preserve those streams explicitly. Keep credentials, passwords, and session secrets out of logs. See the [logging migration plan](LOGGING-MIGRATION-PLAN.md). |
@@ -75,8 +75,9 @@ need.
 The version numbers above identify current candidate lines, not a blanket
 upgrade instruction. Every dependency change must be pinned, checked for
 licensing and Java 25 compatibility, and qualified through CI. In particular,
-the migration framework, logging backend, network framework, and script runtime
-must be validated with the actual server workloads before adoption.
+the migration framework, logging backend, network framework, and selected
+Jython bridge must be validated with the actual server workloads before
+adoption. GraalPy is excluded from the target and from further qualification.
 
 This is a pre-production modernization program. It explicitly permits early
 evaluation of beta and preview technologies in isolated CI jobs, disposable
@@ -89,7 +90,7 @@ measurement stage, not an adoption decision.
 
 | Track | Candidates | Evidence required before adoption |
 |---|---|---|
-| Python runtime | Jython 2.7 candidates and GraalPy candidates on Microsoft OpenJDK 25; see the [infrastructure stack map](INFRASTRUCTURE-STACK.md) for pinned versions | Parse the full script inventory; exercise Java interop, script lifecycle, representative quests and AI, startup time, memory, and Windows behavior. Keep Jython 2.2.1 as the comparison baseline. Candidate jobs are non-blocking while incompatibilities are inventoried. |
+| Python runtime | Jython 2.7.5b1 for 2.0; Jython 2.7 final for Platform 3.0 | Qualify the embedded bridge, all supported scripts, Java interop, lifecycle, representative quests and AI, and Windows behavior. GraalPy is excluded; no Python 3 migration is planned. |
 | Network I/O | Netty 4.2.18.Final as the initial comparison point; current custom MMO core | Replay protocol fixtures and encrypted sessions, then compare disconnect behavior, throughput, p95/p99 latency, allocation rate, and recovery under load on Linux and Windows runners. Recheck the current 4.2 patch before each adoption decision. |
 | Concurrency | Stable JDK virtual threads for blocking administrative, login, and background I/O tasks | Compare throughput, tail latency, thread count, pinning, and shutdown behavior against the existing executor model. Do not move CPU-bound world ticks or lock-sensitive simulation loops without separate evidence. |
 | Telemetry | JFR recordings and OpenTelemetry Java agent / SDK | Measure startup, GC, database pool, script load, scheduler, and request/packet paths; record instrumentation overhead and provide repeatable incident artifacts. Start in CI now rather than waiting for final operations work. |
@@ -182,12 +183,10 @@ restart, recover from database connection loss, and shut down cleanly.
   release.
 - Compare the Jython 2.7.4 stable and 2.7.5b1 beta candidates with the current
   Jython 2.2.1 runtime, including Java 25 and Windows qualification.
-- Prototype GraalPy on Microsoft OpenJDK 25 and inventory the Python 2 to
-  Python 3 migration required by the existing datapack.
-- Port scripts incrementally to the selected supported runtime, preserving
-  gameplay behavior through scenario checks.
-- Remove ECJ and the legacy Jython integration only after all supported scripts
-  have replacements and the selected runtime passes full qualification.
+- Port the remaining required scripts to Jython 2.7.5b1, preserving gameplay
+  behavior through representative scenario checks.
+- Ship one Python runtime: Jython 2.7.5b1. Platform 3.0 updates it to the final
+  Jython 2.7 release. Do not add GraalPy or a second interpreter.
 
 Exit evidence: all required scripts compile or load; the release reports no
 unexplained failures; representative quests, AI, events, and scheduled scripts

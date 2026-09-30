@@ -6,12 +6,11 @@ target, experiment, and evidence required before the target enters a release.
 Candidate experiments run through GitHub Actions and do not alter the release
 runtime by themselves.
 
-Jython 2.7 is an interim Python 2 compatibility candidate. GraalPy is a
-separate Python 2 to Python 3 migration candidate. Neither becomes the release
-runtime from syntax or bridge probes alone; full inventory and representative
-gameplay behavior must pass first. On the fixed Microsoft OpenJDK 25 platform,
-treat GraalPy as a compatibility experiment and make no Truffle performance
-claim unless a GraalVM runtime is separately approved and qualified.
+The selected Python runtime for 2.0 is Jython 2.7.5b1; Platform 3.0 moves to
+the final Jython 2.7 release. Jython 2.2.1 is the current compatibility
+baseline until the selected bridge and supported scripts pass qualification.
+GraalPy and a Python 3 port are excluded from the modernization goal. The
+GraalPy prototype, dependencies, and CI job are being removed.
 
 ## Fixed platform
 
@@ -34,7 +33,7 @@ claim unless a GraalVM runtime is separately approved and qualified.
 | Connection pool | c3p0 was removed | HikariCP 7.1.x | Pool exhaustion, reconnect, idle validation, lifecycle, metrics, and shutdown checks | Implemented; full target-host workload qualification remains |
 | Schema evolution | Historical SQL installer and existing databases | Versioned, non-destructive migration runner; compare Liquibase 4.33 with a direct SQL runner | Empty install, baseline existing schema, forward migration, checksum drift, concurrent startup, interruption, restore, and restart on disposable MySQL 8.4 | Liquibase test probe exists; production migration choice is open |
 | Java datapack scripts | Runtime Java compilation through ECJ 4.4.2 | ECJ 3.44.x, validated and versioned datapack output, stable script API | Compile all scripts in CI; representative load and gameplay scenarios | Compiler upgrade is implemented; script API and scenario coverage remain |
-| Python datapack scripts | Jython 2.2.1 and Python 2 scripts | Compare Jython 2.7.4, Jython 2.7.5b1, and GraalPy 25.4.4 / Python 3.13 (Maven artifacts 25.4.4.1.1) on Microsoft OpenJDK 25 | Full inventory parse/compile; Java interop; representative quest, AI, event, and task behavior; startup, memory, and Windows qualification | CI probes Jython candidate syntax, Java interop, and the embedded JSR-223 bridge; GraalPy embedding and Python 3 parsing run as experiments; full GameServer script loading and behavior qualification remain |
+| Python datapack scripts | Jython 2.2.1 and Python 2 scripts | Jython 2.7.5b1 for 2.0; final Jython 2.7 release for Platform 3.0 | Full inventory parse/compile, Java interop, embedded JSR-223 bridge, representative quest, AI, event, and task behavior, and Windows qualification | Candidate CI checks pass; gameplay behavior and target-host qualification remain |
 | Network I/O | Custom MMO transport and protocol implementation | Compare with Netty 4.2.18.Final, checking newer security patches before adoption | Protocol fixture replay, encryption/order, disconnects, recovery, throughput, p95/p99 latency, and allocations on Linux and Windows | Prototype and measurements remain |
 | Concurrency | Existing executor, FIFO, and scheduled task model | Evaluate JDK 25 virtual threads only for blocking login, administrative, and background I/O | Compare throughput, tail latency, thread count, pinning, cancellation, and shutdown; leave world ticks out until separately proven | Benchmark remains |
 | Collections | Javolution 5.4.1 and Trove4j 2.1.0 | Replace selectively with JDK collections | Allocation and throughput measurements for affected code, including hot world loops | Selective migration remains |
@@ -46,11 +45,12 @@ claim unless a GraalVM runtime is separately approved and qualified.
 
 ## Experiment policy
 
-Pre-production status permits beta and preview dependencies in isolated
-branches, non-blocking CI jobs, disposable databases, and private deployment
-images. A candidate may fail compatibility checks without blocking the stable
-baseline while its incompatibilities are recorded and resolved. Do not place a
-candidate in public release archives until its promotion evidence is complete.
+Pre-production status permits beta dependencies only when they are part of the
+approved target. Jython 2.7.5b1 is the selected 2.0 runtime and must pass the
+bridge, script, and target-host gates before release. GraalPy is excluded and
+its experiment is removed. Database and network prototypes remain isolated
+until their promotion evidence is complete. Do not place an unapproved
+dependency in public release archives.
 Protect established world data with backups and disposable copies even while
 the server itself has no production users.
 
