@@ -13,11 +13,22 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.script.Compilable;
 import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 
 import org.junit.jupiter.api.Test;
+import org.python.core.PySystemState;
 
 class JythonScriptEngineInteropTest
 {
+	@Test
+	void factoryReportsTheSelectedJythonRuntimeVersion()
+	{
+		JythonScriptEngineFactory factory = new JythonScriptEngineFactory();
+
+		assertThat(factory.getEngineVersion()).isEqualTo(PySystemState.version.toString());
+		assertThat(factory.getLanguageVersion()).isEqualTo(PySystemState.version.toString());
+	}
+
 	@Test
 	void compiledScriptReadsBindingsAndCallsBoundJavaObjects() throws Exception
 	{
@@ -30,5 +41,15 @@ class JythonScriptEngineInteropTest
 		script.eval();
 
 		assertThat(holder.get()).isEqualTo(" through the L2JFree JSR-223 bridge");
+	}
+
+	@Test
+	void scriptAssignmentsRemainVisibleThroughEngineBindings() throws ScriptException
+	{
+		ScriptEngine engine = new JythonScriptEngineFactory().getScriptEngine();
+
+		engine.eval("bridge_value = 'visible'");
+
+		assertThat(engine.get("bridge_value")).isEqualTo("visible");
 	}
 }
