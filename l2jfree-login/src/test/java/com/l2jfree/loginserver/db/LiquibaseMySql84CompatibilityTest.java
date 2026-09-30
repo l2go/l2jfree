@@ -21,6 +21,7 @@ import liquibase.Liquibase;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.CommandExecutionException;
 import liquibase.exception.ValidationFailedException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import org.junit.jupiter.api.Test;
@@ -82,7 +83,8 @@ class LiquibaseMySql84CompatibilityTest
 				assertThat(statement.executeUpdate()).isEqualTo(1);
 			}
 
-			assertThatThrownBy(liquibase::validate).isInstanceOf(ValidationFailedException.class);
+			assertThatThrownBy(liquibase::validate).isInstanceOf(CommandExecutionException.class)
+					.hasCauseInstanceOf(ValidationFailedException.class);
 		}
 	}
 
