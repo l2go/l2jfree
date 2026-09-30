@@ -50,7 +50,6 @@ import org.python.core.Py;
 import org.python.core.PyCode;
 import org.python.core.PyObject;
 import org.python.core.PySystemState;
-import org.python.core.__builtin__;
 
 public class JythonScriptEngine extends AbstractScriptEngine implements Compilable, Invocable
 {
@@ -358,7 +357,9 @@ public class JythonScriptEngine extends AbstractScriptEngine implements Compilab
 		catch (ClassNotFoundException | NoSuchMethodException e)
 		{
 			// Jython 2.2.1 predates CompileMode and Py.compile_flags.
-			return __builtin__.compile(script, fileName, mode);
+			Class<?> builtinClass = Class.forName("org.python.core.__builtin__");
+			Method compile = builtinClass.getMethod("compile", String.class, String.class, String.class);
+			return (PyCode) compile.invoke(null, script, fileName, mode);
 		}
 	}
 
