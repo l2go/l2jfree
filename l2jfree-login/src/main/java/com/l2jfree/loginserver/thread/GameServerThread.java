@@ -250,8 +250,6 @@ public class GameServerThread extends NetworkThread
 				if (_log.isDebugEnabled())
 				{
 					_log.info("auth request: NO");
-					_log.info("session key from self: " + key);
-					_log.info("session key sent: " + par.getKey());
 				}
 				authResponse = new PlayerAuthResponse(par.getAccount(), false, host, par.getKey());
 			}

@@ -73,14 +73,16 @@ unreviewable bulk replacement.
 
 ## Migration progress
 
-- Completed: application loggers in `l2j-commons` now use the SLF4J API. Fatal
-  messages map to SLF4J error level; other levels and throwable arguments are
-  preserved.
+- Completed: application loggers in `l2j-commons` and LoginServer now use the
+  SLF4J API. Fatal messages map to SLF4J error level; other levels and
+  throwable arguments are preserved. LoginServer no longer logs the local or
+  supplied player session key on failed authentication.
 - In progress: SLF4J 2.0.20, Logback 1.5, and the JCL-to-SLF4J compatibility
-  bridge are configured. The `l2j-commons` application callers use SLF4J.
-  LoginServer and GameServer application callers still use Commons Logging and
-  are routed through the compatibility bridge; package-sized migrations are
-  pending. Logback declares dedicated appenders for audit, chat, IRC, item,
+  bridge are configured. The `l2j-commons` and LoginServer application callers
+  use SLF4J. GameServer, mmocore, scripting, and IRC callers still use Commons
+  Logging and are routed through the compatibility bridge; package-sized
+  migrations are pending. Logback declares dedicated appenders for audit,
+  chat, IRC, item,
   login, login-attempt, and failed-login logger names at the existing
   `log/.../*.log` paths. Each appender appends to the active file and has a
   30-day / 128 MiB rolling cap. Ordinary SLF4J loggers go to stdout. Existing

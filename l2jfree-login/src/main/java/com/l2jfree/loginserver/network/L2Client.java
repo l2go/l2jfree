@@ -22,8 +22,8 @@ import java.security.interfaces.RSAPrivateKey;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.loginserver.beans.SessionKey;
@@ -45,7 +45,7 @@ import com.l2jfree.tools.random.Rnd;
  */
 public final class L2Client extends MMOConnection<L2Client, L2ClientPacket, L2ServerPacket>
 {
-	private static final Log _log = LogFactory.getLog(L2Client.class);
+	private static final Logger _log = LoggerFactory.getLogger(L2Client.class);
 	
 	public static enum LoginClientState
 	{

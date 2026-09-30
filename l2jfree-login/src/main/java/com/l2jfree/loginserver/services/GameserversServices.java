@@ -16,8 +16,8 @@ package com.l2jfree.loginserver.services;
 
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.l2jfree.loginserver.beans.Gameservers;
 import com.l2jfree.loginserver.dao.GameserversDAO;
 import com.l2jfree.loginserver.dao.LoginDataAccessException;
@@ -29,7 +29,7 @@ import com.l2jfree.loginserver.dao.LoginObjectNotFoundException;
  */
 public class GameserversServices
 {
-	private static Log _log = LogFactory.getLog(GameserversServices.class);
+	private static Logger _log = LoggerFactory.getLogger(GameserversServices.class);
 	
 	private GameserversDAO __dao = null;
 	

@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -46,7 +46,7 @@ import com.l2jfree.loginserver.dao.GameserversDAO;
  */
 public class GameserversDAOXml implements GameserversDAO
 {
-	private static final Log _log = LogFactory.getLog(GameserversDAOXml.class);
+	private static final Logger _log = LoggerFactory.getLogger(GameserversDAOXml.class);
 	
 	private final Map<Integer, Gameservers> serverNames = new TreeMap<Integer, Gameservers>();
 	
