@@ -36,6 +36,8 @@ import java.util.List;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
+import org.python.core.PySystemState;
+
 public class JythonScriptEngineFactory implements ScriptEngineFactory
 {
 	@Override
@@ -47,7 +49,7 @@ public class JythonScriptEngineFactory implements ScriptEngineFactory
 	@Override
 	public String getEngineVersion()
 	{
-		return "2.2.1";
+		return PySystemState.version.toString();
 	}
 	
 	@Override
@@ -65,7 +67,7 @@ public class JythonScriptEngineFactory implements ScriptEngineFactory
 	@Override
 	public String getLanguageVersion()
 	{
-		return "2.2.1";
+		return PySystemState.version.toString();
 	}
 	
 	@Override
