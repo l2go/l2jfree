@@ -19,6 +19,7 @@
 		<mysql-connector-j.version>26.7.0</mysql-connector-j.version>
 		<hikaricp.version>7.1.0</hikaricp.version>
 		<slf4j.version>2.0.20</slf4j.version>
+		<logback.version>1.5.32</logback.version>
 		<commons-lang3.version>3.20.0</commons-lang3.version>
 		<testcontainers.version>2.0.5</testcontainers.version>
 		<liquibase.version>4.33.0</liquibase.version>
@@ -64,8 +65,13 @@
 			</dependency>
 			<dependency>
 				<groupId>org.slf4j</groupId>
-				<artifactId>slf4j-jdk14</artifactId>
+				<artifactId>jcl-over-slf4j</artifactId>
 				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-classic</artifactId>
+				<version>${logback.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.commons</groupId>
