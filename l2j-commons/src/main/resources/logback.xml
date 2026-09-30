@@ -4,11 +4,11 @@
 	<conversionRule conversionWord="l2ex" converterClass="com.l2jfree.util.logging.LegacyThrowableConverter"/>
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<target>System.out</target>
-		<encoder><pattern>%level [%date{dd MMM HH:mm:ss,SSS}] %legacyCaller%msg%l2ex%n</pattern></encoder>
+		<encoder><pattern>%level [%date{"dd MMM HH:mm:ss,SSS"}] %legacyCaller%msg%l2ex%n</pattern></encoder>
 	</appender>
 	<appender name="JAVA" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>log/java/java.log</file><append>true</append>
-		<encoder><pattern>%level [%date{dd MMM HH:mm:ss,SSS}] %legacyCaller%msg%l2ex%n</pattern></encoder>
+		<encoder><pattern>%level [%date{"dd MMM HH:mm:ss,SSS"}] %legacyCaller%msg%l2ex%n</pattern></encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
 			<fileNamePattern>log/java/java.%i.log</fileNamePattern><minIndex>1</minIndex><maxIndex>50</maxIndex>
 		</rollingPolicy>
@@ -17,7 +17,7 @@
 	<appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>log/error/error.log</file><append>true</append>
 		<filter class="com.l2jfree.util.logging.ErrorEventFilter"/>
-		<encoder><pattern>%level [%date{dd MMM HH:mm:ss,SSS}] %legacyCaller%msg%l2ex%n</pattern></encoder>
+		<encoder><pattern>%level [%date{"dd MMM HH:mm:ss,SSS"}] %legacyCaller%msg%l2ex%n</pattern></encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
 			<fileNamePattern>log/error/error.%i.log</fileNamePattern><minIndex>1</minIndex><maxIndex>50</maxIndex>
 		</rollingPolicy>
@@ -27,21 +27,21 @@
 
 	<appender name="AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>log/audit/audit.log</file><append>true</append>
-		<encoder><pattern>%date{dd MMM HH:mm:ss,SSS} %msg%n</pattern></encoder>
+		<encoder><pattern>%date{"dd MMM HH:mm:ss,SSS"} %msg%n</pattern></encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>log/audit/audit.%d{yyyy-MM-dd}.%i.log</fileNamePattern><maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
 		</rollingPolicy>
 	</appender>
 	<appender name="CHAT" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>log/chat/chat.log</file><append>true</append>
-		<encoder><pattern>%date{dd MMM HH:mm:ss,SSS} %msg%n</pattern></encoder>
+		<encoder><pattern>%date{"dd MMM HH:mm:ss,SSS"} %msg%n</pattern></encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>log/chat/chat.%d{yyyy-MM-dd}.%i.log</fileNamePattern><maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
 		</rollingPolicy>
 	</appender>
 	<appender name="IRC" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>log/irc/irc.log</file><append>true</append>
-		<encoder><pattern>%date{dd MMM HH:mm:ss,SSS} %msg%n</pattern></encoder>
+		<encoder><pattern>%date{"dd MMM HH:mm:ss,SSS"} %msg%n</pattern></encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>log/irc/irc.%d{yyyy-MM-dd}.%i.log</fileNamePattern><maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
 		</rollingPolicy>
@@ -49,28 +49,28 @@
 	<appender name="ITEM" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>log/item/item.log</file><append>true</append>
 		<filter class="com.l2jfree.util.logging.ItemEventFilter"/>
-		<encoder><pattern>%date{dd MMM HH:mm:ss,SSS} %msg%n</pattern></encoder>
+		<encoder><pattern>%date{"dd MMM HH:mm:ss,SSS"} %msg%n</pattern></encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>log/item/item.%d{yyyy-MM-dd}.%i.log</fileNamePattern><maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
 		</rollingPolicy>
 	</appender>
 	<appender name="LOGIN" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>log/login/login.log</file><append>true</append>
-		<encoder><pattern>%date{dd MMM HH:mm:ss,SSS} %msg%n</pattern></encoder>
+		<encoder><pattern>%date{"dd MMM HH:mm:ss,SSS"} %msg%n</pattern></encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>log/login/login.%d{yyyy-MM-dd}.%i.log</fileNamePattern><maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
 		</rollingPolicy>
 	</appender>
 	<appender name="LOGIN_TRY" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>log/login/login.try.log</file><append>true</append>
-		<encoder><pattern>%date{dd MMM HH:mm:ss,SSS} %msg%n</pattern></encoder>
+		<encoder><pattern>%date{"dd MMM HH:mm:ss,SSS"} %msg%n</pattern></encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>log/login/login.try.%d{yyyy-MM-dd}.%i.log</fileNamePattern><maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
 		</rollingPolicy>
 	</appender>
 	<appender name="LOGIN_FAILED" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>log/login/login.failed.log</file><append>true</append>
-		<encoder><pattern>%date{dd MMM HH:mm:ss,SSS} %msg%n</pattern></encoder>
+		<encoder><pattern>%date{"dd MMM HH:mm:ss,SSS"} %msg%n</pattern></encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>log/login/login.failed.%d{yyyy-MM-dd}.%i.log</fileNamePattern><maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
 		</rollingPolicy>
