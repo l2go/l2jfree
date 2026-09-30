@@ -182,13 +182,22 @@ Exit evidence: target-host acceptance checklist passes; release artifacts are
 traceable, checksummed, and deployable; rollback and database recovery are
 demonstrated.
 
-## 2.0.0 release gate
+## RC and 2.0.0 release gate
 
-Release 2.0.0 only after all stages required for the target architecture have
-passed their exit evidence. The release must include a migration guide from
-1.5.1, database backup and upgrade instructions, a dependency inventory, an
-operations runbook, and exact checksums for every published archive. A CI pass
-alone does not qualify the Windows/MySQL deployment image.
+Complete the implementation stages and publish a final `v2.0.0-rc.N`
+pre-release with the checksummed and attested artifacts intended for the stable
+release. Use this release candidate for final qualification on Windows 10,
+Microsoft JDK 25, and MySQL 8.4, including existing-database upgrade and
+recovery scenarios. A CI pass alone does not qualify the target deployment
+image.
+
+After publishing the final RC, pause for maintainer review of its artifacts
+and target-host acceptance evidence. Publish the stable `v2.0.0` tag and
+release only after the maintainer explicitly confirms acceptance. The stable
+release must include a migration guide from 1.5.1, database backup and upgrade
+instructions, a dependency inventory, an operations runbook, and exact
+checksums for every published archive. Do not automatically create the stable
+release after RC publication.
 
 ## Current project context
 
@@ -263,9 +272,15 @@ opposite-direction world updates cannot hold one creature's KnownList lock
 while entering another creature's logic. The Windows combat report showed this
 path in a JVM-detected deadlock; repeat the Gremlin/combat scenario on the
 target host before treating it as qualified.
-These changes are not yet verified by GitHub Actions or requalified on the
-target host. Release `v1.5.1` remains the stable release until the full 2.0.0
-release gate passes.
+GitHub Actions run [36692274856](https://github.com/l2go/l2jfree/actions/runs/36692274856)
+verified commit `2b0a79dfd367707ba214b3ca54e9e9622fd6a21e`: Linux build and tests
+used Microsoft JDK 25, and the Windows 2022 runner packaged and inspected the
+distributions. The tag-only release job was skipped. These results do not
+qualify the Windows 10 target host or a populated production database. No
+2.0.0 release candidate has been published; `v1.5.1` remains the latest stable
+release. The modernization remains open until all required stage evidence is
+complete, the final RC passes target-host acceptance, and the maintainer
+confirms the stable release.
 
 ## Reference projects and documentation
 

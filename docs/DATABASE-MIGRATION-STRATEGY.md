@@ -49,10 +49,11 @@ Liquibase 4.33 integration guide lists MySQL Server 8.4, and this release is
 published under Apache License 2.0. A Testcontainers scenario in GitHub Actions
 applies two formatted-SQL changesets to MySQL 8.4, validates the applied
 history, confirms a second update adds no changesets, and checks that validation
-rejects a tampered checksum. The test is configured in CI but has not yet
-produced a GitHub Actions result. A passing run will prove basic engine/database
-compatibility for that scenario; it will not qualify the historic L2JFree
-schema or authorize production migrations. Liquibase 5.0 is not selected
+rejects a tampered checksum. The probe ran in the successful Microsoft JDK 25
+GitHub Actions build on 2026-09-30. This proves basic engine/database
+compatibility for those probe changesets; it does not qualify the historic
+L2JFree schema, prove an upgrade of populated databases, or authorize
+production migrations. Liquibase 5.0 is not selected
 because its license changed to Functional Source License, which is not the
 Apache-licensed dependency line appropriate for this GPLv3 project. Production
 use remains subject to a reviewed support and license audit, locking behavior,
