@@ -22,6 +22,8 @@
 		<commons-lang3.version>3.20.0</commons-lang3.version>
 		<testcontainers.version>2.0.5</testcontainers.version>
 		<liquibase.version>4.33.0</liquibase.version>
+		<jython.version>2.2.1</jython.version>
+		<graalpy.version>25.3.4.1</graalpy.version>
 	</properties>
 	<scm>
 		<connection>scm:git:https://github.com/l2go/l2jfree.git</connection>

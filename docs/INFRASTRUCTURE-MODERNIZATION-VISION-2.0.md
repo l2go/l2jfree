@@ -6,7 +6,12 @@ This document defines the target infrastructure for the next major L2JFree
 release, 2.0.0. It turns the incremental modernization that began with issue
 #52 into a coherent end state and an implementation sequence. The intent is to
 improve startup reliability, runtime observability, database safety, script
-quality, and performance without replacing proven gameplay behavior wholesale.
+quality, and performance while keeping experiments isolated from release
+behavior until evidence supports adoption.
+
+See the [infrastructure stack map](INFRASTRUCTURE-STACK.md) for a consolidated
+list of fixed platform choices, current baselines, approved candidates, and
+promotion evidence.
 
 ## Fixed constraints
 
@@ -73,6 +78,28 @@ licensing and Java 25 compatibility, and qualified through CI. In particular,
 the migration framework, logging backend, network framework, and script runtime
 must be validated with the actual server workloads before adoption.
 
+This is a pre-production modernization program. It explicitly permits early
+evaluation of beta and preview technologies in isolated CI jobs, disposable
+databases, and experimental branches. Experimental dependencies must not enter
+the release classpath until their compatibility, behavior, security posture,
+and operational value have been demonstrated. A non-blocking experiment is a
+measurement stage, not an adoption decision.
+
+### Experimental qualification tracks
+
+| Track | Candidates | Evidence required before adoption |
+|---|---|---|
+| Python runtime | Jython 2.7.4 stable; Jython 2.7.5b1 beta; GraalPy 25.3 / Python 3.13 on Microsoft OpenJDK 25 | Compile or parse the full script inventory; exercise Java interop, script lifecycle, representative quests and AI, startup time, memory, and Windows behavior. Keep Jython 2.2.1 as the comparison baseline. Candidate jobs are non-blocking while incompatibilities are inventoried. |
+| Network I/O | Netty 4.2.18.Final as the initial comparison point; current custom MMO core | Replay protocol fixtures and encrypted sessions, then compare disconnect behavior, throughput, p95/p99 latency, allocation rate, and recovery under load on Linux and Windows runners. Recheck the current 4.2 patch before each adoption decision. |
+| Concurrency | Stable JDK virtual threads for blocking administrative, login, and background I/O tasks | Compare throughput, tail latency, thread count, pinning, and shutdown behavior against the existing executor model. Do not move CPU-bound world ticks or lock-sensitive simulation loops without separate evidence. |
+| Telemetry | JFR recordings and OpenTelemetry Java agent / SDK | Measure startup, GC, database pool, script load, scheduler, and request/packet paths; record instrumentation overhead and provide repeatable incident artifacts. Start in CI now rather than waiting for final operations work. |
+| Schema lifecycle | Liquibase 4.33 and direct SQL migration runner prototypes against disposable MySQL 8.4 databases | Demonstrate fresh install, non-destructive baseline, upgrade, checksum drift detection, concurrent startup locking, interruption recovery, backup restore, and restart persistence. Existing world databases are never experimental fixtures. |
+
+Record candidate versions, CI run URLs, measured results, incompatibilities,
+and decisions in the dependency inventory and pull request. Promote a candidate
+only after its evidence is reviewable; otherwise retain the experiment and
+document the remaining blocker.
+
 ## Quality attributes
 
 The 2.0.0 infrastructure should provide:
@@ -104,6 +131,10 @@ The 2.0.0 infrastructure should provide:
 - Add a dependency bill of materials, automated dependency update proposals,
   archive checks, and release provenance.
 - Add an integration CI job using MySQL 8.4 and Microsoft JDK 25.
+- Run non-blocking candidate jobs for Jython 2.7.4, Jython 2.7.5b1, and GraalPy
+  on Microsoft OpenJDK 25; retain Jython 2.2.1 as the comparison baseline.
+- Start JFR and OpenTelemetry measurements for representative startup and
+  integration scenarios.
 - Capture baseline startup time, script load results, pool metrics, GC behavior,
   and representative gameplay load.
 - Scan the generated runtime dependency SBOM and publish the vulnerability
@@ -111,7 +142,8 @@ The 2.0.0 infrastructure should provide:
   triage before setting a blocking severity threshold.
 
 Exit evidence: CI builds all modules and release archives; MySQL integration
-scenarios pass; baseline reports can be compared against later stages.
+scenarios pass; candidate compatibility reports and baseline telemetry are
+available for comparison.
 
 ### Stage 1: Move the codebase to Java 25
 
@@ -147,9 +179,14 @@ restart, recover from database connection loss, and shut down cleanly.
 - Create a stable, versioned server scripting API.
 - Compile Java scripts in CI and include their validated output in the datapack
   release.
-- Port Python 2 scripts incrementally, preserving gameplay behavior through
-  scenario checks.
-- Remove ECJ and Jython only after all supported scripts have replacements.
+- Compare the Jython 2.7.4 stable and 2.7.5b1 beta candidates with the current
+  Jython 2.2.1 runtime, including Java 25 and Windows qualification.
+- Prototype GraalPy on Microsoft OpenJDK 25 and inventory the Python 2 to
+  Python 3 migration required by the existing datapack.
+- Port scripts incrementally to the selected supported runtime, preserving
+  gameplay behavior through scenario checks.
+- Remove ECJ and the legacy Jython integration only after all supported scripts
+  have replacements and the selected runtime passes full qualification.
 
 Exit evidence: all required scripts compile or load; the release reports no
 unexplained failures; representative quests, AI, events, and scheduled scripts
@@ -159,9 +196,12 @@ pass target-runtime scenarios.
 
 - Audit locks and ownership in KnownList, movement, AI, and world-region paths.
 - Add repeatable concurrency and load profiles with deadlock detection enabled.
-- Prototype Netty 4.2 with protocol-level compatibility and performance tests.
-- Adopt the replacement only if measurements show a clear operational or
-  performance benefit.
+- Prototype Netty 4.2.18.Final with protocol-level compatibility and
+  performance tests, checking for a newer security patch before adoption.
+- Compare stable virtual threads for blocking I/O workloads with the current
+  executor model.
+- Adopt a replacement only if measurements show a clear operational or
+  performance benefit and protocol behavior remains compatible.
 
 Exit evidence: no known deadlock-triggered restarts during sustained load;
 packet behavior remains compatible; p95/p99 latency and allocation data are
@@ -169,8 +209,9 @@ recorded for the selected network implementation.
 
 ### Stage 5: Complete operations and release qualification
 
-- Add OpenTelemetry metrics and structured log fields for process, world,
-  database pool, scripts, and scheduled jobs.
+- Complete the OpenTelemetry metrics and structured log fields for process,
+  world, database pool, scripts, and scheduled jobs, building on the Stage 0
+  instrumentation baseline.
 - Document Windows service installation, startup ordering, backup/restore,
   health checks, and incident capture.
 - Generate a release SBOM, verify dependency vulnerabilities, sign or attest

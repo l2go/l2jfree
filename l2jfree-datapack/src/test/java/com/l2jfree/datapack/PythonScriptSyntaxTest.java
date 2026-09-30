@@ -28,7 +28,7 @@ import com.sun.script.jython.JythonScriptEngineFactory;
 class PythonScriptSyntaxTest
 {
 	@Test
-	void allDatapackPythonScriptsCompileWithThePinnedJythonRuntime() throws IOException
+	void allDatapackPythonScriptsCompileWithTheSelectedJythonRuntime() throws IOException
 	{
 		Path scriptRoot = Path.of("data", "scripts");
 		assertThat(scriptRoot).isDirectory();
@@ -57,6 +57,6 @@ class PythonScriptSyntaxTest
 			}
 		}
 
-		assertThat(failures).as("Jython syntax errors in datapack scripts").isEmpty();
+		assertThat(failures).as("Jython syntax errors in datapack scripts using the selected runtime").isEmpty();
 	}
 }

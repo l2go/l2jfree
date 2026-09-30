@@ -18,13 +18,31 @@
 			<artifactId>ecj</artifactId>
 			<version>3.44.0</version>
 		</dependency>
-		<!-- Updating Jython to a newer version is NOT recommend. -->
 		<dependency>
 			<groupId>org.python</groupId>
 			<artifactId>jython</artifactId>
-			<version>2.2.1</version>
+			<version>${jython.version}</version>
 		</dependency>
 	</dependencies>
+	<profiles>
+		<profile>
+			<id>graalpy-experiment</id>
+			<dependencies>
+				<dependency>
+					<groupId>org.graalvm.polyglot</groupId>
+					<artifactId>polyglot</artifactId>
+					<version>${graalpy.version}</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.graalvm.polyglot</groupId>
+					<artifactId>python</artifactId>
+					<version>${graalpy.version}</version>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
 	<build>
 		<defaultGoal>install</defaultGoal>
 		<plugins>

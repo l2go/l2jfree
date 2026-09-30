@@ -14,6 +14,52 @@ permissions:
   contents: read
 
 jobs:
+  jython-candidate-compatibility:
+    # These candidate probes are intentionally non-blocking while the runtime
+    # and its Java integration are being evaluated against the full datapack.
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        jython-version: ["2.7.4", "2.7.5b1"]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Set up Microsoft Build of OpenJDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: microsoft
+          java-version: "25"
+          cache: maven
+
+      - name: Compile and syntax-check datapack with Jython ${{ matrix.jython-version }}
+        run: ./mvnw -B -ntp -Djython.version=${{ matrix.jython-version }} -pl l2jfree-datapack -am test
+
+  graalpy-experiment:
+    # This prototype checks GraalPy embedding and inventories Python 3 parse
+    # compatibility; it does not replace the production script engine.
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Set up Microsoft Build of OpenJDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: microsoft
+          java-version: "25"
+          cache: maven
+
+      - name: Probe GraalPy on Microsoft OpenJDK 25
+        run: ./mvnw -B -ntp -Pgraalpy-experiment -pl l2jfree-scripting-engines -am test
+
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -100,6 +146,7 @@ jobs:
           cp "l2jfree-datapack/target/l2jfree-datapack-${artifact_version}-dist.zip" release-artifacts/
           zip -r "release-artifacts/l2jfree-${artifact_version}-docs.zip" LICENSE README.md \
             docs/INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md \
+            docs/INFRASTRUCTURE-STACK.md \
             docs/DATABASE-MIGRATION-STRATEGY.md \
             docs/LOGGING-MIGRATION-PLAN.md \
             docs/OPERATIONS-RUNBOOK.md \
