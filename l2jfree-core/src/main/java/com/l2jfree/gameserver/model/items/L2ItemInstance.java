@@ -243,7 +243,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 			param.add(this);
 			param.add(creator);
 			param.add(reference);
-			_logItems.info(param.toString());
+			_logItems.info("{}", param);
 		}
 	}
 	
@@ -374,7 +374,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 			param.add(this);
 			param.add(creator);
 			param.add(reference);
-			_logItems.info(param.toString());
+			_logItems.info("{}", param);
 		}
 	}
 	

@@ -710,7 +710,7 @@ public final class ItemTable
 			param.add(item);
 			param.add(actor);
 			param.add(reference);
-			_logItems.info(param.toString());
+			_logItems.info("{}", param);
 		}
 		
 		return item;
@@ -775,7 +775,7 @@ public final class ItemTable
 				param.add(item);
 				param.add(actor);
 				param.add(reference);
-				_logItems.info(param.toString());
+				_logItems.info("{}", param);
 			}
 			
 			// if it's a pet control item, delete the pet as well

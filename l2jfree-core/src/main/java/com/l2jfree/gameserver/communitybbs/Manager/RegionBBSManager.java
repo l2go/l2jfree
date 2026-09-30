@@ -22,11 +22,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 import javolution.util.FastMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
@@ -46,7 +46,7 @@ import com.l2jfree.lang.L2TextBuilder;
 
 public class RegionBBSManager extends BaseBBSManager
 {
-	private static final Logger _logChat = Logger.getLogger("chat");
+	private static final Logger _logChat = LoggerFactory.getLogger("chat");
 	
 	/*
 	 * (non-Javadoc)
@@ -238,11 +238,7 @@ public class RegionBBSManager extends BaseBBSManager
 				
 				if (Config.LOG_CHAT)
 				{
-					LogRecord record = new LogRecord(Level.INFO, ar3);
-					record.setLoggerName("chat");
-					record.setParameters(new Object[] { "TELL",
-							"[" + activeChar.getName() + " to " + receiver.getName() + "]" });
-					_logChat.log(record);
+					_logChat.info("TELL[" + activeChar.getName() + " to " + receiver.getName() + "] " + ar3);
 				}
 				CreatureSay cs =
 						new CreatureSay(activeChar.getObjectId(), SystemChatChannelId.Chat_Tell, activeChar.getName(),

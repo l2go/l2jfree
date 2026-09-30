@@ -16,7 +16,6 @@ package com.l2jfree;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.PrintStream;
 import java.lang.Thread.UncaughtExceptionHandler;
@@ -33,12 +32,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import com.l2jfree.config.ConfigProperty;
 import com.l2jfree.config.L2Properties;
@@ -57,14 +54,11 @@ public abstract class L2AutoInitialization
 	// protocol 1 does not support connection filtering
 	public static final int LOGIN_PROTOCOL_CURRENT = 2;
 	
-	public static final String LOG_FILE = "./config/logging.properties";
 	public static final String TELNET_FILE = "./config/telnet.properties";
 	
 	public static Level EXTENDED_LOG_LEVEL = Level.OFF;
 	
 	protected static final org.slf4j.Logger _log;
-	protected static final Logger _logger;
-	
 	public static final PrintStream out = System.out;
 	public static final PrintStream err = System.err;
 	
@@ -166,46 +160,16 @@ public abstract class L2AutoInitialization
 		
 		System.setProperty("line.separator", "\r\n");
 		System.setProperty("file.encoding", "UTF-8");
-		System.setProperty("java.util.logging.manager", "com.l2jfree.util.logging.L2LogManager");
-		
-		FileInputStream fis = null;
-		try
-		{
-			fis = new FileInputStream(LOG_FILE);
-			
-			LogManager.getLogManager().readConfiguration(fis);
-		}
-		catch (Exception e)
-		{
-			try
-			{
-				// if failed to load 'logging.properties', then load default logging parameters
-				LogManager.getLogManager().readConfiguration();
-			}
-			catch (Exception e1)
-			{
-				throw new Error(e1);
-			}
-		}
-		finally
-		{
-			IOUtils.closeQuietly(fis);
-		}
+		SLF4JBridgeHandler.removeHandlersForRootLogger();
+		SLF4JBridgeHandler.install();
 		
 		_log = LoggerFactory.getLogger(L2AutoInitialization.class);
 		_log.info("logging initialized");
-		_logger = Logger.getLogger(L2AutoInitialization.class.getName());
-		
 		System.setOut(new PrintStream(new BufferedRedirectingOutputStream() {
 			@Override
 			protected void handleLine(String line)
 			{
-				final StackTraceElement caller = getCaller();
-				
-				if (caller == null)
-					_logger.logp(Level.INFO, "", "", line);
-				else
-					_logger.logp(Level.INFO, caller.getClassName(), caller.getMethodName(), line);
+				LoggerFactory.getLogger("system.stdout").info(line);
 			}
 		}));
 		
@@ -215,10 +179,8 @@ public abstract class L2AutoInitialization
 			{
 				final StackTraceElement caller = getCaller();
 				
-				if (caller == null)
-					_logger.logp(Level.WARNING, "", "", line);
-				else
-					_logger.logp(Level.WARNING, caller.getClassName(), caller.getMethodName(), line);
+				String source = caller == null ? "" : caller.getClassName() + "." + caller.getMethodName() + "(): ";
+				LoggerFactory.getLogger("system.stderr").warn(source + line);
 			}
 		}));
 	}
