@@ -76,7 +76,25 @@ unreviewable bulk replacement.
 - Completed: application loggers in `l2j-commons` now use the SLF4J API. Fatal
   messages map to SLF4J error level; other levels and throwable arguments are
   preserved.
-- Remaining: migrate LoginServer and GameServer callers in package-sized
-  slices, then assess datapack scripts and third-party logging dependencies.
-- Commons Logging remains available during this transition because production
-  modules still contain callers. Do not remove it from runtime archives yet.
+- In progress: SLF4J 2.0.20, Logback 1.5, and the JCL-to-SLF4J compatibility
+  bridge are configured. The `l2j-commons` application callers use SLF4J.
+  LoginServer and GameServer application callers still use Commons Logging and
+  are routed through the compatibility bridge; package-sized migrations are
+  pending. Logback declares dedicated appenders for audit, chat, IRC, item,
+  login, login-attempt, and failed-login logger names at the existing
+  `log/.../*.log` paths. Each appender appends to the active file and has a
+  30-day / 128 MiB rolling cap. Ordinary SLF4J loggers go to stdout. Existing
+  JUL `logging.properties` and handlers remain enabled for JUL callers.
+- Blocking parity work before migration can be considered complete: the
+  Logback appenders currently use a common message formatter and do not
+  reproduce the existing channel-specific JUL filters and formatters. In
+  particular, item-event filtering (excluded item types and `Consume`
+  processes), channel-specific field ordering, output equivalence, and the
+  access controls for audit and authentication-failure files have not been
+  qualified. Implement equivalent filters/formatters or record an approved
+  behavior change, then verify routing, rotation, restart append behavior,
+  concurrency, and Windows permissions in GitHub Actions and on the target
+  host. Keep JUL handlers until that parity gate passes.
+- The SLF4J/JCL runtime bridge replaces the Commons Logging implementation in
+  the runtime classpath. Commons Logging remains compile-only where the
+  unconverted mmocore and legacy core callers require its API.

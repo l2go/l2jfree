@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<target>System.out</target>
+		<encoder>
+			<pattern>%date{ISO8601} %-5level [%thread] %logger - %msg%n%ex</pattern>
+		</encoder>
+	</appender>
+
+	<!-- Dedicated operational channels. Append to active files and retain at most
+	     30 days / 128 MiB per channel. JUL handlers remain configured separately. -->
+	<appender name="AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>log/audit/audit.log</file>
+		<append>true</append>
+		<encoder><pattern>%date{ISO8601} %msg%ex%n</pattern></encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>log/audit/audit.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+			<maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+	<appender name="CHAT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>log/chat/chat.log</file><append>true</append>
+		<encoder><pattern>%date{ISO8601} %msg%ex%n</pattern></encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>log/chat/chat.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+			<maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+	<appender name="IRC" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>log/irc/irc.log</file><append>true</append>
+		<encoder><pattern>%date{ISO8601} %msg%ex%n</pattern></encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>log/irc/irc.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+			<maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+	<appender name="ITEM" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>log/item/item.log</file><append>true</append>
+		<encoder><pattern>%date{ISO8601} %msg%ex%n</pattern></encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>log/item/item.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+			<maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+	<appender name="LOGIN" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>log/login/login.log</file><append>true</append>
+		<encoder><pattern>%date{ISO8601} %msg%ex%n</pattern></encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>log/login/login.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+			<maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+	<appender name="LOGIN_TRY" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>log/login/login.try.log</file><append>true</append>
+		<encoder><pattern>%date{ISO8601} %msg%ex%n</pattern></encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>log/login/login.try.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+			<maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+	<appender name="LOGIN_FAILED" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>log/login/login.failed.log</file><append>true</append>
+		<encoder><pattern>%date{ISO8601} %msg%ex%n</pattern></encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>log/login/login.failed.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+			<maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+
+	<logger name="audit" level="INFO" additivity="false"><appender-ref ref="AUDIT" /></logger>
+	<logger name="chat" level="INFO" additivity="false"><appender-ref ref="CHAT" /></logger>
+	<logger name="irc" level="INFO" additivity="false"><appender-ref ref="IRC" /></logger>
+	<logger name="item" level="INFO" additivity="false"><appender-ref ref="ITEM" /></logger>
+	<logger name="login" level="INFO" additivity="false"><appender-ref ref="LOGIN" /></logger>
+	<logger name="login.try" level="INFO" additivity="false"><appender-ref ref="LOGIN_TRY" /></logger>
+	<logger name="login.failed" level="INFO" additivity="false"><appender-ref ref="LOGIN_FAILED" /></logger>
+
+	<root level="INFO">
+		<appender-ref ref="STDOUT" />
+	</root>
+</configuration>
