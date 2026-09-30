@@ -72,7 +72,7 @@ need.
 | Logging | SLF4J 2.0.20 and Logback 1.5 with named operational channels and a one-way JUL bridge | The unified backend and removal of Commons Logging/JUL handlers are implemented. Verify channel routing, rotation, Windows file permissions, and secret redaction before 2.0 stable. See the [logging migration plan](LOGGING-MIGRATION-PLAN.md). |
 | IRC integration | Kitteh IRC Client Library if the admin IRC bridge remains a supported feature; otherwise remove irclib and its code | irclib 1.10 is removed before stable either way. This optional admin integration is not part of login or gameplay protocol paths. |
 | Observability | Optional OpenTelemetry Java agent with OTLP metrics/traces, JFR, structured logs, and health/readiness status | Operators need evidence for startup failures, deadlocks, DB pool pressure, script failures, GC pauses, and packet load. OpenTelemetry provides portable metrics and traces; JFR gives low-overhead JVM diagnostics available in the fixed runtime. The agent remains disabled until a collector endpoint is configured and target-host overhead is qualified. |
-| Build and tests | Maven Wrapper, Microsoft JDK 25 in GitHub Actions, MySQL 8.4 integration service | Keep Maven unless a measured limitation appears. Run unit, integration, packaging, dependency, and archive-content checks in CI. Test the same MySQL major/minor family used by the deployment. |
+| Build and verification | Maven Wrapper, Microsoft JDK 25 in GitHub Actions | Through 2.0.0, CI runs production compilation, packaging, provenance, dependency, and archive-content checks only. Do not compile or execute tests. Test modernization and CI test execution resume in 2.1.0 after stable 2.0.0. |
 | Releases | Immutable, checksummed LoginServer and GameServer archives plus a private Windows image assembled from those archives | Java bytecode and Python scripts have one GameServer revision and are covered by its checksum manifest. Release artifacts are traceable to a commit and reproducible in CI. Keep environment-specific configuration outside the public repository. |
 
 The 2.0 runtime keeps the existing network core and platform-thread execution
@@ -134,6 +134,16 @@ The 2.0.0 infrastructure should provide:
 
 ## Delivery sequence
 
+### Test execution policy
+
+Do not compile or run the repository test suites in local environments or
+GitHub Actions before the stable 2.0.0 release. The 2.0.0 RC gate uses
+production compilation, archive and provenance checks in GitHub Actions, plus
+operator qualification on the Windows 10 / Microsoft JDK 25 / MySQL 8.4 host.
+Test modernization and re-enabling CI test execution are scheduled for
+2.1.0, after 2.0.0 has been released. No 2.0.0 acceptance claim may rely on
+test results from an earlier revision.
+
 ### Stage 0: Establish the 2.0 baseline
 
 - Publish and maintain this vision as the parent plan for the 2.0.0 work.
@@ -141,33 +151,33 @@ The 2.0.0 infrastructure should provide:
   supported Java and MySQL versions in CI.
 - Add a dependency bill of materials, automated dependency update proposals,
   archive checks, and release provenance.
-- Add an integration CI job using MySQL 8.4 and Microsoft JDK 25.
-- Run the Jython 2.7.5b1 qualification job listed in the
-  [infrastructure stack map](INFRASTRUCTURE-STACK.md) on Microsoft JDK 25;
-  compare its behavior with the current Jython 2.2.1 baseline.
-- Capture JFR recordings for CI test processes and start OpenTelemetry
-  measurements for representative startup and integration scenarios.
+- Keep all unit, integration, and script-test jobs disabled through 2.0.0;
+  schedule their modernization and reactivation for 2.1.0.
+- Capture JFR recordings for CI production build processes. Qualify optional
+  OpenTelemetry export on the Windows target host before enabling it for
+  routine operation.
 - Capture baseline startup time, script load results, pool metrics, GC behavior,
   and representative gameplay load.
 - Scan the generated runtime dependency SBOM and publish the vulnerability
   report with the release artifacts. Treat the initial report as a baseline to
   triage before setting a blocking severity threshold.
 
-Exit evidence: CI builds all modules and release archives; MySQL integration
-scenarios pass; Jython 2.7.5b1 qualification results and baseline telemetry are
-available for review.
+Exit evidence: CI production compilation and release-archive checks pass;
+operator qualification and baseline telemetry are available for review. No
+automated test result is required or claimed for 2.0.0.
 
 ### Stage 1: Move the codebase to Java 25
 
 - Raise production and test compiler releases to Java 25.
 - Remove obsolete Java 8 compatibility workarounds where evidence allows.
 - Update compiler, test, and packaging plugins as required.
-- Build and inspect the release distributions on a Windows GitHub runner as
-  well as running the main test suite on the Linux GitHub runner.
+- Build and inspect the release distributions on Linux and Windows GitHub
+  runners. Test compilation and execution remain disabled until 2.1.0.
 - Keep the release runtime on the Microsoft JDK 25 distribution.
 
-Exit evidence: clean GitHub Actions build and test on Microsoft JDK 25; packaged
-LoginServer and GameServer start on the Windows target without extra JDK flags.
+Exit evidence: clean GitHub Actions production build and packaging on Microsoft
+JDK 25; packaged LoginServer and GameServer start on the Windows target without
+extra JDK flags.
 
 ### Stage 2: Modernize JDBC operations
 
@@ -178,14 +188,17 @@ LoginServer and GameServer start on the Windows target without extra JDK flags.
 - Add versioned, non-destructive schema migrations and a baseline procedure for
   existing installations. Follow the [database migration strategy](DATABASE-MIGRATION-STRATEGY.md)
   and do not replay historical installer updates to invent a baseline.
-- Add MySQL 8.4 integration coverage for login, account management, game state,
-  reconnects, shutdown, and restart persistence.
+- Defer automated MySQL 8.4 integration coverage for login, account management,
+  game state, reconnects, shutdown, and restart persistence to 2.1.0. For the
+  2.0.0 RC, use operator qualification on the target host.
 - Put new SQL changes in numbered files and keep MySQL-specific persistence
   syntax in the repository layer. Keep Liquibase test-only and do not add a
   migration framework to the 2.0 release journal.
 
-Exit evidence: existing data survives an upgrade; both processes start, persist,
-restart, recover from database connection loss, and shut down cleanly.
+Exit evidence: operator qualification confirms existing data survives an
+upgrade and both processes start, persist, restart, recover from database
+connection loss, and shut down cleanly. Automated database tests are deferred
+to 2.1.0.
 
 ### Stage 3: Make datapack scripts release-safe
 
@@ -197,22 +210,24 @@ restart, recover from database connection loss, and shut down cleanly.
 - Qualify the embedded Jython 2.7.5b1 bridge and supported Python 2 scripts on
   Microsoft JDK 25 and Windows. Jython 2.7.5b1 is the only candidate runtime.
 - Port the remaining required scripts to Jython 2.7.5b1, preserving gameplay
-  behavior through representative scenario checks.
+  behavior through operator qualification of representative scenarios. The
+  automated script compatibility suite is deferred to 2.1.0.
 - Ship one Python runtime, Jython 2.7.5b1, and one GameServer revision and
   checksum manifest for the runtime and both script languages. Platform 3.0
   updates Jython to the final 2.7 release. Do not add GraalPy or a second
   interpreter.
 
-Exit evidence: all required scripts compile or load; the release reports no
-unexplained failures; representative quests, AI, events, and scheduled scripts
-pass target-runtime scenarios.
+Exit evidence: CI compiles Java scripts, and operator qualification confirms
+that required Python scripts load without unexplained failures and that
+representative quests, AI, events, and scheduled scripts behave as expected.
+Automated script tests are deferred to 2.1.0.
 
 ### Stage 4: Qualify world concurrency and preserve the network core
 
 - Audit locks and ownership in KnownList, movement, AI, and world-region paths.
-- Add repeatable concurrency and load profiles with deadlock detection enabled.
-- Repeat combat and world-interaction scenarios that exposed the KnownList
-  deadlock on the target Windows host.
+- Defer automated concurrency and load profiles to 2.1.0.
+- Repeat the combat and world-interaction scenario that exposed the KnownList
+  deadlock during operator qualification on the target Windows host.
 - Retain the custom MMO transport and existing platform-thread model for 2.0.
   Netty, virtual threads, Generational ZGC, and the JDK AOT cache belong to the
   Platform 3.0 Linux qualification path.
@@ -272,18 +287,19 @@ during Windows runtime qualification. CI and target-host evidence are still
 required before marking these steps complete.
 The GameServer closes its Hikari pool if the startup connection check fails and
 publishes the pool only after that check succeeds.
-The LoginServer and GameServer now have MySQL 8.4 integration coverage for
-startup connection checkout without creating a synthetic connection-test
-table. Login tests also exercise account DAO upserts against the repository
-schema, pool metrics, and transaction commit/rollback. A test-only Liquibase
-4.33.0 check applies two probe changesets on MySQL 8.4 and checks repeatability,
-validation, and checksum rejection; it does not enable production schema
-migrations. Liquibase 5.x is excluded from selection because its license is no
-longer Apache 2.0.
+The repository contains MySQL 8.4 integration coverage for startup connection
+checkout without creating a synthetic connection-test table, account DAO
+upserts, pool metrics, transaction commit/rollback, and a test-only Liquibase
+4.33.0 compatibility probe. These tests were run in an earlier CI phase but
+are currently skipped; they are not evidence for 2.0.0 acceptance and return
+as part of the 2.1.0 test modernization. Liquibase does not enable production
+schema migrations. Liquibase 5.x is excluded from selection because its
+license is no longer Apache 2.0.
 The non-interactive legacy installer now refuses clean mode unless the operator
 repeats the exact database name with `-confirm-clean`; the update mode does not
 accept or invoke that destructive operation.
-These tests execute in the GitHub Actions test job.
+Earlier CI runs executed these tests. GitHub Actions now skips all test
+compilation and execution until after the 2.0.0 stable release.
 The logging inventory began with 274 Java files using Commons Logging and two
 direct `Jdk14Logger` casts, alongside specialized JUL handlers. The later
 application migration converted first-party callers to SLF4J, unified JUL and
@@ -326,12 +342,12 @@ while entering another creature's logic. The Windows combat report showed this
 path in a JVM-detected deadlock; repeat the Gremlin/combat scenario on the
 target host before treating it as qualified.
 GitHub Actions run [36692274856](https://github.com/l2go/l2jfree/actions/runs/36692274856)
-verified commit `2b0a79dfd367707ba214b3ca54e9e9622fd6a21e`: Linux build and tests
-used Microsoft JDK 25, and the Windows 2022 runner packaged and inspected the
-distributions. The tag-only release job was skipped. These results do not
-qualify the Windows 10 target host or a populated production database. No
-2.0.0 release candidate has been published; `v1.5.1` remains the latest stable
-release. The modernization remains open until all required stage evidence is
+verified commit `2b0a79dfd367707ba214b3ca54e9e9622fd6a21e`: an earlier Linux
+build and test run used Microsoft JDK 25, and the Windows 2022 runner packaged
+and inspected the distributions. Current workflows skip tests. Historical
+test results do not qualify the Windows 10 target host or count as 2.0.0
+acceptance evidence. No 2.0.0 release candidate has been published; `v1.5.1`
+remains the latest stable release. The modernization remains open until all required stage evidence is
 complete, the final RC passes target-host acceptance, and the maintainer
 confirms the stable release.
 
