@@ -19,8 +19,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -42,7 +42,7 @@ import com.l2jfree.gameserver.network.SystemMessageId;
  */
 public class AdminMenu implements IAdminCommandHandler
 {
-	private static final Log _log = LogFactory.getLog(AdminMenu.class);
+	private static final Logger _log = LoggerFactory.getLogger(AdminMenu.class);
 	
 	private static final String[] ADMIN_COMMANDS = { "admin_char_manage", "admin_teleport_character_to_menu",
 			"admin_recall_char", "admin_recall_char_menu", "admin_recall_party", "admin_recall_party_menu",

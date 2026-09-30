@@ -28,8 +28,8 @@ import java.util.StringTokenizer;
 
 import javolution.text.TextBuilder;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -64,7 +64,7 @@ import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
  */
 public class AdminTeleport implements IAdminCommandHandler
 {
-	private static final Log _log = LogFactory.getLog(AdminTeleport.class);
+	private static final Logger _log = LoggerFactory.getLogger(AdminTeleport.class);
 	
 	private static final String[] ADMIN_COMMANDS = {
 			"admin_bookmark", // L2JP_JP ADD

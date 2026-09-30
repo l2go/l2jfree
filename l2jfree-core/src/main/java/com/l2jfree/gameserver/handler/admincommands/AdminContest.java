@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.handler.admincommands;
 
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.handler.IAdminCommandHandler;
@@ -29,7 +29,7 @@ import com.l2jfree.gameserver.instancemanager.ClanHallManager;
  */
 public final class AdminContest implements IAdminCommandHandler
 {
-	private static final Log _log = LogFactory.getLog(AdminContest.class);
+	private static final Logger _log = LoggerFactory.getLogger(AdminContest.class);
 	private static final String[] COMMANDS = { "admin_contest_start", "admin_contest_cancel" };
 	
 	/* (non-Javadoc)
@@ -75,7 +75,7 @@ public final class AdminContest implements IAdminCommandHandler
 			}
 			catch (IndexOutOfBoundsException e)
 			{
-				_log.fatal("Caught it!", e);
+				_log.error("Caught it!", e);
 			}
 		}
 		return false;

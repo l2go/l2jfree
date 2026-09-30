@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.handler.admincommands;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.communitybbs.Manager.RegionBBSManager;
 import com.l2jfree.gameserver.communitybbs.Manager.RegionBBSManager.PlayerStateOnCommunity;
@@ -31,7 +31,7 @@ import com.l2jfree.gameserver.handler.IAdminCommandHandler;
  */
 public class AdminGm implements IAdminCommandHandler
 {
-	private final static Log _log = LogFactory.getLog(AdminGm.class);
+	private final static Logger _log = LoggerFactory.getLogger(AdminGm.class);
 	private static final String[] ADMIN_COMMANDS = { "admin_gm" };
 	
 	@Override

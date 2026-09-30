@@ -18,8 +18,8 @@ import java.util.StringTokenizer;
 
 import javolution.text.TextBuilder;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.datatables.SkillTable;
 import com.l2jfree.gameserver.datatables.SkillTreeTable;
@@ -53,7 +53,7 @@ import com.l2jfree.gameserver.network.packets.server.SystemMessage;
  */
 public class AdminSkill implements IAdminCommandHandler
 {
-	private final static Log _log = LogFactory.getLog(AdminSkill.class);
+	private final static Logger _log = LoggerFactory.getLogger(AdminSkill.class);
 	
 	private static final String[] ADMIN_COMMANDS = { "admin_show_skills", "admin_remove_skills", "admin_skill_list",
 			"admin_skill_index", "admin_add_skill", "admin_remove_skill", "admin_get_skills", "admin_reset_skills",

@@ -26,8 +26,8 @@ import java.util.Vector;
 import javolution.text.TextBuilder;
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -60,7 +60,7 @@ public class AdminSortMultisellItems implements IAdminCommandHandler
 {
 	private static final String[] ADMIN_COMMANDS = { "admin_sortmulti" };
 	
-	private static final Log _log = LogFactory.getLog(AdminSortMultisellItems.class);
+	private static final Logger _log = LoggerFactory.getLogger(AdminSortMultisellItems.class);
 	
 	private static boolean MULTISELL_GENERATE_OUTPUT_TEXT = true;
 	private static boolean MULTISELL_GENERATE_UNKNOWN = true;

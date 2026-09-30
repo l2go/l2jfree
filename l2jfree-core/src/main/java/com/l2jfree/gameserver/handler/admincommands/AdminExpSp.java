@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.handler.admincommands;
 
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.gameobjects.L2Object;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -34,7 +34,7 @@ import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
  */
 public class AdminExpSp implements IAdminCommandHandler
 {
-	private final static Log _log = LogFactory.getLog(AdminExpSp.class);
+	private final static Logger _log = LoggerFactory.getLogger(AdminExpSp.class);
 	
 	private static final String[] ADMIN_COMMANDS = { "admin_add_exp_sp_to_character", "admin_add_exp_sp",
 			"admin_remove_exp_sp" };
