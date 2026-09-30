@@ -9,6 +9,14 @@
 	</formats>
 	<dependencySets>
 		<dependencySet>
+			<outputDirectory>gameserver/agents/</outputDirectory>
+			<includes>
+				<include>io.opentelemetry.javaagent:opentelemetry-javaagent</include>
+			</includes>
+			<outputFileNameMapping>opentelemetry-javaagent.jar</outputFileNameMapping>
+			<useTransitiveDependencies>false</useTransitiveDependencies>
+		</dependencySet>
+		<dependencySet>
 			<outputDirectory>gameserver/</outputDirectory>
 			<includes>
 				<include>com.l2jfree:l2jfree-core</include>
@@ -17,6 +25,7 @@
 		<dependencySet>
 			<outputDirectory>gameserver/libs/</outputDirectory>
 			<excludes>
+				<exclude>io.opentelemetry.javaagent:opentelemetry-javaagent</exclude>
 				<exclude>com.l2jfree:l2jfree-core</exclude>
 			</excludes>
 		</dependencySet>

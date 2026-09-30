@@ -14,6 +14,7 @@
 		<maven.compiler.release>25</maven.compiler.release>
 		<maven.compiler.testRelease>25</maven.compiler.testRelease>
 		<junit.version>6.1.3</junit.version>
+		<opentelemetry.javaagent.version>2.26.1</opentelemetry.javaagent.version>
 		<assertj.version>3.27.7</assertj.version>
 		<mockito.version>5.24.0</mockito.version>
 		<mysql-connector-j.version>26.7.0</mysql-connector-j.version>
@@ -25,6 +26,7 @@
 		<liquibase.version>4.33.0</liquibase.version>
 		<jython.version>2.7.5b1</jython.version>
 		<jython.artifactId>jython-standalone</jython.artifactId>
+		<opentelemetry.javaagent.version>2.26.1</opentelemetry.javaagent.version>
 		<jfr.argLine></jfr.argLine>
 	</properties>
 	<scm>
@@ -39,6 +41,11 @@
 	<inceptionYear>2010</inceptionYear>
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>io.opentelemetry.javaagent</groupId>
+				<artifactId>opentelemetry-javaagent</artifactId>
+				<version>${opentelemetry.javaagent.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>org.testcontainers</groupId>
 				<artifactId>testcontainers-bom</artifactId>

@@ -83,6 +83,25 @@ LoginServer/GameServer registration port (default 9014), MySQL, and any
 administrative or status interfaces private. Confirm the configured bind
 addresses and firewall rules before exposing the host.
 
+## Optional OpenTelemetry export
+
+Both runtime archives contain the pinned OpenTelemetry Java agent outside the
+application classpath. Telemetry is disabled unless `L2JFREE_OTEL_ENABLED` is
+set to `true` in the process environment. Before enabling it, configure
+`OTEL_EXPORTER_OTLP_ENDPOINT` to a reachable OTLP collector and permit the
+collector connection through the host firewall. The launchers set distinct
+service names (`l2jfree-loginserver` and `l2jfree-gameserver`), export metrics
+and traces, and disable the agent's log exporter so Logback remains the single
+log path. The agent sanitizes database statements by default; keep that
+sanitization enabled.
+
+Use the collector's TLS and authentication settings for endpoints outside the
+host. Keep credentials in protected environment variables or the service
+secret store; do not add exporter headers or endpoints containing secrets to
+repository files. Start with a short qualification window, inspect collector
+data and JVM overhead, then keep the agent disabled until the server's normal
+workload has been compared with and without instrumentation.
+
 ## Incident capture
 
 When startup, combat, or persistence fails, record the release tag, source

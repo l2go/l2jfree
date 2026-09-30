@@ -13,6 +13,11 @@
 	<packaging>jar</packaging>
 	<dependencies>
 		<dependency>
+			<groupId>io.opentelemetry.javaagent</groupId>
+			<artifactId>opentelemetry-javaagent</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
 			<groupId>com.l2jfree</groupId>
 			<artifactId>l2j-commons</artifactId>
 			<version>${project.version}</version>
