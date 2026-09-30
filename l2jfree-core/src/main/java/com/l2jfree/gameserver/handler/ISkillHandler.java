@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.handler;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.model.skills.L2Skill;
@@ -23,7 +23,7 @@ import com.l2jfree.gameserver.model.skills.templates.L2SkillType;
 
 public interface ISkillHandler
 {
-	public static final Log _log = LogFactory.getLog(ISkillHandler.class);
+	public static final Logger _log = LoggerFactory.getLogger(ISkillHandler.class);
 	
 	public void useSkill(L2Creature activeChar, L2Skill skill, L2Creature... targets);
 	

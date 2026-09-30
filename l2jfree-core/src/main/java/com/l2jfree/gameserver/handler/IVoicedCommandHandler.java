@@ -14,14 +14,14 @@
  */
 package com.l2jfree.gameserver.handler;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 
 public interface IVoicedCommandHandler
 {
-	public static final Log _log = LogFactory.getLog(IVoicedCommandHandler.class);
+	public static final Logger _log = LoggerFactory.getLogger(IVoicedCommandHandler.class);
 	
 	/**
 	 * this is the worker method that is called when someone uses an .user command.

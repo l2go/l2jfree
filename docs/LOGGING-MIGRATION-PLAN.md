@@ -79,9 +79,10 @@ unreviewable bulk replacement.
   supplied player session key on failed authentication.
 - In progress: SLF4J 2.0.20, Logback 1.5, and the JCL-to-SLF4J compatibility
   bridge are configured. Application callers in `l2j-commons` and LoginServer
-  use SLF4J. GameServer datatables, 45 instance-manager classes, and 21
-  admin-command handlers are migrated. Remaining GameServer, mmocore,
-  scripting, and IRC callers still use Commons Logging and are routed through
+  use SLF4J. GameServer datatables, 45 instance-manager classes, 21
+  admin-command handlers, and 8 other handler classes are migrated. Remaining
+  GameServer, mmocore, scripting, and IRC callers still use Commons Logging
+  and are routed through
   the compatibility bridge;
   package-sized migrations are pending. Logback
   declares dedicated appenders for audit, chat, IRC, item,
