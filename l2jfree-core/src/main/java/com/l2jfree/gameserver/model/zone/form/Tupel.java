@@ -14,13 +14,13 @@
  */
 package com.l2jfree.gameserver.model.zone.form;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
 public class Tupel
 {
-	protected static Log _log = LogFactory.getLog(Tupel.class);
+	protected static Logger _log = LoggerFactory.getLogger(Tupel.class);
 	
 	public int x = 0;
 	public int y = 0;

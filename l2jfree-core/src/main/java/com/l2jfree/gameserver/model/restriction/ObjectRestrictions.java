@@ -28,8 +28,8 @@ import java.util.concurrent.ScheduledFuture;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -47,7 +47,7 @@ public final class ObjectRestrictions
 	private static final String INSERT_RESTRICTIONS =
 			"INSERT INTO obj_restrictions (`obj_Id`, `type`, `delay`, `message`) VALUES (?, ?, ?, ?)";
 	
-	private static final Log _log = LogFactory.getLog(ObjectRestrictions.class);
+	private static final Logger _log = LoggerFactory.getLogger(ObjectRestrictions.class);
 	
 	private static final ObjectRestrictions _instance = new ObjectRestrictions();
 	

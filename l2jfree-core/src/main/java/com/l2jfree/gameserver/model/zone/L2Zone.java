@@ -25,8 +25,8 @@ import java.util.StringTokenizer;
 import javolution.util.FastMap;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
 import com.l2jfree.Config;
@@ -53,7 +53,7 @@ import com.l2jfree.util.L2Collections;
 
 public class L2Zone implements FuncOwner
 {
-	protected static final Log _log = LogFactory.getLog(L2Zone.class);
+	protected static final Logger _log = LoggerFactory.getLogger(L2Zone.class);
 	
 	public static enum ZoneType
 	{

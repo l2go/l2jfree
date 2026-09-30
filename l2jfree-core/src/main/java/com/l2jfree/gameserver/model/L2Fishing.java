@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.model;
 
 import java.util.concurrent.Future;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.datatables.NpcTable;
@@ -34,7 +34,7 @@ import com.l2jfree.tools.random.Rnd;
 
 public class L2Fishing implements Runnable
 {
-	private static final Log _log = LogFactory.getLog(L2Fishing.class);
+	private static final Logger _log = LoggerFactory.getLogger(L2Fishing.class);
 	
 	// =========================================================
 	// Data Field

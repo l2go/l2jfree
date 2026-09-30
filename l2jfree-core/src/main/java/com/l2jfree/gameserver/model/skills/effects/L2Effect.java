@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.model.skills.effects;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
@@ -46,7 +46,7 @@ import com.l2jfree.util.L2Arrays;
 
 public abstract class L2Effect implements FuncOwner, Runnable
 {
-	protected static final Log _log = LogFactory.getLog(L2Effect.class);
+	protected static final Logger _log = LoggerFactory.getLogger(L2Effect.class);
 	
 	public static final L2Effect[] EMPTY_ARRAY = new L2Effect[0];
 	

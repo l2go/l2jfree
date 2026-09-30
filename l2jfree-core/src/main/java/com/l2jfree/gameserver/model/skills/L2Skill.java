@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.model.skills;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.SkillTable;
@@ -78,7 +78,7 @@ public class L2Skill implements FuncOwner, IChanceSkillTrigger
 {
 	public static final L2Skill[] EMPTY_ARRAY = new L2Skill[0];
 	
-	protected static final Log _log = LogFactory.getLog(L2Skill.class);
+	protected static final Logger _log = LoggerFactory.getLogger(L2Skill.class);
 	
 	public static final int SKILL_CUBIC_MASTERY = 143;
 	public static final int SKILL_LUCKY = 194;
@@ -3977,7 +3977,7 @@ public class L2Skill implements FuncOwner, IChanceSkillTrigger
 		Condition old = _preCondition;
 		
 		if (old != null)
-			_log.fatal("Replaced " + old + " condition with " + c + " condition at skill: " + this);
+			_log.error("Replaced " + old + " condition with " + c + " condition at skill: " + this);
 		
 		_preCondition = c;
 	}

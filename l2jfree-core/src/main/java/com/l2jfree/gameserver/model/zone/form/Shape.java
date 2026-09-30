@@ -18,8 +18,8 @@ import java.lang.reflect.Constructor;
 
 import javolution.util.FastList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
 import com.l2jfree.gameserver.gameobjects.L2Object;
@@ -30,7 +30,7 @@ import com.l2jfree.gameserver.model.Location;
  */
 public abstract class Shape
 {
-	protected static Log _log = LogFactory.getLog(Shape.class);
+	protected static Logger _log = LoggerFactory.getLogger(Shape.class);
 	
 	protected FastList<Tupel> _points;
 	protected int _zMin, _zMax;
