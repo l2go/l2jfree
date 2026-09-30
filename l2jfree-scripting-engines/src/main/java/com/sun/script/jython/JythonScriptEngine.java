@@ -153,7 +153,7 @@ public class JythonScriptEngine extends AbstractScriptEngine implements Compilab
 			{
 				// lookup in built-in functions. This way
 				// user can call invoke built-in functions.
-				PyObject builtins = PySystemState.builtins;
+				PyObject builtins = systemState.get().builtins;
 				func = builtins.__finditem__(name);
 			}
 		}
@@ -335,7 +335,7 @@ public class JythonScriptEngine extends AbstractScriptEngine implements Compilab
 			{
 				mode = "exec";
 			}
-			return __builtin__.compile(script, fileName, mode);
+			return compileWithRuntimeApi(script, fileName, mode);
 		}
 		catch (Exception exp)
 		{
@@ -343,6 +343,25 @@ public class JythonScriptEngine extends AbstractScriptEngine implements Compilab
 		}
 	}
 	
+	private PyCode compileWithRuntimeApi(String script, String fileName, String mode) throws Exception
+	{
+		try
+		{
+			Class<?> compileModeClass = Class.forName("org.python.core.CompileMode");
+			Object compileMode = compileModeClass.getField(mode).get(null);
+			Class<?> compilerFlagsClass = Class.forName("org.python.core.CompilerFlags");
+			Object compilerFlags = compilerFlagsClass.getConstructor().newInstance();
+			Method compile = Py.class.getMethod("compile_flags", String.class, String.class, compileModeClass,
+					compilerFlagsClass);
+			return (PyCode) compile.invoke(null, script, fileName, compileMode, compilerFlags);
+		}
+		catch (ClassNotFoundException | NoSuchMethodException e)
+		{
+			// Jython 2.2.1 predates CompileMode and Py.compile_flags.
+			return __builtin__.compile(script, fileName, mode);
+		}
+	}
+
 	private Object evalCode(PyCode code, ScriptContext ctx) throws ScriptException
 	{
 		try
