@@ -21,8 +21,6 @@ import java.util.logging.Logger;
 import javolution.util.FastMap;
 import javolution.util.FastMap.Entry;
 
-import org.slf4j.Logger;
-
 /**
  * @author NB4L1
  */
