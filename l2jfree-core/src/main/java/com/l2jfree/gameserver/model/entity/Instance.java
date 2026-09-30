@@ -26,8 +26,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -59,7 +59,7 @@ import com.l2jfree.util.L2FastSet;
  */
 public class Instance
 {
-	private final static Log _log = LogFactory.getLog(Instance.class);
+	private final static Logger _log = LoggerFactory.getLogger(Instance.class);
 	
 	public interface InstanceFactory
 	{
@@ -279,7 +279,7 @@ public class Instance
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Error in door data, ID:" + temp.getDoorId(), e);
+			_log.error("Error in door data, ID:" + temp.getDoorId(), e);
 		}
 		newdoor.getStatus().setCurrentHpMp(newdoor.getMaxHp(), newdoor.getMaxMp());
 		newdoor.setOpen(open);

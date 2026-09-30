@@ -25,8 +25,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -80,7 +80,7 @@ public class TvT
 		}
 	}
 	
-	private final static Log _log = LogFactory.getLog(TvT.class);
+	private final static Logger _log = LoggerFactory.getLogger(TvT.class);
 	public static String _eventName = "";
 	public static String _eventDesc = "";
 	public static String _topTeam = "";

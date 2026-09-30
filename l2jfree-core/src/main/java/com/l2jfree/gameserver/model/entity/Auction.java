@@ -22,8 +22,8 @@ import java.util.Map;
 
 import javolution.util.FastMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -39,7 +39,7 @@ import com.l2jfree.gameserver.network.SystemMessageId;
 
 public class Auction
 {
-	protected static Log _log = LogFactory.getLog(Auction.class);
+	protected static Logger _log = LoggerFactory.getLogger(Auction.class);
 	private int _id = 0;
 	private long _endDate;
 	private int _highestBidderId = 0;
@@ -266,7 +266,7 @@ public class Auction
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Exception: saveAuctionDate(): " + e.getMessage(), e);
+			_log.error("Exception: saveAuctionDate(): " + e.getMessage(), e);
 		}
 		finally
 		{
@@ -382,7 +382,7 @@ public class Auction
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Exception: Auction.updateInDB(L2Player bidder, int bid): ", e);
+			_log.error("Exception: Auction.updateInDB(L2Player bidder, int bid): ", e);
 		}
 		finally
 		{
@@ -407,7 +407,7 @@ public class Auction
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Exception: Auction.deleteFromDB(): " + e.getMessage(), e);
+			_log.error("Exception: Auction.deleteFromDB(): " + e.getMessage(), e);
 		}
 		finally
 		{
@@ -445,7 +445,7 @@ public class Auction
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Exception: Auction.deleteFromDB(): " + e.getMessage(), e);
+			_log.error("Exception: Auction.deleteFromDB(): " + e.getMessage(), e);
 		}
 		finally
 		{
@@ -509,7 +509,7 @@ public class Auction
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Exception: Auction.cancelBid(String bidder): " + e.getMessage(), e);
+			_log.error("Exception: Auction.cancelBid(String bidder): " + e.getMessage(), e);
 		}
 		finally
 		{
@@ -559,7 +559,7 @@ public class Auction
 		}
 		catch (Exception e)
 		{
-			_log.fatal("Exception: Auction.load(): " + e.getMessage(), e);
+			_log.error("Exception: Auction.load(): " + e.getMessage(), e);
 		}
 		finally
 		{

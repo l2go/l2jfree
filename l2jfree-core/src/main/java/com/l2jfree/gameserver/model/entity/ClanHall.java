@@ -228,7 +228,7 @@ public class ClanHall extends Siegeable<CCHSiege>
 			}
 			catch (Exception e)
 			{
-				_log.fatal(
+				_log.error(
 						"Exception: ClanHall.updateFunctions(int type, int lvl, int lease, long rate, long time, boolean addNew): "
 								+ e.getMessage(), e);
 			}
@@ -485,7 +485,7 @@ public class ClanHall extends Siegeable<CCHSiege>
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("Exception: ClanHall.loadFunctions(): " + e.getMessage(), e);
+			_log.error("Exception: ClanHall.loadFunctions(): " + e.getMessage(), e);
 		}
 		finally
 		{
@@ -510,7 +510,7 @@ public class ClanHall extends Siegeable<CCHSiege>
 		}
 		catch (SQLException e)
 		{
-			_log.fatal("Exception: ClanHall.removeFunctions(int functionType): " + e.getMessage(), e);
+			_log.error("Exception: ClanHall.removeFunctions(int functionType): " + e.getMessage(), e);
 		}
 		finally
 		{
