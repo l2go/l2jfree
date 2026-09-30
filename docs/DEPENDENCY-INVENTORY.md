@@ -62,7 +62,7 @@ unless a later reviewed change promotes them.
 |---|---|---|
 | Python 2 compatibility | Jython 2.7.4 | Candidate CI scans all datapack Python files, checks Java interop, compiles the embedded engine, and exercises its JSR-223 bridge on Microsoft JDK 25; full GameServer script loading and behavior remain unqualified. |
 | Python 2 compatibility | Jython 2.7.5b1 | Beta candidate CI scans all datapack Python files, checks Java interop, compiles the embedded engine, and exercises its JSR-223 bridge on Microsoft JDK 25; full GameServer script loading and behavior remain unqualified. |
-| Python 3 migration | GraalPy 25.4.4 / Python 3.13 | Isolated test profile probes embedding and Java interop on Microsoft OpenJDK 25 and inventories Python 2 syntax gaps. |
+| Python 3 migration | GraalPy 25.4.4 / Python 3.13 (Maven artifacts 25.4.4.1.1) | Isolated test profile probes embedding and Java interop on Microsoft OpenJDK 25 and inventories Python 2 syntax gaps. |
 | Network I/O | Netty 4.2.18.Final | Initial prototype candidate; protocol replay and load comparison remain outstanding. Recheck security patches before adoption. |
 | Blocking I/O concurrency | JDK 25 virtual threads | Benchmark candidate; no production executor changes until pinning, tail latency, and shutdown are measured. |
 | Runtime diagnostics | JFR and OpenTelemetry Java agent / SDK | Begin baseline capture in CI; measure instrumentation overhead before adding release defaults. |
