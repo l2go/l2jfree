@@ -89,7 +89,7 @@ measurement stage, not an adoption decision.
 
 | Track | Candidates | Evidence required before adoption |
 |---|---|---|
-| Python runtime | Jython 2.7.4 stable; Jython 2.7.5b1 beta; GraalPy 25.3 / Python 3.13 on Microsoft OpenJDK 25 | Compile or parse the full script inventory; exercise Java interop, script lifecycle, representative quests and AI, startup time, memory, and Windows behavior. Keep Jython 2.2.1 as the comparison baseline. Candidate jobs are non-blocking while incompatibilities are inventoried. |
+| Python runtime | Jython 2.7 candidates and GraalPy candidates on Microsoft OpenJDK 25; see the [infrastructure stack map](INFRASTRUCTURE-STACK.md) for pinned versions | Parse the full script inventory; exercise Java interop, script lifecycle, representative quests and AI, startup time, memory, and Windows behavior. Keep Jython 2.2.1 as the comparison baseline. Candidate jobs are non-blocking while incompatibilities are inventoried. |
 | Network I/O | Netty 4.2.18.Final as the initial comparison point; current custom MMO core | Replay protocol fixtures and encrypted sessions, then compare disconnect behavior, throughput, p95/p99 latency, allocation rate, and recovery under load on Linux and Windows runners. Recheck the current 4.2 patch before each adoption decision. |
 | Concurrency | Stable JDK virtual threads for blocking administrative, login, and background I/O tasks | Compare throughput, tail latency, thread count, pinning, and shutdown behavior against the existing executor model. Do not move CPU-bound world ticks or lock-sensitive simulation loops without separate evidence. |
 | Telemetry | JFR recordings and OpenTelemetry Java agent / SDK | Measure startup, GC, database pool, script load, scheduler, and request/packet paths; record instrumentation overhead and provide repeatable incident artifacts. Start in CI now rather than waiting for final operations work. |
@@ -131,8 +131,9 @@ The 2.0.0 infrastructure should provide:
 - Add a dependency bill of materials, automated dependency update proposals,
   archive checks, and release provenance.
 - Add an integration CI job using MySQL 8.4 and Microsoft JDK 25.
-- Run non-blocking candidate jobs for Jython 2.7.4, Jython 2.7.5b1, and GraalPy
-  on Microsoft OpenJDK 25; retain Jython 2.2.1 as the comparison baseline.
+- Run the non-blocking script-runtime candidate jobs listed in the
+  [infrastructure stack map](INFRASTRUCTURE-STACK.md) on Microsoft OpenJDK 25;
+  retain Jython 2.2.1 as the comparison baseline.
 - Capture JFR recordings for CI test processes and start OpenTelemetry
   measurements for representative startup and integration scenarios.
 - Capture baseline startup time, script load results, pool metrics, GC behavior,
