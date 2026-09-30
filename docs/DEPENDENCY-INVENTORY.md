@@ -52,6 +52,25 @@ artifact and depends on GameServer code for its Java script sources.
 - Replace Javolution and Trove only in measured, reviewable areas. Preserve the
   current game behavior and benchmark hot world paths before changing them.
 
+## Experimental candidates
+
+The pre-production program runs candidates in isolated, non-blocking GitHub
+Actions jobs. These are experiments and are not included in release archives
+unless a later reviewed change promotes them.
+
+| Area | Candidate | CI / qualification status |
+|---|---|---|
+| Python 2 compatibility | Jython 2.7.4 | Candidate probe scans all datapack Python files and checks Java interop on Microsoft JDK 25; server JSR-223 bridge compatibility remains separate. |
+| Python 2 compatibility | Jython 2.7.5b1 | Beta probe scans all datapack Python files and checks Java interop on Microsoft JDK 25; server JSR-223 bridge compatibility remains separate. |
+| Python 3 migration | GraalPy 25.3.4.1 / Python 3.13 | Isolated test profile probes embedding and Java interop on Microsoft OpenJDK 25 and inventories Python 2 syntax gaps. |
+| Network I/O | Netty 4.2.18.Final | Initial prototype candidate; protocol replay and load comparison remain outstanding. Recheck security patches before adoption. |
+| Blocking I/O concurrency | JDK 25 virtual threads | Benchmark candidate; no production executor changes until pinning, tail latency, and shutdown are measured. |
+| Runtime diagnostics | JFR and OpenTelemetry Java agent / SDK | Begin baseline capture in CI; measure instrumentation overhead before adding release defaults. |
+| Schema evolution | Liquibase 4.33 and a direct SQL migration runner | Disposable MySQL 8.4 comparison; test existing-schema baselining, interrupted upgrades, and restore. |
+
+See the [experimental qualification tracks](INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md#experimental-qualification-tracks)
+for the promotion evidence required for each candidate.
+
 ## Governance
 
 GitHub Actions generates a CycloneDX SBOM from the release source revision and
