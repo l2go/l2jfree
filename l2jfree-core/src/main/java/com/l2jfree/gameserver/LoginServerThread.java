@@ -539,7 +539,7 @@ public final class LoginServerThread extends NetworkThread
 			}
 			catch (ConnectException e)
 			{
-				_log.info(e);
+				_log.info("Connection to LoginServer failed: {}", e.toString());
 			}
 			catch (IOException e)
 			{

@@ -189,7 +189,7 @@ public final class GameServer extends L2AutoInitialization
 		AutoAnnouncements.getInstance();
 		if (!IdFactory.getInstance().isInitialized())
 		{
-			_log.fatal("Could not read object IDs from DB. Please Check Your Data.");
+			_log.error("Could not read object IDs from DB. Please Check Your Data.");
 			throw new Exception("Could not initialize the ID factory");
 		}
 		_log.info("IdFactory: Free ObjectID's remaining: " + IdFactory.getInstance().size());
@@ -333,7 +333,7 @@ public final class GameServer extends L2AutoInitialization
 		}
 		catch (IOException ioe)
 		{
-			_log.fatal("Failed loading scripts.cfg, no script going to be loaded");
+			_log.error("Failed loading scripts.cfg, no script going to be loaded");
 		}
 		try
 		{
@@ -355,7 +355,7 @@ public final class GameServer extends L2AutoInitialization
 		}
 		catch (IOException e)
 		{
-			_log.fatal("Failed to store Compiled Scripts Cache.", e);
+			_log.error("Failed to store Compiled Scripts Cache.", e);
 		}
 		
 		QuestManager.getInstance().report();
