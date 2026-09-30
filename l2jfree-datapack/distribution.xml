@@ -9,6 +9,13 @@
 	</formats>
 	<fileSets>
 		<fileSet>
+			<directory>target/classes</directory>
+			<outputDirectory>gameserver/data/scripts</outputDirectory>
+			<includes>
+				<include>**/*.class</include>
+			</includes>
+		</fileSet>
+		<fileSet>
 			<directory>target/</directory>
 			<outputDirectory>gameserver/config/versionning</outputDirectory>
 			<includes>

@@ -24,6 +24,11 @@ import java.io.LineNumberReader;
 import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -81,6 +86,7 @@ public final class L2ScriptEngineManager
 	private final LongAdder _scriptLoadAttempts = new LongAdder();
 	private final LongAdder _scriptLoadSuccesses = new LongAdder();
 	private final LongAdder _scriptLoadFailures = new LongAdder();
+	private volatile ClassLoader _packagedJavaScriptLoader;
 	
 	// Configs
 	// TODO move to config file
@@ -294,9 +300,9 @@ public final class L2ScriptEngineManager
 						{
 							extension = name.substring(lastIndex + 1);
 							ScriptEngine engine = getEngineByExtension(extension);
-							if (engine != null)
+							if ("java".equalsIgnoreCase(extension) || engine != null)
 							{
-								this.executeScript(engine, file);
+								this.executeScript(file);
 							}
 						}
 					}
@@ -379,6 +385,11 @@ public final class L2ScriptEngineManager
 		}
 		
 		ScriptEngine engine = getEngineByExtension(extension);
+		if ("java".equalsIgnoreCase(extension) && hasPackagedJavaScript(file))
+		{
+			this.executePackagedJavaScript(file);
+			return;
+		}
 		if (engine == null)
 			throw new ScriptException("No engine registered for extension (" + extension + ")");
 		
@@ -396,6 +407,11 @@ public final class L2ScriptEngineManager
 	
 	public void executeScript(ScriptEngine engine, File file) throws IOException, ScriptException
 	{
+		if ("java".equalsIgnoreCase(getExtension(file)) && hasPackagedJavaScript(file))
+		{
+			this.executePackagedJavaScript(file);
+			return;
+		}
 		_scriptLoadAttempts.increment();
 		boolean loaded = false;
 		try (BufferedReader reader = new BufferedReader(
@@ -487,6 +503,103 @@ public final class L2ScriptEngineManager
 				_scriptLoadFailures.increment();
 			}
 		}
+	}
+
+	private static String getExtension(File file)
+	{
+		int dot = file.getName().lastIndexOf('.');
+		return dot < 0 ? "" : file.getName().substring(dot + 1);
+	}
+
+	private static boolean hasPackagedJavaScript(File file)
+	{
+		String className = getClassForFile(file);
+		if (className == null)
+		{
+			return false;
+		}
+		File classFile = new File(SCRIPT_FOLDER, className.replace('.', File.separatorChar) + ".class");
+		return classFile.isFile();
+	}
+
+	private void executePackagedJavaScript(File file) throws IOException, ScriptException
+	{
+		_scriptLoadAttempts.increment();
+		boolean loaded = false;
+		setCurrentLoadingScript(file);
+		try
+		{
+			String className = getClassForFile(file).replace('/', '.').replace('\\', '.');
+			Class<?> scriptClass = Class.forName(className, false, getPackagedJavaScriptLoader());
+			ScriptContext context = new SimpleScriptContext();
+			context.setAttribute("mainClass", className, ScriptContext.ENGINE_SCOPE);
+			context.setAttribute(ScriptEngine.FILENAME, file.getName(), ScriptContext.ENGINE_SCOPE);
+			context.setAttribute("classpath", getScriptClassPath(), ScriptContext.ENGINE_SCOPE);
+			context.setAttribute("sourcepath", SCRIPT_FOLDER.getAbsolutePath(), ScriptContext.ENGINE_SCOPE);
+			context.setAttribute("parentLoader", ClassLoader.getSystemClassLoader(), ScriptContext.ENGINE_SCOPE);
+			context.setAttribute("context", context, ScriptContext.ENGINE_SCOPE);
+			context.setAttribute("arguments", new String[0], ScriptContext.ENGINE_SCOPE);
+			Method setContext = findPublicStaticMethod(scriptClass, "setScriptContext", ScriptContext.class);
+			if (setContext != null)
+			{
+				setContext.invoke(null, context);
+			}
+			Method main = findPublicStaticMethod(scriptClass, "main", String[].class);
+			if (main == null)
+			{
+				throw new ScriptException("no main method in " + className);
+			}
+			main.invoke(null, (Object)context.getAttribute("arguments"));
+			loaded = true;
+		}
+		catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException e)
+		{
+			throw new ScriptException(e);
+		}
+		finally
+		{
+			setCurrentLoadingScript(null);
+			if (loaded)
+			{
+				_scriptLoadSuccesses.increment();
+			}
+			else
+			{
+				_scriptLoadFailures.increment();
+			}
+		}
+	}
+
+	private static Method findPublicStaticMethod(Class<?> type, String name, Class<?>... parameterTypes)
+	{
+		try
+		{
+			Method method = type.getMethod(name, parameterTypes);
+			return Modifier.isPublic(method.getModifiers()) && Modifier.isStatic(method.getModifiers()) ? method : null;
+		}
+		catch (NoSuchMethodException e)
+		{
+			return null;
+		}
+	}
+
+	private ClassLoader getPackagedJavaScriptLoader() throws IOException
+	{
+		ClassLoader loader = _packagedJavaScriptLoader;
+		if (loader == null)
+		{
+			synchronized (this)
+			{
+				loader = _packagedJavaScriptLoader;
+				if (loader == null)
+				{
+					URL scriptRoot = SCRIPT_FOLDER.toURI().toURL();
+					loader = new URLClassLoader(new URL[] { scriptRoot }, ClassLoader.getSystemClassLoader());
+					_packagedJavaScriptLoader = loader;
+				}
+			}
+		}
+		return loader;
 	}
 
 	public static String getClassForFile(File script)

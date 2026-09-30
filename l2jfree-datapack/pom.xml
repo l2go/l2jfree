@@ -34,7 +34,7 @@
 						</manifest>
 						<manifestEntries>
 							<Implementation-Title>${project.artifactId}-${project.version}</Implementation-Title>
-							<Implementation-Build>${git.commitsCount}</Implementation-Build>
+							<Implementation-Build>${l2jfree.build.revision}</Implementation-Build>
 							<Implementation-Time>${maven.build.timestamp}</Implementation-Time>
 						</manifestEntries>
 					</archive>
@@ -57,7 +57,8 @@
 									failifexecutionfails="false">
 									<arg line="rev-list HEAD --count" />
 								</exec>
-								<concat destfile="${project.basedir}/target/datapack-infos.properties">BuildInfo=${project.version},${last.revision},${maven.build.timestamp}</concat>
+				<concat destfile="${project.basedir}/target/datapack-infos.properties">BuildInfo=${project.version},${last.revision},${maven.build.timestamp}
+SourceRevision=${l2jfree.build.revision}</concat>
 							</target>
 						</configuration>
 					</execution>
