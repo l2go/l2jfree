@@ -2,9 +2,22 @@
 
 ## Purpose
 
-Define a safe path from the 1.5.1 SQL installer to versioned database changes.
-This strategy applies to both the LoginServer database and the GameServer
-world database. It preserves established account and world data.
+Define safe, forward-only SQL changes from the 1.5.1 schema for the 2.0.0
+release. This strategy applies to both the LoginServer database and the
+GameServer world database. It preserves established account and world data.
+
+## 2.0 release boundary
+
+- New schema changes are numbered, immutable SQL files. Login and world schema
+  changes remain separately identifiable.
+- MySQL-specific persistence syntax stays in the repository layer.
+- Liquibase 4.33 remains a test-only compatibility probe. Liquibase and Flyway
+  are not part of the 2.0 production migration path or release runtime.
+- Do not replay the historical installer updates or infer their completion from
+  machine-local Java Preferences. Upgrade instructions must identify the exact
+  forward SQL files for the target baseline and preserve established data.
+- Flyway is introduced with PostgreSQL in Platform 3.0, not backported into
+  the MySQL 2.0 line.
 
 ## Current-state findings
 
@@ -29,18 +42,17 @@ current installation merely to create a migration ledger. The installer also
 continues after SQL errors in its update path, so a local Preferences entry is
 not reliable proof that an update completed successfully.
 
-## Target model
+## Target model for numbered SQL changes
 
-- Maintain independent migration histories for the login database and the
-  world database. Each has its own schema and release lifecycle.
-- Use versioned, immutable SQL migrations for changes introduced after the
-  2.0.0 baseline. Do not edit an applied migration; add a new version.
+- Keep login and world changes separately identifiable because each database
+  has its own schema and release lifecycle.
+- Use numbered, immutable SQL files for changes introduced after the 2.0.0
+  baseline. Do not edit a released change; add a new version.
 - Keep bootstrap/reference data separate from schema migrations where it can
   be safely reloaded. Never reseed mutable player, account, economy, or world
   state during an upgrade.
 - Make CI create clean MySQL 8.4 databases, apply the supported baseline and
-  every new migration, then start the LoginServer and GameServer against those
-  databases.
+  each numbered SQL change, then start both servers against those databases.
 - Back up both production databases and rehearse the exact upgrade against a
   restorable copy before a release is accepted.
 
@@ -55,9 +67,8 @@ compatibility for those probe changesets; it does not qualify the historic
 L2JFree schema, prove an upgrade of populated databases, or authorize
 production migrations. Liquibase 5.0 is not selected
 because its license changed to Functional Source License, which is not the
-Apache-licensed dependency line appropriate for this GPLv3 project. Production
-use remains subject to a reviewed support and license audit, locking behavior,
-checksum validation, and baseline semantics. See the [Liquibase 4.33 MySQL
+Apache-licensed dependency line appropriate for this GPLv3 project. Production Liquibase use in 2.0 is not planned. Platform 3.0 adopts Flyway for
+PostgreSQL; any production migration framework decision there is separate. See the [Liquibase 4.33 MySQL
 guide](https://docs.liquibase.com/oss/integration-guide-4-33/connect-liquibase-with-mysql-server)
 and the [Liquibase 4.33 license](https://central.sonatype.com/artifact/org.liquibase/liquibase-core/4.33.0).
 
@@ -69,8 +80,8 @@ and the [Liquibase 4.33 license](https://central.sonatype.com/artifact/org.liqui
    2.0.0 install definitions.
 2. Apply it to empty MySQL 8.4 databases in CI and verify server startup and
    required repository queries.
-3. Record a migration baseline for each database and apply only migrations
-   newer than that baseline.
+3. Record the verified database baseline and apply only numbered SQL changes
+   released after it.
 4. Classify seed rows as immutable reference data or mutable operational data;
    encode only safe reference data in repeatable, reviewed steps.
 
@@ -84,7 +95,7 @@ and the [Liquibase 4.33 license](https://central.sonatype.com/artifact/org.liqui
    Do not infer migration state from Java Preferences or table names alone.
 4. Baseline the verified schema without executing historical updates. Stop if
    schema drift or an unknown legacy update state remains unresolved.
-5. Apply only reviewed migrations newer than the agreed baseline. Preserve
+5. Apply only reviewed SQL changes newer than the agreed baseline. Preserve
    account rows and all player, item, character, clan, siege, and event state.
 6. Run post-upgrade invariants and a representative restart/persistence check
    against the restored copy before cutover.
@@ -102,8 +113,9 @@ until all of these are true:
 - Login and world databases each have explicit baseline versions.
 - MySQL 8.4 integration tests cover baseline application, forward migration,
   checksum mismatch, failed migration reporting, and restart after migration.
-- The exact Liquibase version and all of its transitive licenses have been
-  reviewed for inclusion in the GPLv3 release artifacts.
+- Any future production migration runner is a separate decision with its own
+  support, locking, licensing, checksum, and baseline review. It is not part of
+  the 2.0 release scope.
 - Existing-host schema differences have been inventoried and the upgrade has
   been rehearsed on a restorable database copy.
 - The installer cannot invoke a destructive database reset through the normal
@@ -112,4 +124,5 @@ until all of these are true:
 
 Until these gates pass, retain the 1.5.1 installer as a manual legacy tool,
 require verified backups, and do not describe its Java Preferences history as a
-database migration ledger.
+database migration ledger. Platform 3.0 introduces Flyway for PostgreSQL as a
+separate migration system.

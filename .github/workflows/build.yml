@@ -14,14 +14,8 @@ permissions:
   contents: read
 
 jobs:
-  jython-candidate-compatibility:
-    # These candidate probes are intentionally non-blocking while the runtime
-    # and its Java integration are being evaluated against the full datapack.
-    continue-on-error: true
-    strategy:
-      fail-fast: false
-      matrix:
-        jython-version: ["2.7.4", "2.7.5b1"]
+  jython-runtime-compatibility:
+    # Jython 2.7.5b1 is the selected Python runtime for Platform 2.0.
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -36,23 +30,23 @@ jobs:
           java-version: "25"
           cache: maven
 
-      - name: Download standalone Jython ${{ matrix.jython-version }} runtime
+      - name: Download standalone Jython 2.7.5b1 runtime
         shell: bash
         run: |
           curl --fail --location --silent --show-error \
-            "https://repo.maven.apache.org/maven2/org/python/jython-standalone/${{ matrix.jython-version }}/jython-standalone-${{ matrix.jython-version }}.jar" \
-            --output "$RUNNER_TEMP/jython-standalone-${{ matrix.jython-version }}.jar"
+            "https://repo.maven.apache.org/maven2/org/python/jython-standalone/2.7.5b1/jython-standalone-2.7.5b1.jar" \
+            --output "$RUNNER_TEMP/jython-standalone-2.7.5b1.jar"
 
       - name: Scan datapack scripts and check Java interop
         run: >-
           java --enable-native-access=ALL-UNNAMED
-          -cp "$RUNNER_TEMP/jython-standalone-${{ matrix.jython-version }}.jar"
+          -cp "$RUNNER_TEMP/jython-standalone-2.7.5b1.jar"
           org.python.util.jython tools/ci/validate-jython-candidate.py l2jfree-datapack/data/scripts
 
       - name: Compile the embedded script engine and exercise its JSR-223 bridge
         run: >-
           ./mvnw -B -ntp
-          -Djython.version=${{ matrix.jython-version }}
+          -Djython.version=2.7.5b1
           -Djython.artifactId=jython-standalone
           -Djfr.argLine=--enable-native-access=ALL-UNNAMED
           -pl l2jfree-scripting-engines -am test

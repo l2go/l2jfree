@@ -19,7 +19,8 @@ promotion evidence.
 - Production Java runtime and build JDK: Microsoft Build of OpenJDK 25.
 - Production database: MySQL Server 8.4.
 - The project remains a Java MMORPG server with separate LoginServer and
-  GameServer processes and a versioned datapack.
+  GameServer processes. Java and Python scripts ship with the GameServer
+  delivery and share its revision and checksum manifest.
 - All build and runtime verification runs in GitHub Actions or on the target
   Windows/MySQL host. Project builds, tests, and server runs are not performed
   on developer workstations.
@@ -35,8 +36,9 @@ vision does not spend effort evaluating alternative databases or Java runtimes.
 Keep LoginServer and GameServer as separately deployable JVM processes, sharing
 the existing MySQL deployment and communicating over the established game
 protocol. Keep gameplay simulation, world state, AI, and packet handling in the
-GameServer process. Preserve the datapack as an independently versioned release
-artifact.
+GameServer process. Compile Java scripts in CI and include their bytecode in
+the GameServer delivery. Ship Python scripts and Jython with that same
+revision; do not maintain an independently versioned datapack release.
 
 ```mermaid
 flowchart LR
@@ -60,41 +62,47 @@ need.
 
 | Area | Target | Rationale and constraints |
 |---|---|---|
-| Java baseline | Compile production modules for Java 25; run and build with Microsoft JDK 25 | The 1.5.1 baseline targeted Java 8 bytecode, preserving an obsolete compatibility constraint. The fixed production runtime is Java 25, so the project should be able to use its APIs and supported libraries. Upgrade compiler, tests, scripts, and launch configuration together, then qualify both Linux CI and the Windows target. |
+| Java baseline | Compile production modules for Java 25; run and build with Microsoft JDK 25 | The 1.5.1 baseline targeted Java 8 bytecode, preserving an obsolete compatibility constraint. Use Java 25 bytecode and standard JDK APIs without dependencies on vendor-specific APIs. Upgrade compiler, tests, scripts, and launch configuration together, then qualify in GitHub Actions and on the Windows target. |
 | Database access | JDBC repositories, explicit transaction boundaries, MySQL Connector/J 26.7.x | Issue #52 removed the login ORM path. Both servers now use JDBC. Connector/J 26.7.0 is already present and officially supports MySQL 8.4 and Java 8+, so replacing it brings no immediate benefit. Pin a current patch when each change is implemented. |
 | Connection pools | HikariCP 7.1.0, with bounded waits, explicit lifecycle, and pool metrics | Replace c3p0 with a smaller, actively maintained pool. HikariCP 7.1.0 targets Java 11+, which fits the fixed runtime. Preserve current transaction semantics and qualify reconnect, idle validation, shutdown, and exhaustion behavior. |
-| Schema changes | Versioned SQL migrations, with Liquibase 4.33 as the test candidate | The legacy installer has 69 historical updates and records completion in machine-local Java Preferences; its clean-install path drops all tables. A migration ledger and repeatable CI validation can make future upgrades auditable, but replaying this history is unsafe. Liquibase 4.33 lists MySQL 8.4 and remains Apache-licensed; validate its checksum, repeatability, locking, licensing, and baseline behavior before production adoption. Never reset or destructively recreate an established world database. See the [database migration strategy](DATABASE-MIGRATION-STRATEGY.md). |
-| Scripting | ECJ 3.44.0 as the Java-script compiler; compile scripts in CI into a versioned datapack; move Python scripts to Jython 2.7.5b1 | Jython 2.2.1 is the current baseline. The selected 2.0 runtime is Jython 2.7.5b1, subject to qualification of its embedded bridge and supported datapack behavior. Platform 3.0 advances to the final Jython 2.7 release. GraalPy and a Python 3 port are excluded. |
-| Network layer | Retain the custom MMO core initially; prototype Netty 4.2 behind protocol compatibility tests | A mature event-driven framework could reduce custom buffer and selector maintenance. A wholesale replacement is high risk for framing, encryption, ordering, and latency. Compare throughput, tail latency, allocation, and disconnect behavior before making the decision. |
-| Collections | Replace Javolution and Trove selectively with JDK collections | The current libraries are deeply embedded. Replacing them mechanically could regress the hottest world loops. Migrate low-risk utilities first; use repeatable load and allocation measurements for hot paths. |
-| Logging | SLF4J 2.x API with a maintained Logback backend | One logging facade and backend provide structured fields, consistent levels, rotation, and better library integration. The 1.5.1 code had hundreds of Commons Logging callers and custom JUL audit/gameplay channels, so migrate in package-sized steps and preserve those streams explicitly. Keep credentials, passwords, and session secrets out of logs. See the [logging migration plan](LOGGING-MIGRATION-PLAN.md). |
+| Schema changes | Numbered SQL files for new schema changes; MySQL syntax contained in the repository layer | The historical installer has destructive clean-install behavior and cannot safely be replayed to derive a baseline. Liquibase remains a test-only probe; neither it nor Flyway is the 2.0 release journal. Preserve established data and qualify numbered forward changes on disposable MySQL 8.4 databases and existing-schema copies. Platform 3.0 adopts Flyway for PostgreSQL. |
+| Scripting | ECJ 3.44.0 compiles Java scripts in CI into the GameServer delivery; Jython 2.7.5b1 runs the Python 2 scripts from the same delivery revision | Remove ECJ and Jython 2.2.1 from the 2.0 runtime archives after the packaged output, bridge, and supported scripts pass qualification. Do not compile Java scripts during server startup. Platform 3.0 replaces b1 with final Jython 2.7; GraalPy and a Python 3 port are excluded. |
+| Network layer | Retain the existing custom MMO network core in 2.0 | Keep the established protocol, encryption, ordering, and disconnect behavior on the Windows acceptance host. Netty 4.2 with `io_uring` is a Platform 3.0 replacement, after migration to Linux; no Netty port is part of 2.0. |
+| Collections | Keep Javolution and Trove in 2.0; replace with JDK collections and fastutil on measured paths in Platform 3.0 | The current libraries are deeply embedded. Replacing them in 2.0 could regress the hottest world loops. Platform 3.0 uses Linux JFR to identify hot paths before moving cold paths to the JDK and measured primitive hot paths to fastutil. |
+| Logging | SLF4J 2.0.20 with Logback 1.5 writing to stdout; remove Commons Logging and the `slf4j-jdk14` bridge | Finish the in-progress migration before 2.0 stable. Preserve the existing audit and gameplay channels as named loggers, and keep credentials, passwords, and session secrets out of logs. See the [logging migration plan](LOGGING-MIGRATION-PLAN.md). |
+| IRC integration | Kitteh IRC Client Library if the admin IRC bridge remains a supported feature; otherwise remove irclib and its code | irclib 1.10 is removed before stable either way. This optional admin integration is not part of login or gameplay protocol paths. |
 | Observability | OpenTelemetry Java SDK, JFR, structured logs, and health/readiness status | Operators need evidence for startup failures, deadlocks, DB pool pressure, script failures, GC pauses, and packet load. OpenTelemetry provides portable metrics and traces; JFR gives low-overhead JVM diagnostics available in the fixed runtime. |
 | Build and tests | Maven Wrapper, Microsoft JDK 25 in GitHub Actions, MySQL 8.4 integration service | Keep Maven unless a measured limitation appears. Run unit, integration, packaging, dependency, and archive-content checks in CI. Test the same MySQL major/minor family used by the deployment. |
-| Releases | Immutable, checksummed LoginServer, GameServer, and Datapack archives plus a private Windows image assembled from those archives | Release artifacts must be traceable to a commit and reproducible in CI. The deployment assembler verifies release checksums, geodata, classpaths, and absence of credentials. Keep environment-specific configuration outside the public repository. |
+| Releases | Immutable, checksummed LoginServer and GameServer archives plus a private Windows image assembled from those archives | Java bytecode and Python scripts have one GameServer revision and are covered by its checksum manifest. Release artifacts are traceable to a commit and reproducible in CI. Keep environment-specific configuration outside the public repository. |
 
-The version numbers above identify current candidate lines, not a blanket
+The 2.0 runtime keeps the existing network core and platform-thread execution
+model. Virtual threads, Generational ZGC, and the JDK AOT cache are not enabled
+in the 2.0 release; they are evaluated only on the Platform 3.0 Linux process.
+The launch command is `java`, configuration stays outside release archives,
+and Windows `.bat` files only set the environment before invoking Java.
+
+The version numbers above identify selected target versions, not a blanket
 upgrade instruction. Every dependency change must be pinned, checked for
 licensing and Java 25 compatibility, and qualified through CI. In particular,
-the migration framework, logging backend, network framework, and selected
-Jython bridge must be validated with the actual server workloads before
-adoption. GraalPy is excluded from the target and from further qualification.
+the logging backend, optional IRC replacement, and selected Jython bridge must
+be validated with the actual server workloads before adoption. GraalPy is
+excluded from the target and from further qualification.
 
-This is a pre-production modernization program. It explicitly permits early
-evaluation of beta and preview technologies in isolated CI jobs, disposable
-databases, and experimental branches. Experimental dependencies must not enter
-the release classpath until their compatibility, behavior, security posture,
-and operational value have been demonstrated. A non-blocking experiment is a
-measurement stage, not an adoption decision.
+This is a pre-production modernization program. It permits a beta Jython
+runtime in the isolated qualification path because Jython 2.7.5b1 is the
+selected 2.0 target. Other Platform 3.0 technologies are outside the 2.0
+implementation and release scope. Experimental dependencies must not enter
+release archives until their compatibility, behavior, security posture, and
+operational value have been demonstrated.
 
 ### Experimental qualification tracks
 
 | Track | Candidates | Evidence required before adoption |
 |---|---|---|
-| Python runtime | Jython 2.7.5b1 for 2.0; Jython 2.7 final for Platform 3.0 | Qualify the embedded bridge, all supported scripts, Java interop, lifecycle, representative quests and AI, and Windows behavior. GraalPy is excluded; no Python 3 migration is planned. |
-| Network I/O | Netty 4.2.18.Final as the initial comparison point; current custom MMO core | Replay protocol fixtures and encrypted sessions, then compare disconnect behavior, throughput, p95/p99 latency, allocation rate, and recovery under load on Linux and Windows runners. Recheck the current 4.2 patch before each adoption decision. |
-| Concurrency | Stable JDK virtual threads for blocking administrative, login, and background I/O tasks | Compare throughput, tail latency, thread count, pinning, and shutdown behavior against the existing executor model. Do not move CPU-bound world ticks or lock-sensitive simulation loops without separate evidence. |
+| Python runtime | Jython 2.7.5b1 for 2.0; Jython 2.7 final for Platform 3.0 | Qualify the embedded bridge, every supported script, Java interop, lifecycle, representative quests and AI, and Windows behavior. Jython 2.7.5b1 is the only candidate being qualified. GraalPy and a Python 3 migration are excluded. |
+| Network I/O | Existing custom MMO core for 2.0 | Netty 4.2 and the Linux transports are Platform 3.0 work; no 2.0 network replacement experiment is planned. |
 | Telemetry | JFR recordings and OpenTelemetry Java agent / SDK | Measure startup, GC, database pool, script load, scheduler, and request/packet paths; record instrumentation overhead and provide repeatable incident artifacts. Start in CI now rather than waiting for final operations work. |
-| Schema lifecycle | Liquibase 4.33 and direct SQL migration runner prototypes against disposable MySQL 8.4 databases | Demonstrate fresh install, non-destructive baseline, upgrade, checksum drift detection, concurrent startup locking, interruption recovery, backup restore, and restart persistence. Existing world databases are never experimental fixtures. |
+| Schema lifecycle | Numbered forward SQL changes for 2.0; Flyway 13 for PostgreSQL in Platform 3.0 | Qualify numbered MySQL changes on disposable databases and copies. Do not ship Liquibase or Flyway in the 2.0 runtime, and never use established world databases as experiments. |
 
 Record candidate versions, CI run URLs, measured results, incompatibilities,
 and decisions in the dependency inventory and pull request. Promote a candidate
@@ -108,6 +116,8 @@ The 2.0.0 infrastructure should provide:
 - Predictable startup that reports a clear failing subsystem and its root cause.
 - A preflight check for configuration, schema compatibility, database access,
   required datapack files, and script compilation before accepting traffic.
+- A deployment command that invokes `java`, external configuration, and thin
+  Windows batch launchers that only prepare the environment.
 - Bounded connection acquisition and observable pool state rather than
   unbounded waits.
 - Database upgrades that are versioned, reviewable, repeatable in CI, and
@@ -132,9 +142,9 @@ The 2.0.0 infrastructure should provide:
 - Add a dependency bill of materials, automated dependency update proposals,
   archive checks, and release provenance.
 - Add an integration CI job using MySQL 8.4 and Microsoft JDK 25.
-- Run the non-blocking script-runtime candidate jobs listed in the
-  [infrastructure stack map](INFRASTRUCTURE-STACK.md) on Microsoft OpenJDK 25;
-  retain Jython 2.2.1 as the comparison baseline.
+- Run the Jython 2.7.5b1 qualification job listed in the
+  [infrastructure stack map](INFRASTRUCTURE-STACK.md) on Microsoft JDK 25;
+  compare its behavior with the current Jython 2.2.1 baseline.
 - Capture JFR recordings for CI test processes and start OpenTelemetry
   measurements for representative startup and integration scenarios.
 - Capture baseline startup time, script load results, pool metrics, GC behavior,
@@ -144,8 +154,8 @@ The 2.0.0 infrastructure should provide:
   triage before setting a blocking severity threshold.
 
 Exit evidence: CI builds all modules and release archives; MySQL integration
-scenarios pass; candidate compatibility reports and baseline telemetry are
-available for comparison.
+scenarios pass; Jython 2.7.5b1 qualification results and baseline telemetry are
+available for review.
 
 ### Stage 1: Move the codebase to Java 25
 
@@ -170,6 +180,9 @@ LoginServer and GameServer start on the Windows target without extra JDK flags.
   and do not replay historical installer updates to invent a baseline.
 - Add MySQL 8.4 integration coverage for login, account management, game state,
   reconnects, shutdown, and restart persistence.
+- Put new SQL changes in numbered files and keep MySQL-specific persistence
+  syntax in the repository layer. Keep Liquibase test-only and do not add a
+  migration framework to the 2.0 release journal.
 
 Exit evidence: existing data survives an upgrade; both processes start, persist,
 restart, recover from database connection loss, and shut down cleanly.
@@ -179,33 +192,33 @@ restart, recover from database connection loss, and shut down cleanly.
 - Inventory every Java and Python script, classify it by feature, and record
   startup/runtime failures.
 - Create a stable, versioned server scripting API.
-- Compile Java scripts in CI and include their validated output in the datapack
-  release.
-- Compare the Jython 2.7.4 stable and 2.7.5b1 beta candidates with the current
-  Jython 2.2.1 runtime, including Java 25 and Windows qualification.
+- Compile Java scripts in CI and include their validated bytecode in the
+  GameServer delivery; do not compile them at server startup.
+- Qualify the embedded Jython 2.7.5b1 bridge and supported Python 2 scripts on
+  Microsoft JDK 25 and Windows. Jython 2.7.5b1 is the only candidate runtime.
 - Port the remaining required scripts to Jython 2.7.5b1, preserving gameplay
   behavior through representative scenario checks.
-- Ship one Python runtime: Jython 2.7.5b1. Platform 3.0 updates it to the final
-  Jython 2.7 release. Do not add GraalPy or a second interpreter.
+- Ship one Python runtime, Jython 2.7.5b1, and one GameServer revision and
+  checksum manifest for the runtime and both script languages. Platform 3.0
+  updates Jython to the final 2.7 release. Do not add GraalPy or a second
+  interpreter.
 
 Exit evidence: all required scripts compile or load; the release reports no
 unexplained failures; representative quests, AI, events, and scheduled scripts
 pass target-runtime scenarios.
 
-### Stage 4: Improve concurrency and network observability
+### Stage 4: Qualify world concurrency and preserve the network core
 
 - Audit locks and ownership in KnownList, movement, AI, and world-region paths.
 - Add repeatable concurrency and load profiles with deadlock detection enabled.
-- Prototype Netty 4.2.18.Final with protocol-level compatibility and
-  performance tests, checking for a newer security patch before adoption.
-- Compare stable virtual threads for blocking I/O workloads with the current
-  executor model.
-- Adopt a replacement only if measurements show a clear operational or
-  performance benefit and protocol behavior remains compatible.
+- Repeat combat and world-interaction scenarios that exposed the KnownList
+  deadlock on the target Windows host.
+- Retain the custom MMO transport and existing platform-thread model for 2.0.
+  Netty, virtual threads, Generational ZGC, and the JDK AOT cache belong to the
+  Platform 3.0 Linux qualification path.
 
-Exit evidence: no known deadlock-triggered restarts during sustained load;
-packet behavior remains compatible; p95/p99 latency and allocation data are
-recorded for the selected network implementation.
+Exit evidence: no known deadlock-triggered restarts during sustained target
+host gameplay; the existing packet behavior remains compatible.
 
 ### Stage 5: Complete operations and release qualification
 
