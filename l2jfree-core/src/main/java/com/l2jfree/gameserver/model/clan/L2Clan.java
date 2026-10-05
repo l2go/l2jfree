@@ -1773,7 +1773,7 @@ public class L2Clan
 			// Retrieve all skills of this L2Player from the database
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT privilleges,rank,party FROM clan_privs WHERE clan_id=?");
+					con.prepareStatement("SELECT privilleges,`rank`,party FROM clan_privs WHERE clan_id=?");
 			statement.setInt(1, getClanId());
 			//_log.warning("clanPrivs restore for ClanId : "+getClanId());
 			ResultSet rset = statement.executeQuery();
@@ -1835,7 +1835,7 @@ public class L2Clan
 				// Retrieve all skills of this L2Player from the database
 				con = L2DatabaseFactory.getInstance().getConnection(con);
 				PreparedStatement statement =
-						con.prepareStatement("INSERT INTO clan_privs (clan_id,rank,party,privilleges) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE privilleges = ?");
+						con.prepareStatement("INSERT INTO clan_privs (clan_id,`rank`,party,privilleges) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE privilleges = ?");
 				statement.setInt(1, getClanId());
 				statement.setInt(2, rank);
 				statement.setInt(3, 0);
@@ -1883,7 +1883,7 @@ public class L2Clan
 				// Retrieve all skills of this L2Player from the database
 				con = L2DatabaseFactory.getInstance().getConnection(con);
 				PreparedStatement statement =
-						con.prepareStatement("INSERT INTO clan_privs (clan_id,rank,party,privilleges) VALUES (?,?,?,?)");
+						con.prepareStatement("INSERT INTO clan_privs (clan_id,`rank`,party,privilleges) VALUES (?,?,?,?)");
 				statement.setInt(1, getClanId());
 				statement.setInt(2, rank);
 				statement.setInt(3, 0);
