@@ -102,6 +102,7 @@ jobs:
               l2jfree-login-*-dist.zip)
                 require_entry "$archive" loginserver/loginserver_launcher.bat
                 require_entry "$archive" loginserver/config/loginserver.properties
+                require_entry "$archive" loginserver/config/logback.xml
                 require_entry "$archive" loginserver/sql/accounts.sql
                 require_entry "$archive" loginserver/agents/opentelemetry-javaagent.jar
                 verify_logging_runtime loginserver
@@ -109,6 +110,7 @@ jobs:
               l2jfree-core-*-dist.zip)
                 require_entry "$archive" gameserver/gameserver_launcher.bat
                 require_entry "$archive" gameserver/config/server.properties
+                require_entry "$archive" gameserver/config/logback.xml
                 require_entry "$archive" gameserver/agents/opentelemetry-javaagent.jar
                 verify_logging_runtime gameserver
                 ;;
@@ -141,7 +143,7 @@ jobs:
           artifact_version="$(./mvnw -q -N org.apache.maven.plugins:maven-help-plugin:3.5.1:evaluate -Dexpression=project.version -DforceStdout)"
           mkdir -p release-artifacts
           cp "l2jfree-login/target/l2jfree-login-${artifact_version}-dist.zip" release-artifacts/
-          cp "l2jfree-datapack/target/l2jfree-datapack-${artifact_version}-dist.zip" release-artifacts/
+          # The datapack is merged into the GameServer archive below. It is not published as its own archive.
           python3 - "l2jfree-core/target/l2jfree-core-${artifact_version}-dist.zip" \
             "l2jfree-datapack/target/l2jfree-datapack-${artifact_version}-dist.zip" \
             "release-artifacts/l2jfree-core-${artifact_version}-dist.zip" <<'PY'
@@ -156,28 +158,39 @@ jobs:
           scripts_root = Path("l2jfree-datapack/data/scripts")
           metadata_path = "gameserver/config/versionning/datapack-infos.properties"
           class_prefix = "gameserver/data/scripts/"
+          required_names = {
+              metadata_path,
+              "gameserver/data/scripts.cfg",
+              "gameserver/sql/characters.sql",
+              "gameserver/config/logback.xml",
+          }
 
           with zipfile.ZipFile(datapack_archive) as datapack:
               metadata = datapack.read(metadata_path).decode("utf-8")
               revision_match = re.search(r"(?m)^SourceRevision=([^\r\n]+)$", metadata)
               if not revision_match or revision_match.group(1) != expected_revision:
                   raise SystemExit("Datapack source revision does not match GITHUB_SHA")
-
-              bytecode = {
-                  entry.filename: (entry, datapack.read(entry))
+              datapack_files = [
+                  (entry, datapack.read(entry.filename))
                   for entry in datapack.infolist()
-                  if entry.filename.startswith(class_prefix) and entry.filename.endswith(".class")
-              }
-              if not bytecode:
-                  raise SystemExit("Datapack distribution contains no compiled Java script classes")
+                  if not entry.is_dir()
+              ]
+
+          bytecode = {
+              entry.filename
+              for entry, _contents in datapack_files
+              if entry.filename.startswith(class_prefix) and entry.filename.endswith(".class")
+          }
+          if not bytecode:
+              raise SystemExit("Datapack distribution contains no compiled Java script classes")
 
           sources = sorted(scripts_root.rglob("*.java"))
           if not sources:
               raise SystemExit("No Java script sources were found")
           missing = []
           for source in sources:
-              text = source.read_text(encoding="utf-8")
-              package = re.search(r"(?m)^\s*package\s+([\w.]+)\s*;", text)
+              source_text = source.read_text(encoding="utf-8")
+              package = re.search(r"(?m)^\s*package\s+([\w.]+)\s*;", source_text)
               package_path = package.group(1).replace(".", "/") + "/" if package else ""
               expected_class = f"{class_prefix}{package_path}{source.stem}.class"
               if expected_class not in bytecode:
@@ -187,19 +200,32 @@ jobs:
 
           output_archive.parent.mkdir(parents=True, exist_ok=True)
           with zipfile.ZipFile(core_archive) as core, zipfile.ZipFile(output_archive, "w") as merged:
-              bytecode_names = set(bytecode)
+              core_names = set()
               for entry in core.infolist():
-                  if entry.filename not in bytecode_names:
-                      merged.writestr(entry, core.read(entry))
-              for name, (entry, contents) in bytecode.items():
+                  merged.writestr(entry, core.read(entry.filename))
+                  core_names.add(entry.filename)
+              conflicts = sorted(
+                  entry.filename
+                  for entry, _contents in datapack_files
+                  if entry.filename in core_names
+              )
+              if conflicts:
+                  raise SystemExit(
+                      "Datapack files collide with GameServer files:\n" + "\n".join(conflicts)
+                  )
+              for entry, contents in datapack_files:
                   merged.writestr(entry, contents)
 
           with zipfile.ZipFile(output_archive) as merged:
               packaged = {entry.filename for entry in merged.infolist()}
-              missing = sorted(set(bytecode) - packaged)
-              if missing:
-                  raise SystemExit("Merged GameServer archive is missing compiled classes:\n" + "\n".join(missing))
-          print(f"Merged and verified {len(bytecode)} Java script classes for {expected_revision}")
+          missing = sorted(
+              ({entry.filename for entry, _contents in datapack_files} | required_names) - packaged
+          )
+          if missing:
+              raise SystemExit("Merged GameServer archive is missing entries:\n" + "\n".join(missing))
+          print(
+              f"Merged {len(datapack_files)} datapack files, including {len(bytecode)} Java script classes, for {expected_revision}"
+          )
           PY
           zip -r "release-artifacts/l2jfree-${artifact_version}-docs.zip" LICENSE README.md \
             docs/INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md \
@@ -278,11 +304,11 @@ jobs:
               }
               $requiredEntries = switch -Wildcard ($archive.Name) {
                 'l2jfree-login-*-dist.zip' {
-                  @('loginserver/loginserver_launcher.bat', 'loginserver/config/loginserver.properties', 'loginserver/sql/accounts.sql')
+                  @('loginserver/loginserver_launcher.bat', 'loginserver/config/loginserver.properties', 'loginserver/config/logback.xml', 'loginserver/sql/accounts.sql')
                   break
                 }
                 'l2jfree-core-*-dist.zip' {
-                  @('gameserver/gameserver_launcher.bat', 'gameserver/config/server.properties')
+                  @('gameserver/gameserver_launcher.bat', 'gameserver/config/server.properties', 'gameserver/config/logback.xml')
                   break
                 }
                 'l2jfree-datapack-*-dist.zip' {
@@ -319,16 +345,17 @@ jobs:
             }
           }
 
-      - name: Merge and verify packaged Java scripts in Windows GameServer archive
+      - name: Merge the datapack into the Windows GameServer archive
         shell: pwsh
         run: |
           Add-Type -AssemblyName System.IO.Compression
           Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $metadataPath = 'gameserver/config/versionning/datapack-infos.properties'
           $datapackArchive = Get-Item 'l2jfree-datapack/target/l2jfree-datapack-*-dist.zip'
           $coreArchive = Get-Item 'l2jfree-core/target/l2jfree-core-*-dist.zip'
           $datapackZip = [System.IO.Compression.ZipFile]::OpenRead($datapackArchive.FullName)
           try {
-            $metadataEntry = $datapackZip.GetEntry('gameserver/config/versionning/datapack-infos.properties')
+            $metadataEntry = $datapackZip.GetEntry($metadataPath)
             if ($null -eq $metadataEntry) { throw 'Datapack revision metadata is missing.' }
             $reader = [System.IO.StreamReader]::new($metadataEntry.Open())
             try { $metadata = $reader.ReadToEnd() } finally { $reader.Dispose() }
@@ -337,22 +364,15 @@ jobs:
               throw 'Datapack source revision does not match GITHUB_SHA.'
             }
 
-            $bytecodeEntries = @($datapackZip.Entries | Where-Object {
-              $_.FullName -like 'gameserver/data/scripts/*.class'
-            })
-            if ($bytecodeEntries.Count -eq 0) { throw 'Datapack distribution has no compiled Java script classes.' }
-            $bytecodeFiles = foreach ($entry in $bytecodeEntries) {
-              $inputStream = $entry.Open()
-              $memoryStream = [System.IO.MemoryStream]::new()
-              try {
-                $inputStream.CopyTo($memoryStream)
-                $classBytes = $memoryStream.ToArray()
-              }
-              finally { $memoryStream.Dispose(); $inputStream.Dispose() }
-              [pscustomobject]@{ FullName = $entry.FullName; Bytes = $classBytes }
-            }
+            $datapackFiles = @($datapackZip.Entries | Where-Object { -not $_.FullName.EndsWith('/') })
+            $datapackNames = @($datapackFiles | ForEach-Object { $_.FullName })
             $bytecodeNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
-            foreach ($entry in $bytecodeFiles) { [void]$bytecodeNames.Add($entry.FullName) }
+            foreach ($entry in $datapackFiles) {
+              if ($entry.FullName -like 'gameserver/data/scripts/*.class') {
+                [void]$bytecodeNames.Add($entry.FullName)
+              }
+            }
+            if ($bytecodeNames.Count -eq 0) { throw 'Datapack distribution has no compiled Java script classes.' }
 
             $javaSources = @(Get-ChildItem 'l2jfree-datapack/data/scripts' -Filter '*.java' -File -Recurse)
             if ($javaSources.Count -eq 0) { throw 'No Java script sources were found.' }
@@ -365,42 +385,58 @@ jobs:
                 throw "Java script source is missing packaged bytecode: $expectedClass"
               }
             }
+
+            $coreZip = [System.IO.Compression.ZipFile]::Open($coreArchive.FullName, [System.IO.Compression.ZipArchiveMode]::Update)
+            try {
+              $coreNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+              foreach ($entry in $coreZip.Entries) { [void]$coreNames.Add($entry.FullName) }
+              $conflicts = @($datapackFiles | Where-Object { $coreNames.Contains($_.FullName) } | ForEach-Object { $_.FullName })
+              if ($conflicts.Count -gt 0) {
+                throw "Datapack files collide with GameServer files: $($conflicts -join ', ')"
+              }
+              foreach ($sourceEntry in $datapackFiles) {
+                $targetEntry = $coreZip.CreateEntry($sourceEntry.FullName, [System.IO.Compression.CompressionLevel]::Optimal)
+                $sourceStream = $sourceEntry.Open()
+                try {
+                  $targetStream = $targetEntry.Open()
+                  try { $sourceStream.CopyTo($targetStream) } finally { $targetStream.Dispose() }
+                }
+                finally { $sourceStream.Dispose() }
+              }
+            }
+            finally { $coreZip.Dispose() }
           }
           finally { $datapackZip.Dispose() }
-
-          $coreZip = [System.IO.Compression.ZipFile]::Open($coreArchive.FullName, [System.IO.Compression.ZipArchiveMode]::Update)
-          try {
-            foreach ($sourceEntry in $bytecodeFiles) {
-              $existing = $coreZip.GetEntry($sourceEntry.FullName)
-              if ($null -ne $existing) { $existing.Delete() }
-              $targetEntry = $coreZip.CreateEntry($sourceEntry.FullName, [System.IO.Compression.CompressionLevel]::Optimal)
-              $targetStream = $targetEntry.Open()
-              try { $targetStream.Write($sourceEntry.Bytes, 0, $sourceEntry.Bytes.Length) }
-              finally { $targetStream.Dispose() }
-            }
-          }
-          finally { $coreZip.Dispose() }
 
           $mergedZip = [System.IO.Compression.ZipFile]::OpenRead($coreArchive.FullName)
           try {
             $mergedNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
             foreach ($entry in $mergedZip.Entries) { [void]$mergedNames.Add($entry.FullName) }
-            foreach ($entry in $bytecodeFiles) {
-              if (-not $mergedNames.Contains($entry.FullName)) {
-                throw "Merged GameServer archive is missing compiled class: $($entry.FullName)"
+            $required = @($datapackNames) + @(
+              $metadataPath,
+              'gameserver/data/scripts.cfg',
+              'gameserver/sql/characters.sql',
+              'gameserver/config/logback.xml'
+            )
+            foreach ($name in $required) {
+              if (-not $mergedNames.Contains($name)) {
+                throw "Merged GameServer archive is missing entry: $name"
               }
             }
           }
           finally { $mergedZip.Dispose() }
           $digest = (Get-FileHash -Path $coreArchive.FullName -Algorithm SHA256).Hash
           if ([string]::IsNullOrWhiteSpace($digest)) { throw 'Unable to checksum merged GameServer archive.' }
-          Write-Host "Merged and verified $($bytecodeFiles.Count) Java script classes for $env:GITHUB_SHA; SHA256 $digest"
+          Write-Host "Merged $($datapackFiles.Count) datapack files, including $($bytecodeNames.Count) Java script classes, for $env:GITHUB_SHA; SHA256 $digest"
 
   # Release archives contain Java 25 bytecode built with OpenJDK 25. They are
   # portable JVM packages, not Windows-specific binaries.
   release:
     needs: [build, windows-package]
     if: startsWith(github.ref, 'refs/tags/v')
+    # A pre-release tag publishes on its own. A stable tag waits in stable-release
+    # so the maintainer approves it before the release is created.
+    environment: ${{ contains(github.ref_name, '-') && 'prerelease' || 'stable-release' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -423,7 +459,6 @@ jobs:
           artifact_version="${release_version}"
           test -s "release-artifacts/l2jfree-login-${artifact_version}-dist.zip"
           test -s "release-artifacts/l2jfree-core-${artifact_version}-dist.zip"
-          test -s "release-artifacts/l2jfree-datapack-${artifact_version}-dist.zip"
           test -s "release-artifacts/l2jfree-${artifact_version}-docs.zip"
           test -s "release-artifacts/l2jfree-${artifact_version}-sbom.json"
           test -s "release-artifacts/l2jfree-${artifact_version}-vulnerability-report.json"

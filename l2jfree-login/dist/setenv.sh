@@ -7,6 +7,9 @@ CLASSPATH=${CLASSPATH}:.
 
 export CLASSPATH
 
+# Operators edit config/logback.xml. The copy inside the jars is not the runtime configuration.
+export JAVA_LOGGING_OPTS="-Dlogback.configurationFile=config/logback.xml"
+
 JAVA_AGENT_OPTS=""
 if [[ "${L2JFREE_OTEL_ENABLED:-false}" == "true" ]]; then
 	if [[ -z "${OTEL_EXPORTER_OTLP_ENDPOINT:-}" ]]; then

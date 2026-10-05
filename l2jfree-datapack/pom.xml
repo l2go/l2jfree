@@ -53,11 +53,7 @@
 						<configuration>
 							<target>
 								<mkdir dir="${project.build.directory}" />
-								<exec dir="." executable="git" outputproperty="last.revision"
-									failifexecutionfails="false">
-									<arg line="rev-list HEAD --count" />
-								</exec>
-				<concat destfile="${project.basedir}/target/datapack-infos.properties">BuildInfo=${project.version},${last.revision},${maven.build.timestamp}
+				<concat destfile="${project.basedir}/target/datapack-infos.properties">BuildInfo=${project.version},${l2jfree.build.revision},${maven.build.timestamp}
 SourceRevision=${l2jfree.build.revision}</concat>
 							</target>
 						</configuration>
