@@ -20,7 +20,7 @@ An archived Lineage II server, maintained for modern builds and Windows 10 deplo
 
 ## Quick start
 
-Download the published [L2JFree release artifacts](https://github.com/l2go/l2jfree/releases). The release contains separate LoginServer, GameServer, and Datapack archives with a `SHA256SUMS.txt` manifest. The deployment target uses Microsoft OpenJDK 25 x64 and MySQL Server 8.4.
+Download the published [L2JFree release artifacts](https://github.com/l2go/l2jfree/releases). From v2.5.0 the release contains LoginServer and GameServer archives. The datapack is inside the GameServer archive. `SHA256SUMS.txt` covers the published files. The deployment target uses Microsoft OpenJDK 25 x64 and MySQL Server 8.4.
 
 Build and package verification run in GitHub Actions with the checksum-pinned Maven Wrapper and Microsoft OpenJDK 25. Consult the [2.0.0 infrastructure vision](docs/INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md) for the evolving Java baseline and delivery gates.
 
@@ -40,11 +40,11 @@ The [dependency inventory](docs/DEPENDENCY-INVENTORY.md) lists the current direc
 
 Both Windows server launchers reject Java runtimes whose major version is not 25. Set `JAVA_HOME` to the Microsoft JDK 25 installation or make that runtime the `java` command found through `PATH`.
 
-The current stable release is [v2.0.0](https://github.com/l2go/l2jfree/releases/tag/v2.0.0). It publishes separate LoginServer, GameServer, and datapack archives, plus the documentation archive, CycloneDX SBOM, vulnerability report, and `SHA256SUMS.txt`. Re-qualification of that image on the Windows 10 and MySQL 8.4 host is open in [#95](https://github.com/l2go/l2jfree/issues/95). The [deployment qualification notes](docs/2026-Q4-UPGRADE.md) record the target and the checks that are still open.
+The current stable release is [v2.5.0](https://github.com/l2go/l2jfree/releases/tag/v2.5.0). It publishes the LoginServer archive, the GameServer archive with the datapack merged in, the documentation archive, a CycloneDX SBOM, a vulnerability report, and `SHA256SUMS.txt`. [v2.0.0](https://github.com/l2go/l2jfree/releases/tag/v2.0.0) remains the previous stable release and still publishes a separate datapack archive. The maintainer ran the v2.5.0 tree on the Windows 10 and MySQL 8.4 host. The [deployment qualification notes](docs/2026-Q4-UPGRADE.md) record that acceptance. Vulnerability triage for the published report remains open in [#92](https://github.com/l2go/l2jfree/issues/92).
 
 ## Infrastructure modernization
 
-The first database qualification issue, [#52](https://github.com/l2go/l2jfree/issues/52), is complete in v1.5.1. Stable [v2.0.0](https://github.com/l2go/l2jfree/releases/tag/v2.0.0) is the published infrastructure release. The [modernization vision](docs/INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md) records the architecture and the execution status. Parent issue [#59](https://github.com/l2go/l2jfree/issues/59) tracked the work that produced v2.0.0.
+The first database qualification issue, [#52](https://github.com/l2go/l2jfree/issues/52), is complete in v1.5.1. Stable [v2.5.0](https://github.com/l2go/l2jfree/releases/tag/v2.5.0) is the current release. [v2.0.0](https://github.com/l2go/l2jfree/releases/tag/v2.0.0) is the previous stable release. The [modernization vision](docs/INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md) records the architecture and the execution status. Parent issue [#59](https://github.com/l2go/l2jfree/issues/59) tracked the work that produced v2.0.0.
 
 Release archives include a checksum manifest and signed GitHub provenance. See the [release verification guide](docs/RELEASE-VERIFICATION.md) before deploying downloaded artifacts.
 

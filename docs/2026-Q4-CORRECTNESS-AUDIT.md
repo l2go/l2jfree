@@ -6,13 +6,11 @@ Repository text, issues, and commit messages stay in English. Commit messages do
 
 ## Current test-execution status
 
-Decision updated 2026-09-30: do not compile or execute tests locally or in
-GitHub Actions before the stable 2.0.0 release. The test modernization and
-CI test jobs described below are deferred to 2.1.0. Until then, the 2.0.0 RC
-uses production build/package checks and operator qualification on the target
-Windows/MySQL host; no automated test evidence is claimed. The remaining test
-design in this historical audit is a proposal for the 2.1.0 phase, not a
-2.0.0 implementation or release gate.
+Decision updated for v2.5.0: GitHub Actions compiles and runs the retained
+unit suite on Linux and Windows, and runs MySQL tests in a separate Linux
+job. v2.0.0 skipped test compilation and execution. Local Maven builds remain
+out of the project workflow. The test design below is the historical audit
+proposal; it is not a claim that every listed case has a test in v2.5.0.
 
 ## Baseline
 

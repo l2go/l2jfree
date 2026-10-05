@@ -72,7 +72,7 @@ need.
 | Logging | SLF4J 2.0.20 and Logback 1.5 with named operational channels and a one-way JUL bridge | The unified backend and removal of Commons Logging/JUL handlers are implemented. Verify channel routing, rotation, Windows file permissions, and secret redaction before 2.0 stable. See the [logging migration plan](LOGGING-MIGRATION-PLAN.md). |
 | IRC integration | Not a supported feature | The admin IRC bridge and irclib 1.10 are removed. Login and gameplay do not use IRC. |
 | Observability | Optional OpenTelemetry Java agent with OTLP metrics/traces, JFR, structured logs, and health/readiness status | Operators need evidence for startup failures, deadlocks, DB pool pressure, script failures, GC pauses, and packet load. OpenTelemetry provides portable metrics and traces; JFR gives low-overhead JVM diagnostics available in the fixed runtime. The agent remains disabled until a collector endpoint is configured and target-host overhead is qualified. |
-| Build and verification | Maven Wrapper, Microsoft JDK 25 in GitHub Actions | Through 2.0.0, CI runs production compilation, packaging, provenance, dependency, and archive-content checks only. Do not compile or execute tests. Test modernization and CI test execution resume in 2.1.0 after stable 2.0.0. |
+| Build and verification | Maven Wrapper, Microsoft JDK 25 in GitHub Actions | v2.0.0 CI ran production compilation, packaging, provenance, dependency, and archive-content checks only. v2.5.0 also compiles and runs the unit tests on Linux and Windows, and runs MySQL tests in a separate Linux job. |
 | Releases | Immutable, checksummed LoginServer and GameServer archives plus a private Windows image assembled from those archives | Java bytecode and Python scripts have one GameServer revision and are covered by its checksum manifest. Release artifacts are traceable to a commit and reproducible in CI. Keep environment-specific configuration outside the public repository. |
 
 The 2.0 runtime keeps the existing network core and platform-thread execution
@@ -135,6 +135,9 @@ The 2.0.0 infrastructure should provide:
 ## Delivery sequence
 
 ### Test execution policy
+
+Release 2.5.0 restored test compilation and execution in GitHub Actions. The
+rules below are the record of what 2.0.0 required.
 
 Do not compile or run the repository test suites in local environments or
 GitHub Actions before the stable 2.0.0 release. The 2.0.0 RC gate uses
@@ -268,10 +271,10 @@ instructions, a dependency inventory, an operations runbook, and exact
 checksums for every published archive. Do not automatically create the stable
 release after RC publication.
 
-`v2.0.0-rc.1`, `v2.0.0-rc.2`, and stable `v2.0.0` are published. Target-host
-acceptance of the stable image is still open in
-[#95](https://github.com/l2go/l2jfree/issues/95). The stable release was not
-created automatically from a candidate tag.
+`v2.0.0-rc.1`, `v2.0.0-rc.2`, and stable `v2.0.0` are published. The maintainer
+accepted the later `v2.5.0` tree on Windows 10 and MySQL 8.4.
+[#95](https://github.com/l2go/l2jfree/issues/95) is closed on that acceptance.
+The stable release was not created automatically from a candidate tag.
 
 ## Current project context
 
@@ -283,34 +286,42 @@ v2.0.0 release. Follow-up after v2.0.0 is listed in the execution status.
 
 ## Execution status
 
+Stable [v2.5.0](https://github.com/l2go/l2jfree/releases/tag/v2.5.0) is the
+current release. It keeps the Java 25 bytecode and HikariCP 7.1.0 line from
+v2.0.0 and adds the post-release corrections: quoted `clan_privs.rank`,
+`cursed_weapons.charId` during id compaction, KnownList removal that keeps an
+object added during the walk, database pool bounds read from configuration,
+direct Jython registration without a runtime Java compiler, removal of the
+admin IRC bridge and irclib, a JFR recording of the Maven build JVM, and a
+GameServer archive that contains the datapack and loads Logback from
+`config/logback.xml`. GitHub Actions compiles and runs the unit tests on Linux
+and Windows. MySQL 8.4 tests run in a separate Linux job. The maintainer ran
+this tree on Windows 10 and MySQL 8.4 and accepted it for release.
 Stable [v2.0.0](https://github.com/l2go/l2jfree/releases/tag/v2.0.0) was
-published on 2026-09-30 and is the current stable release. The tags
-`v2.0.0-rc.1` and `v2.0.0-rc.2` were published before it. The release sets
-Java 25 for production and test compilation, uses HikariCP 7.1.0 in both
-server processes, upgrades ECJ for current Java class files, and corrects
+published on 2026-09-30. The tags `v2.0.0-rc.1` and `v2.0.0-rc.2` were
+published before it. That release sets Java 25 for production and test
+compilation, uses HikariCP 7.1.0 in both server processes, and corrects
 forward-only JDBC result-set usage found during Windows runtime qualification.
-GitHub Actions built the tag. Target-host qualification of this image on
-Windows 10 and MySQL 8.4 is still open in
-[#95](https://github.com/l2go/l2jfree/issues/95). `v1.5.1` remains the last
-image qualified on that host. Parent issue
+GitHub Actions built the tag. It publishes a separate datapack archive and
+skips tests. Parent issue
 [#59](https://github.com/l2go/l2jfree/issues/59) tracked the work that
-produced this release.
+produced v2.0.0.
 The GameServer closes its Hikari pool if the startup connection check fails and
 publishes the pool only after that check succeeds.
 The repository contains MySQL 8.4 integration coverage for startup connection
 checkout without creating a synthetic connection-test table, account DAO
 upserts, pool metrics, transaction commit/rollback, and a test-only Liquibase
-4.33.0 compatibility probe. These tests were run in an earlier CI phase but
-are currently skipped; they are not evidence for 2.0.0 acceptance and return
-as part of the 2.1.0 test modernization. Liquibase does not enable production
+4.33.0 compatibility probe. v2.0.0 skipped these tests. v2.5.0 runs the
+retained suite again: unit tests in the Linux and Windows package jobs, and
+the MySQL tests in the integration job. Liquibase does not enable production
 schema migrations. Liquibase 5.x is excluded from selection because its
 license is no longer Apache 2.0.
 The non-interactive legacy installer now refuses clean mode unless the operator
 repeats the exact database name with `-confirm-clean`; the update mode does not
 accept or invoke that destructive operation.
-Earlier CI runs executed these tests. The v2.0.0 workflows still skip all
-test compilation and execution. Restoring that coverage is
-[#93](https://github.com/l2go/l2jfree/issues/93).
+Earlier CI runs executed these tests. The v2.0.0 workflows skip all test
+compilation and execution. v2.5.0 restores that CI execution.
+[#93](https://github.com/l2go/l2jfree/issues/93) is closed.
 The logging inventory began with 274 Java files using Commons Logging and two
 direct `Jdk14Logger` casts, alongside specialized JUL handlers. The later
 application migration converted first-party callers to SLF4J, unified JUL and
@@ -355,17 +366,17 @@ target host before treating it as qualified.
 GitHub Actions run [36692274856](https://github.com/l2go/l2jfree/actions/runs/36692274856)
 verified commit `2b0a79dfd367707ba214b3ca54e9e9622fd6a21e`: an earlier Linux
 build and test run used Microsoft JDK 25, and the Windows 2022 runner packaged
-and inspected the distributions. Current workflows skip tests. Historical
-test results do not qualify the Windows 10 target host or count as v2.0.0
-acceptance evidence. The published v2.0.0 assets are
-`l2jfree-login-2.0.0-dist.zip`, `l2jfree-core-2.0.0-dist.zip`,
-`l2jfree-datapack-2.0.0-dist.zip`, `l2jfree-2.0.0-docs.zip`,
-`l2jfree-2.0.0-sbom.json`, `l2jfree-2.0.0-vulnerability-report.json`, and
-`SHA256SUMS.txt`. The GameServer archive does not contain the datapack.
-Tests remain skipped after this release; restoring them is
-[#93](https://github.com/l2go/l2jfree/issues/93). Other open follow-up is
-[#92](https://github.com/l2go/l2jfree/issues/92),
-[#95](https://github.com/l2go/l2jfree/issues/95),
+and inspected the distributions. Historical test results do not qualify the
+Windows 10 target host or count as v2.0.0 acceptance evidence. The published
+v2.0.0 assets are `l2jfree-login-2.0.0-dist.zip`,
+`l2jfree-core-2.0.0-dist.zip`, `l2jfree-datapack-2.0.0-dist.zip`,
+`l2jfree-2.0.0-docs.zip`, `l2jfree-2.0.0-sbom.json`,
+`l2jfree-2.0.0-vulnerability-report.json`, and `SHA256SUMS.txt`. The v2.0.0
+GameServer archive does not contain the datapack. v2.5.0 publishes
+`l2jfree-login-2.5.0-dist.zip` and `l2jfree-core-2.5.0-dist.zip` with the
+datapack merged into the GameServer archive, plus the docs archive, SBOM,
+vulnerability report, and `SHA256SUMS.txt`.
+[#94](https://github.com/l2go/l2jfree/issues/94),
 [#96](https://github.com/l2go/l2jfree/issues/96),
 [#97](https://github.com/l2go/l2jfree/issues/97),
 [#98](https://github.com/l2go/l2jfree/issues/98),
@@ -373,7 +384,9 @@ Tests remain skipped after this release; restoring them is
 [#100](https://github.com/l2go/l2jfree/issues/100),
 [#101](https://github.com/l2go/l2jfree/issues/101),
 [#102](https://github.com/l2go/l2jfree/issues/102), and
-[#103](https://github.com/l2go/l2jfree/issues/103).
+[#103](https://github.com/l2go/l2jfree/issues/103) are closed.
+The remaining open follow-up is
+[#92](https://github.com/l2go/l2jfree/issues/92).
 
 ## Reference projects and documentation
 
