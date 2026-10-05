@@ -29,8 +29,14 @@ public final class LoginDataSource implements AutoCloseable
 		pool.setUsername(Config.DATABASE_LOGIN);
 		pool.setPassword(Config.DATABASE_PASSWORD);
 		pool.setAutoCommit(true);
-		pool.setMinimumIdle(1);
-		pool.setMaximumPoolSize(20);
+		int maximumPoolSize = Math.max(1, Config.DATABASE_MAX_CONNECTIONS);
+		int idleConnections = Config.DATABASE_MIN_IDLE_CONNECTIONS;
+		if (idleConnections < 0)
+			idleConnections = 0;
+		if (idleConnections > maximumPoolSize)
+			idleConnections = maximumPoolSize;
+		pool.setMaximumPoolSize(maximumPoolSize);
+		pool.setMinimumIdle(idleConnections);
 		pool.setConnectionTimeout(30_000);
 		pool.setValidationTimeout(5_000);
 		if (Config.DATABASE_DRIVER.toLowerCase(Locale.ROOT).contains("mysql"))
