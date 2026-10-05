@@ -143,6 +143,8 @@ public abstract class IdFactory
 				return new IncrementIDFactory();
 			case Rebuild:
 				return new BitSetRebuildFactory();
+			default:
+				throw new IllegalStateException("Unsupported id factory type: " + Config.IDFACTORY_TYPE);
 		}
 	}
 	
