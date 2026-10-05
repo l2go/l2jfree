@@ -32,11 +32,11 @@ Connector/J 26.7 is the currently pinned driver. The modernization vision record
    under `dist/l2jfree-deploy`, and install it at `C:\l2jfree\`. The maintainer completed this run for v2.5.0.
 5. **Qualify runtime behavior.** Run the login and game servers with OpenJDK 25 and the MySQL 8.4 service.
    Check script loading, login, gameplay entry, database writes, scheduled events, sustained load, shutdown, and restart.
-   Resolve Java and SQL errors before release.
+   Resolve Java and SQL errors before cutover.
 6. **Cut over and record.** Take a final verified backup, deploy the qualified image, and monitor errors and resource use.
    Record exact OS, Java, Maven, MySQL, JDBC, VC++, and package checksum values with the release.
 
-Never let old and new game servers write to the same database. The target is ready only when the exact release image starts after reboot, the checks above pass, and any enabled legacy test failures have an explicit release decision.
+Never let old and new game servers write to the same database. The target is ready only when the exact release image starts after reboot and the checks above pass. CI runs the unit suite and the MySQL integration job before a tag is published.
 
 ## References
 

@@ -7,13 +7,15 @@ from different releases.
 
 ## Prepare and verify a release
 
-1. Download the LoginServer, GameServer, Datapack, and documentation archives
-   from the same GitHub release.
+1. Download the LoginServer, GameServer, and documentation archives from the
+   same GitHub release. From v2.5.0 the datapack is inside the GameServer
+   archive. v2.0.0 is the last release that publishes a separate datapack zip.
 2. Verify `SHA256SUMS.txt` and GitHub artifact attestations using
    [the release verification guide](RELEASE-VERIFICATION.md).
-3. Extract the three runtime archives into the deployment image. Keep Login and
-   Game configuration separate from the public repository and restrict their
-   Windows ACLs to the server operator and service identity.
+3. Extract the LoginServer and GameServer archives into the deployment image.
+   Keep Login and Game configuration separate from the public repository and
+   restrict their Windows ACLs to the server operator and service identity.
+   Both processes load `config/logback.xml` from their own directory.
 4. Install Microsoft Build of OpenJDK 25 x64 and MySQL Server 8.4. Record exact
    versions and archive hashes in the private deployment record.
 5. Create the `l2jfree_ls` and `l2jfree_gs` databases using the account setup

@@ -1,8 +1,9 @@
 # Dependency inventory and modernization status
 
 This inventory records direct Maven dependencies and the infrastructure
-decisions for the 2.0.0 program. The CycloneDX SBOM attached to each CI release
-is the authoritative complete inventory, including transitive dependencies.
+decisions for the 2.0 line. The version pins below are the v2.5.0 set. The
+CycloneDX SBOM attached to each CI release is the authoritative complete
+inventory, including transitive dependencies.
 Version values marked as properties are maintained in
 `l2jfree-module/pom.xml`.
 
@@ -20,7 +21,7 @@ Version values marked as properties are maintained in
 | LoginServer, GameServer | OpenTelemetry Java agent | 2.32.0 | Optional agent archive | Provides opt-in JVM, JDBC, and HikariCP metrics and traces through OTLP; packaged outside the application classpath and disabled by default. |
 | LoginServer, GameServer | SLF4J JUL provider | 2.0.20 | Runtime | Routes HikariCP SLF4J diagnostics into the existing JUL configuration during migration. |
 | GameServer | JDK compiler | the CI JDK | Build only | Compiles datapack Java sources during the CI build. The server does not compile Java scripts at startup, and ECJ is not a dependency. |
-| GameServer | Jython | 2.2.1 | Runtime baseline | Current compatibility baseline while the embedded Jython 2.7.5b1 bridge and supported scripts are qualified for the 2.0 target. |
+| GameServer | Jython | 2.7.5b1 | Runtime | Python 2 runtime for datapack scripts. Platform 3.0 moves to the final Jython 2.7 release. Jython 2.2.1 is the baseline this line replaced. |
 | GameServer | Trove4j | 2.1.0 | Runtime | Legacy primitive collections; replace selectively after profiling. |
 | LoginServer, GameServer | Testcontainers JUnit Jupiter | 2.0.5 | Test | MySQL integration infrastructure in GitHub Actions. |
 | LoginServer | Liquibase Core | 4.33.0 | Test | MySQL 8.4 migration compatibility probe only; not included in runtime distributions and not approved for production migrations. |
@@ -43,8 +44,8 @@ independently versioned datapack release.
   pass. Do not restore c3p0 or a Hibernate/Spring ORM runtime.
 - SLF4J 2.x and Logback now own application and JUL logging. Keep the named
   audit and gameplay channels described in the
-  [logging migration plan](LOGGING-MIGRATION-PLAN.md), and qualify output and
-  access controls before stable release.
+  [logging migration plan](LOGGING-MIGRATION-PLAN.md). Qualify output and
+  access controls on the target host.
 - Place new MySQL schema changes in numbered SQL files and keep MySQL-specific
   syntax in the repository layer. Liquibase remains a test-only probe and is
   not the 2.0 release journal. Platform 3.0 uses Flyway for PostgreSQL.

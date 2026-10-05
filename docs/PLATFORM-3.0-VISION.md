@@ -3,23 +3,24 @@
 ## Purpose
 
 This document defines Platform 3.0, the infrastructure generation after the
-2.0.0 line. Release 2.0.0 still ships on Windows 10, the Microsoft Build of
-OpenJDK 25, and MySQL 8.4. Platform 3.0 replaces that platform. It keeps the
-Lineage II client protocol and the gameplay rules, and it changes the operating
-system, the JDK distribution, the database, and the shape of the deployment.
+2.0 line. The current release on that line is v2.5.0. It still ships on
+Windows 10, the Microsoft Build of OpenJDK 25, and MySQL 8.4. Platform 3.0
+replaces that platform. It keeps the Lineage II client protocol and the
+gameplay rules, and it changes the operating system, the JDK distribution,
+the database, and the shape of the deployment.
 
 The name 3.0 marks a platform change. It is a new host, a new JDK build, and a
 new database, assembled as one process.
 
-Read this document in two layers. The next section is what release 2.0.0
-finishes. Everything after it is the 3.0 vision and starts only from that
-finished 2.0 release.
+Read this document in two layers. The next section is the contract of the
+2.0 line, which v2.5.0 still meets. Everything after it is the 3.0 vision
+and starts only from that finished line.
 
-## What 2.0.0 finishes
+## What the 2.0 line finishes
 
-Release 2.0.0 stays on its current platform. It does not become Platform 3.0.
+v2.5.0 is the current release on this platform. It does not become Platform 3.0.
 
-| Layer | 2.0.0 stable |
+| Layer | 2.0 line, current release v2.5.0 |
 |---|---|
 | Acceptance | Windows 10 x64, Microsoft Build of OpenJDK 25, MySQL 8.4 |
 | Processes | Login and Game remain two processes. The monolith is not moved here |
@@ -208,7 +209,7 @@ inside the pool change.
 
 ## Sequence
 
-These steps start from a finished 2.0.0 stable. They do not repeat the logging,
+These steps start from the finished 2.0 line. v2.5.0 is that release. They do not repeat the logging,
 IRC, Jython 2.7.5b1, or CI script work from that release.
 
 1. Move CI and the image to Linux and Temurin 25. Remove Windows from the
@@ -252,9 +253,10 @@ IRC, Jython 2.7.5b1, or CI script work from that release.
 
 ## Relationship to 2.0.0
 
-The 2.0.0 infrastructure vision remains the contract of the current release
-line: Windows 10, Microsoft Build of OpenJDK 25, MySQL 8.4, two processes, and
-a versioned datapack. Platform 3.0 does not rewrite that release. Work that
+The 2.0 infrastructure vision remains the contract of the current release
+line: Windows 10, Microsoft Build of OpenJDK 25, MySQL 8.4, and two processes.
+From v2.5.0 the datapack ships inside the GameServer archive. Platform 3.0
+does not rewrite that release. Work that
 makes this vision cheaper lands on the 2.0 line only when it also satisfies
 the 2.0 contract: JDK 25 APIs with no vendor dependency, SQL kept behind
 repositories, numbered SQL files, Java scripts compiled in CI into the game

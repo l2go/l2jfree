@@ -22,11 +22,11 @@ An archived Lineage II server, maintained for modern builds and Windows 10 deplo
 
 Download the published [L2JFree release artifacts](https://github.com/l2go/l2jfree/releases). From v2.5.0 the release contains LoginServer and GameServer archives. The datapack is inside the GameServer archive. `SHA256SUMS.txt` covers the published files. The deployment target uses Microsoft OpenJDK 25 x64 and MySQL Server 8.4.
 
-Build and package verification run in GitHub Actions with the checksum-pinned Maven Wrapper and Microsoft OpenJDK 25. Consult the [2.0.0 infrastructure vision](docs/INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md) for the evolving Java baseline and delivery gates.
+Build and package verification run in GitHub Actions with the checksum-pinned Maven Wrapper and Microsoft OpenJDK 25. The [infrastructure vision](docs/INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md) is the contract of this release line. v2.5.0 is the current release on it.
 
 Operators can use the [operations runbook](docs/OPERATIONS-RUNBOOK.md) for release verification, database safety, startup/shutdown, and incident capture.
 
-The [logging migration plan](docs/LOGGING-MIGRATION-PLAN.md) records the existing audit/gameplay log channels and the staged path to structured logging.
+The [logging migration plan](docs/LOGGING-MIGRATION-PLAN.md) records the audit and gameplay log channels. v2.5.0 loads Logback from `config/logback.xml`.
 
 The [dependency inventory](docs/DEPENDENCY-INVENTORY.md) lists the current direct dependencies, selected platform components, and gated replacement candidates.
 

@@ -2,9 +2,13 @@
 
 ## Purpose
 
-This document defines the target infrastructure for the next major L2JFree
-release, 2.0.0. It turns the incremental modernization that began with issue
-#52 into a coherent end state and an implementation sequence. The intent is to
+This document defines the target infrastructure for the 2.0 release line.
+v2.5.0 is the current release on that line. The execution status at the end
+of this document is the live record. Sections that schedule work for 2.1.0
+record the rule used to ship v2.0.0; v2.5.0 restored CI test execution and
+did not open a 2.1.0 release. The text turns the incremental modernization
+that began with issue #52 into a coherent end state and an implementation
+sequence. The intent is to
 improve startup reliability, runtime observability, database safety, script
 quality, and performance while keeping experiments isolated from release
 behavior until evidence supports adoption.
@@ -396,7 +400,6 @@ the packages named in the v2.0.0 vulnerability report.
 - [Liquibase 4.33 Apache 2.0 license](https://central.sonatype.com/artifact/org.liquibase/liquibase-core/4.33.0)
 - [Liquibase 5.0 license change](https://docs.liquibase.com/community/release-notes/5-0)
 - [Netty releases](https://github.com/netty/netty/releases)
-- [Eclipse JDT compiler](https://github.com/eclipse-jdt/eclipse.jdt.core)
 - [Jython downloads and support](https://www.jython.org/download.html)
 - [OpenTelemetry Java](https://github.com/open-telemetry/opentelemetry-java)
 - [CycloneDX Maven plugin](https://github.com/CycloneDX/cyclonedx-maven-plugin)

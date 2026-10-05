@@ -35,17 +35,25 @@ Get-Content .\SHA256SUMS.txt | ForEach-Object {
 ## Verify build provenance
 
 Install a current GitHub CLI release with artifact attestation support, then
-verify each downloaded archive and report against this repository:
+verify each downloaded archive and report against this repository. v2.5.0
+publishes these files:
 
 ```sh
-gh attestation verify l2jfree-login-2.0.0-dist.zip --repo l2go/l2jfree
-gh attestation verify l2jfree-core-2.0.0-dist.zip --repo l2go/l2jfree
-gh attestation verify l2jfree-datapack-2.0.0-dist.zip --repo l2go/l2jfree
-gh attestation verify l2jfree-2.0.0-docs.zip --repo l2go/l2jfree
-gh attestation verify l2jfree-2.0.0-sbom.json --repo l2go/l2jfree
-gh attestation verify l2jfree-2.0.0-vulnerability-report.json --repo l2go/l2jfree
+gh attestation verify l2jfree-login-2.5.0-dist.zip --repo l2go/l2jfree
+gh attestation verify l2jfree-core-2.5.0-dist.zip --repo l2go/l2jfree
+gh attestation verify l2jfree-2.5.0-docs.zip --repo l2go/l2jfree
+gh attestation verify l2jfree-2.5.0-sbom.json --repo l2go/l2jfree
+gh attestation verify l2jfree-2.5.0-vulnerability-report.json --repo l2go/l2jfree
 gh attestation verify SHA256SUMS.txt --repo l2go/l2jfree
 ```
 
-Replace `2.0.0` with the version being installed. Check the source repository,
-workflow identity, and source commit shown by verification before deployment.
+The GameServer archive contains the datapack. There is no separate datapack
+zip from v2.5.0 onward. v2.0.0 still publishes `l2jfree-datapack-2.0.0-dist.zip`
+in addition to the LoginServer and GameServer archives. Check the source
+repository, workflow identity, and source commit shown by verification before
+deployment.
+
+A stable tag, one whose name has no hyphen, publishes only after the
+`stable-release` environment is approved. A tag with a hyphen publishes as a
+pre-release without that approval. The approval is the publish gate. It is
+not a second build.

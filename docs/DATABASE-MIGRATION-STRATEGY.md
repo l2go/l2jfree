@@ -2,8 +2,9 @@
 
 ## Purpose
 
-Define safe, forward-only SQL changes from the 1.5.1 schema for the 2.0.0
-release. This strategy applies to both the LoginServer database and the
+Define safe, forward-only SQL changes from the 1.5.1 schema for the 2.0
+line. v2.5.0 keeps this boundary. This strategy applies to both the
+LoginServer database and the
 GameServer world database. It preserves established account and world data.
 
 ## 2.0 release boundary
