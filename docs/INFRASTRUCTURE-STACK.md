@@ -1,15 +1,12 @@
 # L2JFree Infrastructure Stack
 
-This is the implementation map for the 2.0.0 infrastructure vision. Platform
-constraints are fixed; the remaining rows identify the incumbent, approved
-target, and evidence required before the target enters a release. Platform 3.0
-replacements are explicitly deferred until the 2.0 acceptance gates pass.
+This is the implementation map for the 2.0 infrastructure vision. v2.5.0 is
+the current release. Platform constraints are fixed. A row's status cell says
+whether that choice is in v2.5.0 or still waits for Platform 3.0.
 
-The selected Python runtime for 2.0 is Jython 2.7.5b1; Platform 3.0 moves to
-the final Jython 2.7 release. Jython 2.2.1 is the current compatibility
-baseline until the selected bridge and supported scripts pass qualification.
-GraalPy and a Python 3 port are excluded from the modernization goal. The
-GraalPy prototype, dependencies, and CI job are being removed.
+The Python runtime is Jython 2.7.5b1. Platform 3.0 moves to the final Jython
+2.7 release. GraalPy and a Python 3 port are excluded. Jython 2.2.1 is the
+baseline this line replaced.
 
 ## Fixed platform
 

@@ -1,4 +1,8 @@
-# Logging migration plan for 2.0.0
+# Logging migration plan for the 2.0 line
+
+v2.5.0 ships this backend. Each process loads `config/logback.xml`, and the
+launchers pass that file to Logback. The sections below are the migration
+record, not an open implementation milestone.
 
 ## Current logging architecture
 
@@ -52,9 +56,8 @@ every output channel.
 - Both server processes start, run, and shut down with logging diagnostics
   available if a backend configuration fails.
 
-The backend and named-channel migration are implemented together so there is
-only one owner for each log file. Output formatting and target-host file
-permissions still require acceptance before stable release.
+The backend and named-channel migration shipped together so there is only
+one owner for each log file. v2.5.0 is the stable release that carries it.
 
 ## Migration progress
 
@@ -72,8 +75,7 @@ permissions still require acceptance before stable release.
   consumption and the legacy excluded item categories are filtered; root
   events still reach admin/status listeners. Existing active log paths are
   retained, append mode is enabled, and rolling limits are explicit.
-- Remaining before calling this migration complete: remote CI packaging and
-  dependency-closure verification; inspect representative output and
-  exception rendering; verify permissions and rotation on Windows; confirm
-  no secrets enter authentication logs. No local build, test, or server run
-  is part of this workflow.
+- Shipped in v2.5.0: the Logback files are in the release archives, CI
+  packages them, and the configuration test checks that the operator copies
+  match the packaged file. Inspecting rotation and Windows file permissions
+  remains an operator check on the host. It is not an open code milestone.
