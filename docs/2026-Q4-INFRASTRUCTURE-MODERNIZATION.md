@@ -1,6 +1,6 @@
 # Infrastructure modernization program
 
-The original qualification slice, [issue #52](https://github.com/l2go/l2jfree/issues/52), is complete in release `v1.5.1`. The broader program continues under the public [2.0.0 infrastructure vision](INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md) and its [GitHub parent issue](https://github.com/l2go/l2jfree/issues/59).
+The original qualification slice, [issue #52](https://github.com/l2go/l2jfree/issues/52), is complete in release `v1.5.1`. Stable [v2.0.0](https://github.com/l2go/l2jfree/releases/tag/v2.0.0) is published. The public [2.0.0 infrastructure vision](INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md) records that release, and parent issue [#59](https://github.com/l2go/l2jfree/issues/59) tracked the work that produced it. Target-host qualification of the v2.0.0 image remains open in [#95](https://github.com/l2go/l2jfree/issues/95).
 
 The fixed deployment platform is Windows 10 x64, Microsoft Build of OpenJDK 25, and MySQL Server 8.4. The program modernizes the Java baseline, JDBC pools and schema workflow, datapack scripting, network and concurrency diagnostics, dependency governance, and operational telemetry in qualified stages.
 

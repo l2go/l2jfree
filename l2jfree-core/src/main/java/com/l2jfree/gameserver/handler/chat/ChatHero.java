@@ -17,7 +17,6 @@ package com.l2jfree.gameserver.handler.chat;
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.handler.IChatHandler;
-import com.l2jfree.gameserver.instancemanager.IrcManager;
 import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.SystemChatChannelId;
 import com.l2jfree.gameserver.network.packets.server.CreatureSay;
@@ -67,11 +66,6 @@ public class ChatHero implements IChatHandler
 		
 		if (canSpeak)
 		{
-			if (Config.IRC_ENABLED && Config.IRC_FROM_GAME_TYPE.equalsIgnoreCase("hero") && activeChar.isHero()
-					|| Config.IRC_ENABLED && Config.IRC_FROM_GAME_TYPE.equalsIgnoreCase("all")) // added hero voice to IRC like said in the properties files
-			{
-				IrcManager.getInstance().getConnection().sendChan("12%" + activeChar.getName() + ": " + text);
-			}
 			String name =
 					(activeChar.isGM() && Config.GM_NAME_HAS_BRACELETS) ? "[GM]" + activeChar.getName() : activeChar
 							.getName();

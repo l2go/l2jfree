@@ -40,11 +40,11 @@ The [dependency inventory](docs/DEPENDENCY-INVENTORY.md) lists the current direc
 
 Both Windows server launchers reject Java runtimes whose major version is not 25. Set `JAVA_HOME` to the Microsoft JDK 25 installation or make that runtime the `java` command found through `PATH`.
 
-The current stable release is [v1.5.1](https://github.com/l2go/l2jfree/releases/tag/v1.5.1). The private Windows deployment image is assembled from its three release archives and verified with their SHA-256 manifest. The [deployment qualification notes](docs/2026-Q4-UPGRADE.md) record the target and host checks.
+The current stable release is [v2.0.0](https://github.com/l2go/l2jfree/releases/tag/v2.0.0). It publishes separate LoginServer, GameServer, and datapack archives, plus the documentation archive, CycloneDX SBOM, vulnerability report, and `SHA256SUMS.txt`. Re-qualification of that image on the Windows 10 and MySQL 8.4 host is open in [#95](https://github.com/l2go/l2jfree/issues/95). The [deployment qualification notes](docs/2026-Q4-UPGRADE.md) record the target and the checks that are still open.
 
 ## Infrastructure modernization
 
-The first database qualification issue, [#52](https://github.com/l2go/l2jfree/issues/52), is complete in v1.5.1. The [modernization vision](docs/INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md) defines the target architecture and staged 2.0.0 plan. Track implementation in [parent issue #59](https://github.com/l2go/l2jfree/issues/59).
+The first database qualification issue, [#52](https://github.com/l2go/l2jfree/issues/52), is complete in v1.5.1. Stable [v2.0.0](https://github.com/l2go/l2jfree/releases/tag/v2.0.0) is the published infrastructure release. The [modernization vision](docs/INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md) records the architecture and the execution status. Parent issue [#59](https://github.com/l2go/l2jfree/issues/59) tracked the work that produced v2.0.0.
 
 Release archives include a checksum manifest and signed GitHub provenance. See the [release verification guide](docs/RELEASE-VERIFICATION.md) before deploying downloaded artifacts.
 

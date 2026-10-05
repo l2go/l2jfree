@@ -66,11 +66,11 @@ need.
 | Database access | JDBC repositories, explicit transaction boundaries, MySQL Connector/J 26.7.x | Issue #52 removed the login ORM path. Both servers now use JDBC. Connector/J 26.7.0 is already present and officially supports MySQL 8.4 and Java 8+, so replacing it brings no immediate benefit. Pin a current patch when each change is implemented. |
 | Connection pools | HikariCP 7.1.0, with bounded waits, explicit lifecycle, and pool metrics | Replace c3p0 with a smaller, actively maintained pool. HikariCP 7.1.0 targets Java 11+, which fits the fixed runtime. Preserve current transaction semantics and qualify reconnect, idle validation, shutdown, and exhaustion behavior. |
 | Schema changes | Numbered SQL files for new schema changes; MySQL syntax contained in the repository layer | The historical installer has destructive clean-install behavior and cannot safely be replayed to derive a baseline. Liquibase remains a test-only probe; neither it nor Flyway is the 2.0 release journal. Preserve established data and qualify numbered forward changes on disposable MySQL 8.4 databases and existing-schema copies. Platform 3.0 adopts Flyway for PostgreSQL. |
-| Scripting | ECJ 3.44.0 compiles Java scripts in CI into the GameServer delivery; Jython 2.7.5b1 runs the Python 2 scripts from the same delivery revision | Remove ECJ and Jython 2.2.1 from the 2.0 runtime archives after the packaged output, bridge, and supported scripts pass qualification. Do not compile Java scripts during server startup. Platform 3.0 replaces b1 with final Jython 2.7; GraalPy and a Python 3 port are excluded. |
+| Scripting | The CI JDK compiles Java scripts into the GameServer delivery; Jython 2.7.5b1 runs the Python 2 scripts from the same delivery revision | Do not compile Java scripts during server startup, and do not ship ECJ. Register the project Jython factory directly. Platform 3.0 replaces b1 with final Jython 2.7; GraalPy and a Python 3 port are excluded. |
 | Network layer | Retain the existing custom MMO network core in 2.0 | Keep the established protocol, encryption, ordering, and disconnect behavior on the Windows acceptance host. Netty 4.2 with `io_uring` is a Platform 3.0 replacement, after migration to Linux; no Netty port is part of 2.0. |
 | Collections | Keep Javolution and Trove in 2.0; replace with JDK collections and fastutil on measured paths in Platform 3.0 | The current libraries are deeply embedded. Replacing them in 2.0 could regress the hottest world loops. Platform 3.0 uses Linux JFR to identify hot paths before moving cold paths to the JDK and measured primitive hot paths to fastutil. |
 | Logging | SLF4J 2.0.20 and Logback 1.5 with named operational channels and a one-way JUL bridge | The unified backend and removal of Commons Logging/JUL handlers are implemented. Verify channel routing, rotation, Windows file permissions, and secret redaction before 2.0 stable. See the [logging migration plan](LOGGING-MIGRATION-PLAN.md). |
-| IRC integration | Kitteh IRC Client Library if the admin IRC bridge remains a supported feature; otherwise remove irclib and its code | irclib 1.10 is removed before stable either way. This optional admin integration is not part of login or gameplay protocol paths. |
+| IRC integration | Not a supported feature | The admin IRC bridge and irclib 1.10 are removed. Login and gameplay do not use IRC. |
 | Observability | Optional OpenTelemetry Java agent with OTLP metrics/traces, JFR, structured logs, and health/readiness status | Operators need evidence for startup failures, deadlocks, DB pool pressure, script failures, GC pauses, and packet load. OpenTelemetry provides portable metrics and traces; JFR gives low-overhead JVM diagnostics available in the fixed runtime. The agent remains disabled until a collector endpoint is configured and target-host overhead is qualified. |
 | Build and verification | Maven Wrapper, Microsoft JDK 25 in GitHub Actions | Through 2.0.0, CI runs production compilation, packaging, provenance, dependency, and archive-content checks only. Do not compile or execute tests. Test modernization and CI test execution resume in 2.1.0 after stable 2.0.0. |
 | Releases | Immutable, checksummed LoginServer and GameServer archives plus a private Windows image assembled from those archives | Java bytecode and Python scripts have one GameServer revision and are covered by its checksum manifest. Release artifacts are traceable to a commit and reproducible in CI. Keep environment-specific configuration outside the public repository. |
@@ -84,7 +84,7 @@ and Windows `.bat` files only set the environment before invoking Java.
 The version numbers above identify selected target versions, not a blanket
 upgrade instruction. Every dependency change must be pinned, checked for
 licensing and Java 25 compatibility, and qualified through CI. In particular,
-the logging backend, optional IRC replacement, and selected Jython bridge must
+the logging backend and selected Jython bridge must
 be validated with the actual server workloads before adoption. GraalPy is
 excluded from the target and from further qualification.
 
@@ -268,23 +268,33 @@ instructions, a dependency inventory, an operations runbook, and exact
 checksums for every published archive. Do not automatically create the stable
 release after RC publication.
 
+`v2.0.0-rc.1`, `v2.0.0-rc.2`, and stable `v2.0.0` are published. Target-host
+acceptance of the stable image is still open in
+[#95](https://github.com/l2go/l2jfree/issues/95). The stable release was not
+created automatically from a candidate tag.
+
 ## Current project context
 
 Issue #52 is complete in release 1.5.1. It delivered JDBC persistence for the
 login path, removed the c3p0 synthetic test-table requirement, and qualified
 runtime fixes. The KnownList update deadlock reported during gameplay was fixed
-in the same final release. The remaining modernization is tracked by this
-2.0.0 vision; completion of #52 does not imply completion of the broader
-infrastructure program.
+in the same final release. Completion of #52 does not describe the later
+v2.0.0 release. Follow-up after v2.0.0 is listed in the execution status.
 
 ## Execution status
 
-As of 2026-09-30, implementation is in progress under parent issue #59. The
-current implementation branch sets Java 25 for production and test compilation,
-replaces c3p0 with HikariCP 7.1.0 in both server processes, upgrades ECJ for
-current Java class files, and corrects forward-only JDBC result-set usage found
-during Windows runtime qualification. CI and target-host evidence are still
-required before marking these steps complete.
+Stable [v2.0.0](https://github.com/l2go/l2jfree/releases/tag/v2.0.0) was
+published on 2026-09-30 and is the current stable release. The tags
+`v2.0.0-rc.1` and `v2.0.0-rc.2` were published before it. The release sets
+Java 25 for production and test compilation, uses HikariCP 7.1.0 in both
+server processes, upgrades ECJ for current Java class files, and corrects
+forward-only JDBC result-set usage found during Windows runtime qualification.
+GitHub Actions built the tag. Target-host qualification of this image on
+Windows 10 and MySQL 8.4 is still open in
+[#95](https://github.com/l2go/l2jfree/issues/95). `v1.5.1` remains the last
+image qualified on that host. Parent issue
+[#59](https://github.com/l2go/l2jfree/issues/59) tracked the work that
+produced this release.
 The GameServer closes its Hikari pool if the startup connection check fails and
 publishes the pool only after that check succeeds.
 The repository contains MySQL 8.4 integration coverage for startup connection
@@ -298,8 +308,9 @@ license is no longer Apache 2.0.
 The non-interactive legacy installer now refuses clean mode unless the operator
 repeats the exact database name with `-confirm-clean`; the update mode does not
 accept or invoke that destructive operation.
-Earlier CI runs executed these tests. GitHub Actions now skips all test
-compilation and execution until after the 2.0.0 stable release.
+Earlier CI runs executed these tests. The v2.0.0 workflows still skip all
+test compilation and execution. Restoring that coverage is
+[#93](https://github.com/l2go/l2jfree/issues/93).
 The logging inventory began with 274 Java files using Commons Logging and two
 direct `Jdk14Logger` casts, alongside specialized JUL handlers. The later
 application migration converted first-party callers to SLF4J, unified JUL and
@@ -345,11 +356,24 @@ GitHub Actions run [36692274856](https://github.com/l2go/l2jfree/actions/runs/36
 verified commit `2b0a79dfd367707ba214b3ca54e9e9622fd6a21e`: an earlier Linux
 build and test run used Microsoft JDK 25, and the Windows 2022 runner packaged
 and inspected the distributions. Current workflows skip tests. Historical
-test results do not qualify the Windows 10 target host or count as 2.0.0
-acceptance evidence. No 2.0.0 release candidate has been published; `v1.5.1`
-remains the latest stable release. The modernization remains open until all required stage evidence is
-complete, the final RC passes target-host acceptance, and the maintainer
-confirms the stable release.
+test results do not qualify the Windows 10 target host or count as v2.0.0
+acceptance evidence. The published v2.0.0 assets are
+`l2jfree-login-2.0.0-dist.zip`, `l2jfree-core-2.0.0-dist.zip`,
+`l2jfree-datapack-2.0.0-dist.zip`, `l2jfree-2.0.0-docs.zip`,
+`l2jfree-2.0.0-sbom.json`, `l2jfree-2.0.0-vulnerability-report.json`, and
+`SHA256SUMS.txt`. The GameServer archive does not contain the datapack.
+Tests remain skipped after this release; restoring them is
+[#93](https://github.com/l2go/l2jfree/issues/93). Other open follow-up is
+[#92](https://github.com/l2go/l2jfree/issues/92),
+[#95](https://github.com/l2go/l2jfree/issues/95),
+[#96](https://github.com/l2go/l2jfree/issues/96),
+[#97](https://github.com/l2go/l2jfree/issues/97),
+[#98](https://github.com/l2go/l2jfree/issues/98),
+[#99](https://github.com/l2go/l2jfree/issues/99),
+[#100](https://github.com/l2go/l2jfree/issues/100),
+[#101](https://github.com/l2go/l2jfree/issues/101),
+[#102](https://github.com/l2go/l2jfree/issues/102), and
+[#103](https://github.com/l2go/l2jfree/issues/103).
 
 ## Reference projects and documentation
 

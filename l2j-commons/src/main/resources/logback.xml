@@ -39,13 +39,6 @@
 			<fileNamePattern>log/chat/chat.%d{yyyy-MM-dd}.%i.log</fileNamePattern><maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
 		</rollingPolicy>
 	</appender>
-	<appender name="IRC" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>log/irc/irc.log</file><append>true</append>
-		<encoder><pattern>%date{"dd MMM HH:mm:ss,SSS"} %msg%n</pattern></encoder>
-		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-			<fileNamePattern>log/irc/irc.%d{yyyy-MM-dd}.%i.log</fileNamePattern><maxFileSize>10MB</maxFileSize><maxHistory>30</maxHistory><totalSizeCap>128MB</totalSizeCap>
-		</rollingPolicy>
-	</appender>
 	<appender name="ITEM" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>log/item/item.log</file><append>true</append>
 		<filter class="com.l2jfree.util.logging.ItemEventFilter"/>
@@ -78,7 +71,6 @@
 
 	<logger name="audit" level="INFO" additivity="false"><appender-ref ref="AUDIT"/></logger>
 	<logger name="chat" level="INFO" additivity="false"><appender-ref ref="CHAT"/></logger>
-	<logger name="irc" level="INFO" additivity="false"><appender-ref ref="IRC"/></logger>
 	<logger name="item" level="INFO" additivity="false"><appender-ref ref="ITEM"/></logger>
 	<logger name="login" level="INFO" additivity="false"><appender-ref ref="LOGIN"/></logger>
 	<logger name="login.try" level="INFO" additivity="false"><appender-ref ref="LOGIN_TRY"/></logger>

@@ -19,9 +19,8 @@ Version values marked as properties are maintained in
 | LoginServer, GameServer | HikariCP | 7.1.0 | Runtime | JDBC connection pool replacing c3p0. |
 | LoginServer, GameServer | OpenTelemetry Java agent | 2.26.1 | Optional agent archive | Provides opt-in JVM, JDBC, and HikariCP metrics and traces through OTLP; packaged outside the application classpath and disabled by default. |
 | LoginServer, GameServer | SLF4J JUL provider | 2.0.20 | Runtime | Routes HikariCP SLF4J diagnostics into the existing JUL configuration during migration. |
-| GameServer | ECJ | 3.44.0 | Provided compile dependency | Compiles datapack Java sources during the CI build; the release distribution must not include ECJ. |
+| GameServer | JDK compiler | the CI JDK | Build only | Compiles datapack Java sources during the CI build. The server does not compile Java scripts at startup, and ECJ is not a dependency. |
 | GameServer | Jython | 2.2.1 | Runtime baseline | Current compatibility baseline while the embedded Jython 2.7.5b1 bridge and supported scripts are qualified for the 2.0 target. |
-| GameServer | irclib | 1.10 | Runtime | Optional IRC integration. |
 | GameServer | Trove4j | 2.1.0 | Runtime | Legacy primitive collections; replace selectively after profiling. |
 | LoginServer, GameServer | Testcontainers JUnit Jupiter | 2.0.5 | Test | MySQL integration infrastructure in GitHub Actions. |
 | LoginServer | Liquibase Core | 4.33.0 | Test | MySQL 8.4 migration compatibility probe only; not included in runtime distributions and not approved for production migrations. |
@@ -49,10 +48,10 @@ independently versioned datapack release.
 - Place new MySQL schema changes in numbered SQL files and keep MySQL-specific
   syntax in the repository layer. Liquibase remains a test-only probe and is
   not the 2.0 release journal. Platform 3.0 uses Flyway for PostgreSQL.
-- Compile Java datapack scripts in CI and remove ECJ from the 2.0 runtime
-  archives after the packaged bytecode has been qualified.
-- Remove irclib before 2.0 stable. Use Kitteh IRC Client Library only if the
-  admin IRC bridge remains a product feature; otherwise delete that feature.
+- Compile Java datapack scripts with the CI JDK. The server loads that bytecode
+  and does not compile Java sources at startup. ECJ is not a dependency.
+- The admin IRC bridge is not a supported feature. irclib is not a runtime
+  dependency, and the release archive check rejects an irclib jar.
 - Promote Jython 2.7.5b1 as the 2.0 runtime after the embedded bridge,
   supported scripts, and target-host behavior pass qualification. Platform 3.0
   advances to the final Jython 2.7 release. Jython 2.7.5b1 is the only
