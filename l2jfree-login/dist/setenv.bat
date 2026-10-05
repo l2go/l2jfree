@@ -4,6 +4,9 @@ SET CLASSPATH=%CLASSPATH%;./config/
 SET CLASSPATH=%CLASSPATH%;./*
 SET CLASSPATH=%CLASSPATH%;.
 
+REM Operators edit config\logback.xml. The copy inside the jars is not the runtime configuration.
+set "JAVA_LOGGING_OPTS=-Dlogback.configurationFile=config/logback.xml"
+
 if defined JAVA_HOME (
 	set "JAVA_CMD=%JAVA_HOME%\bin\java.exe"
 	set "JAVA_CMDW=%JAVA_HOME%\bin\javaw.exe"

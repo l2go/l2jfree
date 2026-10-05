@@ -8,7 +8,7 @@ SET OLDCLASSPATH=%CLASSPATH%
 call setenv.bat
 if ERRORLEVEL 1 goto error
 
-"%JAVA_CMD%" %JAVA_AGENT_OPTS% -Dfile.encoding=UTF-8 -Xmx64m com.l2jfree.loginserver.LoginServer
+"%JAVA_CMD%" %JAVA_AGENT_OPTS% %JAVA_LOGGING_OPTS% -Dfile.encoding=UTF-8 -Xmx64m com.l2jfree.loginserver.LoginServer
 
 SET CLASSPATH=%OLDCLASSPATH%
 
