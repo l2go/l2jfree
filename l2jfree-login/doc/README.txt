@@ -1,3 +1,7 @@
+NOTE: This file is inherited from upstream L2J and L2JFree and is kept for history.
+Its requirements, ports, contacts, and installation steps are out of date.
+For the current platform, see README.md and docs/OPERATIONS-RUNBOOK.md.
+
  NOTE: This short guide is for a L2J Server. http://l2jserver.com
 
  If you received this file as a part of a packaged or bundled build:
