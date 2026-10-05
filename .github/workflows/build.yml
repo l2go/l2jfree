@@ -34,19 +34,30 @@ jobs:
       # Test modernization and CI test execution are scheduled for 2.1.0.
       # This workflow verifies production compilation, packaging, provenance,
       # and archive contents only.
+      # Tests are skipped, so a Surefire argLine never starts a recorded JVM.
+      # Record the Maven build JVM instead.
       - name: Build and package with Java 25 while recording JFR
+        env:
+          MAVEN_OPTS: -XX:StartFlightRecording=filename=${{ github.workspace }}/jfr/maven-build.jfr,settings=profile,dumponexit=true
         run: >-
+          mkdir -p jfr &&
           ./mvnw -B -ntp -Dmaven.test.skip=true
           -Dl2jfree.build.revision=${{ github.sha }}
-          "-Djfr.argLine=-XX:StartFlightRecording=filename=target/l2jfree-ci.jfr,settings=profile,dumponexit=true"
           install
+
+      - name: Report JFR baseline size and checksum
+        run: |
+          recording="jfr/maven-build.jfr"
+          test -s "$recording"
+          stat -c '%s bytes %n' "$recording"
+          sha256sum "$recording"
 
       - name: Upload baseline JFR recordings
         uses: actions/upload-artifact@v4
         with:
           name: l2jfree-jfr-baseline
-          if-no-files-found: warn
-          path: "**/target/l2jfree-ci.jfr"
+          if-no-files-found: error
+          path: jfr/*.jfr
 
       - name: Generate aggregate CycloneDX SBOM
         run: ./mvnw -B -ntp org.cyclonedx:cyclonedx-maven-plugin:2.9.2:makeAggregateBom
