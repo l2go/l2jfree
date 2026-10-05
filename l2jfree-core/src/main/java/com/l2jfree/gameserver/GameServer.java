@@ -69,7 +69,6 @@ import com.l2jfree.gameserver.geodata.pathfinding.PathFinding;
 import com.l2jfree.gameserver.geoeditorcon.GeoEditorListener;
 import com.l2jfree.gameserver.handler.AdminCommandHandler;
 import com.l2jfree.gameserver.handler.ChatHandler;
-import com.l2jfree.gameserver.handler.IrcCommandHandler;
 import com.l2jfree.gameserver.handler.ItemHandler;
 import com.l2jfree.gameserver.handler.SkillHandler;
 import com.l2jfree.gameserver.handler.SkillTargetHandler;
@@ -100,7 +99,6 @@ import com.l2jfree.gameserver.instancemanager.FriendListManager;
 import com.l2jfree.gameserver.instancemanager.GameTimeManager;
 import com.l2jfree.gameserver.instancemanager.GrandBossSpawnManager;
 import com.l2jfree.gameserver.instancemanager.InstanceManager;
-import com.l2jfree.gameserver.instancemanager.IrcManager;
 import com.l2jfree.gameserver.instancemanager.ItemsAutoDestroyManager;
 import com.l2jfree.gameserver.instancemanager.ItemsOnGroundManager;
 import com.l2jfree.gameserver.instancemanager.MapRegionManager;
@@ -183,7 +181,6 @@ public final class GameServer extends L2AutoInitialization
 			new Status().start();
 		else
 			_log.info("Telnet Server is currently disabled.");
-		IrcCommandHandler.getInstance();
 		MapRegionManager.getInstance();
 		Announcements.getInstance();
 		AutoAnnouncements.getInstance();
@@ -444,9 +441,6 @@ public final class GameServer extends L2AutoInitialization
 		
 		L2ClientSelectorThread.getInstance().openServerSocket(Config.GAMESERVER_HOSTNAME, Config.PORT_GAME);
 		L2ClientSelectorThread.getInstance().start();
-		
-		if (Config.IRC_ENABLED)
-			IrcManager.getInstance().getConnection().sendChan("GameServer Started");
 		
 		if (Config.ACCEPT_GEOEDITOR_CONN)
 			GeoEditorListener.getInstance();

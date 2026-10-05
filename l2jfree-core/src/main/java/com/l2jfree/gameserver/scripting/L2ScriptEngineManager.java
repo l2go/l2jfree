@@ -43,7 +43,6 @@ import javax.script.CompiledScript;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
@@ -54,6 +53,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
+import com.sun.script.jython.JythonScriptEngineFactory;
 
 /**
  * Caches script engines and provides funcionality for executing and managing scripts.<BR>
@@ -116,8 +116,6 @@ public final class L2ScriptEngineManager
 	
 	private L2ScriptEngineManager()
 	{
-		ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
-		List<ScriptEngineFactory> factories = scriptEngineManager.getEngineFactories();
 		if (USE_COMPILED_CACHE)
 		{
 			_cache = loadCompiledScriptCache();
@@ -127,39 +125,31 @@ public final class L2ScriptEngineManager
 			_cache = null;
 		}
 		_log.info("Initializing Script Engine Manager");
-		
-		for (ScriptEngineFactory factory : factories)
-		{
-			try
-			{
-				_log.info("Script Engine: " + factory.getEngineName() + " " + factory.getEngineVersion()
-						+ " - Language: " + factory.getLanguageName() + " " + factory.getLanguageVersion());
-				
-				ScriptEngine engine = factory.getScriptEngine();
-				
-				for (String name : factory.getNames())
-				{
-					if (_nameEngines.containsKey(name))
-						throw new IllegalStateException("Multiple script engines for the same name!");
-					
-					_nameEngines.put(name, engine);
-				}
-				
-				for (String ext : factory.getExtensions())
-				{
-					if (_extEngines.containsKey(ext))
-						throw new IllegalStateException("Multiple script engines for the same extension!");
-					
-					_extEngines.put(ext, engine);
-				}
-			}
-			catch (Exception e)
-			{
-				_log.warn("Failed initializing factory.", e);
-			}
-		}
+		// One factory, chosen here. ServiceLoader would also see the factory inside jython-standalone,
+		// and the two disagree on which class serves the python extension.
+		registerEngine(new JythonScriptEngineFactory());
 		
 		preConfigure();
+	}
+	
+	private void registerEngine(ScriptEngineFactory factory)
+	{
+		_log.info("Script Engine: " + factory.getEngineName() + " " + factory.getEngineVersion() + " - Language: "
+				+ factory.getLanguageName() + " " + factory.getLanguageVersion());
+		
+		ScriptEngine engine = factory.getScriptEngine();
+		for (String name : factory.getNames())
+		{
+			if (_nameEngines.containsKey(name))
+				throw new IllegalStateException("Script engine name is already registered: " + name);
+			_nameEngines.put(name, engine);
+		}
+		for (String extension : factory.getExtensions())
+		{
+			if (_extEngines.containsKey(extension))
+				throw new IllegalStateException("Script engine extension is already registered: " + extension);
+			_extEngines.put(extension, engine);
+		}
 	}
 	
 	private void preConfigure()
@@ -384,12 +374,16 @@ public final class L2ScriptEngineManager
 					+ ") doesnt has an extension that identifies the ScriptEngine to be used.");
 		}
 		
-		ScriptEngine engine = getEngineByExtension(extension);
-		if ("java".equalsIgnoreCase(extension) && hasPackagedJavaScript(file))
+		if ("java".equalsIgnoreCase(extension))
 		{
+			if (!hasPackagedJavaScript(file))
+				throw new ScriptException("Java script (" + file.getPath()
+						+ ") has no packaged bytecode. Java scripts are compiled in CI and are not compiled at startup.");
 			this.executePackagedJavaScript(file);
 			return;
 		}
+		
+		ScriptEngine engine = getEngineByExtension(extension);
 		if (engine == null)
 			throw new ScriptException("No engine registered for extension (" + extension + ")");
 		

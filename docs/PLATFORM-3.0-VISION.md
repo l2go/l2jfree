@@ -27,7 +27,7 @@ Release 2.0.0 stays on its current platform. It does not become Platform 3.0.
 | Data | JDBC and HikariCP 7.1. New schema changes are numbered SQL files. The MySQL dialect stays inside the repository layer. Liquibase is not the release journal. Flyway is not added |
 | Scripts | Java scripts are compiled in CI into the Game delivery, and startup loads bytecode. Python is Jython 2.7.5b1 in that same delivery, one checksum manifest with Game |
 | Logging | SLF4J 2.0.20 and Logback 1.5 to stdout and named operational files. JUL uses a one-way bridge; Commons Logging is removed |
-| IRC | irclib 1.10 is removed. Kitteh IRC Client Library replaces it when the admin IRC bridge remains a product feature. Otherwise the integration is deleted |
+| IRC | The admin bridge is not a 2.0 feature, and irclib is not a dependency |
 | Launch | A `java` command, with configuration outside the archive |
 
 A 2.0 release candidate is blocked only by qualification of what is already
@@ -134,7 +134,7 @@ adapter in advance.
 | Migrations | Flyway 13, PostgreSQL module | Plain SQL in the repository. The PostgreSQL module is Apache 2.0. Transactional DDL makes a migration atomic. Liquibase 5 is declined on license terms. |
 | Network | Own protocol codec on Netty 4.2. Transport is `io_uring`, with epoll as the fallback | A replay of real packets accepts the port: encryption, packet order, disconnect, p99, allocations. A losing table is fixed in the Netty port. The previous core is not in the 3.0 release. |
 | Logging | SLF4J 2.0.20 and Logback 1.5 to stdout and named operational files | The 2.0 line completes the backend migration. Platform 3.0 retains the unified backend and named audit/gameplay channels. |
-| IRC | Kitteh IRC Client Library, or deletion | irclib 1.10 is removed. Kitteh stays only when the admin IRC bridge remains a product feature. Line 2.0 completes this before stable. |
+| IRC | Not included | The admin bridge and irclib are removed on the 2.0 line. Platform 3.0 does not add an IRC client. |
 | Threads | Virtual threads for login, JDBC, admin, and background I/O. Scoped values replace `ThreadLocal` | World ticks, knownlist, and AI stay on platform threads. The promotion check includes a pinning report. |
 | Scripts and catalog | Built into the image in CI | Datapack sources are not a release archive. Java scripts ship as bytecode. Python is one runtime inside the image. ECJ in the running process is a development tool. |
 | Python | Jython 2.7 final inside the image | Same line as the 2.0.0 choice, Jython 2.7.5b1. The final release drops the beta. GraalPy is excluded: the datapack stays on Python 2, and GraalPy speed requires GraalVM. |
@@ -258,7 +258,7 @@ a versioned datapack. Platform 3.0 does not rewrite that release. Work that
 makes this vision cheaper lands on the 2.0 line only when it also satisfies
 the 2.0 contract: JDK 25 APIs with no vendor dependency, SQL kept behind
 repositories, numbered SQL files, Java scripts compiled in CI into the game
-delivery, and Jython 2.7.5b1 as the only Python runtime. Before stable, 2.0
-also removes Commons Logging in favor of SLF4J 2.0.20 with Logback 1.5, and
-replaces or deletes irclib. Platform 3.0 moves the Jython pin to the 2.7 final
+delivery, and Jython 2.7.5b1 as the only Python runtime. The 2.0 line uses
+SLF4J 2.0.20 with Logback 1.5 instead of Commons Logging, and it does not
+ship an admin IRC bridge or irclib. Platform 3.0 moves the Jython pin to the 2.7 final
 release and completes the JDK, fastutil, and Netty replacements above.
