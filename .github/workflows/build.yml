@@ -16,7 +16,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
         with:
@@ -30,18 +30,15 @@ jobs:
           java-version: "25"
           cache: maven
 
-      # Keep all test compilation and execution disabled through stable 2.0.0.
-      # Test modernization and CI test execution are scheduled for 2.1.0.
-      # This workflow verifies production compilation, packaging, provenance,
-      # and archive contents only.
-      # Tests are skipped, so a Surefire argLine never starts a recorded JVM.
-      # Record the Maven build JVM instead.
-      - name: Build and package with Java 25 while recording JFR
+      # Unit tests run in this job. Tests tagged integration need MySQL and run
+      # in the integration job. Surefire excludes that tag unless -Dgroups is set.
+      # Record the Maven build JVM so the baseline does not depend on Surefire.
+      - name: Build, test, and package with Java 25 while recording JFR
         env:
           MAVEN_OPTS: -XX:StartFlightRecording=filename=${{ github.workspace }}/jfr/maven-build.jfr,settings=profile,dumponexit=true
         run: >-
           mkdir -p jfr &&
-          ./mvnw -B -ntp -Dmaven.test.skip=true
+          ./mvnw -B -ntp
           -Dl2jfree.build.revision=${{ github.sha }}
           install
 
@@ -248,9 +245,9 @@ jobs:
           if-no-files-found: error
           path: release-artifacts/*
 
-  windows-package:
-    runs-on: windows-2022
-    timeout-minutes: 30
+  integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
         with:
@@ -263,8 +260,34 @@ jobs:
           java-version: "25"
           cache: maven
 
-      - name: Package distributions on Windows
-        run: .\mvnw.cmd -B -ntp "-Dmaven.test.skip=true" "-Dl2jfree.build.revision=$env:GITHUB_SHA" install
+      - name: Run MySQL integration tests
+        run: |
+          ./mvnw -B -ntp \
+            -Dgroups=integration \
+            -Dsurefire.excludedGroups= \
+            -Dl2jfree.build.revision=${{ github.sha }} \
+            verify
+          reports="$(find l2jfree-core/target/surefire-reports l2jfree-login/target/surefire-reports -name 'TEST-*.xml' | wc -l | tr -d '[:space:]')"
+          echo "integration reports: ${reports}"
+          test "${reports}" -ge 6
+
+  windows-package:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Set up Microsoft Build of OpenJDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: microsoft
+          java-version: "25"
+          cache: maven
+
+      - name: Test and package distributions on Windows
+        run: .\mvnw.cmd -B -ntp "-Dl2jfree.build.revision=$env:GITHUB_SHA" install
 
       - name: Verify Windows release archives
         shell: pwsh
@@ -432,7 +455,7 @@ jobs:
   # Release archives contain Java 25 bytecode built with OpenJDK 25. They are
   # portable JVM packages, not Windows-specific binaries.
   release:
-    needs: [build, windows-package]
+    needs: [build, integration, windows-package]
     if: startsWith(github.ref, 'refs/tags/v')
     # A pre-release tag publishes on its own. A stable tag waits in stable-release
     # so the maintainer approves it before the release is created.

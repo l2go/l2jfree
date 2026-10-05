@@ -13,12 +13,14 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 import com.zaxxer.hikari.HikariConfig;
 
+@Tag("integration")
 @Testcontainers
 class L2DatabaseFactoryMySqlTest
 {

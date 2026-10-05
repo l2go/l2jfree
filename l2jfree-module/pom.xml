@@ -27,6 +27,7 @@
 		<jython.artifactId>jython-standalone</jython.artifactId>
 		<opentelemetry.javaagent.version>2.26.1</opentelemetry.javaagent.version>
 		<jfr.argLine></jfr.argLine>
+		<surefire.excludedGroups>integration</surefire.excludedGroups>
 	</properties>
 	<scm>
 		<connection>scm:git:https://github.com/l2go/l2jfree.git</connection>
@@ -132,6 +133,8 @@
 				<configuration>
 					<!-- Modules with no tests yet must not fail the build. l2j-commons carries the platform test. -->
 					<failIfNoTests>false</failIfNoTests>
+					<!-- MySQL tests opt in through -Dgroups=integration. The default build stays on unit tests. -->
+					<excludedGroups>${surefire.excludedGroups}</excludedGroups>
 					<!-- JDK 21+ refuses Mockito's self-attach. The agent is declared explicitly. -->
 					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar ${jfr.argLine}</argLine>
 				</configuration>

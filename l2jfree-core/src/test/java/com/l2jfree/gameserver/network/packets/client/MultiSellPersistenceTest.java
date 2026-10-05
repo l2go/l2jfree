@@ -24,10 +24,12 @@ import java.sql.Statement;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
+@Tag("integration")
 @Testcontainers
 class MultiSellPersistenceTest
 {
