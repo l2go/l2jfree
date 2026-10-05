@@ -40,7 +40,7 @@ There is no systemd unit, no Kubernetes manifest, and no install script on the h
 | Question | Where the answer is |
 |---|---|
 | Why was a decision made? | [Architecture decision records](docs/adr/README.md) |
-| What is planned and when is it done? | [Roadmap](docs/roadmap.md) and the [project board](https://github.com/users/l2go/projects/1) |
+| What is planned and when is it done? | [Roadmap](docs/roadmap.md) and the [Platform 3.0 project board](https://github.com/users/l2go/projects/2) |
 | What could go wrong? | [Risk register](docs/risks.md) |
 | Which document is current? | [Documentation index](docs/index.md) |
 | How are defects handled? | [Correctness program](#correctness-program) |
@@ -67,7 +67,7 @@ flowchart LR
 
 ## Correctness program
 
-The [project board](https://github.com/users/l2go/projects/1) (“L2JFree: correctness program and Java 25 releases”) shows the live backlog, priorities, milestones, and pull requests. The [audit decision record](docs/2026-Q4-CORRECTNESS-AUDIT.md) explains the filing bar and review gate. Each defect has one issue and one pull request; the maintainer merges after the `build` and `commit-identity` checks pass and review threads are resolved.
+The [2.x project board](https://github.com/users/l2go/projects/1) (“L2JFree: correctness program and Java 25 releases”) is the closed record of the backlog, priorities, milestones, and pull requests of that program. Platform 3.0 has its own board. The [audit decision record](docs/2026-Q4-CORRECTNESS-AUDIT.md) explains the filing bar and review gate. Each defect has one issue and one pull request; the maintainer merges after the `build` and `commit-identity` checks pass and review threads are resolved.
 
 ## Provenance and license
 
