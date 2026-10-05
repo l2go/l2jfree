@@ -40,7 +40,7 @@ The [dependency inventory](docs/DEPENDENCY-INVENTORY.md) lists the current direc
 
 Both Windows server launchers reject Java runtimes whose major version is not 25. Set `JAVA_HOME` to the Microsoft JDK 25 installation or make that runtime the `java` command found through `PATH`.
 
-The current stable release is [v2.5.0](https://github.com/l2go/l2jfree/releases/tag/v2.5.0). It publishes the LoginServer archive, the GameServer archive with the datapack merged in, the documentation archive, a CycloneDX SBOM, a vulnerability report, and `SHA256SUMS.txt`. [v2.0.0](https://github.com/l2go/l2jfree/releases/tag/v2.0.0) remains the previous stable release and still publishes a separate datapack archive. The maintainer ran the v2.5.0 tree on the Windows 10 and MySQL 8.4 host. The [deployment qualification notes](docs/2026-Q4-UPGRADE.md) record that acceptance. Vulnerability triage for the published report remains open in [#92](https://github.com/l2go/l2jfree/issues/92).
+The current stable release is [v2.5.0](https://github.com/l2go/l2jfree/releases/tag/v2.5.0). It publishes the LoginServer archive, the GameServer archive with the datapack merged in, the documentation archive, a CycloneDX SBOM, a vulnerability report, and `SHA256SUMS.txt`. [v2.0.0](https://github.com/l2go/l2jfree/releases/tag/v2.0.0) remains the previous stable release and still publishes a separate datapack archive. The maintainer ran the v2.5.0 tree on the Windows 10 and MySQL 8.4 host. The [deployment qualification notes](docs/2026-Q4-UPGRADE.md) record that acceptance. The v2.0.0 vulnerability findings are upgraded in this release.
 
 ## Infrastructure modernization
 

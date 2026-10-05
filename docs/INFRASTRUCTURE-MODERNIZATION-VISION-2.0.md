@@ -384,9 +384,9 @@ vulnerability report, and `SHA256SUMS.txt`.
 [#100](https://github.com/l2go/l2jfree/issues/100),
 [#101](https://github.com/l2go/l2jfree/issues/101),
 [#102](https://github.com/l2go/l2jfree/issues/102), and
-[#103](https://github.com/l2go/l2jfree/issues/103) are closed.
-The remaining open follow-up is
-[#92](https://github.com/l2go/l2jfree/issues/92).
+[#103](https://github.com/l2go/l2jfree/issues/103), and
+[#92](https://github.com/l2go/l2jfree/issues/92) are closed. v2.5.0 upgrades
+the packages named in the v2.0.0 vulnerability report.
 
 ## Reference projects and documentation
 
