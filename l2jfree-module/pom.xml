@@ -255,16 +255,4 @@
 		<module>../l2jfree-core</module>
 		<module>../l2jfree-datapack</module>
 	</modules>
-	<distributionManagement>
-		<repository>
-			<id>revengineer</id>
-			<name>Releases</name>
-			<url>http://maven.revengineer.eu:8081/nexus/content/repositories/releases/</url>
-		</repository>
-		<snapshotRepository>
-			<id>revengineer</id>
-			<name>Snapshots</name>
-			<url>http://maven.revengineer.eu:8081/nexus/content/repositories/snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
 </project>
