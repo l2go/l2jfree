@@ -53,7 +53,6 @@ import com.l2jfree.gameserver.handler.admincommands.AdminGmChat;
 import com.l2jfree.gameserver.handler.admincommands.AdminHeal;
 import com.l2jfree.gameserver.handler.admincommands.AdminHellbound;
 import com.l2jfree.gameserver.handler.admincommands.AdminHelpPage;
-import com.l2jfree.gameserver.handler.admincommands.AdminIRC;
 import com.l2jfree.gameserver.handler.admincommands.AdminInstance;
 import com.l2jfree.gameserver.handler.admincommands.AdminInvul;
 import com.l2jfree.gameserver.handler.admincommands.AdminJail;
@@ -182,9 +181,6 @@ public final class AdminCommandHandler extends HandlerRegistry<String, IAdminCom
 		register(new AdminVIPEngine());
 		register(new AdminVitality());
 		register(new AdminZone());
-		
-		if (Config.IRC_ENABLED)
-			register(new AdminIRC());
 		
 		// Dynamic testing extensions
 		try

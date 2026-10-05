@@ -71,8 +71,8 @@ jobs:
             exit 1
           fi
           for archive in "${archives[@]}"; do
-            if unzip -Z1 "$archive" | grep -Eiq '(^|/)libs/[^/]*(spring|hibernate|cglib|ehcache|c3p0|mchange-commons|ecj)[^/]*\.jar$'; then
-              echo "Release distribution contains removed persistence, ORM, or compiler libraries: $archive"
+            if unzip -Z1 "$archive" | grep -Eiq '(^|/)libs/[^/]*(spring|hibernate|cglib|ehcache|c3p0|mchange-commons|ecj|irclib)[^/]*\.jar$'; then
+              echo "Release distribution contains a removed persistence, compiler, or IRC library: $archive"
               exit 1
             fi
 
@@ -285,10 +285,10 @@ jobs:
             $zip = [System.IO.Compression.ZipFile]::OpenRead($archive.FullName)
             try {
               $removedRuntimeJars = @($zip.Entries | Where-Object {
-                $_.FullName -match '(^|/)libs/[^/]*(spring|hibernate|cglib|ehcache|c3p0|mchange-commons|ecj)[^/]*\.jar$'
+                $_.FullName -match '(^|/)libs/[^/]*(spring|hibernate|cglib|ehcache|c3p0|mchange-commons|ecj|irclib)[^/]*\.jar$'
               })
               if ($removedRuntimeJars.Count -gt 0) {
-                throw "Release distribution contains removed persistence or compiler libraries: $($archive.FullName)"
+                throw "Release distribution contains a removed persistence, compiler, or IRC library: $($archive.FullName)"
               }
 
               $entryNames = @($zip.Entries | ForEach-Object { $_.FullName })

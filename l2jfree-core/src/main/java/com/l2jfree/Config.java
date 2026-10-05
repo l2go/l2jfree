@@ -83,7 +83,6 @@ public final class Config
 		registerConfig(new FunEnginesConfig());
 		registerConfig(new GMAccessConfig());
 		registerConfig(new GeoConfig());
-		registerConfig(new IRCConfig());
 		registerConfig(new LotteryConfig());
 		registerConfig(new OptionsConfig());
 		registerConfig(new OtherConfig());
@@ -123,6 +122,7 @@ public final class Config
 	public static String DATABASE_PASSWORD; // Database password
 	public static int DATABASE_MAX_CONNECTIONS; // Maximum number of connections to the
 	// database
+	public static int DATABASE_MIN_IDLE_CONNECTIONS; // Idle connections kept open, never above the maximum
 	public static int MAXIMUM_ONLINE_USERS; // Maximum number of players allowed to play
 	// simultaneously on server
 	public static boolean SAFE_REBOOT = false; // Safe mode will disable some feature
@@ -220,6 +220,7 @@ public final class Config
 			DATABASE_LOGIN = serverSettings.getProperty("Login", "root");
 			DATABASE_PASSWORD = serverSettings.getProperty("Password", "");
 			DATABASE_MAX_CONNECTIONS = Integer.parseInt(serverSettings.getProperty("MaximumDbConnections", "10"));
+			DATABASE_MIN_IDLE_CONNECTIONS = Integer.parseInt(serverSettings.getProperty("MinimumDbIdleConnections", "10"));
 			
 			SAFE_REBOOT = Boolean.parseBoolean(serverSettings.getProperty("SafeReboot", "False"));
 			SAFE_REBOOT_TIME = Integer.parseInt(serverSettings.getProperty("SafeRebootTime", "10"));
@@ -2275,7 +2276,6 @@ public final class Config
 			//			GM_RES = Integer.parseInt(gmSettings.getProperty("GMRes", "100"));
 			GM_PEACEATTACK = Integer.parseInt(gmSettings.getProperty("GMPeaceAttack", "100"));
 			//			GM_HEAL = Integer.parseInt(gmSettings.getProperty("GMHeal", "100"));
-			//			GM_IRC = Integer.parseInt(gmSettings.getProperty("GMIRC", "100"));
 			//			GM_ENCHANT = Integer.parseInt(gmSettings.getProperty("GMEnchant", "100"));
 			//			GM_UNBLOCK = Integer.parseInt(gmSettings.getProperty("GMUnblock", "100"));
 			//			GM_CACHE = Integer.parseInt(gmSettings.getProperty("GMCache", "100"));
@@ -3189,67 +3189,6 @@ public final class Config
 					Long.parseLong(funEnginesSettings.getProperty("TvTIJoinNpcDoSkillAgain", "0"));
 			if (TVTI_JOIN_NPC_DO_SKILL_AGAIN < 1000 && TVTI_JOIN_NPC_DO_SKILL_AGAIN != 0)
 				TVTI_JOIN_NPC_DO_SKILL_AGAIN = 1000; //can't be set less then 1 second
-		}
-	}
-	
-	// *******************************************************************************************
-	public static final String IRC_FILE = "./config/irc.properties";
-	// *******************************************************************************************
-	public static boolean IRC_ENABLED;
-	public static boolean IRC_LOG_CHAT;
-	public static boolean IRC_SSL;
-	public static String IRC_SERVER;
-	public static int IRC_PORT;
-	public static String IRC_PASS;
-	public static String IRC_NICK;
-	public static String IRC_USER;
-	public static String IRC_NAME;
-	public static boolean IRC_NICKSERV;
-	public static String IRC_NICKSERV_NAME;
-	public static String IRC_NICKSERV_COMMAND;
-	public static String IRC_LOGIN_COMMAND;
-	public static String IRC_CHANNEL;
-	public static String IRC_FROM_GAME_TYPE;
-	public static String IRC_TO_GAME_TYPE;
-	public static String IRC_TO_GAME_SPECIAL_CHAR;
-	public static String IRC_TO_GAME_DISPLAY;
-	public static boolean IRC_ANNOUNCE;
-	public static boolean IRC_ME_SUPPORT;
-	public static String IRC_TO_GAME_ME_DISPLAY;
-	
-	// *******************************************************************************************
-	private static final class IRCConfig extends ConfigPropertiesLoader
-	{
-		@Override
-		protected String getName()
-		{
-			return "irc";
-		}
-		
-		@Override
-		protected void loadImpl(L2Properties ircSettings)
-		{
-			IRC_ENABLED = Boolean.parseBoolean(ircSettings.getProperty("Enable", "false"));
-			IRC_LOG_CHAT = Boolean.parseBoolean(ircSettings.getProperty("LogChat", "false"));
-			IRC_SSL = Boolean.parseBoolean(ircSettings.getProperty("SSL", "false"));
-			IRC_SERVER = ircSettings.getProperty("Server", "localhost");
-			IRC_PORT = Integer.parseInt(ircSettings.getProperty("Port", "6667"));
-			IRC_PASS = ircSettings.getProperty("Pass", "localhost");
-			IRC_NICK = ircSettings.getProperty("Nick", "l2jfbot");
-			IRC_USER = ircSettings.getProperty("User", "l2jfree");
-			IRC_NAME = ircSettings.getProperty("Name", "l2jfree");
-			IRC_NICKSERV = Boolean.parseBoolean(ircSettings.getProperty("NickServ", "false"));
-			IRC_NICKSERV_NAME = ircSettings.getProperty("NickservName", "nickserv");
-			IRC_NICKSERV_COMMAND = ircSettings.getProperty("NickservCommand", "");
-			IRC_LOGIN_COMMAND = ircSettings.getProperty("LoginCommand", "");
-			IRC_CHANNEL = ircSettings.getProperty("Channel", "#mychan");
-			IRC_ANNOUNCE = Boolean.parseBoolean(ircSettings.getProperty("IrcAnnounces", "false"));
-			IRC_FROM_GAME_TYPE = ircSettings.getProperty("GameToIrcType", "off");
-			IRC_TO_GAME_TYPE = ircSettings.getProperty("IrcToGameType", "off");
-			IRC_TO_GAME_SPECIAL_CHAR = ircSettings.getProperty("IrcToGameSpecialChar", "#");
-			IRC_TO_GAME_DISPLAY = ircSettings.getProperty("IrcToGameDisplay", "trade");
-			IRC_ME_SUPPORT = Boolean.parseBoolean(ircSettings.getProperty("IrcMeSupport", "false"));
-			IRC_TO_GAME_ME_DISPLAY = ircSettings.getProperty("IrcToGameMeDisplay", "trade");
 		}
 	}
 	
@@ -4756,12 +4695,6 @@ public final class Config
 			SHOW_KARMA_PLAYERS = Boolean.parseBoolean(pValue);
 		else if (pName.equalsIgnoreCase("ShowJailedPlayers"))
 			SHOW_JAILED_PLAYERS = Boolean.parseBoolean(pValue);
-		
-		// IRC options
-		else if (pName.equalsIgnoreCase("IrcMeSupport"))
-			IRC_ME_SUPPORT = Boolean.parseBoolean(pValue);
-		else if (pName.equalsIgnoreCase("IrcToGameMeDisplay"))
-			IRC_TO_GAME_ME_DISPLAY = pValue;
 		
 		else if (pName.equalsIgnoreCase("MaxPersonalFamePoints"))
 			MAX_PERSONAL_FAME_POINTS = Integer.parseInt(pValue);
