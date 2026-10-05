@@ -73,11 +73,11 @@ The fix does not rewrite the subsystem. Severity is relative to 1.4.0 qualificat
 
 Labels are a small set: `bug`, `severity:blocker`, `severity:major`, `severity:minor`, `area:economy`, `area:session`, `area:packets`, `area:persistence`, `area:concurrency`, and `area:commons`. Milestones are delivery slices, listed under Deliver by slice. One tracking issue states the scope, the method, the filing bar, and what is left unfiled. Child issues use the GitHub parent issue relationship.
 
-The [1.4.0 Project](https://github.com/users/l2go/projects/1) is the live queue. Every filed defect receives a severity label, an area label, a milestone, a project status, and a priority. Severity measures impact; priority sets execution order. P0 protects release safety and item or session integrity, P1 is planned correctness work, and P2 is bounded robustness work. A changed priority needs a reason recorded on the issue. The project is the source of current status; this document records the policy.
+The [project board](https://github.com/users/l2go/projects/1) (“L2JFree: correctness program and Java 25 releases”) is the live queue. Every filed defect receives a severity label, an area label, a milestone, a project status, and a priority. Severity measures impact; priority sets execution order. P0 protects release safety and item or session integrity, P1 is planned correctness work, and P2 is bounded robustness work. A changed priority needs a reason recorded on the issue. The project is the source of current status; this document records the policy.
 
 Findings that clear the bar are filed as they are confirmed; the program has no issue quota. A SpotBugs warning is not an issue. A security-shaped game bug (packet trust, admin command) is a normal public issue that states impact and the fix, without a step-by-step exploit. A leaked credential would use a private advisory; item and session bugs do not.
 
-A fix is one pull request. The body starts with `Fixes #n`. The author leaves it open for maintainer review. The maintainer merges only after the `build` check is green and review threads are resolved. Direct pushes to `main` are rejected. This repository has a single GitHub account, and GitHub will not let that account approve its own pull request, so the manual merge itself is the approval. Auto-merge is off.
+A fix is one pull request. The body starts with `Fixes #n`. The author leaves it open for maintainer review. The maintainer merges only after the `build` and `commit-identity` checks are green and review threads are resolved. Direct pushes to `main` are rejected. This repository has a single GitHub account, and GitHub will not let that account approve its own pull request, so the manual merge itself is the approval. Auto-merge is off.
 
 ## How a change lands
 
@@ -99,7 +99,7 @@ Old tests and their infrastructure are removed when the new stack lands: every `
 
 ### Stack
 
-Tests execute on JDK 25, which is also the only CI JDK. Production bytecode stays `--release 8`. Test sources use `testRelease` 21, so tests may use records and pattern matching without changing server bytecode.
+Tests execute on JDK 25, which is also the only CI JDK. This section is the 2026-09-26 proposal: it kept production bytecode at `--release 8` and set `testRelease` to 21. The current build compiles production and test code with `--release 25`.
 
 | Role | Artifact | Version |
 |---|---|---|
@@ -107,7 +107,7 @@ Tests execute on JDK 25, which is also the only CI JDK. Production bytecode stay
 | Assertions | `org.assertj:assertj-core` | 3.27.7 |
 | Mocks | `org.mockito:mockito-junit-jupiter` | 5.24.0 |
 | SQL | `org.testcontainers:testcontainers-bom`, `testcontainers-mysql`, `testcontainers-junit-jupiter` | 2.0.5 |
-| Package boundaries | `com.tngtech.archunit:archunit-junit6` | 1.5.0 |
+| Package boundaries | `com.tngtech.archunit:archunit-junit6` | 1.5.0 (proposed; not adopted, no module depends on it) |
 
 AssertJ 4 is still a milestone, so the stack stays on the latest 3.x. Versions are pinned from the BOM in the parent POM. Surefire already runs the JUnit Platform; on JDK 25 it needs `-javaagent` pointed at `mockito-core`, because the JDK no longer allows Mockito to attach itself.
 

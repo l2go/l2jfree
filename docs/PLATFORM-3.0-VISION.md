@@ -29,7 +29,7 @@ v2.5.0 is the current release on this platform. It does not become Platform 3.0.
 | Scripts | Java scripts are compiled in CI into the Game delivery, and startup loads bytecode. Python is Jython 2.7.5b1 in that same delivery, one checksum manifest with Game |
 | Logging | SLF4J 2.0.20 and Logback 1.5 to stdout and named operational files. JUL uses a one-way bridge; Commons Logging is removed |
 | IRC | The admin bridge is not a 2.0 feature, and irclib is not a dependency |
-| Launch | A `java` command, with configuration outside the archive |
+| Launch | A `java` command. Default configuration ships in the archive; credentials stay in private deployment files |
 
 A 2.0 release candidate is blocked only by qualification of what is already
 landed: startup, save, restart, database loss, and shutdown on Windows,

@@ -21,6 +21,8 @@ from different releases.
 5. Create the `l2jfree_ls` and `l2jfree_gs` databases using the account setup
    appropriate to the installation. Grant each process only the permissions
    it requires. Do not use a MySQL administrative account for either server.
+   The shipped configuration files use `Login = root` with an empty password
+   as placeholders; replace the account and password before first start.
 
 The LoginServer reads its JDBC driver, URL, username, and password from
 `loginserver/config/loginserver.properties`. The GameServer reads its database
@@ -80,10 +82,22 @@ private deployment record with the backup set.
    supervising console or service manager and wait for the process to exit
    before stopping MySQL. Avoid force-terminating either JVM.
 
-Keep the game client port (default 7777) reachable only as intended. Keep the
-LoginServer/GameServer registration port (default 9014), MySQL, and any
-administrative or status interfaces private. Confirm the configured bind
+Clients connect to two ports: the LoginServer client port (`LoginServerPort`,
+default 2106) and the GameServer port (`GameserverPort`, default 7777). Keep
+those reachable only as intended. Keep the LoginServer/GameServer registration
+port (`LoginPort`, default 9014; `LoginHostname` defaults to 127.0.0.1),
+MySQL, and any administrative or status interfaces private. Confirm the configured bind
 addresses and firewall rules before exposing the host.
+
+## Logs
+
+Logback writes under `log/` in each server directory, as configured in
+`config/logback.xml`: `log/java/java.log`, `log/error/error.log`, and the named
+channels `log/audit`, `log/chat`, `log/item`, and `log/login` (`login.log`,
+`login.try.log`, `login.failed.log`). Each file is size-limited and rolls over;
+the named channels keep 30 days up to 128 MB. The console also receives the
+root log. The `.sh` launchers additionally redirect console output to
+`log/stdout.log`. Treat these files as private operational data.
 
 ## Optional OpenTelemetry export
 

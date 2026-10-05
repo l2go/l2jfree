@@ -12,15 +12,15 @@ Version values marked as properties are maintained in
 | Module | Dependency | Current version | Scope | Purpose and status |
 |---|---|---:|---|---|
 | `l2j-commons`, GameServer, MMOCore | SLF4J API | 2.0.20 | Runtime | Application logging API; modules declare it directly where source code uses it and LoginServer receives it through `l2j-commons`. |
-| Runtime distributions | JCL-to-SLF4J bridge | 2.0.20 | Runtime | Routes third-party Commons Logging calls to SLF4J pending a dependency and script audit. |
+| `l2j-commons` | Logback Classic and Core | 1.5.38 | Runtime | Single logging backend for both servers. Each process loads `config/logback.xml`. |
+| `l2j-commons` | SLF4J JUL bridge (`jul-to-slf4j`) | 2.0.20 | Runtime | One-way bridge that routes `java.util.logging` records into Logback. There is no Commons Logging bridge; CI rejects `jcl-over-slf4j`, `commons-logging`, and `slf4j-jdk14` jars. |
 | `l2j-commons` | Apache Commons Lang | 3.20.0 | Runtime | General utility library. |
 | `l2j-commons` | Apache Commons IO | 2.22.0 | Runtime | File and stream utilities. |
-| `l2j-commons` | MySQL Connector/J | 26.7.0 | Runtime | JDBC driver for the fixed MySQL 8.4 platform. |
+| `l2j-commons` | MySQL Connector/J | 26.7.0 | Runtime | JDBC driver for the fixed MySQL 8.4 platform. Brings `protobuf-java` 4.31.1 as a transitive runtime dependency. |
 | `l2j-commons` | Javolution | 5.4.1 | Runtime | Legacy collections and utility structures; replace selectively after profiling. |
 | LoginServer, GameServer | HikariCP | 7.1.0 | Runtime | JDBC connection pool replacing c3p0. |
-| LoginServer, GameServer | OpenTelemetry Java agent | 2.32.0 | Optional agent archive | Provides opt-in JVM, JDBC, and HikariCP metrics and traces through OTLP; packaged outside the application classpath and disabled by default. |
-| LoginServer, GameServer | SLF4J JUL provider | 2.0.20 | Runtime | Routes HikariCP SLF4J diagnostics into the existing JUL configuration during migration. |
-| GameServer | JDK compiler | the CI JDK | Build only | Compiles datapack Java sources during the CI build. The server does not compile Java scripts at startup, and ECJ is not a dependency. |
+| LoginServer, GameServer | OpenTelemetry Java agent | 2.32.0 | Optional agent archive | Provides opt-in JVM, JDBC, and HikariCP metrics and traces through OTLP; packaged under `agents/`, outside the application classpath, and disabled unless `L2JFREE_OTEL_ENABLED=true`. |
+| Datapack | JDK compiler | the CI JDK | Build only | Compiles datapack Java sources during the Maven build. The server loads that bytecode, does not compile Java scripts at startup, and ECJ is not a dependency. |
 | GameServer | Jython | 2.7.5b1 | Runtime | Python 2 runtime for datapack scripts. Platform 3.0 moves to the final Jython 2.7 release. Jython 2.2.1 is the baseline this line replaced. |
 | GameServer | Trove4j | 2.1.0 | Runtime | Legacy primitive collections; replace selectively after profiling. |
 | LoginServer, GameServer | Testcontainers JUnit Jupiter | 2.0.5 | Test | MySQL integration infrastructure in GitHub Actions. |
@@ -72,7 +72,7 @@ GraalPy and Python 3 migration are excluded.
 
 | Area | Candidate | CI / qualification status |
 |---|---|---|
-| Python 2 compatibility | Jython 2.7.5b1 | Runtime version is pinned. v2.5.0 CI compiles the datapack Python sources with that runtime. A full quest and AI behavior suite is not in this release. |
+| Python 2 compatibility | Jython 2.7.5b1 | Runtime version is pinned and ships in the GameServer archive. No CI job loads or compiles the datapack Python scripts. The syntax probe `tools/ci/validate-jython-candidate.py` is not wired into any workflow; the job that ran it was removed in the v2.0.0 cycle. A quest and AI behavior suite does not exist. Script behavior is accepted on the target host only. |
 | Runtime diagnostics | JFR and OpenTelemetry Java agent 2.32.0 | The agent is included separately in both distributions and stays disabled unless an operator enables it. Version 2.32.0 includes the fixes for the v2.0.0 agent findings. |
 
 See the [approved qualification tracks](INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md#experimental-qualification-tracks)
@@ -96,7 +96,7 @@ The v2.0.0 report contained four findings:
 | GHSA-jhq6-gfmj-v8fx | Low | logback-core 1.5.32 | Upgraded to 1.5.38. Fixed in 1.5.34. |
 
 v2.5.0 publishes a new SBOM and vulnerability report from this dependency
-set. Every direct or transitive
+set. The v2.5.0 report lists no findings; the SBOM matches the versions in the table above. Every direct or transitive
 runtime dependency change must be reviewed for supported Java 25 operation,
 MySQL compatibility where relevant, licensing, maintenance status, and
 presence in the intended release archives. Automated update proposals do not

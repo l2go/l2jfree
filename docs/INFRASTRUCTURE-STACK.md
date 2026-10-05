@@ -29,11 +29,11 @@ baseline this line replaced.
 | Connection pool | c3p0 was removed | HikariCP 7.1.x | Pool exhaustion, reconnect, idle validation, lifecycle, metrics, and shutdown checks | Implemented; full target-host workload qualification remains |
 | Schema evolution | Historical SQL installer and existing databases | Numbered forward SQL files; MySQL syntax stays in the repository layer; Liquibase remains test-only | Operator qualification uses disposable MySQL 8.4 and a copy of an existing schema | No production migration framework is selected. Liquibase stays a test-only probe. Flyway belongs to PostgreSQL in Platform 3.0 |
 | Java datapack scripts | Runtime Java compilation through ECJ 4.4.2 | Compile datapack sources during CI packaging; carry compiled bytecode with the matching GameServer revision; remove ECJ from runtime archives | CI verifies source-to-bytecode coverage, revision match, merged archive contents, and absence of ECJ | v2.5.0 ships the bytecode inside the GameServer archive and does not compile Java scripts at startup. ECJ is not a dependency. |
-| Python datapack scripts | Jython 2.2.1 and Python 2 scripts | Jython 2.7.5b1 only for 2.0; final Jython 2.7 release for Platform 3.0 | Operator qualification of Java interop, embedded bridge, and representative quest/AI/event/task behavior on Windows | Jython 2.7.5b1 is pinned. CI compiles the datapack Python sources with that runtime. A full quest and AI behavior suite is not in this release. |
+| Python datapack scripts | Jython 2.2.1 and Python 2 scripts | Jython 2.7.5b1 only for 2.0; final Jython 2.7 release for Platform 3.0 | Operator qualification of Java interop, embedded bridge, and representative quest/AI/event/task behavior on Windows | Jython 2.7.5b1 is pinned and ships in the GameServer archive. No CI job loads or compiles the datapack Python scripts, and no quest or AI behavior suite exists, so script behavior is accepted on the target host. |
 | Network I/O | Custom MMO transport and protocol implementation | Retain the existing core in 2.0; Netty 4.2 with `io_uring` and epoll is Platform 3.0 work | Preserve packet encryption, ordering, and disconnect behavior on the Windows acceptance host | No network replacement experiment is planned for 2.0 |
 | Concurrency | Existing executor, FIFO, scheduled task, and platform-thread model | Retain in 2.0; evaluate virtual threads only on the Platform 3.0 Linux process | Repeat target-host gameplay and deadlock scenarios | 2.0 fixes known world-lock issues and does not change thread model |
 | Collections | Javolution 5.4.1 and Trove4j 2.1.0 | Replace with JDK collections and fastutil on measured paths in Platform 3.0 | Linux JFR and allocation/throughput measurements for affected code, including hot world loops | Deferred until Platform 3.0 Linux qualification |
-| Logging | Mixed JUL and SLF4J handlers during transition | SLF4J 2.0.20, Logback 1.5, one-way JUL bridge; no Commons Logging bridge | Preserve named audit/gameplay channels; verify rotation, severity, exceptions, file permissions, and secret redaction | Unified backend and named channels implemented; GitHub packaging and Windows runtime qualification remain |
+| Logging | Mixed JUL and SLF4J handlers during transition | SLF4J 2.0.20, Logback 1.5, one-way JUL bridge; no Commons Logging bridge | Preserve named audit/gameplay channels; verify rotation, severity, exceptions, file permissions, and secret redaction | Shipped in v2.5.0: unified Logback backend, named channels, and `config/logback.xml` in both archives. CI checks the packaged runtime jars. Rotation and file permissions remain an operator check on the host |
 | IRC integration | irclib 1.10 | The admin IRC bridge and irclib are removed | The archive check rejects an irclib jar | Removed |
 | JVM diagnostics | Existing logs and deadlock detector | JFR plus optional OpenTelemetry Java agent 2.32.0 with OTLP metrics and traces | Capture JVM, JDBC, HikariCP pool, startup, script, scheduler, and packet paths; record instrumentation overhead and incident artifacts | Agent is packaged separately and stays disabled until an operator enables it. Version 2.32.0 replaces 2.26.1, which had the v2.0.0 scan findings. |
 | Test stack | Existing Maven tests and legacy qualification checks | Refactored and expanded JUnit 6.1.x, AssertJ, Mockito, Testcontainers 2.0.x, MySQL 8.4 | Deterministic GitHub Actions unit and integration runs | v2.5.0 runs the unit suite on Linux and Windows. MySQL tests run in a separate Linux integration job. v2.0.0 skipped tests. |
@@ -43,14 +43,13 @@ baseline this line replaced.
 ## Experiment policy
 
 Pre-production status permits the selected beta Jython 2.7.5b1 in the 2.0
-qualification path; its compatibility job is a required check. GraalPy is
-excluded and its experiment is removed. Linux,
+qualification path. GraalPy is excluded and its experiment is removed. Linux,
 PostgreSQL, Temurin, Flyway, Netty, virtual threads, ZGC, the AOT cache, and
 collection replacements belong to Platform 3.0, not 2.0. Do not place an
 unapproved dependency in public release archives.
 Protect established world data with backups and disposable copies even while
 the server itself has no production users.
 
-Attach the Jython 2.7.5b1 CI result and target-host qualification evidence to
-the pull request and dependency inventory. Keep each selected stack component
+Attach the target-host qualification evidence for Jython 2.7.5b1 to the pull
+request and dependency inventory. Keep each selected stack component
 pinned and review licensing and vulnerability results before release.
