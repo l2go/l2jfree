@@ -47,6 +47,8 @@ public final class Config
 	public static String DATABASE_LOGIN;
 	/** Database password */
 	public static String DATABASE_PASSWORD;
+	public static int DATABASE_MAX_CONNECTIONS;
+	public static int DATABASE_MIN_IDLE_CONNECTIONS;
 	
 	/** Configuration files */
 	/** Properties file for login server configurations */
@@ -105,6 +107,8 @@ public final class Config
 			DATABASE_URL = serverSettings.getProperty("URL", "jdbc:mysql://localhost/l2jfree_ls");
 			DATABASE_LOGIN = serverSettings.getProperty("Login", "root");
 			DATABASE_PASSWORD = serverSettings.getProperty("Password", "");
+			DATABASE_MAX_CONNECTIONS = Integer.parseInt(serverSettings.getProperty("MaximumDbConnections", "20"));
+			DATABASE_MIN_IDLE_CONNECTIONS = Integer.parseInt(serverSettings.getProperty("MinimumDbIdleConnections", "1"));
 			
 			SHOW_LICENCE = Boolean.parseBoolean(serverSettings.getProperty("ShowLicence", "true"));
 			
