@@ -224,17 +224,11 @@ jobs:
               f"Merged {len(datapack_files)} datapack files, including {len(bytecode)} Java script classes, for {expected_revision}"
           )
           PY
-          zip -r "release-artifacts/l2jfree-${artifact_version}-docs.zip" LICENSE README.md \
-            docs/INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md \
-            docs/PLATFORM-3.0-VISION.md \
-            docs/INFRASTRUCTURE-STACK.md \
-            docs/DATABASE-MIGRATION-STRATEGY.md \
-            docs/LOGGING-MIGRATION-PLAN.md \
-            docs/OPERATIONS-RUNBOOK.md \
-            docs/RELEASE-VERIFICATION.md
-          unzip -Z1 "release-artifacts/l2jfree-${artifact_version}-docs.zip" | grep -Fxq docs/DATABASE-MIGRATION-STRATEGY.md
-          unzip -Z1 "release-artifacts/l2jfree-${artifact_version}-docs.zip" | grep -Fxq docs/OPERATIONS-RUNBOOK.md
-          unzip -Z1 "release-artifacts/l2jfree-${artifact_version}-docs.zip" | grep -Fxq docs/PLATFORM-3.0-VISION.md
+          # The whole docs tree ships so that every relative link in the packaged documents resolves.
+          zip -r "release-artifacts/l2jfree-${artifact_version}-docs.zip" LICENSE README.md UPSTREAM_README.md assets docs
+          for doc in DATABASE-MIGRATION-STRATEGY DEPENDENCY-INVENTORY OPERATIONS-RUNBOOK PLATFORM-3.0-VISION RELEASE-VERIFICATION 2026-Q4-UPGRADE; do
+            unzip -Z1 "release-artifacts/l2jfree-${artifact_version}-docs.zip" | grep -Fxq "docs/${doc}.md"
+          done
           cp target/bom.json "release-artifacts/l2jfree-${artifact_version}-sbom.json"
           cp target/vulnerability-report.json "release-artifacts/l2jfree-${artifact_version}-vulnerability-report.json"
 

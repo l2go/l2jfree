@@ -22,4 +22,4 @@ Why this fix is scoped this way, what could regress, and how to detect it.
 
 ## Maintainer
 
-The author leaves this open for manual maintainer review and merge. Auto-merge is off. `main` requires a green `build` check and resolved review threads. The single GitHub account cannot approve its own pull request; the manual merge is the maintainer decision.
+The author leaves this open for manual maintainer review and merge. Auto-merge is off. `main` requires green `build` and `commit-identity` checks and resolved review threads. The single GitHub account cannot approve its own pull request; the manual merge is the maintainer decision.

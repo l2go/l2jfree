@@ -82,8 +82,11 @@ need.
 The 2.0 runtime keeps the existing network core and platform-thread execution
 model. Virtual threads, Generational ZGC, and the JDK AOT cache are not enabled
 in the 2.0 release; they are evaluated only on the Platform 3.0 Linux process.
-The launch command is `java`, configuration stays outside release archives,
-and Windows `.bat` files only set the environment before invoking Java.
+The launch command is `java`. The archives carry default configuration under
+`config/`; operators keep credentials and host-specific settings in private
+deployment files. The Windows `.bat` files only prepare the environment
+(classpath, the Logback file, the Java 25 check, and the optional
+OpenTelemetry agent) before invoking Java.
 
 The version numbers above identify selected target versions, not a blanket
 upgrade instruction. Every dependency change must be pinned, checked for
@@ -120,8 +123,8 @@ The 2.0.0 infrastructure should provide:
 - Predictable startup that reports a clear failing subsystem and its root cause.
 - A preflight check for configuration, schema compatibility, database access,
   required datapack files, and script compilation before accepting traffic.
-- A deployment command that invokes `java`, external configuration, and thin
-  Windows batch launchers that only prepare the environment.
+- A deployment command that invokes `java`, operator-owned configuration, and
+  thin Windows batch launchers that only prepare the environment.
 - Bounded connection acquisition and observable pool state rather than
   unbounded waits.
 - Database upgrades that are versioned, reviewable, repeatable in CI, and
@@ -141,7 +144,9 @@ The 2.0.0 infrastructure should provide:
 ### Test execution policy
 
 Release 2.5.0 restored test compilation and execution in GitHub Actions. The
-rules below are the record of what 2.0.0 required.
+rules below are the record of what 2.0.0 required. They no longer apply: CI
+compiles and runs the unit tests, and local builds and test runs remain outside
+the project workflow.
 
 Do not compile or run the repository test suites in local environments or
 GitHub Actions before the stable 2.0.0 release. The 2.0.0 RC gate uses
@@ -290,6 +295,14 @@ v2.0.0 release. Follow-up after v2.0.0 is listed in the execution status.
 
 ## Execution status
 
+This status is the record of what is delivered. A stage item that it does not
+name as delivered is not delivered. In particular, v2.5.0 has no startup
+preflight of configuration, schema compatibility, or datapack files beyond the
+database connection check, and no health or readiness status. The CI job that
+ran a Jython syntax probe over the datapack Python scripts was removed during
+the v2.0.0 cycle and has not been restored, so no automated check loads those
+scripts.
+
 Stable [v2.5.0](https://github.com/l2go/l2jfree/releases/tag/v2.5.0) is the
 current release. It keeps the Java 25 bytecode and HikariCP 7.1.0 line from
 v2.0.0 and adds the post-release corrections: quoted `clan_privs.rank`,
@@ -336,15 +349,11 @@ Login persistence upserts use MySQL's row aliases instead of the deprecated
 `VALUES(column)` form, matching the fixed MySQL 8.4 target.
 The old Commons Lang 3.4 dependency is upgraded to 3.20.0 and its version is
 centralized in the parent build.
-Java scripts now compile against the running JDK release instead of Java 8,
-avoiding class-file incompatibility with Java 25 server classes. Their compiler
-classpath includes both the running server and datapack scripts; previously it
-contained only the scripts directory, which prevented Java scripts from
-resolving server classes and libraries. Java compilation errors now preserve
-diagnostic kind, compiler code, line, and column in per-script reports. The
-script loader uses UTF-8, closes source and cache file handles, visits
-directory contents in a stable order, and reports load summaries for Windows
-diagnostics.
+The Maven build compiles the datapack Java scripts for Java 25 against the
+server classes, and the GameServer archive carries the resulting bytecode under
+`data/scripts`. v2.5.0 removed the runtime Java compiler that v2.0.0 still
+used. The script loader reads UTF-8, closes its file handles, visits directory
+contents in a stable order, and logs a load summary for Windows diagnostics.
 GitHub Actions now packages and inspects distributions on a Windows runner in
 addition to the Linux build. The release job promotes the exact distributions
 and CycloneDX SBOM that passed the Linux CI checks; it does not rebuild them.

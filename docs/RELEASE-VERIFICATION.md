@@ -2,11 +2,15 @@
 
 Every public release includes a SHA-256 manifest, a CycloneDX dependency SBOM,
 a vulnerability scan report, and GitHub artifact attestations for the released
-files. It also includes a documentation ZIP with the modernization vision,
+files. It also includes a documentation ZIP with the README, the license, and the
+`docs/` directory: the modernization vision, Platform 3.0 vision, stack map,
 database migration strategy, dependency inventory, logging migration plan,
-release verification guide, and operations runbook. The archives and reports
-are promoted from the CI build that passed the Linux checks; the release job
-does not rebuild them.
+release verification guide, operations runbook, and deployment notes. The
+v2.5.0 documentation ZIP predates this packaging. It holds the README, the
+license, and seven documents, and it omits the dependency inventory and the
+deployment notes, which the runbook links to. Read those on the `v2.5.0` tag.
+The archives and reports are promoted from the CI build that passed the Linux
+checks; the release job does not rebuild them.
 Linux and Windows packaging jobs verify the expected launcher, configuration,
 schema, and datapack entries, and reject distributions that still contain the
 removed ORM or connection-pool libraries.

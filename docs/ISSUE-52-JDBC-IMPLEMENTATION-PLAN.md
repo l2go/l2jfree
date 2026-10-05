@@ -3,7 +3,7 @@
 > Historical implementation handoff. Issue #52 was completed in `v1.5.1`.
 > The broader modernization vision supersedes its Java 8 and c3p0 constraints.
 
-Historical implementation handoff for GPT-6 Luna. The agreed decision was to remove Spring
+The agreed decision was to remove Spring
 2.0.2 and Hibernate 3.2.2 from the login module and use JDBC for its `accounts`
 and `gameservers` tables. Issue #52 also covers startup and database
 qualification of the game server. Its persistence already uses JDBC through
@@ -149,7 +149,7 @@ verify against a disposable copy of the repository SQL schemas and MySQL 8.4:
 Issue #52 was closed after the exact release image passed target Windows and
 MySQL qualification in `v1.5.1`. This file is retained as historical context.
 
-## Existing work and handoff rules
+## Related work
 
-Keep every GitHub CLI command outside the sandbox. The current infrastructure
-modernization is tracked by parent issue #59.
+The infrastructure modernization that followed this issue was tracked by parent
+issue #59 and is recorded in the [modernization vision](INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md).
