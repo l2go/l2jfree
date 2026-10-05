@@ -9,7 +9,6 @@ package com.l2jfree.datapack;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,16 +46,29 @@ class PythonScriptSyntaxTest
 		List<String> failures = new ArrayList<>();
 		for (Path script : scripts)
 		{
-			try (Reader source = Files.newBufferedReader(script, StandardCharsets.UTF_8))
+			// Windows checkout rewrites LF as CRLF. A trailing backslash then
+			// escapes the carriage return, so normalize before the syntax check.
+			String source = Files.readString(script, StandardCharsets.UTF_8).replace("\r\n", "\n").replace("\r", "\n");
+			try
 			{
 				compiler.compile(source);
 			}
 			catch (ScriptException e)
 			{
-				failures.add(scriptRoot.relativize(script) + ": " + e.getMessage());
+				failures.add(scriptRoot.relativize(script) + ": " + scriptFailure(e));
 			}
 		}
 
 		assertThat(failures).as("Jython syntax errors in datapack scripts using the selected runtime").isEmpty();
+	}
+
+	private static String scriptFailure(ScriptException exception)
+	{
+		Throwable cause = exception.getCause();
+		while (cause != null && cause.getCause() != null && cause.getCause() != cause)
+		{
+			cause = cause.getCause();
+		}
+		return cause == null ? exception.getMessage() : cause.toString();
 	}
 }
