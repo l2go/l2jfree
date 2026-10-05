@@ -1,26 +1,36 @@
 # Platform 3.0 Vision
 
+## Status
+
+Platform 3.0 is in development. v2.5.0 is the final release of the 2.x line,
+which is retired ([ADR-0008](adr/0008-retire-the-2x-line.md)). Decisions made
+after this vision was first written are recorded in [docs/adr](adr/README.md)
+and take precedence where they differ: delivery
+([ADR-0002](adr/0002-linux-image-delivered-with-compose.md)), the network core
+([ADR-0005](adr/0005-netty-network-core.md)), data access
+([ADR-0006](adr/0006-data-access-layer.md)), and the release policy
+([ADR-0007](adr/0007-release-policy.md)). The [roadmap](roadmap.md) groups the
+work into milestones.
+
 ## Purpose
 
 This document defines Platform 3.0, the infrastructure generation after the
-2.0 line. The current release on that line is v2.5.0. It still ships on
-Windows 10, the Microsoft Build of OpenJDK 25, and MySQL 8.4. Platform 3.0
-replaces that platform. It keeps the Lineage II client protocol and the
+2.0 line. The 2.0 line shipped on Windows 10, the Microsoft Build of OpenJDK 25,
+and MySQL 8.4. Platform 3.0 replaces that platform. It keeps the Lineage II client protocol and the
 gameplay rules, and it changes the operating system, the JDK distribution,
 the database, and the shape of the deployment.
 
 The name 3.0 marks a platform change. It is a new host, a new JDK build, and a
 new database, assembled as one process.
 
-Read this document in two layers. The next section is the contract of the
-2.0 line, which v2.5.0 still meets. Everything after it is the 3.0 vision
-and starts only from that finished line.
+Read this document in two layers. The next section records what the 2.0 line
+delivered. Everything after it is the 3.0 vision.
 
-## What the 2.0 line finishes
+## What the 2.0 line delivered
 
-v2.5.0 is the current release on this platform. It does not become Platform 3.0.
+v2.5.0 is the final release on this platform. It does not become Platform 3.0.
 
-| Layer | 2.0 line, current release v2.5.0 |
+| Layer | 2.0 line, final release v2.5.0 |
 |---|---|
 | Acceptance | Windows 10 x64, Microsoft Build of OpenJDK 25, MySQL 8.4 |
 | Processes | Login and Game remain two processes. The monolith is not moved here |
@@ -31,11 +41,6 @@ v2.5.0 is the current release on this platform. It does not become Platform 3.0.
 | IRC | The admin bridge is not a 2.0 feature, and irclib is not a dependency |
 | Launch | A `java` command. Default configuration ships in the archive; credentials stay in private deployment files |
 
-A 2.0 release candidate is blocked only by qualification of what is already
-landed: startup, save, restart, database loss, and shutdown on Windows,
-Microsoft JDK 25, and MySQL 8.4. Stable waits for confirmation and for the
-table above.
-
 Release 2.0.0 does not include Linux as the acceptance host, Temurin as the
 acceptance JDK, PostgreSQL, one process, Netty, Generational ZGC, the AOT
 cache, a Javolution or Trove replacement, GraalPy, or a datapack revision
@@ -45,11 +50,11 @@ separate from Game.
 
 | Layer | Decision |
 |---|---|
-| Operating system | Linux x64. aarch64 is built the same way and is not the acceptance host. |
-| JDK | Eclipse Temurin 25, the current long-term support release. The next LTS is JDK 29, expected in September 2027. |
+| Operating system | A Linux image, `linux/amd64`, on an Arch Linux base. It runs on Docker Desktop (Windows), Colima (macOS), and Docker Engine (Linux). On Apple Silicon it runs through emulation. |
+| JDK | Eclipse Temurin 25, the current long-term support release, as a pinned JRE archive. The next LTS is JDK 29, expected in September 2027. |
 | Database | PostgreSQL 18, current minor of that major line. On 30 September 2026 the minor is 18.6. Community support runs until 14 November 2030. |
-| Deployment | One image, one process, two client ports. Modules `login` and `world`. The datapack is source that the image contains. |
-| Verification | GitHub Actions and the acceptance Linux host. Developer workstations do not build, test, or run the server. |
+| Deployment | One image, one process, two client ports: 2106 for login and 7777 for the world. Installed only with `docker compose up -d --wait`. Modules `login` and `world`. The datapack is source that the image contains. |
+| Verification | GitHub Actions on Linux for every merge, and a manual check on Docker Desktop and Colima before the release. Developer workstations do not build, test, or run the server. |
 
 PostgreSQL does not publish a separate long-term-support edition. The project
 supports each major version for five years. PostgreSQL 18 is the newest line
@@ -65,7 +70,9 @@ integrity.
 
 - Linux provides `io_uring`. A Netty 4.2 transport can use it. That path does
   not exist on Windows, which is why replacing the current network core was a
-  weak trade on the 2.0 host.
+  weak trade on the 2.0 host. Docker's default security profile blocks
+  `io_uring` inside containers, so the default transport is epoll and
+  `io_uring` is an opt-in ([ADR-0002](adr/0002-linux-image-delivered-with-compose.md)).
 - JDK 25 provides virtual threads, scoped values, and the Project Leyden AOT
   cache. One process warms once, without a native image. Generational ZGC
   holds pauses on a long-lived process with allocation spikes.
@@ -79,12 +86,15 @@ build matched the Windows 2.0 host. On Linux, Adoptium publishes archives,
 container images, deb and rpm packages, x64 and aarch64, including Alpine.
 Server behavior does not change with the vendor string. `java.vendor` becomes
 Eclipse Adoptium. Oracle JDK 25 updates move to a different license after
-autumn 2028. Temurin does not have that split.
+autumn 2028. Temurin does not have that split. The image pairs the Temurin
+JRE archive with an Arch Linux base and does not use Arch's JDK package, which
+follows the newest JDK.
 
 The server stays a Java MMORPG server. Quarkus, Spring, and a reactive database
 stack are not added. Virtual threads plus JDBC cover the workload that used to
-justify a database event loop. Kubernetes is not part of the platform. One
-systemd unit and one compose file run the image and PostgreSQL 18.
+justify a database event loop. Neither Kubernetes nor systemd is part of the
+platform. One compose file runs the image and PostgreSQL 18 on Docker Desktop,
+Colima, or Docker Engine.
 
 ## Modular monolith
 
@@ -133,14 +143,14 @@ adapter in advance.
 | Driver candidate | pg-java | August 2026 pre-release. Blocking API that avoids pinning virtual threads. It enters a release only after full JDBC coverage and a comparison with pgjdbc. |
 | Pool | HikariCP 7.1 | The pool stays small. Virtual threads wait for a connection. One connection per thread overloads PostgreSQL. |
 | Migrations | Flyway 13, PostgreSQL module | Plain SQL in the repository. The PostgreSQL module is Apache 2.0. Transactional DDL makes a migration atomic. Liquibase 5 is declined on license terms. |
-| Network | Own protocol codec on Netty 4.2. Transport is `io_uring`, with epoll as the fallback | A replay of real packets accepts the port: encryption, packet order, disconnect, p99, allocations. A losing table is fixed in the Netty port. The previous core is not in the 3.0 release. |
+| Network | Own protocol codec on Netty 4.2. Transport is `io_uring`, then epoll, then NIO. The container default is epoll | Adopted by decision without a packet-replay comparison ([ADR-0005](adr/0005-netty-network-core.md)). Conformance tests on fixed vectors and an end-to-end smoke test cover the risk. The previous core is not in the 3.0 release. |
 | Logging | SLF4J 2.0.20 and Logback 1.5 to stdout and named operational files | The 2.0 line completes the backend migration. Platform 3.0 retains the unified backend and named audit/gameplay channels. |
 | IRC | Not included | The admin bridge and irclib are removed on the 2.0 line. Platform 3.0 does not add an IRC client. |
 | Threads | Virtual threads for login, JDBC, admin, and background I/O. Scoped values replace `ThreadLocal` | World ticks, knownlist, and AI stay on platform threads. The promotion check includes a pinning report. |
 | Scripts and catalog | Built into the image in CI | Datapack sources are not a release archive. Java scripts ship as bytecode. Python is one runtime inside the image. ECJ in the running process is a development tool. |
 | Python | Jython 2.7 final inside the image | Same line as the 2.0.0 choice, Jython 2.7.5b1. The final release drops the beta. GraalPy is excluded: the datapack stays on Python 2, and GraalPy speed requires GraalVM. |
 | Observability | Always-on JFR, OpenTelemetry Java agent, `pg_stat_statements`, `auto_explain` | An incident is captured without a restart: JVM recording, pool, task queue, slow SQL. |
-| Delivery | Non-root image, SBOM, cosign signature, checksum | CI uses `eclipse-temurin:25` and `postgres:18.6`. PostgreSQL patch releases stay on the 18 line. |
+| Delivery | Non-root image on a pinned Arch Linux base, Temurin 25 JRE archive pinned by checksum, SBOM, cosign signature, checksums | CI builds the image and starts it with the compose bundle. The database is the official `postgres` image of the 18 line, pinned by digest ([ADR-0002](adr/0002-linux-image-delivered-with-compose.md), [ADR-0007](adr/0007-release-policy.md)). |
 | Tests | JUnit 6, AssertJ, Mockito, Testcontainers with PostgreSQL 18 | The same major line as the acceptance host. |
 
 Javolution 5.4.1 leaves the release. Cold paths use the JDK collections.
@@ -209,42 +219,48 @@ inside the pool change.
 
 ## Sequence
 
-These steps start from the finished 2.0 line. v2.5.0 is that release. They do not repeat the logging,
+These steps start from the final 2.0 release, v2.5.0. They are grouped into
+three milestones in the [roadmap](roadmap.md). They do not repeat the logging,
 IRC, Jython 2.7.5b1, or CI script work from that release.
 
-1. Move CI and the image to Linux and Temurin 25. Remove Windows from the
-   acceptance gate.
-2. Bring up PostgreSQL 18.6 beside the existing database: Flyway,
-   Testcontainers, and a vertical slice of account and character save/restart.
-   MySQL stays until that slice passes.
-3. Move the remaining JDBC paths to PostgreSQL. The pool has a wait ceiling
-   and metrics.
+1. Move CI and the image to Linux. The image runs with Docker Compose and
+   publishes ports 2106 and 7777. Remove Windows from the acceptance gate.
+2. Move the data to PostgreSQL 18 with the accepted data design: Flyway,
+   Testcontainers, and a vertical slice of account and character save and
+   restart ([ADR-0004](adr/0004-postgresql-and-the-accepted-data-design.md)).
+   There is no parallel run of MySQL and no migration of 2.x databases.
+3. Move the remaining JDBC paths to PostgreSQL behind the targeted repository
+   seam ([ADR-0006](adr/0006-data-access-layer.md)). The pool has a wait
+   ceiling and metrics.
 4. Enable the AOT cache and ZGC in the image. Compare time-to-accept-players
    with the previous start.
 5. Build the catalog and scripts into the image. Remove the separate datapack
    archive. Split `login`, `world`, and `catalog`.
 6. Collapse login and world into one process and replace the internal
    admission socket with the in-process contract.
-7. Move the transport to Netty 4.2 on `io_uring`, with epoll as the fallback.
-   Keep the protocol codec. Accept the port with a replay of real packets. A
-   losing table is fixed in the Netty port. The previous core is not released.
+7. Move the transport to Netty 4.2 with epoll by default. Keep the protocol
+   codec. Accept the port with conformance tests and an end-to-end smoke test
+   ([ADR-0005](adr/0005-netty-network-core.md)). The previous core is not
+   released.
 8. After that flight recording, replace Javolution with JDK collections and
    Trove with fastutil on the measured primitive hot paths. Move every other
    site to the JDK collections.
-9. Release Platform 3.0 as one image plus PostgreSQL 18. The MySQL migration
-   record covers `login` and `world`. The catalog arrives inside the image.
-   The image no longer contains Commons Logging, irclib, Javolution, Trove,
+9. Release Platform 3.0 as one image plus PostgreSQL 18, once
+   ([ADR-0007](adr/0007-release-policy.md)). The catalog arrives inside the
+   image. The image no longer contains Commons Logging, irclib, Javolution, Trove,
    GraalPy, or the previous network core.
 
 ## Outside this platform
 
 - PostgreSQL 19, until a later decision changes the major line.
 - The Microsoft Build of OpenJDK and Oracle JDK.
-- Windows as a delivery target.
+- Windows and macOS as native hosts. They run the Linux image through Docker Desktop or Colima.
+- systemd units, Kubernetes manifests, and install scripts on the host.
+- A native arm64 image. The amd64 image runs through emulation on Apple Silicon.
 - MySQL.
 - GraalPy, GraalVM, and any second Python interpreter. Jython 2.7.5b1 is replaced by the Jython 2.7 final release.
 - pg-java while it is a pre-release.
-- Quarkus, Spring, R2DBC, and Kubernetes.
+- Quarkus, Spring, and R2DBC.
 - Virtual threads on world ticks.
 - The previous network core, Commons Logging, irclib, Javolution, and Trove.
 - A separate datapack archive, a shared content volume, or a catalog path the
@@ -253,14 +269,8 @@ IRC, Jython 2.7.5b1, or CI script work from that release.
 
 ## Relationship to 2.0.0
 
-The 2.0 infrastructure vision remains the contract of the current release
-line: Windows 10, Microsoft Build of OpenJDK 25, MySQL 8.4, and two processes.
-From v2.5.0 the datapack ships inside the GameServer archive. Platform 3.0
-does not rewrite that release. Work that
-makes this vision cheaper lands on the 2.0 line only when it also satisfies
-the 2.0 contract: JDK 25 APIs with no vendor dependency, SQL kept behind
-repositories, numbered SQL files, Java scripts compiled in CI into the game
-delivery, and Jython 2.7.5b1 as the only Python runtime. The 2.0 line uses
-SLF4J 2.0.20 with Logback 1.5 instead of Commons Logging, and it does not
-ship an admin IRC bridge or irclib. Platform 3.0 moves the Jython pin to the 2.7 final
-release and completes the JDK, fastutil, and Netty replacements above.
+The 2.0 line is retired ([ADR-0008](adr/0008-retire-the-2x-line.md)). Its
+documents remain as history and describe Windows 10, MySQL 8.4, and two
+processes. Nothing in the 3.0 line has to satisfy the 2.0 contract. Platform
+3.0 moves the Jython pin to the 2.7 final release and completes the JDK,
+collection, and Netty replacements above.

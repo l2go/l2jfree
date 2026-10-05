@@ -6,49 +6,45 @@
 
 **Gracia Final · Protocol 83**
 
-An archived Lineage II server, maintained for modern builds and Windows 10 deployment qualification.
+An archived Lineage II server, being rebuilt as Platform 3.0: a Linux image that runs with Docker Compose on Docker Desktop, Colima, or Docker Engine.
 
 [![Build](https://github.com/l2go/l2jfree/actions/workflows/build.yml/badge.svg)](https://github.com/l2go/l2jfree/actions/workflows/build.yml)
 [![License: GPLv3](https://img.shields.io/badge/license-GPLv3-2563eb)](LICENSE)
 ![Java: 25](https://img.shields.io/badge/Java-25-2ea44f)
 
-[Build](#quick-start) · [Deployment](#windows-10-deployment) · [Infrastructure](#infrastructure-modernization) · [Architecture](#architecture) · [Correctness](#correctness-program)
+[Platform 3.0](#platform-30-in-development) · [How this project is run](#how-this-project-is-run) · [Architecture](#architecture) · [Legacy 2.x](#legacy-2x-retired) · [Correctness](#correctness-program)
 
 </div>
 
-> **Target platform:** Windows 10 x64, Microsoft Build of OpenJDK 25, and MySQL Server 8.4.
+> **Status:** Platform 3.0 is in development and has no release yet. v2.5.0 is the final release of the 2.x line, which is retired and unsupported.
 
-## Quick start
+## Platform 3.0 (in development)
 
-Download the published [L2JFree release artifacts](https://github.com/l2go/l2jfree/releases). From v2.5.0 the release contains LoginServer and GameServer archives. The datapack is inside the GameServer archive. `SHA256SUMS.txt` covers the published files.
+The target is one Linux image that starts with `docker compose up -d --wait` and publishes two ports: **2106** for login and **7777** for the world. The image runs one process with a login module and a world module on Java 25 (Eclipse Temurin), with PostgreSQL 18 as the database. The base is Arch Linux for `linux/amd64`.
 
-Build and package verification run in GitHub Actions with the checksum-pinned Maven Wrapper and Microsoft OpenJDK 25. The [infrastructure vision](docs/INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md) is the contract of this release line; v2.5.0 is its current release. [Platform 3.0](docs/PLATFORM-3.0-VISION.md) records the later, separate platform change.
-
-Operators can use the [operations runbook](docs/OPERATIONS-RUNBOOK.md) for release verification, database safety, startup/shutdown, and incident capture.
-
-The [logging migration plan](docs/LOGGING-MIGRATION-PLAN.md) records the audit and gameplay log channels. v2.5.0 loads Logback from `config/logback.xml`.
-
-The [dependency inventory](docs/DEPENDENCY-INVENTORY.md) lists the current direct dependencies, selected platform components, and gated replacement candidates. The [deployment qualification notes](docs/2026-Q4-UPGRADE.md) record the Windows 10 acceptance steps.
-
-## Windows 10 deployment
-
-| Component | Target |
+| Environment | How it runs |
 |---|---|
-| Host | Windows 10 Pro 22H2 x64 |
-| Java | Microsoft Build of OpenJDK 25 x64 |
-| Database | MySQL Server 8.4 installed as a Windows service; Connector/J 26.7.0 |
+| Linux | Docker Engine with the Compose plugin |
+| Windows | Docker Desktop |
+| macOS | Colima with the Docker CLI and Compose. On Apple Silicon the image runs through emulation |
 
-Both Windows server launchers reject Java runtimes whose major version is not 25. Set `JAVA_HOME` to the Microsoft JDK 25 installation or make that runtime the `java` command found through `PATH`.
+There is no systemd unit, no Kubernetes manifest, and no install script on the host. Read the [vision](docs/PLATFORM-3.0-VISION.md) and the [delivery decision](docs/adr/0002-linux-image-delivered-with-compose.md) for the details and the limits.
 
-The current stable release is [v2.5.0](https://github.com/l2go/l2jfree/releases/tag/v2.5.0). It publishes the LoginServer archive, the GameServer archive with the datapack merged in, the documentation archive, a CycloneDX SBOM, a vulnerability report, and `SHA256SUMS.txt`. [v2.0.0](https://github.com/l2go/l2jfree/releases/tag/v2.0.0) remains the previous stable release and still publishes a separate datapack archive. The maintainer ran the v2.5.0 tree on the Windows 10 and MySQL 8.4 host and accepted it for release. The four v2.0.0 vulnerability findings are upgraded in this release, and the v2.5.0 scan report lists no findings.
+## How this project is run
 
-## Infrastructure modernization
+| Question | Where the answer is |
+|---|---|
+| Why was a decision made? | [Architecture decision records](docs/adr/README.md) |
+| What is planned and when is it done? | [Roadmap](docs/roadmap.md) and the [project board](https://github.com/users/l2go/projects/1) |
+| What could go wrong? | [Risk register](docs/risks.md) |
+| Which document is current? | [Documentation index](docs/index.md) |
+| How are defects handled? | [Correctness program](#correctness-program) |
 
-The first database qualification issue, [#52](https://github.com/l2go/l2jfree/issues/52), is complete in v1.5.1. The [modernization vision](docs/INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md) records the architecture and the execution status. Parent issue [#59](https://github.com/l2go/l2jfree/issues/59) tracked the work that produced v2.0.0.
-
-Release archives include a checksum manifest and signed GitHub provenance. See the [release verification guide](docs/RELEASE-VERIFICATION.md) before deploying downloaded artifacts.
+The project ships one release of the 3.0 line, `v3.0.0`. Until then every merge to `main` builds an image for acceptance ([release policy](docs/adr/0007-release-policy.md)).
 
 ## Architecture
+
+Modules of the current code base. Platform 3.0 runs login and world as two modules of one process ([decision](docs/adr/0003-one-process-two-modules.md)).
 
 ```mermaid
 flowchart LR
@@ -59,6 +55,10 @@ flowchart LR
     E[Scripting engines] --> D
     D --> F[Datapack]
 ```
+
+## Legacy 2.x (retired)
+
+[v2.5.0](https://github.com/l2go/l2jfree/releases/tag/v2.5.0) is the final release of the 2.x line ([decision](docs/adr/0008-retire-the-2x-line.md)). It ran on Windows 10 x64, Microsoft Build of OpenJDK 25, and MySQL Server 8.4 with two processes. It receives no further releases, patches, or security fixes. The release and its checksums, SBOM, vulnerability report, and attestations stay published as history; see the [release verification guide](docs/RELEASE-VERIFICATION.md). The 2.x documents are listed in the [documentation index](docs/index.md). A 3.0 installation starts clean; there is no tool that migrates a 2.x database.
 
 ## Correctness program
 

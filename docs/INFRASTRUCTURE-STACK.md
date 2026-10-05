@@ -1,5 +1,7 @@
 # L2JFree Infrastructure Stack
 
+> **Retired.** This document describes the 2.x line. v2.5.0 is its final release ([ADR-0008](adr/0008-retire-the-2x-line.md)). See the [documentation index](index.md).
+
 This is the implementation map for the 2.0 infrastructure vision. v2.5.0 is
 the current release. Platform constraints are fixed. A row's status cell says
 whether that choice is in v2.5.0 or still waits for Platform 3.0.

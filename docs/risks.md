@@ -1,0 +1,18 @@
+# Risk register
+
+Reviewed at the close of each milestone. Likelihood and impact are Low, Medium, or High. Status is Open, Mitigated, or Closed.
+
+| ID | Risk | Likelihood | Impact | Mitigation | Status |
+|---|---|---|---|---|---|
+| R-1 | The Netty core was adopted without a comparison ([ADR-0005](adr/0005-netty-network-core.md)). Cipher ordering, back-pressure, or disconnect behavior may differ from the old core | Medium | High | Conformance tests on fixed vectors, an end-to-end smoke test in CI, a real client before the release, and conditions for reopening the decision in the record | Open |
+| R-2 | The Arch Linux base is a rolling release, so an unpinned build can change without notice | High | Medium | Base pinned by dated tag and digest, packages from a dated Arch Linux Archive snapshot, JDK pinned as a separate archive ([ADR-0002](adr/0002-linux-image-delivered-with-compose.md)) | Open |
+| R-3 | The official Arch image is `linux/amd64` only, so Apple Silicon runs it through emulation. Stability and speed under emulation are not known | Medium | Medium | Colima with `--vm-type vz --vz-rosetta` documented; the limit is stated in the support matrix; revisit if an official arm64 image appears | Open |
+| R-4 | On Docker Desktop and Colima the server sees the gateway address instead of client addresses, so per-IP features collapse to one address | High | Medium | Limitation documented; optional host-network profile for Linux; external address setting | Open |
+| R-5 | Docker's default security profile blocks `io_uring`, so the vision's `io_uring` benefit is unavailable by default | High | Low | Default transport is epoll; `io_uring` is an opt-in with a custom profile | Mitigated |
+| R-6 | Windows and macOS cannot be verified in CI | High | Medium | Manual check once before the release, recorded in the report | Open |
+| R-7 | M2 is large because the work is not sliced into releases | Medium | Medium | Packages with green CI after each, a real-client run at the end of M2 on the `edge` image, and a report after each large group of packages | Open |
+| R-8 | The data-access seam grows beyond the three chosen domains | Medium | Medium | A dependency rule keeps the count of direct database calls from growing; the seam stays limited by [ADR-0006](adr/0006-data-access-layer.md) | Open |
+| R-9 | Suspected concurrency defects, not yet confirmed in this code: shared maps and lists in clan, boss, event, login, and flood-protection code, a connection counter in the selector thread, and a null check in skill assignment for NPCs | Medium | Medium | Confirm each with a failing test, then fix it during WP6 | Open |
+| R-10 | One maintainer and one account, with manual merge, so work stops when that person is unavailable | Medium | High | Decisions, runbooks, and reports are written so another person can continue; the ruleset and checks do not depend on the person | Open |
+| R-11 | Supply chain: images, base, and dependencies change over time | Medium | High | Digest pins, SBOM, signature, attestations, and a vulnerability policy that blocks a stable tag | Open |
+| R-12 | Documentation grows long and repetitive | Medium | Low | One page per decision record, tables in reports, retired documents marked in `docs/index.md` and moved to an archive later | Open |

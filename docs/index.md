@@ -1,0 +1,36 @@
+# Documentation index
+
+Platform 3.0 is in development. v2.5.0 is the final release of the 2.x line, which is retired ([ADR-0008](adr/0008-retire-the-2x-line.md)).
+
+## Current
+
+| Document | Purpose |
+|---|---|
+| [Roadmap](roadmap.md) | Milestones, exit criteria, and work packages for Platform 3.0 |
+| [Risk register](risks.md) | Open risks and their mitigations |
+| [Architecture decision records](adr/README.md) | One record per decision, with rationale and consequences |
+| [Platform 3.0 vision](PLATFORM-3.0-VISION.md) | Target platform and design, revised by the decision records |
+| [Correctness audit](2026-Q4-CORRECTNESS-AUDIT.md) | Policy for filing and fixing defects; the testing sections are historical |
+
+## 2.x line (retired)
+
+These describe Windows 10, MySQL 8.4, and two processes. They stay as history.
+
+| Document | Purpose |
+|---|---|
+| [Operations runbook](OPERATIONS-RUNBOOK.md) | Release acceptance and routine operation of v2.5.0 |
+| [Deployment qualification](2026-Q4-UPGRADE.md) | Windows 10 qualification notes |
+| [Release verification](RELEASE-VERIFICATION.md) | Checksums and attestations of the published releases |
+| [Dependency inventory](DEPENDENCY-INVENTORY.md) | Direct dependencies of v2.5.0 |
+| [Infrastructure stack](INFRASTRUCTURE-STACK.md) | Stack map of the 2.0 line |
+| [Infrastructure vision 2.0](INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md) | Target and execution status of the 2.0 line |
+| [Database migration strategy](DATABASE-MIGRATION-STRATEGY.md) | Forward-only SQL changes for MySQL |
+| [Logging migration plan](LOGGING-MIGRATION-PLAN.md) | Logging backend and named channels of the 2.0 line |
+
+## Historical
+
+| Document | Purpose |
+|---|---|
+| [Issue 52 implementation plan](ISSUE-52-JDBC-IMPLEMENTATION-PLAN.md) | Login persistence work completed in v1.5.1 |
+| [Infrastructure modernization program](2026-Q4-INFRASTRUCTURE-MODERNIZATION.md) | Summary of the first modernization stages |
+| [Original readme](../UPSTREAM_README.md) | Upstream text, kept unchanged |
