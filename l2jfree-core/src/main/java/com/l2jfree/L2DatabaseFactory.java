@@ -100,7 +100,7 @@ public final class L2DatabaseFactory
 		}
 	}
 
-	private static HikariConfig createPoolConfig()
+	static HikariConfig createPoolConfig()
 	{
 		if (Config.DATABASE_MAX_CONNECTIONS < 10)
 		{

@@ -22,6 +22,11 @@ public final class LoginDataSource implements AutoCloseable
 
 	public LoginDataSource()
 	{
+		this(createPoolConfig());
+	}
+
+	static HikariConfig createPoolConfig()
+	{
 		HikariConfig pool = new HikariConfig();
 		pool.setPoolName("l2jfree-loginserver");
 		pool.setDriverClassName(Config.DATABASE_DRIVER);
@@ -46,7 +51,7 @@ public final class LoginDataSource implements AutoCloseable
 			pool.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 		}
 		pool.setInitializationFailTimeout(30_000);
-		dataSource = createDataSource(pool);
+		return pool;
 	}
 
 	LoginDataSource(HikariConfig pool)
