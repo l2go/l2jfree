@@ -17,7 +17,7 @@ Version values marked as properties are maintained in
 | `l2j-commons` | MySQL Connector/J | 26.7.0 | Runtime | JDBC driver for the fixed MySQL 8.4 platform. |
 | `l2j-commons` | Javolution | 5.4.1 | Runtime | Legacy collections and utility structures; replace selectively after profiling. |
 | LoginServer, GameServer | HikariCP | 7.1.0 | Runtime | JDBC connection pool replacing c3p0. |
-| LoginServer, GameServer | OpenTelemetry Java agent | 2.26.1 | Optional agent archive | Provides opt-in JVM, JDBC, and HikariCP metrics and traces through OTLP; packaged outside the application classpath and disabled by default. |
+| LoginServer, GameServer | OpenTelemetry Java agent | 2.32.0 | Optional agent archive | Provides opt-in JVM, JDBC, and HikariCP metrics and traces through OTLP; packaged outside the application classpath and disabled by default. |
 | LoginServer, GameServer | SLF4J JUL provider | 2.0.20 | Runtime | Routes HikariCP SLF4J diagnostics into the existing JUL configuration during migration. |
 | GameServer | JDK compiler | the CI JDK | Build only | Compiles datapack Java sources during the CI build. The server does not compile Java scripts at startup, and ECJ is not a dependency. |
 | GameServer | Jython | 2.2.1 | Runtime baseline | Current compatibility baseline while the embedded Jython 2.7.5b1 bridge and supported scripts are qualified for the 2.0 target. |
@@ -71,8 +71,8 @@ GraalPy and Python 3 migration are excluded.
 
 | Area | Candidate | CI / qualification status |
 |---|---|---|
-| Python 2 compatibility | Jython 2.7.5b1 | Runtime version is pinned for 2.0. Automated syntax, Java interop, and embedded bridge coverage is deferred to 2.1.0; Windows gameplay qualification remains before 2.0.0. |
-| Runtime diagnostics | JFR and OpenTelemetry Java agent 2.26.1 | The agent is included separately in both Windows distributions; launch only when explicitly enabled with a configured OTLP endpoint. Measure overhead and verify redaction before operational use. |
+| Python 2 compatibility | Jython 2.7.5b1 | Runtime version is pinned. v2.5.0 CI compiles the datapack Python sources with that runtime. A full quest and AI behavior suite is not in this release. |
+| Runtime diagnostics | JFR and OpenTelemetry Java agent 2.32.0 | The agent is included separately in both distributions and stays disabled unless an operator enables it. Version 2.32.0 includes the fixes for the v2.0.0 agent findings. |
 
 See the [approved qualification tracks](INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md#experimental-qualification-tracks)
 for the promotion evidence required for Jython and runtime diagnostics.
@@ -80,8 +80,22 @@ for the promotion evidence required for Jython and runtime diagnostics.
 ## Governance
 
 GitHub Actions generates a CycloneDX SBOM from the release source revision and
-scans it for known vulnerabilities. The initial scan report is published for
-triage; it is not yet a blanket release blocker. Every direct or transitive
+scans it for known vulnerabilities. A finding at Medium or higher in a
+published report is either removed by a dependency upgrade or given an
+explicit accepted-risk note before the next stable tag. Low findings are
+upgraded when a compatible patch on the same release line exists.
+
+The v2.0.0 report contained four findings:
+
+| Finding | Severity | Package in v2.0.0 | Disposition |
+|---|---|---|---|
+| GHSA-fq3f-m5qm-99f5 | Medium | opentelemetry-javaagent 2.26.1 | Upgraded to 2.32.0. The agent is optional and disabled unless the launcher is given an agent path. The finding is RMI context propagation that can exhaust resources when that instrumentation is active. |
+| GHSA-rwqx-fvqh-6wm4 | Medium | opentelemetry-javaagent 2.26.1 | Upgraded to 2.32.0. Fixed in 2.28.0. JDBC auto-instrumentation could copy a double-quoted password into a span. The server does not attach the agent by default. |
+| GHSA-p47f-322f-whfh | Low | logback-core 1.5.32 | Upgraded to 1.5.38. Fixed in 1.5.33. |
+| GHSA-jhq6-gfmj-v8fx | Low | logback-core 1.5.32 | Upgraded to 1.5.38. Fixed in 1.5.34. |
+
+v2.5.0 publishes a new SBOM and vulnerability report from this dependency
+set. Every direct or transitive
 runtime dependency change must be reviewed for supported Java 25 operation,
 MySQL compatibility where relevant, licensing, maintenance status, and
 presence in the intended release archives. Automated update proposals do not

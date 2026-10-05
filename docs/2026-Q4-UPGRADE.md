@@ -9,9 +9,9 @@
 | Build | Maven Wrapper 3.9.16 with a pinned SHA-256 checksum |
 | Database | MySQL 8.4 LTS, latest patch available at deployment |
 | Driver | Connector/J 26.7.0 (`com.mysql.cj.jdbc.Driver`) |
-| Stable release | GitHub `v2.0.0`. `v1.5.1` is the last image qualified on the target host. Re-qualification of v2.0.0 is open in [#95](https://github.com/l2go/l2jfree/issues/95). |
+| Stable release | GitHub `v2.5.0`. The maintainer ran this tree on the Windows 10 and MySQL 8.4 host. `v2.0.0` is the previous stable release and was not re-qualified as its own three-archive image. |
 
-Release `v1.5.1` was qualified on the target Windows 10 and MySQL 8.4 host. Stable `v2.0.0` changes the Java bytecode target and connection pool and has not been qualified on that host. Qualify the `v2.0.0` image before deployment. GitHub Actions remains the only build and automated verification environment.
+Release `v1.5.1` was qualified on the target Windows 10 and MySQL 8.4 host. The maintainer ran the `v2.5.0` tree on that host and accepted it for release. `v2.0.0` changed the Java bytecode target and connection pool and was not given a separate host qualification. GitHub Actions remains the build and automated verification environment.
 
 Windows 10 left regular support on October 14, 2025. Limit public ports to game traffic, keep MySQL and administration private, restrict remote access, and maintain restorable offline backups. Oracle's supported-platform table does not list Windows 10 for MySQL 8.4. Run the database on a supported host if certification is required; otherwise qualify it on Windows 10 as a project-specific deployment.
 
@@ -26,10 +26,10 @@ Connector/J 26.7 is the currently pinned driver. The modernization vision record
    automatic restart.
 3. **Validate the database copy.** Restore a logical backup into MySQL 8.4. Check SQL modes, character sets, indexes,
    stored objects, authentication, and repository SQL. Preserve the original database backup for rollback.
-4. **Qualify the release image.** Assemble the server from the three ZIPs in the GitHub
-   [v2.0.0 release](https://github.com/l2go/l2jfree/releases/tag/v2.0.0): LoginServer, GameServer, and datapack.
-   Verify them with `SHA256SUMS.txt`, and stage the image under `dist/l2jfree-deploy`. Install it at `C:\l2jfree\`.
-   This step is not yet recorded as complete for v2.0.0 ([#95](https://github.com/l2go/l2jfree/issues/95)).
+4. **Qualify the release image.** Assemble the server from the two distribution ZIPs in the GitHub
+   [v2.5.0 release](https://github.com/l2go/l2jfree/releases/tag/v2.5.0): LoginServer and GameServer.
+   The datapack is already inside the GameServer archive. Verify both with `SHA256SUMS.txt`, stage the image
+   under `dist/l2jfree-deploy`, and install it at `C:\l2jfree\`. The maintainer completed this run for v2.5.0.
 5. **Qualify runtime behavior.** Run the login and game servers with OpenJDK 25 and the MySQL 8.4 service.
    Check script loading, login, gameplay entry, database writes, scheduled events, sustained load, shutdown, and restart.
    Resolve Java and SQL errors before release.
