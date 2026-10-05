@@ -1,5 +1,7 @@
 # Dependency inventory and modernization status
 
+> **Retired.** This document describes the 2.x line. v2.5.0 is its final release ([ADR-0008](adr/0008-retire-the-2x-line.md)). See the [documentation index](index.md).
+
 This inventory records direct Maven dependencies and the infrastructure
 decisions for the 2.0 line. The version pins below are the v2.5.0 set. The
 CycloneDX SBOM attached to each CI release is the authoritative complete

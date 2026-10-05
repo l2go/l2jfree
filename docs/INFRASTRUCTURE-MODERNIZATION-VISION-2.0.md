@@ -1,5 +1,7 @@
 # L2JFree Infrastructure Modernization Vision
 
+> **Retired.** This document describes the 2.x line. v2.5.0 is its final release ([ADR-0008](adr/0008-retire-the-2x-line.md)). See the [documentation index](index.md).
+
 ## Purpose
 
 This document defines the target infrastructure for the 2.0 release line.

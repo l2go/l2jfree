@@ -1,5 +1,7 @@
 # L2JFree operations runbook
 
+> **Retired.** This document describes the 2.x line. v2.5.0 is its final release ([ADR-0008](adr/0008-retire-the-2x-line.md)). See the [documentation index](index.md).
+
 This runbook describes release acceptance and routine operation on the fixed
 Windows 10 x64, Microsoft Build of OpenJDK 25, and MySQL Server 8.4 platform.
 Use the exact release archives selected for the deployment; do not mix files

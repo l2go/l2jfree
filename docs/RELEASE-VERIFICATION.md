@@ -1,5 +1,7 @@
 # Release artifact verification
 
+> **Retired.** This document describes the 2.x line. v2.5.0 is its final release ([ADR-0008](adr/0008-retire-the-2x-line.md)). See the [documentation index](index.md).
+
 Every public release includes a SHA-256 manifest, a CycloneDX dependency SBOM,
 a vulnerability scan report, and GitHub artifact attestations for the released
 files. It also includes a documentation ZIP with the README, the license, and the

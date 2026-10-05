@@ -1,5 +1,7 @@
 # Logging migration plan for the 2.0 line
 
+> **Retired.** This document describes the 2.x line. v2.5.0 is its final release ([ADR-0008](adr/0008-retire-the-2x-line.md)). See the [documentation index](index.md).
+
 v2.5.0 ships this backend. Each process loads `config/logback.xml`, and the
 launchers pass that file to Logback. The sections below are the migration
 record, not an open implementation milestone.

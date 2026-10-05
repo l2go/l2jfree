@@ -1,5 +1,7 @@
 # Database migration strategy for 2.0.0
 
+> **Retired.** This document describes the 2.x line. v2.5.0 is its final release ([ADR-0008](adr/0008-retire-the-2x-line.md)). See the [documentation index](index.md).
+
 ## Purpose
 
 Define safe, forward-only SQL changes from the 1.5.1 schema for the 2.0

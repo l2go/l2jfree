@@ -1,5 +1,7 @@
 # 2026 Q4 deployment qualification: Windows 10
 
+> **Retired.** This document describes the 2.x line. v2.5.0 is its final release ([ADR-0008](adr/0008-retire-the-2x-line.md)). See the [documentation index](index.md).
+
 ## Target and status
 
 | Component | Target |
