@@ -131,22 +131,18 @@ public abstract class IdFactory
 		cleanUpTimeStamps();
 	}
 	
-	static
+	private static IdFactory createInstance()
 	{
 		switch (Config.IDFACTORY_TYPE)
 		{
 			case BitSet:
-				_instance = new BitSetIDFactory();
-				break;
+				return new BitSetIDFactory();
 			case Stack:
-				_instance = new StackIDFactory();
-				break;
+				return new StackIDFactory();
 			case Increment:
-				_instance = new IncrementIDFactory();
-				break;
+				return new IncrementIDFactory();
 			case Rebuild:
-				_instance = new BitSetRebuildFactory();
-				break;
+				return new BitSetRebuildFactory();
 		}
 	}
 	
@@ -302,6 +298,14 @@ public abstract class IdFactory
 	
 	public static IdFactory getInstance()
 	{
+		if (_instance == null)
+		{
+			synchronized (IdFactory.class)
+			{
+				if (_instance == null)
+					_instance = createInstance();
+			}
+		}
 		return _instance;
 	}
 	
