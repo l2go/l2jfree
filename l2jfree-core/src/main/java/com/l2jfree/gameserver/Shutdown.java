@@ -25,7 +25,6 @@ import com.l2jfree.gameserver.instancemanager.CastleManorManager;
 import com.l2jfree.gameserver.instancemanager.CursedWeaponsManager;
 import com.l2jfree.gameserver.instancemanager.GameTimeManager;
 import com.l2jfree.gameserver.instancemanager.GrandBossSpawnManager;
-import com.l2jfree.gameserver.instancemanager.IrcManager;
 import com.l2jfree.gameserver.instancemanager.ItemsOnGroundManager;
 import com.l2jfree.gameserver.instancemanager.MercTicketManager;
 import com.l2jfree.gameserver.instancemanager.QuestManager;
@@ -157,9 +156,6 @@ public final class Shutdown extends Thread
 		{
 			t.printStackTrace();
 		}
-		
-		if (Config.IRC_ENABLED && !Config.IRC_ANNOUNCE)
-			IrcManager.getInstance().getConnection().sendChan("Server is " + _mode.getText() + " NOW!");
 		
 		OfflineTradeManager.getInstance().store();
 		
@@ -305,9 +301,6 @@ public final class Shutdown extends Thread
 		Announcements.getInstance().announceToAll("Attention players!");
 		Announcements.getInstance().announceToAll(msg);
 		
-		if (Config.IRC_ENABLED && !Config.IRC_ANNOUNCE)
-			IrcManager.getInstance().getConnection().sendChan(msg);
-		
 		_counter = seconds;
 		_mode = mode;
 		
@@ -322,9 +315,6 @@ public final class Shutdown extends Thread
 		String msg = "Server aborts " + _mode.getText() + " and continues normal operation!";
 		
 		Announcements.getInstance().announceToAll(msg);
-		
-		if (Config.IRC_ENABLED && !Config.IRC_ANNOUNCE)
-			IrcManager.getInstance().getConnection().sendChan(msg);
 		
 		_counter = Integer.MAX_VALUE;
 		_mode = ShutdownMode.NONE;

@@ -18,7 +18,6 @@ import com.l2jfree.Config;
 import com.l2jfree.Config.ChatMode;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.handler.IChatHandler;
-import com.l2jfree.gameserver.instancemanager.IrcManager;
 import com.l2jfree.gameserver.instancemanager.MapRegionManager;
 import com.l2jfree.gameserver.model.BlockList;
 import com.l2jfree.gameserver.model.mapregion.L2MapRegion;
@@ -57,11 +56,6 @@ public class ChatShout implements IChatHandler
 			return;
 		}
 		
-		if (Config.IRC_ENABLED && Config.IRC_FROM_GAME_TYPE.equalsIgnoreCase("shout") || Config.IRC_ENABLED
-				&& Config.IRC_FROM_GAME_TYPE.equalsIgnoreCase("all"))
-		{
-			IrcManager.getInstance().getConnection().sendChan("07!" + activeChar.getName() + ": " + text);
-		}
 		String name =
 				(activeChar.isGM() && Config.GM_NAME_HAS_BRACELETS) ? "[GM]" + activeChar.getName() : activeChar
 						.getName();

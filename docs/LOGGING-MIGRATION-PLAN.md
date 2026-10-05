@@ -6,7 +6,7 @@ All first-party Java logging calls now use SLF4J 2.x or the narrow JUL adapter
 needed for standard-output redirection. The dedicated channel names remain
 stable across LoginServer and GameServer.
 
-The operational channels route gameplay audit, chat, IRC, and item events into
+The operational channels route gameplay audit, chat, and item events into
 separate GameServer logs. LoginServer has separate login, login-attempt, and
 failed-login logs. These channels have independent formats, filters, retention,
 and append behavior. They are operational data streams, not just console
@@ -21,7 +21,7 @@ found no Commons Logging API use, so `jcl-over-slf4j` is removed as well.
 
 Use SLF4J 2.x as the application logging API with a maintained Logback backend.
 Produce consistent process and subsystem fields while preserving dedicated
-audit, chat, item, IRC, login-attempt, and failed-login streams. Keep passwords,
+audit, chat, item, login-attempt, and failed-login streams. Keep passwords,
 session keys, database credentials, and other authentication secrets out of
 every output channel.
 
@@ -61,14 +61,14 @@ permissions still require acceptance before stable release.
 - Completed: all first-party Java application callers across `l2j-commons`,
   LoginServer, GameServer, and MMOCore use SLF4J or a specialized logging
   adapter. Fatal-level calls map to SLF4J error level; throwable arguments and
-  the existing audit, chat, and IRC logger names are preserved. LoginServer
+  the existing audit and chat logger names are preserved. LoginServer
   no longer logs the local or supplied player session key on failed
   authentication. The core and MMOCore modules no longer need the Commons
   Logging API as a compile dependency.
 - Implemented in this block: Logback is the sole backend; JUL uses the
   one-way `jul-to-slf4j` adapter; per-process JUL configurations and the
   Commons Logging bridge are removed. Dedicated appenders remain for audit,
-  chat, IRC, item, login, login-attempt, and failed-login output. Item
+  chat, item, login, login-attempt, and failed-login output. Item
   consumption and the legacy excluded item categories are filtered; root
   events still reach admin/status listeners. Existing active log paths are
   retained, append mode is enabled, and rolling limits are explicit.
