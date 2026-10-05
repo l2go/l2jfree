@@ -123,6 +123,7 @@ public final class Config
 	public static String DATABASE_PASSWORD; // Database password
 	public static int DATABASE_MAX_CONNECTIONS; // Maximum number of connections to the
 	// database
+	public static int DATABASE_MIN_IDLE_CONNECTIONS; // Idle connections kept open, never above the maximum
 	public static int MAXIMUM_ONLINE_USERS; // Maximum number of players allowed to play
 	// simultaneously on server
 	public static boolean SAFE_REBOOT = false; // Safe mode will disable some feature
@@ -220,6 +221,7 @@ public final class Config
 			DATABASE_LOGIN = serverSettings.getProperty("Login", "root");
 			DATABASE_PASSWORD = serverSettings.getProperty("Password", "");
 			DATABASE_MAX_CONNECTIONS = Integer.parseInt(serverSettings.getProperty("MaximumDbConnections", "10"));
+			DATABASE_MIN_IDLE_CONNECTIONS = Integer.parseInt(serverSettings.getProperty("MinimumDbIdleConnections", "10"));
 			
 			SAFE_REBOOT = Boolean.parseBoolean(serverSettings.getProperty("SafeReboot", "False"));
 			SAFE_REBOOT_TIME = Integer.parseInt(serverSettings.getProperty("SafeRebootTime", "10"));

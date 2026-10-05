@@ -100,7 +100,7 @@ public final class L2DatabaseFactory
 		}
 	}
 
-	private static HikariConfig createPoolConfig()
+	static HikariConfig createPoolConfig()
 	{
 		if (Config.DATABASE_MAX_CONNECTIONS < 10)
 		{
@@ -116,7 +116,12 @@ public final class L2DatabaseFactory
 		poolConfig.setPassword(Config.DATABASE_PASSWORD);
 		poolConfig.setAutoCommit(true);
 		poolConfig.setMaximumPoolSize(Config.DATABASE_MAX_CONNECTIONS);
-		poolConfig.setMinimumIdle(10);
+		int idleConnections = Config.DATABASE_MIN_IDLE_CONNECTIONS;
+		if (idleConnections < 0)
+			idleConnections = 0;
+		if (idleConnections > Config.DATABASE_MAX_CONNECTIONS)
+			idleConnections = Config.DATABASE_MAX_CONNECTIONS;
+		poolConfig.setMinimumIdle(idleConnections);
 		poolConfig.setConnectionTimeout(30_000);
 		poolConfig.setValidationTimeout(5_000);
 		if (Config.DATABASE_DRIVER.toLowerCase(Locale.ROOT).contains("mysql"))
