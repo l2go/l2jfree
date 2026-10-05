@@ -72,7 +72,7 @@ GraalPy and Python 3 migration are excluded.
 
 | Area | Candidate | CI / qualification status |
 |---|---|---|
-| Python 2 compatibility | Jython 2.7.5b1 | Runtime version is pinned and ships in the GameServer archive. No CI job loads or compiles the datapack Python scripts. The syntax probe `tools/ci/validate-jython-candidate.py` is not wired into any workflow; the job that ran it was removed in the v2.0.0 cycle. A quest and AI behavior suite does not exist. Script behavior is accepted on the target host only. |
+| Python 2 compatibility | Jython 2.7.5b1 | Runtime version is pinned and ships in the GameServer archive. The `jython-syntax` CI job downloads the checksum-pinned runtime and runs `tools/ci/validate-jython-candidate.py`, which compiles every datapack Python script and checks Java interop. It proves syntax only. A quest and AI behavior suite does not exist, so script behavior is accepted on the target host. |
 | Runtime diagnostics | JFR and OpenTelemetry Java agent 2.32.0 | The agent is included separately in both distributions and stays disabled unless an operator enables it. Version 2.32.0 includes the fixes for the v2.0.0 agent findings. |
 
 See the [approved qualification tracks](INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md#experimental-qualification-tracks)
