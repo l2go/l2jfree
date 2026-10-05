@@ -93,15 +93,13 @@ public class CreatureKnownList extends ObjectKnownList
 	@Override
 	public void removeAllKnownObjects()
 	{
+		// removeKnownObject already drops the id from both indexes under this list's monitor.
+		// A clear after that walk would also drop an object admitted while the walk was in progress.
 		for (L2Object object : getKnownObjects().values())
 		{
 			removeKnownObject(object);
 			object.getKnownList().removeKnownObject(getActiveChar());
 		}
-		
-		getKnownObjects().clear();
-		
-		getKnownPlayers().clear();
 		
 		// Set _target of the L2Creature to null
 		// Cancel Attack or Cast
