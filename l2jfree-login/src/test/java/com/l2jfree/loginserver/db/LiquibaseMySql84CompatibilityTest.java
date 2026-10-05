@@ -25,10 +25,12 @@ import liquibase.exception.CommandExecutionException;
 import liquibase.exception.ValidationFailedException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
+@Tag("integration")
 @Testcontainers
 class LiquibaseMySql84CompatibilityTest
 {
