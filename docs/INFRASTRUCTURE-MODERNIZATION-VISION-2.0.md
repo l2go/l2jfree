@@ -298,10 +298,11 @@ v2.0.0 release. Follow-up after v2.0.0 is listed in the execution status.
 This status is the record of what is delivered. A stage item that it does not
 name as delivered is not delivered. In particular, v2.5.0 has no startup
 preflight of configuration, schema compatibility, or datapack files beyond the
-database connection check, and no health or readiness status. The CI job that
-ran a Jython syntax probe over the datapack Python scripts was removed during
-the v2.0.0 cycle and has not been restored, so no automated check loads those
-scripts.
+database connection check, and no health or readiness status. The
+`jython-syntax` CI job compiles the datapack Python scripts with Jython
+2.7.5b1. It checks syntax and Java interop only; no automated check runs
+quests or AI. An earlier version of that job was removed during the v2.0.0
+cycle and was restored after v2.5.0.
 
 Stable [v2.5.0](https://github.com/l2go/l2jfree/releases/tag/v2.5.0) is the
 current release. It keeps the Java 25 bytecode and HikariCP 7.1.0 line from
