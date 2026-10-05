@@ -1,0 +1,46 @@
+name: docs links
+
+# Checks every relative link and heading anchor in the Markdown documents on
+# each change. A weekly run also checks external links and reports failures
+# without blocking anything.
+
+on:
+  pull_request:
+    paths:
+      - "**.md"
+      - ".github/workflows/docs-links.yml"
+  push:
+    branches: [main]
+    paths:
+      - "**.md"
+  schedule:
+    - cron: "41 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  local:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check relative links and anchors
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --offline --include-fragments --no-progress README.md CONTRIBUTING.md SECURITY.md SUPPORT.md CODE_OF_CONDUCT.md CHANGELOG.md docs
+          fail: true
+
+  external:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check external links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --max-retries 3 --accept 200,201,204,301,302,403,429 README.md docs
+          fail: false

@@ -11,6 +11,11 @@ An archived Lineage II server, being rebuilt as Platform 3.0: a Linux image that
 [![Build](https://github.com/l2go/l2jfree/actions/workflows/build.yml/badge.svg)](https://github.com/l2go/l2jfree/actions/workflows/build.yml)
 [![License: GPLv3](https://img.shields.io/badge/license-GPLv3-2563eb)](LICENSE)
 ![Java: 25](https://img.shields.io/badge/Java-25-2ea44f)
+[![Release](https://img.shields.io/github/v/release/l2go/l2jfree?display_name=tag&sort=semver)](https://github.com/l2go/l2jfree/releases)
+[![Last commit](https://img.shields.io/github/last-commit/l2go/l2jfree)](https://github.com/l2go/l2jfree/commits/main)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/l2go/l2jfree/badge)](https://scorecard.dev/viewer/?uri=github.com/l2go/l2jfree)
+[![Board](https://img.shields.io/badge/board-Platform%203.0-8250df)](https://github.com/users/l2go/projects/2)
+[![Docs](https://img.shields.io/badge/docs-index-0969da)](docs/index.md)
 
 [Platform 3.0](#platform-30-in-development) · [How this project is run](#how-this-project-is-run) · [Architecture](#architecture) · [Legacy 2.x](#legacy-2x-retired) · [Correctness](#correctness-program)
 
