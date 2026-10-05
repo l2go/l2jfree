@@ -59,7 +59,6 @@ import com.l2jfree.gameserver.gameobjects.instance.L2MonsterInstance;
 import com.l2jfree.gameserver.gameobjects.itemcontainer.Inventory;
 import com.l2jfree.gameserver.idfactory.IdFactory;
 import com.l2jfree.gameserver.instancemanager.GameTimeManager;
-import com.l2jfree.gameserver.instancemanager.IrcManager;
 import com.l2jfree.gameserver.instancemanager.Manager;
 import com.l2jfree.gameserver.instancemanager.ZoneManager;
 import com.l2jfree.gameserver.model.GMAudit;
@@ -326,11 +325,6 @@ public final class GameStatusThread extends Thread
 					_print.println("unjail <player>");
 					_print.println("reload <...>");
 					_print.println("reload_config <file>");
-					if (Config.IRC_ENABLED)
-					{
-						_print.println("ircc <command>  	- sends a command to irc");
-						_print.println("ircm <target ><msg> - sends a message to irc");
-					}
 					_print.println("quit				- closes telnet session.");
 				}
 				else if (_usrCommand.equals("help debug"))
@@ -864,43 +858,6 @@ public final class GameStatusThread extends Thread
 					{
 						if (_log.isDebugEnabled())
 							_log.debug(e.getMessage(), e);
-					}
-				}
-				else if (_usrCommand.startsWith("ircc"))
-				{
-					if (Config.IRC_ENABLED)
-					{
-						_usrCommand = _usrCommand.substring(4);
-						try
-						{
-							IrcManager.getInstance().getConnection().send(_usrCommand);
-							
-						}
-						catch (Exception e)
-						{
-							if (_log.isDebugEnabled())
-								_log.debug(e.getMessage(), e);
-						}
-					}
-				}
-				else if (_usrCommand.startsWith("ircm"))
-				{
-					if (Config.IRC_ENABLED)
-					{
-						String val = _usrCommand.substring(4);
-						try
-						{
-							StringTokenizer st = new StringTokenizer(val);
-							String name = st.nextToken();
-							String message = val.substring(name.length() + 1);
-							IrcManager.getInstance().getConnection().send(name, message);
-							
-						}
-						catch (Exception e)
-						{
-							if (_log.isDebugEnabled())
-								_log.debug(e.getMessage(), e);
-						}
 					}
 				}
 				else if (_usrCommand.startsWith("debug") && _usrCommand.length() > 6)

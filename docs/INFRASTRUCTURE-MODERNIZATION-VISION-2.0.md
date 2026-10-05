@@ -70,7 +70,7 @@ need.
 | Network layer | Retain the existing custom MMO network core in 2.0 | Keep the established protocol, encryption, ordering, and disconnect behavior on the Windows acceptance host. Netty 4.2 with `io_uring` is a Platform 3.0 replacement, after migration to Linux; no Netty port is part of 2.0. |
 | Collections | Keep Javolution and Trove in 2.0; replace with JDK collections and fastutil on measured paths in Platform 3.0 | The current libraries are deeply embedded. Replacing them in 2.0 could regress the hottest world loops. Platform 3.0 uses Linux JFR to identify hot paths before moving cold paths to the JDK and measured primitive hot paths to fastutil. |
 | Logging | SLF4J 2.0.20 and Logback 1.5 with named operational channels and a one-way JUL bridge | The unified backend and removal of Commons Logging/JUL handlers are implemented. Verify channel routing, rotation, Windows file permissions, and secret redaction before 2.0 stable. See the [logging migration plan](LOGGING-MIGRATION-PLAN.md). |
-| IRC integration | Kitteh IRC Client Library if the admin IRC bridge remains a supported feature; otherwise remove irclib and its code | irclib 1.10 is removed before stable either way. This optional admin integration is not part of login or gameplay protocol paths. |
+| IRC integration | Not a supported feature | The admin IRC bridge and irclib 1.10 are removed. Login and gameplay do not use IRC. |
 | Observability | Optional OpenTelemetry Java agent with OTLP metrics/traces, JFR, structured logs, and health/readiness status | Operators need evidence for startup failures, deadlocks, DB pool pressure, script failures, GC pauses, and packet load. OpenTelemetry provides portable metrics and traces; JFR gives low-overhead JVM diagnostics available in the fixed runtime. The agent remains disabled until a collector endpoint is configured and target-host overhead is qualified. |
 | Build and verification | Maven Wrapper, Microsoft JDK 25 in GitHub Actions | Through 2.0.0, CI runs production compilation, packaging, provenance, dependency, and archive-content checks only. Do not compile or execute tests. Test modernization and CI test execution resume in 2.1.0 after stable 2.0.0. |
 | Releases | Immutable, checksummed LoginServer and GameServer archives plus a private Windows image assembled from those archives | Java bytecode and Python scripts have one GameServer revision and are covered by its checksum manifest. Release artifacts are traceable to a commit and reproducible in CI. Keep environment-specific configuration outside the public repository. |
@@ -84,7 +84,7 @@ and Windows `.bat` files only set the environment before invoking Java.
 The version numbers above identify selected target versions, not a blanket
 upgrade instruction. Every dependency change must be pinned, checked for
 licensing and Java 25 compatibility, and qualified through CI. In particular,
-the logging backend, optional IRC replacement, and selected Jython bridge must
+the logging backend and selected Jython bridge must
 be validated with the actual server workloads before adoption. GraalPy is
 excluded from the target and from further qualification.
 

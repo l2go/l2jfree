@@ -54,11 +54,6 @@
 			<artifactId>testcontainers-mysql</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.schwering</groupId>
-			<artifactId>irclib</artifactId>
-			<version>1.10</version>
-		</dependency>
 		<!-- Replace Trove selectively after profiling its use in hot world loops. -->
 		<dependency>
 			<groupId>net.sf.trove4j</groupId>

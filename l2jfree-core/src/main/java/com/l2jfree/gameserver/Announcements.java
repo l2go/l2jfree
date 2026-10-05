@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.cache.HtmCache;
 import com.l2jfree.gameserver.gameobjects.L2Player;
-import com.l2jfree.gameserver.instancemanager.IrcManager;
 import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.SystemChatChannelId;
 import com.l2jfree.gameserver.network.SystemMessageId;
@@ -220,9 +219,6 @@ public class Announcements
 	public void announceToAll(String text)
 	{
 		CreatureSay cs = new CreatureSay(0, SystemChatChannelId.Chat_Announce, "", text);
-		
-		if (Config.IRC_ENABLED && Config.IRC_ANNOUNCE)
-			IrcManager.getInstance().getConnection().sendChan("10Announce: " + text);
 		
 		for (L2Player player : L2World.getInstance().getAllPlayers())
 		{
