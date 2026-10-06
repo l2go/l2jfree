@@ -48,7 +48,8 @@ public final class LoginDataSource implements AutoCloseable
 		// Text parameters are sent untyped, so the server types them from the column: a login name is
 		// compared as citext (without regard to case) and an address is stored as inet.
 		pool.addDataSourceProperty("stringtype", "unspecified");
-		pool.addDataSourceProperty("currentSchema", SCHEMA);
+		// The schema of the module comes first. The public schema stays in the path because the citext type lives there.
+		pool.addDataSourceProperty("currentSchema", SCHEMA + ",public");
 		pool.addDataSourceProperty("ApplicationName", "l2jfree-login");
 		pool.setInitializationFailTimeout(30_000);
 		return pool;

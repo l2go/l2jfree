@@ -12,7 +12,7 @@
 1. The database is created once, on its first start, by the official image's init script, which runs as the superuser. The script creates the `citext` extension, one role per module, and the schema each role owns. The superuser password and each role password are generated on the first start and kept in a volume. No default password ships.
 2. A module connects with its own role, which owns its schema. A module cannot read the schema of another module.
 3. Each module applies the migrations of its own schema when it starts, with Flyway, as the role that owns the schema. The role needs no right to create extensions or schemas. A migration that was applied and later edited fails the validation, so a released migration is never changed.
-4. Connections send text parameters untyped (`stringtype=unspecified`) and set the schema with `currentSchema`. Without the first setting, the driver types a login name as `varchar`, the server compares it as `text`, and a name that differs only in case no longer matches a `citext` column.
+4. Connections send text parameters untyped (`stringtype=unspecified`) and set the search path with `currentSchema`: the module schema first, then `public`, where the `citext` type lives. Without the first setting, the driver types a login name as `varchar`, the server compares it as `text`, and a name that differs only in case no longer matches a `citext` column.
 5. Migrations are applied by a shared runner in the commons module. Each module owns its migration files under `db/<schema>` on its classpath.
 
 ## Alternatives considered
