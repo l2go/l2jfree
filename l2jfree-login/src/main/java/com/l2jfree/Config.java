@@ -103,9 +103,9 @@ public final class Config
 			LOGIN_BLOCK_AFTER_BAN = Integer.parseInt(serverSettings.getProperty("LoginBlockAfterBan", "600"));
 			GM_MIN = Integer.parseInt(serverSettings.getProperty("GMMinLevel", "100"));
 			
-			DATABASE_DRIVER = serverSettings.getProperty("Driver", "com.mysql.cj.jdbc.Driver");
-			DATABASE_URL = serverSettings.getProperty("URL", "jdbc:mysql://localhost/l2jfree_ls");
-			DATABASE_LOGIN = serverSettings.getProperty("Login", "root");
+			DATABASE_DRIVER = serverSettings.getProperty("Driver", "org.postgresql.Driver");
+			DATABASE_URL = serverSettings.getProperty("URL", "jdbc:postgresql://localhost/l2jfree");
+			DATABASE_LOGIN = serverSettings.getProperty("Login", "l2jfree_login");
 			DATABASE_PASSWORD = serverSettings.getProperty("Password", "");
 			DATABASE_MAX_CONNECTIONS = Integer.parseInt(serverSettings.getProperty("MaximumDbConnections", "20"));
 			DATABASE_MIN_IDLE_CONNECTIONS = Integer.parseInt(serverSettings.getProperty("MinimumDbIdleConnections", "1"));

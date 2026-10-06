@@ -15,17 +15,21 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - The Platform 3.0 walking skeleton: a `linux/amd64` image on a pinned Arch Linux base with a pinned Temurin 25 JRE, a Docker Compose stack that publishes ports 2106 and 7777, a content check, and a first-packet probe of the login port.
 - Publication of `edge` and `sha-*` images with a cosign signature, an SBOM, and build provenance, and a daily job that deletes `sha-*` versions older than 30 days.
 - Architecture views as diagrams in `docs/architecture.md`.
+- PostgreSQL 18 for the login module: the `login` schema and its Flyway migration, a shared migration runner, a pool that sends text untyped, and integration tests against a real database.
+- A decision record for database roles, schemas, and migration at start, and the report of milestone M1.
 - Monthly Dependabot updates for the image base and the compose images.
 
 ### Changed
 
 - The vision describes a Linux image delivered with Docker Compose on Docker Desktop, Colima, or Docker Engine, with ports 2106 and 7777.
 - The documentation archive carries the whole `docs/` tree.
+- The Docker Compose stack runs PostgreSQL 18 instead of MySQL, with passwords generated on the first start.
 
 ### Removed
 
 - The dead plain-HTTP distribution repository in the root build file.
 - The Windows packaging job and the 2.x release job of the pipeline.
+- MySQL from the login module, its SQL files and installer scripts, and the Liquibase compatibility test.
 
 ## [2.5.0] - 2026-10-05
 

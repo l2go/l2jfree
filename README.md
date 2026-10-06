@@ -33,7 +33,7 @@ The target is one Linux image that starts with `docker compose up -d --wait` and
 | Windows | Docker Desktop |
 | macOS | Colima with the Docker CLI and Compose. On Apple Silicon the image runs through emulation |
 
-Today the image is a walking skeleton that runs the login server with MySQL; see [deploy](deploy/README.md). There is no systemd unit, no Kubernetes manifest, and no install script on the host. Read the [vision](docs/PLATFORM-3.0-VISION.md) and the [delivery decision](docs/adr/0002-linux-image-delivered-with-compose.md) for the details and the limits.
+Today the image runs the login server on PostgreSQL 18; see [deploy](deploy/README.md). There is no systemd unit, no Kubernetes manifest, and no install script on the host. Read the [vision](docs/PLATFORM-3.0-VISION.md) and the [delivery decision](docs/adr/0002-linux-image-delivered-with-compose.md) for the details and the limits.
 
 ## How this project is run
 

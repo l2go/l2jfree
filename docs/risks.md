@@ -1,6 +1,6 @@
 # Risk register
 
-Reviewed at the close of each milestone. Likelihood and impact are Low, Medium, or High. Status is Open, Mitigated, or Closed.
+Reviewed at the close of each milestone. Last review: 2026-10-06, close of M1. Likelihood and impact are Low, Medium, or High. Status is Open, Mitigated, or Closed.
 
 | ID | Risk | Likelihood | Impact | Mitigation | Status |
 |---|---|---|---|---|---|
@@ -16,3 +16,5 @@ Reviewed at the close of each milestone. Likelihood and impact are Low, Medium, 
 | R-10 | One maintainer and one account, with manual merge, so work stops when that person is unavailable | Medium | High | Decisions, runbooks, and reports are written so another person can continue; the ruleset and checks do not depend on the person | Open |
 | R-11 | Supply chain: images, base, and dependencies change over time | Medium | High | Digest pins, SBOM, signature, attestations, and a vulnerability policy that blocks a stable tag | Open |
 | R-12 | Documentation grows long and repetitive | Medium | Low | One page per decision record, tables in reports, retired documents marked in `docs/index.md` and moved to an archive later | Open |
+| R-13 | A container package inherits the visibility of the repository, so the `edge` image was published publicly although the release policy says private until the release. Visibility cannot be changed through the API | High | Low | The maintainer changes the package visibility in the package settings, or the policy is amended; recorded in the M1 report | Open |
+| R-14 | The SQL of the game server, about 570 statements in 134 files, must move to the accepted schema, and none of it can be run on a workstation | High | High | A statement-level check prepares every statement against the real schema in CI, domain by domain, and the data port is staged so the pipeline stays green | Open |

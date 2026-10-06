@@ -2,7 +2,7 @@
 
 The delivery of Platform 3.0: one Linux image started with Docker Compose. The decision and its limits are in [ADR-0002](../docs/adr/0002-linux-image-delivered-with-compose.md). The [architecture views](../docs/architecture.md) show how the parts fit.
 
-> **Walking skeleton.** Today the image carries the LoginServer of the current code base with MySQL. It proves the pipeline, the image, and the compose stack. The world on port 7777, PostgreSQL, and the single process arrive in milestone M2 ([roadmap](../docs/roadmap.md)).
+> **Work in progress.** Today the image carries the LoginServer, which runs on PostgreSQL 18. The world on port 7777 and the single process arrive in milestone M2 ([roadmap](../docs/roadmap.md)).
 
 ## Run it
 
@@ -10,7 +10,7 @@ The delivery of Platform 3.0: one Linux image started with Docker Compose. The d
 docker compose -f deploy/compose.yaml up -d --wait
 ```
 
-The stack starts three services: a one-shot `secrets` service that creates the database password, the `db` service, and the `login` service. `--wait` returns when they are healthy.
+The stack starts three services: a one-shot `secrets` service that creates the database passwords, the `db` service (PostgreSQL 18, with a role and a schema per module, see [ADR-0009](../docs/adr/0009-database-roles-schemas-and-migration.md)), and the `login` service, which migrates its schema when it starts. `--wait` returns when they are healthy.
 
 | Port | Service | State |
 |---|---|---|

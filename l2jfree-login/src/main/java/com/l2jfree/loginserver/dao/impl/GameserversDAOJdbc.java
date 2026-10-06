@@ -18,7 +18,7 @@ import com.l2jfree.loginserver.dao.GameserversDAO;
 import com.l2jfree.loginserver.dao.JdbcTransactions;
 import com.l2jfree.loginserver.dao.LoginObjectNotFoundException;
 
-/** JDBC persistence for the login server's registered gameservers table. */
+/** JDBC persistence for the <code>login.game_server</code> table. */
 public final class GameserversDAOJdbc implements GameserversDAO
 {
 	private final JdbcTransactions transactions;
@@ -34,7 +34,7 @@ public final class GameserversDAOJdbc implements GameserversDAO
 		return transactions.withConnection(connection -> {
 			List<Gameservers> servers = new ArrayList<Gameservers>();
 			try (PreparedStatement statement = connection.prepareStatement(
-					"SELECT server_id, hexid, host FROM gameservers ORDER BY server_id");
+					"SELECT id, registration_key, host FROM game_server ORDER BY id");
 					ResultSet result = statement.executeQuery())
 			{
 				while (result.next())
@@ -51,7 +51,7 @@ public final class GameserversDAOJdbc implements GameserversDAO
 	{
 		return transactions.withConnection(connection -> {
 			try (PreparedStatement statement = connection.prepareStatement(
-					"INSERT INTO gameservers (server_id, hexid, host) VALUES (?, ?, ?)"))
+					"INSERT INTO game_server (id, registration_key, host) VALUES (?, ?, ?)"))
 			{
 				bind(statement, gameserver);
 				statement.executeUpdate();
@@ -64,9 +64,9 @@ public final class GameserversDAOJdbc implements GameserversDAO
 	public void createOrUpdate(Gameservers gameserver)
 	{
 		transactions.withConnection(connection -> {
-			try (PreparedStatement statement = connection.prepareStatement("INSERT INTO gameservers "
-					+ "(server_id, hexid, host) VALUES (?, ?, ?) AS new ON DUPLICATE KEY UPDATE "
-					+ "hexid=new.hexid, host=new.host"))
+			try (PreparedStatement statement = connection.prepareStatement("INSERT INTO game_server "
+					+ "(id, registration_key, host) VALUES (?, ?, ?) ON CONFLICT (id) DO UPDATE SET "
+					+ "registration_key = EXCLUDED.registration_key, host = EXCLUDED.host"))
 			{
 				bind(statement, gameserver);
 				statement.executeUpdate();
@@ -79,9 +79,9 @@ public final class GameserversDAOJdbc implements GameserversDAO
 	public void createOrUpdateAll(Collection<?> entities)
 	{
 		transactions.inTransaction(connection -> {
-			try (PreparedStatement statement = connection.prepareStatement("INSERT INTO gameservers "
-					+ "(server_id, hexid, host) VALUES (?, ?, ?) AS new ON DUPLICATE KEY UPDATE "
-					+ "hexid=new.hexid, host=new.host"))
+			try (PreparedStatement statement = connection.prepareStatement("INSERT INTO game_server "
+					+ "(id, registration_key, host) VALUES (?, ?, ?) ON CONFLICT (id) DO UPDATE SET "
+					+ "registration_key = EXCLUDED.registration_key, host = EXCLUDED.host"))
 			{
 				for (Object entity : entities)
 				{
@@ -101,7 +101,7 @@ public final class GameserversDAOJdbc implements GameserversDAO
 		Gameservers gameserver = requireGameserver(object);
 		transactions.withConnection(connection -> {
 			try (PreparedStatement statement = connection.prepareStatement(
-					"UPDATE gameservers SET hexid=?, host=? WHERE server_id=?"))
+					"UPDATE game_server SET registration_key=?, host=? WHERE id=?"))
 			{
 				statement.setString(1, gameserver.getHexid());
 				statement.setString(2, gameserver.getHost());
@@ -126,7 +126,7 @@ public final class GameserversDAOJdbc implements GameserversDAO
 	{
 		return transactions.withConnection(connection -> {
 			try (PreparedStatement statement = connection.prepareStatement(
-					"SELECT server_id, hexid, host FROM gameservers WHERE server_id=?"))
+					"SELECT id, registration_key, host FROM game_server WHERE id=?"))
 			{
 				statement.setInt(1, id);
 				try (ResultSet result = statement.executeQuery())
@@ -145,7 +145,7 @@ public final class GameserversDAOJdbc implements GameserversDAO
 	public void removeGameserverByServerId(int id)
 	{
 		transactions.withConnection(connection -> {
-			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM gameservers WHERE server_id=?"))
+			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM game_server WHERE id=?"))
 			{
 				statement.setInt(1, id);
 				statement.executeUpdate();
@@ -158,7 +158,7 @@ public final class GameserversDAOJdbc implements GameserversDAO
 	public void removeAll(Collection<?> entities)
 	{
 		transactions.inTransaction(connection -> {
-			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM gameservers WHERE server_id=?"))
+			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM game_server WHERE id=?"))
 			{
 				for (Object entity : entities)
 				{
@@ -175,7 +175,7 @@ public final class GameserversDAOJdbc implements GameserversDAO
 	public void removeAll()
 	{
 		transactions.withConnection(connection -> {
-			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM gameservers"))
+			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM game_server"))
 			{
 				statement.executeUpdate();
 			}
@@ -185,7 +185,7 @@ public final class GameserversDAOJdbc implements GameserversDAO
 
 	private static Gameservers readGameserver(ResultSet result) throws SQLException
 	{
-		return new Gameservers(result.getInt("server_id"), result.getString("hexid"), result.getString("host"));
+		return new Gameservers(result.getInt("id"), result.getString("registration_key"), result.getString("host"));
 	}
 
 	private static void bind(PreparedStatement statement, Gameservers gameserver) throws SQLException
