@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
-import javolution.util.FastList;
 
+import java.util.List;
 import com.l2jfree.gameserver.network.packets.L2ServerPacket;
 
 /**
@@ -33,9 +33,9 @@ import com.l2jfree.gameserver.network.packets.L2ServerPacket;
 public class ExSendManorList extends L2ServerPacket
 {
 	private static final String _S__FE_1B_EXSENDMANORLIST = "[S] FE:1B ExSendManorList";
-	private final FastList<String> _manors;
+	private final List<String> _manors;
 	
-	public ExSendManorList(FastList<String> manors)
+	public ExSendManorList(List<String> manors)
 	{
 		_manors = manors;
 	}

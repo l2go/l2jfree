@@ -27,7 +27,6 @@ import com.l2jfree.gameserver.network.packets.server.ActionFailed;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.network.packets.server.PlaySound;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
-import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.tools.random.Rnd;
 
 public final class L2UrnInstance extends L2NpcInstance
@@ -349,7 +348,7 @@ public final class L2UrnInstance extends L2NpcInstance
 		else
 			rankName = "Master Alchemist";
 		
-		L2TextBuilder msg = L2TextBuilder.newInstance("<html><body>");
+		StringBuilder msg = StringBuilder.newInstance("<html><body>");
 		msg.append("%npcname%:<br><br>");
 		msg.append(urnEffect + "<BR>");
 		msg.append("You peer into the urn to see " + prodName3 + " (" + prodNum3 + ") !<br>");
@@ -360,13 +359,13 @@ public final class L2UrnInstance extends L2NpcInstance
 		msg.append("</table>");
 		msg.append("</body></html>");
 		
-		sendHtmlMessage(player, msg.moveToString());
+		sendHtmlMessage(player, msg.toString());
 	}
 	
 	public void showFailureWindow(L2Player player)
 	{
 		
-		L2TextBuilder msg = L2TextBuilder.newInstance("<html><body>");
+		StringBuilder msg = StringBuilder.newInstance("<html><body>");
 		msg.append("%npcname%:<br><br>");
 		msg.append("The contents burble and boil, smoke and steam rise from the urn.<BR>");
 		msg.append("You peer into the urn to see nothing remains, the temperature was too hot!<br>");
@@ -376,12 +375,12 @@ public final class L2UrnInstance extends L2NpcInstance
 		msg.append("</table>");
 		msg.append("</body></html>");
 		
-		sendHtmlMessage(player, msg.moveToString());
+		sendHtmlMessage(player, msg.toString());
 	}
 	
 	public void showMessageWindow(L2Player player)
 	{
-		L2TextBuilder msg = L2TextBuilder.newInstance("<html><body>");
+		StringBuilder msg = StringBuilder.newInstance("<html><body>");
 		msg.append("%npcname%:<br><br>");
 		msg.append("If you have brought the <font color=\"LEVEL\">Mixing Stone</font> then you must insert it to continue!<BR>");
 		msg.append("<table width=200>");
@@ -389,7 +388,7 @@ public final class L2UrnInstance extends L2NpcInstance
 		msg.append("</table>");
 		msg.append("</body></html>");
 		
-		sendHtmlMessage(player, msg.moveToString());
+		sendHtmlMessage(player, msg.toString());
 	}
 	
 	private void sendHtmlMessage(L2Player player, String htmlMessage)

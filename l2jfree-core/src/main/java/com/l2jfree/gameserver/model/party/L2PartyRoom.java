@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.model.party;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.instancemanager.MapRegionManager;
 import com.l2jfree.gameserver.instancemanager.PartyRoomManager;
@@ -36,7 +37,7 @@ import com.l2jfree.lang.L2Math;
 public class L2PartyRoom
 {
 	private final int _id;
-	private final FastList<L2Player> _members;
+	private final List<L2Player> _members;
 	private int _minLevel;
 	private int _maxLevel;
 	private int _lootDist;
@@ -52,11 +53,11 @@ public class L2PartyRoom
 		setMaxMembers(maxMembers);
 		_lootDist = lootDist;
 		_title = title;
-		_members = new FastList<L2Player>();
+		_members = new ArrayList<L2Player>();
 		_party = null;
 	}
 	
-	public final FastList<L2Player> getMembers()
+	public final List<L2Player> getMembers()
 	{
 		return _members;
 	}

@@ -16,8 +16,7 @@ package com.l2jfree.gameserver.model.entity.events;
 
 import java.util.Map;
 import java.util.Set;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.entity.events.AbstractFunEvent.FunEventState;
@@ -34,7 +33,7 @@ public abstract class AbstractFunEventTeam<Info extends AbstractFunEventPlayerIn
 	/**
 	 * used to store current online players in this team
 	 */
-	private final Map<Integer, Info> _players = new FastMap<Integer, Info>().setShared(true);
+	private final Map<Integer, Info> _players = new ConcurrentHashMap<Integer, Info>();
 	
 	/**
 	 * used to store disconnected/offline players' objectId in case they reconnect

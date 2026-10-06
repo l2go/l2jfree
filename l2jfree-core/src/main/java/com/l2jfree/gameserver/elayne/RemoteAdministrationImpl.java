@@ -19,8 +19,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-
-import javolution.util.FastMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +44,6 @@ import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.Disconnection;
 import com.l2jfree.gameserver.network.SystemChatChannelId;
 import com.l2jfree.gameserver.network.packets.server.CreatureSay;
-import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.tools.random.Rnd;
 
 public class RemoteAdministrationImpl extends UnicastRemoteObject implements IRemoteAdministration
@@ -281,7 +279,7 @@ public class RemoteAdministrationImpl extends UnicastRemoteObject implements IRe
 	 * @see com.l2jfree.gameserver.elayne.IRemoteAdministration#getOnlinePlayersDetails(java.lang.String)
 	 */
 	@Override
-	public FastMap<String, IRemotePlayer> getOnlinePlayersDetails(String rmiPassword) throws RemoteException
+	public Map<String, IRemotePlayer> getOnlinePlayersDetails(String rmiPassword) throws RemoteException
 	{
 		if (!rmiPassword.equals(_pass))
 			return null;
@@ -290,7 +288,7 @@ public class RemoteAdministrationImpl extends UnicastRemoteObject implements IRe
 	
 	private String generateRandomPassword(int length)
 	{
-		L2TextBuilder password = L2TextBuilder.newInstance();
+		StringBuilder password = new StringBuilder();
 		String lowerChar = "qwertzuiopasdfghjklyxcvbnm";
 		String upperChar = "QWERTZUIOPASDFGHJKLYXCVBNM";
 		String digits = "1234567890";
@@ -310,6 +308,6 @@ public class RemoteAdministrationImpl extends UnicastRemoteObject implements IRe
 					break;
 			}
 		}
-		return password.moveToString();
+		return password.toString();
 	}
 }

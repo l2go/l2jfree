@@ -19,8 +19,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.l2jfree.lang.L2TextBuilder;
-
 /**
  * @author NB4L1
  */
@@ -74,14 +72,14 @@ public class ExecuteWrapper implements Runnable
 			
 			if (runtimeInMillisec > maximumRuntimeInMillisecWithoutWarning)
 			{
-				L2TextBuilder tb = L2TextBuilder.newInstance();
+				StringBuilder tb = new StringBuilder();
 				
 				tb.append(clazz);
 				tb.append(" - execution time: ");
 				tb.append(runtimeInMillisec);
 				tb.append("msec");
 				
-				_log.warn(tb.moveToString());
+				_log.warn(tb.toString());
 			}
 		}
 	}

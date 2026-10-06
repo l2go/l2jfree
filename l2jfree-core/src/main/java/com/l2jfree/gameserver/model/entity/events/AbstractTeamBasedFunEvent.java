@@ -15,8 +15,7 @@
 package com.l2jfree.gameserver.model.entity.events;
 
 import java.util.Map;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author NB4L1
@@ -24,7 +23,7 @@ import javolution.util.FastMap;
 public abstract class AbstractTeamBasedFunEvent<Team extends AbstractFunEventTeam<Info>, Info extends AbstractFunEventPlayerInfo>
 		extends AbstractFunEvent
 {
-	private final Map<String, Team> _teams = new FastMap<String, Team>().setShared(true);
+	private final Map<String, Team> _teams = new ConcurrentHashMap<String, Team>();
 	
 	protected AbstractTeamBasedFunEvent()
 	{

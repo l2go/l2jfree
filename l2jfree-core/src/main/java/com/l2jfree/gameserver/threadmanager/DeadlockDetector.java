@@ -16,10 +16,9 @@ package com.l2jfree.gameserver.threadmanager;
 
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-
-import javolution.util.FastSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +43,7 @@ public final class DeadlockDetector extends L2Thread
 		return SingletonHolder.INSTANCE;
 	}
 	
-	private final Set<Long> _logged = new FastSet<Long>();
+	private final Set<Long> _logged = new LinkedHashSet<Long>();
 	
 	private DeadlockDetector()
 	{

@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.instancemanager;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,7 @@ public class FactionQuestManager
 	
 	// =========================================================
 	// Data Field
-	private FastList<FactionQuest> _quests;
+	private List<FactionQuest> _quests;
 	
 	// =========================================================
 	// Constructor
@@ -88,10 +89,10 @@ public class FactionQuestManager
 		return -1;
 	}
 	
-	public final FastList<FactionQuest> getFactionQuests()
+	public final List<FactionQuest> getFactionQuests()
 	{
 		if (_quests == null)
-			_quests = new FastList<FactionQuest>();
+			_quests = new ArrayList<FactionQuest>();
 		return _quests;
 	}
 }

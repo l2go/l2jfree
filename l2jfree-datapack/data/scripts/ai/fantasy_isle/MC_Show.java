@@ -15,9 +15,8 @@
 package ai.fantasy_isle;
 
 import java.text.SimpleDateFormat;
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.gameobjects.L2Npc;
@@ -62,8 +61,8 @@ public class MC_Show extends Quest
 					"Please remember that Fantasy Isle is always planning a lot of great shows for you.",
 					"Well, I wish I could continue all night long, but this is it for today. Thank you." };
 	
-	private static Map<String, Object[]> talks = new FastMap<String, Object[]>();
-	private static Map<String, Object[]> walks = new FastMap<String, Object[]>();
+	private static Map<String, Object[]> talks = new LinkedHashMap<String, Object[]>();
+	private static Map<String, Object[]> walks = new LinkedHashMap<String, Object[]>();
 	
 	private void load()
 	{

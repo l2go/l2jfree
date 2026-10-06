@@ -24,11 +24,11 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.L2Object;
@@ -75,9 +75,8 @@ final class GeoEngine extends GeoData
 	private final LookupTable<int[]> _geodataIndex = new LookupTable<int[]>();
 	private BufferedOutputStream _geoBugsOut;
 	
-	private final Map<Integer, Map<Long, Byte>> _instanceGeodata = new FastMap<Integer, Map<Long, Byte>>()
-			.setShared(true);
-	private final Map<Integer, Map<Long, Byte>> _doorGeodata = new FastMap<Integer, Map<Long, Byte>>();
+	private final Map<Integer, Map<Long, Byte>> _instanceGeodata = new ConcurrentHashMap<Integer, Map<Long, Byte>>();
+	private final Map<Integer, Map<Long, Byte>> _doorGeodata = new LinkedHashMap<Integer, Map<Long, Byte>>();
 	
 	private GeoEngine()
 	{
@@ -101,7 +100,7 @@ final class GeoEngine extends GeoData
 		Map<Long, Byte> instanceGeodata = _instanceGeodata.get(door.getInstanceId());
 		
 		if (instanceGeodata == null)
-			_instanceGeodata.put(door.getInstanceId(), instanceGeodata = new FastMap<Long, Byte>());
+			_instanceGeodata.put(door.getInstanceId(), instanceGeodata = new LinkedHashMap<Long, Byte>());
 		
 		for (Entry<Long, Byte> doorGeo : doorGeodata.entrySet())
 			instanceGeodata.put(doorGeo.getKey(), open ? doorGeo.getValue() : NSWE_NONE);
@@ -198,7 +197,7 @@ final class GeoEngine extends GeoData
 						continue;
 					
 					if (doorGeodata == null)
-						_doorGeodata.put(door.getDoorId(), doorGeodata = new FastMap<Long, Byte>());
+						_doorGeodata.put(door.getDoorId(), doorGeodata = new LinkedHashMap<Long, Byte>());
 					
 					doorGeodata.put(((long)region << 32) | neededIndex, (byte)NSWE);
 				}

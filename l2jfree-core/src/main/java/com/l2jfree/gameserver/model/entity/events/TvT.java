@@ -50,7 +50,6 @@ import com.l2jfree.gameserver.network.packets.server.MagicSkillUse;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.network.packets.server.SocialAction;
 import com.l2jfree.gameserver.persistence.WorldTransaction;
-import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.tools.random.Rnd;
 
 public class TvT
@@ -856,11 +855,11 @@ public class TvT
 					_playerWon = 1;
 					
 					NpcHtmlMessage nhm = new NpcHtmlMessage(5);
-					L2TextBuilder replyMSG = L2TextBuilder.newInstance("");
+					StringBuilder replyMSG = StringBuilder.newInstance("");
 					
 					replyMSG.append("<html><body>Your team wins the event. Look in your inventory for the reward.</body></html>");
 					
-					nhm.setHtml(replyMSG.moveToString());
+					nhm.setHtml(replyMSG.toString());
 					player.sendPacket(nhm);
 					
 					// Send a Server->Client ActionFailed to the L2Player in order to avoid that the client wait another packet
@@ -1184,7 +1183,7 @@ public class TvT
 		{
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 			
-			L2TextBuilder replyMSG = L2TextBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
 			replyMSG.append("TvT Match<br><br><br>");
 			replyMSG.append("Current event...<br1>");
 			replyMSG.append("    ... name:&nbsp;<font color=\"00FF00\">" + _eventName + "</font><br1>");
@@ -1287,7 +1286,7 @@ public class TvT
 				}
 			}
 			replyMSG.append("</body></html>");
-			adminReply.setHtml(replyMSG.moveToString());
+			adminReply.setHtml(replyMSG.toString());
 			eventPlayer.sendPacket(adminReply);
 			
 			// Send a Server->Client ActionFailed to the L2Player in order to avoid that the client wait another packet

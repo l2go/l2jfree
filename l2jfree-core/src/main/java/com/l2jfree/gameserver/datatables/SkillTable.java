@@ -17,12 +17,11 @@ package com.l2jfree.gameserver.datatables;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-
-import javolution.util.FastSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -215,7 +214,7 @@ public final class SkillTable
 				Set<Integer> enchantLevels = enchantLevelsByEnchantType.get(enchantType);
 				
 				if (enchantLevels == null)
-					enchantLevelsByEnchantType.put(enchantType, enchantLevels = new FastSet<Integer>(30));
+					enchantLevelsByEnchantType.put(enchantType, enchantLevels = new LinkedHashSet<Integer>(30));
 				
 				enchantLevels.add(enchantLevel);
 			}

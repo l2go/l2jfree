@@ -14,13 +14,12 @@
  */
 package com.l2jfree.gameserver.instancemanager.grandbosses;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -101,7 +100,7 @@ public class FrintezzaManager extends BossLair
 	protected int _activityTimeOfBoss;
 	
 	// lists of last saved positions <objectId, location>
-	protected Map<Integer, Point3D> _lastLocation = new FastMap<Integer, Point3D>();
+	protected Map<Integer, Point3D> _lastLocation = new LinkedHashMap<Integer, Point3D>();
 	
 	// status in lair.
 	protected boolean _respawningDemon1 = false, _respawningDemon2 = false, _respawningDemon3 = false,
@@ -319,7 +318,7 @@ public class FrintezzaManager extends BossLair
 	private void teleportToStart()
 	{
 		if (_lastLocation == null)
-			_lastLocation = new FastMap<Integer, Point3D>();
+			_lastLocation = new LinkedHashMap<Integer, Point3D>();
 		
 		Point3D p = new Point3D(174233, -88212, -5116);
 		
@@ -678,7 +677,7 @@ public class FrintezzaManager extends BossLair
 		private L2Object[] getSongTargets(int songId)
 		{
 			
-			List<L2Object> targets = new FastList<L2Object>();
+			List<L2Object> targets = new ArrayList<L2Object>();
 			
 			if (songId < 4) // Target is the minions
 			{

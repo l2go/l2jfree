@@ -19,10 +19,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.LineNumberReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -41,11 +42,11 @@ public class L2Manor
 {
 	private final static Logger _log = LoggerFactory.getLogger(L2Manor.class);
 	
-	private static FastMap<Integer, SeedData> _seeds;
+	private static Map<Integer, SeedData> _seeds;
 	
 	private L2Manor()
 	{
-		_seeds = new FastMap<Integer, SeedData>().setShared(true);
+		_seeds = new ConcurrentHashMap<Integer, SeedData>();
 		parseData();
 	}
 	
@@ -54,9 +55,9 @@ public class L2Manor
 		return SingletonHolder._instance;
 	}
 	
-	public FastList<Integer> getAllCrops()
+	public List<Integer> getAllCrops()
 	{
-		FastList<Integer> crops = new FastList<Integer>();
+		List<Integer> crops = new ArrayList<Integer>();
 		for (SeedData seed : _seeds.values())
 		{
 			if (!crops.contains(seed.getCrop()) && seed.getCrop() != 0 && !crops.contains(seed.getCrop()))
@@ -192,9 +193,9 @@ public class L2Manor
 	 * @param castleId
 	 * @return
 	 */
-	public FastList<Integer> getCropsForCastle(int castleId)
+	public List<Integer> getCropsForCastle(int castleId)
 	{
-		FastList<Integer> crops = new FastList<Integer>();
+		List<Integer> crops = new ArrayList<Integer>();
 		for (SeedData seed : _seeds.values())
 		{
 			if (seed.getManorId() == castleId && !crops.contains(seed.getCrop()))
@@ -208,9 +209,9 @@ public class L2Manor
 	 * @param castleId - id of the castle
 	 * @return seedIds - list of seed ids
 	 */
-	public FastList<Integer> getSeedsForCastle(int castleId)
+	public List<Integer> getSeedsForCastle(int castleId)
 	{
-		FastList<Integer> seedsID = new FastList<Integer>();
+		List<Integer> seedsID = new ArrayList<Integer>();
 		for (SeedData seed : _seeds.values())
 		{
 			if (seed.getManorId() == castleId && !seedsID.contains(seed.getId()))

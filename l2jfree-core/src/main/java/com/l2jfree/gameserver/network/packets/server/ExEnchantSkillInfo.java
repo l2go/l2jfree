@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.l2jfree.gameserver.datatables.SkillTreeTable;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.skills.learn.L2EnchantSkillLearn.EnchantSkillDetail;
@@ -25,7 +26,7 @@ import com.l2jfree.gameserver.network.packets.server.ExEnchantSkillList.EnchantS
 public final class ExEnchantSkillInfo extends L2ServerPacket
 {
 	private static final String _S__FE_18_EXENCHANTSKILLINFO = "[S] FE:2a ExEnchantSkillInfo";
-	private final FastList<SkillEnchantDetailElement> _routes;
+	private final List<SkillEnchantDetailElement> _routes;
 	
 	private final int _id;
 	private final EnchantSkillType _type;
@@ -33,7 +34,7 @@ public final class ExEnchantSkillInfo extends L2ServerPacket
 	
 	public ExEnchantSkillInfo(EnchantSkillType type, int id)
 	{
-		_routes = new FastList<SkillEnchantDetailElement>();
+		_routes = new ArrayList<SkillEnchantDetailElement>();
 		_id = id;
 		_type = type;
 		_xpSpCostMultiplier =

@@ -19,12 +19,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.LineNumberReader;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.apache.commons.io.IOUtils;
 
@@ -55,7 +55,7 @@ import com.l2jfree.gameserver.taskmanager.MovementController;
 public final class L2AirShipInstance extends L2Creature
 {
 	public float boatSpeed;
-	protected final FastList<L2Player> _passengers = new FastList<L2Player>();
+	protected final List<L2Player> _passengers = new ArrayList<L2Player>();
 	
 	private class L2AirShipTrajet
 	{
@@ -89,7 +89,7 @@ public final class L2AirShipInstance extends L2Creature
 		 */
 		public void parseLine(String line)
 		{
-			_path = new FastMap<Integer, L2AirShipPoint>();
+			_path = new LinkedHashMap<Integer, L2AirShipPoint>();
 			StringTokenizer st = new StringTokenizer(line, ";");
 			Integer.parseInt(st.nextToken());
 			max = Integer.parseInt(st.nextToken());

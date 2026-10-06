@@ -16,10 +16,10 @@ package com.l2jfree.gameserver.datatables;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +37,7 @@ public class SummonItemsData
 {
 	private static final Logger _log = LoggerFactory.getLogger(SummonItemsData.class);
 	
-	private final FastMap<Integer, L2SummonItem> _summonitems;
+	private final Map<Integer, L2SummonItem> _summonitems;
 	
 	private int[] _summonItemIds;
 	
@@ -48,7 +48,7 @@ public class SummonItemsData
 	
 	private SummonItemsData()
 	{
-		_summonitems = new FastMap<Integer, L2SummonItem>();
+		_summonitems = new LinkedHashMap<Integer, L2SummonItem>();
 		Document doc = null;
 		File file = new File(Config.DATAPACK_ROOT, "data/summon_items.xml");
 		

@@ -20,7 +20,6 @@ package com.l2jfree.gameserver.handler.admincommands;
  * 
  */
 
-import javolution.text.TextBuilder;
 
 import com.l2jfree.gameserver.datatables.ItemTable;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -403,7 +402,7 @@ public class AdminTvTiEngine implements IAdminCommandHandler
 	public void showMainPage(L2Player activeChar)
 	{
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-		TextBuilder replyMSG = new TextBuilder("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		
 		replyMSG.append("<title>[TvT Instanced Engine]</title>");
 		replyMSG.append("<center><font color=\"LEVEL\">[Main Page]</font></center><br><br>");
@@ -479,7 +478,7 @@ public class AdminTvTiEngine implements IAdminCommandHandler
 		}
 		
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-		TextBuilder replyMSG = new TextBuilder("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		
 		replyMSG.append("<title>[TvT Instanced Engine]</title>");
 		replyMSG.append("<table width=\"300\"><tr><td align=\"right\"><button value=\"Back\" action=\"bypass -h admin_tvti\" width=40 height=15 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\"></td></tr></table>");
@@ -605,7 +604,7 @@ public class AdminTvTiEngine implements IAdminCommandHandler
 		c = Util.reverseColor(c);
 		
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-		TextBuilder replyMSG = new TextBuilder("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		
 		replyMSG.append("<title>[TvT Instanced Engine]</title>");
 		replyMSG.append("<table width=\"300\"><tr><td align=\"right\"><button value=\"Back\" action=\"bypass -h admin_tvti_instance_page "
@@ -675,7 +674,7 @@ public class AdminTvTiEngine implements IAdminCommandHandler
 	public void showControlAllPage(L2Player activeChar)
 	{
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-		TextBuilder replyMSG = new TextBuilder("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		
 		replyMSG.append("<title>[TvT Instanced Engine]</title>");
 		replyMSG.append("<table width=\"300\"><tr><td align=\"right\"><button value=\"Back\" action=\"bypass -h admin_tvti\" width=40 height=15 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\"></td></tr></table>");
@@ -697,7 +696,7 @@ public class AdminTvTiEngine implements IAdminCommandHandler
 		TVTInstance i = TvTIMain.getTvTInstance(instanceId);
 		
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-		TextBuilder replyMSG = new TextBuilder("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		
 		replyMSG.append("<title>[TvT Instanced Engine]</title>");
 		replyMSG.append("<table width=\"300\"><tr><td align=\"right\"><button value=\"Back\" action=\"bypass -h admin_tvti_instance_page "

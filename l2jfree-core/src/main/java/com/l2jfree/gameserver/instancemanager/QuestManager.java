@@ -17,8 +17,7 @@ package com.l2jfree.gameserver.instancemanager;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +38,7 @@ public class QuestManager extends ScriptManager<Quest>
 	
 	// =========================================================
 	// Data Field
-	private final Map<String, Quest> _quests = new FastMap<String, Quest>().setShared(true);
+	private final Map<String, Quest> _quests = new ConcurrentHashMap<String, Quest>();
 	
 	// =========================================================
 	// Constructor

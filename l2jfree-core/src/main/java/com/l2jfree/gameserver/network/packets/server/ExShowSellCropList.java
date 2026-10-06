@@ -14,9 +14,9 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
+import java.util.LinkedHashMap;
 import java.util.List;
-
-import javolution.util.FastMap;
+import java.util.Map;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.instancemanager.CastleManorManager.CropProcure;
@@ -40,14 +40,14 @@ public class ExShowSellCropList extends L2ServerPacket
 	private static final String _S__FE_21_EXSHOWSELLCROPLIST = "[S] FE:21 ExShowSellCropList";
 	
 	private int _manorId = 1;
-	private final FastMap<Integer, L2ItemInstance> _cropsItems;
-	private final FastMap<Integer, CropProcure> _castleCrops;
+	private final Map<Integer, L2ItemInstance> _cropsItems;
+	private final Map<Integer, CropProcure> _castleCrops;
 	
 	public ExShowSellCropList(L2Player player, int manorId, List<CropProcure> crops)
 	{
 		_manorId = manorId;
-		_castleCrops = new FastMap<Integer, CropProcure>();
-		_cropsItems = new FastMap<Integer, L2ItemInstance>();
+		_castleCrops = new LinkedHashMap<Integer, CropProcure>();
+		_cropsItems = new LinkedHashMap<Integer, L2ItemInstance>();
 		
 		List<Integer> allCrops = L2Manor.getInstance().getAllCrops();
 		for (int cropId : allCrops)

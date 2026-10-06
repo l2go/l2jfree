@@ -17,9 +17,8 @@ package com.l2jfree.gameserver.gameobjects.ai;
 import static com.l2jfree.gameserver.gameobjects.ai.CtrlIntention.AI_INTENTION_ACTIVE;
 import static com.l2jfree.gameserver.gameobjects.ai.CtrlIntention.AI_INTENTION_ATTACK;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Creature.AIAccessor;
@@ -422,7 +421,7 @@ public class L2ControllableMobAI extends L2AttackableAI
 		double dy, dx;
 		double dblAggroRange = aggroRange * aggroRange;
 		
-		List<L2Creature> potentialTarget = new FastList<L2Creature>();
+		List<L2Creature> potentialTarget = new ArrayList<L2Creature>();
 		
 		for (L2Object obj : _actor.getKnownList().getKnownObjects().values())
 		{

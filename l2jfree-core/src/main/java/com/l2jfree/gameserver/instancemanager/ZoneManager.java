@@ -16,10 +16,10 @@ package com.l2jfree.gameserver.instancemanager;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import javolution.util.FastMap;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
@@ -44,7 +44,7 @@ public final class ZoneManager
 	}
 	
 	private final L2Zone[][] _zones = new L2Zone[ZoneType.values().length][];
-	private final FastMap<Integer, L2Zone> _uniqueZones = new FastMap<Integer, L2Zone>();
+	private final Map<Integer, L2Zone> _uniqueZones = new LinkedHashMap<Integer, L2Zone>();
 	
 	private ZoneManager()
 	{

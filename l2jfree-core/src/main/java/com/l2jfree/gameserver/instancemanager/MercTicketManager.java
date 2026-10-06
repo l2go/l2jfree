@@ -18,12 +18,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,19 +98,19 @@ public class MercTicketManager
 		return SingletonHolder._instance;
 	}
 	
-	private final FastMap<Integer, Integer> _typeLimit;
-	private final FastMap<Integer, MercInfo> _mercenaries;
-	private final FastMap<Integer, FastList<L2ItemInstance>> _positions;
+	private final Map<Integer, Integer> _typeLimit;
+	private final Map<Integer, MercInfo> _mercenaries;
+	private final Map<Integer, List<L2ItemInstance>> _positions;
 	private volatile ScheduledFuture<?> _update;
 	private int[] _handlerIds;
 	
 	private MercTicketManager()
 	{
-		_typeLimit = new FastMap<Integer, Integer>().setShared(true);
+		_typeLimit = new ConcurrentHashMap<Integer, Integer>();
 		fillTypes();
-		_mercenaries = new FastMap<Integer, MercInfo>().setShared(true);
+		_mercenaries = new ConcurrentHashMap<Integer, MercInfo>();
 		fillMercenaries();
-		_positions = new FastMap<Integer, FastList<L2ItemInstance>>();
+		_positions = new LinkedHashMap<Integer, List<L2ItemInstance>>();
 		fillPositions();
 		_update = null;
 	}
@@ -755,7 +757,7 @@ public class MercTicketManager
 					_log.warn("Mercenary at " + x + ";" + y + ";" + z + " isn't assigned to any castle, removed.");
 					continue;
 				}
-				FastList<L2ItemInstance> posts = getPositions(c.getCastleId());
+				List<L2ItemInstance> posts = getPositions(c.getCastleId());
 				if (posts.size() == CASTLE_HIRE_LIMIT[c.getCastleId() - 1])
 				{
 					_log.warn("Mercenary at " + x + ";" + y + ";" + z
@@ -793,12 +795,12 @@ public class MercTicketManager
 	 * @param castle Castle's ID
 	 * @return mercenary position list
 	 */
-	public final FastList<L2ItemInstance> getPositions(int castle)
+	public final List<L2ItemInstance> getPositions(int castle)
 	{
-		FastList<L2ItemInstance> posts = _positions.get(castle);
+		List<L2ItemInstance> posts = _positions.get(castle);
 		if (posts == null)
 		{
-			posts = new FastList<L2ItemInstance>();
+			posts = new ArrayList<L2ItemInstance>();
 			_positions.put(castle, posts);
 		}
 		return posts;
@@ -826,7 +828,7 @@ public class MercTicketManager
 	 */
 	public final int getTypeHired(int castle, int item)
 	{
-		FastList<L2ItemInstance> posts = getPositions(castle);
+		List<L2ItemInstance> posts = getPositions(castle);
 		L2ItemInstance[] tickets = posts.toArray(new L2ItemInstance[posts.size()]);
 		int total = 0;
 		for (L2ItemInstance tick : tickets)
@@ -847,7 +849,7 @@ public class MercTicketManager
 	 */
 	private final boolean isDistanceValid(int x, int y, int z, int castle)
 	{
-		FastList<L2ItemInstance> posts = getPositions(castle);
+		List<L2ItemInstance> posts = getPositions(castle);
 		L2ItemInstance[] tickets = posts.toArray(new L2ItemInstance[posts.size()]);
 		for (L2ItemInstance item : tickets)
 		{
@@ -1163,7 +1165,7 @@ public class MercTicketManager
 				PreparedStatement ps = con.prepareStatement(CLEAN_POSITIONS);
 				ps.executeUpdate();
 				ps.close();
-				for (FastList<L2ItemInstance> posts : _positions.values())
+				for (List<L2ItemInstance> posts : _positions.values())
 				{
 					L2ItemInstance[] pos = posts.toArray(new L2ItemInstance[posts.size()]);
 					for (L2ItemInstance post : pos)
@@ -1197,7 +1199,7 @@ public class MercTicketManager
 	 */
 	public final void buildSpawns(SiegeGuardManager sgm)
 	{
-		FastList<L2ItemInstance> posts = getPositions(sgm.getCastle().getCastleId());
+		List<L2ItemInstance> posts = getPositions(sgm.getCastle().getCastleId());
 		L2ItemInstance[] arr = posts.toArray(new L2ItemInstance[posts.size()]);
 		for (L2ItemInstance pos : arr)
 		{

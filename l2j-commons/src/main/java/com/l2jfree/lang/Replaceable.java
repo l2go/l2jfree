@@ -16,9 +16,6 @@ package com.l2jfree.lang;
 
 import java.util.regex.Matcher;
 
-import javolution.lang.Realtime;
-import javolution.text.Text;
-
 /**
  * @author NB4L1
  */
@@ -68,6 +65,18 @@ public abstract class Replaceable implements CharSequence
 	
 	public abstract int indexOf(String str, int fromIndex);
 	
+	static void replace(StringBuilder sb, String target, String replacement)
+	{
+		for (int index = 0; (index = sb.indexOf(target, index)) != -1; index += replacement.length())
+			sb.replace(index, index + target.length(), replacement);
+	}
+	
+	@Override
+	public final String toString()
+	{
+		return getInnerCharSequence().toString();
+	}
+	
 	public static final class StringBuilderReplaceable extends Replaceable
 	{
 		private final StringBuilder _stringBuilder;
@@ -86,46 +95,13 @@ public abstract class Replaceable implements CharSequence
 		@Override
 		public void replace(String target, String replacement)
 		{
-			replacement = quoteReplacement(replacement);
-			
-			for (int index = 0; (index = _stringBuilder.indexOf(target, index)) != -1; index += replacement.length())
-				_stringBuilder.replace(index, index + target.length(), replacement);
+			replace(_stringBuilder, target, quoteReplacement(replacement));
 		}
 		
 		@Override
 		public int indexOf(String str, int fromIndex)
 		{
 			return _stringBuilder.indexOf(str, fromIndex);
-		}
-	}
-	
-	public static final class TextReplaceable extends Replaceable
-	{
-		private Text _text;
-		
-		public TextReplaceable(Text text)
-		{
-			_text = text;
-		}
-		
-		@Override
-		protected CharSequence getInnerCharSequence()
-		{
-			return _text;
-		}
-		
-		@Override
-		public void replace(String target, String replacement)
-		{
-			replacement = quoteReplacement(replacement);
-			
-			_text = _text.replace(target, replacement);
-		}
-		
-		@Override
-		public int indexOf(String str, int fromIndex)
-		{
-			return _text.indexOf(str, fromIndex);
 		}
 	}
 	
@@ -162,7 +138,7 @@ public abstract class Replaceable implements CharSequence
 	public static final class MixedReplaceable extends Replaceable
 	{
 		private final String _string;
-		private Text _text;
+		private StringBuilder _builder;
 		
 		public MixedReplaceable(String string)
 		{
@@ -172,30 +148,33 @@ public abstract class Replaceable implements CharSequence
 		@Override
 		protected CharSequence getInnerCharSequence()
 		{
-			if (_text == null)
+			if (_builder == null)
 				return _string;
 			
-			return _text;
+			return _builder;
 		}
 		
 		@Override
 		public void replace(String target, String replacement)
 		{
-			replacement = quoteReplacement(replacement);
+			if (_builder == null)
+			{
+				if (!_string.contains(target))
+					return;
+				
+				_builder = new StringBuilder(_string);
+			}
 			
-			if (_text == null)
-				_text = Text.valueOf(_string);
-			
-			_text = _text.replace(target, replacement);
+			replace(_builder, target, quoteReplacement(replacement));
 		}
 		
 		@Override
 		public int indexOf(String str, int fromIndex)
 		{
-			if (_text == null)
+			if (_builder == null)
 				return _string.indexOf(str, fromIndex);
 			
-			return _text.indexOf(str, fromIndex);
+			return _builder.indexOf(str, fromIndex);
 		}
 	}
 	
@@ -205,18 +184,8 @@ public abstract class Replaceable implements CharSequence
 		if (charSequence instanceof StringBuilder)
 			return valueOf((StringBuilder)charSequence);
 		
-		// Text, TextBuilder, RealTime
-		if (charSequence instanceof Realtime)
-			return valueOf((Realtime)charSequence);
-		
 		// String, CharSequence
 		return new MixedReplaceable(charSequence.toString());
-	}
-	
-	// Text, TextBuilder, Realtime
-	public static Replaceable valueOf(Realtime realtime)
-	{
-		return new TextReplaceable(realtime.toText());
 	}
 	
 	// StringBuilder

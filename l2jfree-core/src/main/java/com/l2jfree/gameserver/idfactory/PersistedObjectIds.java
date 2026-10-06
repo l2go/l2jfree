@@ -18,9 +18,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Arrays;
-
-import gnu.trove.TIntArrayList;
+import java.util.stream.IntStream;
 
 final class PersistedObjectIds
 {
@@ -44,7 +42,7 @@ final class PersistedObjectIds
 
 	static int[] read(Connection con) throws SQLException
 	{
-		TIntArrayList ids = new TIntArrayList();
+		IntStream.Builder ids = IntStream.builder();
 		try (Statement statement = con.createStatement())
 		{
 			for (String query : QUERIES)
@@ -60,16 +58,8 @@ final class PersistedObjectIds
 				}
 			}
 		}
-		ids.sort();
 		
 		// An id can be stored twice: a pet has the id of its control item, and the member clans of an alliance share a crest
-		int[] sorted = ids.toNativeArray();
-		int distinct = 0;
-		for (int i = 0; i < sorted.length; i++)
-		{
-			if (i == 0 || sorted[i] != sorted[i - 1])
-				sorted[distinct++] = sorted[i];
-		}
-		return Arrays.copyOf(sorted, distinct);
+		return ids.build().sorted().distinct().toArray();
 	}
 }

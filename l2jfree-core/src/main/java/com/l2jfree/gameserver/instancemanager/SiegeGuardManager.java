@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.instancemanager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
-import javolution.util.FastList;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,13 +47,13 @@ public class SiegeGuardManager
 			"INSERT INTO castle_siege_guard (castle_id, npc_template_id, x, y, z, heading, respawn_delay_s) VALUES (?,?,?,?,?,?,?)";
 	
 	private final Castle _castle;
-	private final FastList<L2Spawn> _siegeGuardSpawn;
+	private final List<L2Spawn> _siegeGuardSpawn;
 	private volatile int _spawnId;
 	
 	public SiegeGuardManager(Castle castle)
 	{
 		_castle = castle;
-		_siegeGuardSpawn = new FastList<L2Spawn>();
+		_siegeGuardSpawn = new ArrayList<L2Spawn>();
 		_spawnId = Integer.MIN_VALUE;
 	}
 	
@@ -253,7 +253,7 @@ public class SiegeGuardManager
 	}
 	
 	/** @return guard spawn list */
-	public final FastList<L2Spawn> getSiegeGuardSpawn()
+	public final List<L2Spawn> getSiegeGuardSpawn()
 	{
 		return _siegeGuardSpawn;
 	}

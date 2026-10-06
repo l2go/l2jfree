@@ -16,17 +16,15 @@ package com.l2jfree.gameserver.communitybbs.Manager;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
-
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Player;
-import com.l2jfree.lang.L2TextBuilder;
 
 /**
  * @author evill33t
@@ -47,7 +45,7 @@ public class UpdateBBSManager extends BaseBBSManager
 	
 	private List<UpdateItem> getChangeLog()
 	{
-		List<UpdateItem> _items = new FastList<UpdateItem>();
+		List<UpdateItem> _items = new ArrayList<UpdateItem>();
 		java.sql.Connection con = null;
 		try
 		{
@@ -102,7 +100,7 @@ public class UpdateBBSManager extends BaseBBSManager
 	{
 		if (command.equals("_bbsupdate_notes"))
 		{
-			final L2TextBuilder tb = L2TextBuilder.newInstance();
+			final StringBuilder tb = new StringBuilder();
 			tb.append("<html><body><br>");
 			
 			tb.append("<table border=0 cellspacing=0 cellpadding=2 bgcolor=808080 width=770>");
@@ -133,7 +131,7 @@ public class UpdateBBSManager extends BaseBBSManager
 			st.nextToken();
 			int id = Integer.parseInt(st.nextToken());
 			UpdateItem it = getDetails(id);
-			final L2TextBuilder tb = L2TextBuilder.newInstance();
+			final StringBuilder tb = new StringBuilder();
 			tb.append("<html><body><table border=0 cellspacing=0 cellpadding=2 width=770><tr><td FIXWIDTH=5></td><td><br>");
 			tb.append(it.udate).append(" ").append(it.introduction).append("<br><br>");
 			tb.append(it.text);

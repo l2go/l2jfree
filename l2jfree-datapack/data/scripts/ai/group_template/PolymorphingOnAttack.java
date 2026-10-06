@@ -14,9 +14,8 @@
  */
 package ai.group_template;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import com.l2jfree.gameserver.gameobjects.L2Attackable;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
@@ -31,7 +30,7 @@ import com.l2jfree.tools.random.Rnd;
  */
 public class PolymorphingOnAttack extends L2AttackableAIScript
 {
-	private static final Map<Integer, Integer[]> MOBSPAWNS = new FastMap<Integer, Integer[]>();
+	private static final Map<Integer, Integer[]> MOBSPAWNS = new LinkedHashMap<Integer, Integer[]>();
 	
 	static
 	{

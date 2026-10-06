@@ -14,8 +14,11 @@
  */
 package instances.Fortress;
 
-import javolution.util.FastMap;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.datatables.NpcTable;
 import com.l2jfree.gameserver.datatables.SpawnTable;
@@ -38,8 +41,8 @@ import com.l2jfree.gameserver.model.world.spawn.L2Spawn;
  */
 public class Dungeon extends QuestJython
 {
-	private final FastMap<Integer, Prison> _prisons = new FastMap<Integer, Prison>();
-	//private FastMap<Integer, Integer>	_fortInstances;
+	private final Map<Integer, Prison> _prisons = new LinkedHashMap<Integer, Prison>();
+	//private Map<Integer, Integer>	_fortInstances;
 	
 	private final String _default =
 			"<html><body>You are either not on a quest that involves this NPC, or you don't meet"
@@ -164,7 +167,7 @@ public class Dungeon extends QuestJython
 		private int _state;
 		private boolean _canEnter;
 		
-		//		protected FastList<L2NpcInstance>	_rbList	= new FastList<L2NpcInstance>();
+		//		protected List<L2NpcInstance>	_rbList	= new ArrayList<L2NpcInstance>();
 		
 		private final int STATE_4 = 4;
 		private final int STATE_1 = 1;

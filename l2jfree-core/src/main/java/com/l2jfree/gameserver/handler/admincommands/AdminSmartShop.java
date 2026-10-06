@@ -17,10 +17,8 @@ package com.l2jfree.gameserver.handler.admincommands;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.text.TextBuilder;
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,9 +148,9 @@ public class AdminSmartShop implements IAdminCommandHandler
 		if (smartList == null)
 		{
 			
-			smartList = new FastList<Integer>();
-			questList = new FastList<Boolean>();
-			gradeList = new FastList<Integer>();
+			smartList = new ArrayList<Integer>();
+			questList = new ArrayList<Boolean>();
+			gradeList = new ArrayList<Integer>();
 		}
 		
 		if (smartList.isEmpty())
@@ -197,7 +195,7 @@ public class AdminSmartShop implements IAdminCommandHandler
 		String itemName = ItemTable.getInstance().getTemplate(itemId).getName();
 		
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-		TextBuilder replyMSG = new TextBuilder("<html><title> " + itemName + "(Id " + itemId + ") </title><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><title> " + itemName + "(Id " + itemId + ") </title><body>");
 		
 		String text =
 				"<center><font color=\"LEVEL\">[Smart Shop by Darki699]</font></center><br><br>"
@@ -307,7 +305,7 @@ public class AdminSmartShop implements IAdminCommandHandler
 	{
 		
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-		TextBuilder replyMSG = new TextBuilder("<html><title> " + heading + " </title><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><title> " + heading + " </title><body>");
 		replyMSG.append(message + "<br1>");
 		replyMSG.append(text);
 		replyMSG.append("</body></html>");
@@ -675,7 +673,7 @@ public class AdminSmartShop implements IAdminCommandHandler
 		
 		int view = valueOfMark("_view", marks), breakPoint = ((view > 0) ? view : _itemsPerView);
 		
-		List<Integer> newList = new FastList<Integer>();
+		List<Integer> newList = new ArrayList<Integer>();
 		
 		if (marks.contains("_next"))
 		{
@@ -707,7 +705,7 @@ public class AdminSmartShop implements IAdminCommandHandler
 	 */
 	private List<Integer> getQuestItems(List<Integer> list)
 	{
-		List<Integer> newList = new FastList<Integer>();
+		List<Integer> newList = new ArrayList<Integer>();
 		for (Integer i : list)
 		{
 			if (i != null && questList.get(smartList.indexOf(i)))
@@ -1599,8 +1597,8 @@ public class AdminSmartShop implements IAdminCommandHandler
 		if (opCommand.contains("_armor") || opCommand.contains("_weapn") || opCommand.contains("_items")
 				|| opCommand.contains("_equip") || opCommand.contains("_ids"))
 		{
-			List<String> search = new FastList<String>();
-			List<Integer> ids = new FastList<Integer>();
+			List<String> search = new ArrayList<String>();
+			List<Integer> ids = new ArrayList<Integer>();
 			String[] param = first.split(" ");
 			for (String s : param)
 			{
@@ -1904,7 +1902,7 @@ public class AdminSmartShop implements IAdminCommandHandler
 	{
 		String message = "";
 		if (skillsWithItems == null)
-			skillsWithItems = new FastList<L2Skill>();
+			skillsWithItems = new ArrayList<L2Skill>();
 		if (skillsWithItems.isEmpty())
 		{
 			for (ClassId classId : ClassId.values())
@@ -2471,7 +2469,7 @@ public class AdminSmartShop implements IAdminCommandHandler
 	private List<Integer> getShopIds(int ItemId)
 	{
 		
-		List<Integer> shopIds = new FastList<Integer>();
+		List<Integer> shopIds = new ArrayList<Integer>();
 		String[] SQL_ITEM_SELECTS =
 				{ "SELECT item_template_id, merchant_shop_id FROM custom_merchant_buylist",
 						"SELECT item_template_id, merchant_shop_id FROM merchant_buylist" };
@@ -2514,7 +2512,7 @@ public class AdminSmartShop implements IAdminCommandHandler
 	private List<Integer> getNpcIds(List<Integer> list)
 	{
 		
-		List<Integer> NpcIds = new FastList<Integer>();
+		List<Integer> NpcIds = new ArrayList<Integer>();
 		String[] SQL_ITEM_SELECTS =
 				{ "SELECT id, npc_template_id FROM custom_merchant_shop", "SELECT id, npc_template_id FROM merchant_shop" };
 		

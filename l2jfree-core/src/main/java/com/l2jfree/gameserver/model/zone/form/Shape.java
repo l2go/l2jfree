@@ -15,8 +15,8 @@
 package com.l2jfree.gameserver.model.zone.form;
 
 import java.lang.reflect.Constructor;
-
-import javolution.util.FastList;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,7 @@ public abstract class Shape
 {
 	protected static Logger _log = LoggerFactory.getLogger(Shape.class);
 	
-	protected FastList<Tupel> _points;
+	protected List<Tupel> _points;
 	protected int _zMin, _zMax;
 	private boolean _z = false;
 	protected boolean _exclude = false;
@@ -111,7 +111,7 @@ public abstract class Shape
 			return null;
 		}
 		
-		shape._points = new FastList<Tupel>();
+		shape._points = new ArrayList<Tupel>();
 		for (Node n = sn.getFirstChild(); n != null; n = n.getNextSibling())
 		{
 			if ("point".equalsIgnoreCase(n.getNodeName()))

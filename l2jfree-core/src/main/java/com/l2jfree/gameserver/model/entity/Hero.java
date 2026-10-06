@@ -22,10 +22,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,8 +95,8 @@ public class Hero
 	
 	private void init()
 	{
-		_heroes = new FastMap<Integer, StatsSet>();
-		_completeHeroes = new FastMap<Integer, StatsSet>();
+		_heroes = new LinkedHashMap<Integer, StatsSet>();
+		_completeHeroes = new LinkedHashMap<Integer, StatsSet>();
 		
 		Connection con = null;
 		Connection con2 = null;
@@ -281,7 +280,7 @@ public class Hero
 			return;
 		}
 		
-		Map<Integer, StatsSet> heroes = new FastMap<Integer, StatsSet>();
+		Map<Integer, StatsSet> heroes = new LinkedHashMap<Integer, StatsSet>();
 		
 		for (StatsSet hero : newHeroes)
 		{

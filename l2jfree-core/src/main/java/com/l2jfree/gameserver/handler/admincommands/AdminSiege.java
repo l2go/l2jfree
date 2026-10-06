@@ -17,8 +17,6 @@ package com.l2jfree.gameserver.handler.admincommands;
 import java.util.Calendar;
 import java.util.StringTokenizer;
 
-import javolution.text.TextBuilder;
-
 import com.l2jfree.gameserver.datatables.ClanTable;
 import com.l2jfree.gameserver.gameobjects.L2Object;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -293,7 +291,7 @@ public class AdminSiege implements IAdminCommandHandler
 		int i = 0;
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 		adminReply.setFile("data/html/admin/castles.htm");
-		TextBuilder cList = new TextBuilder();
+		StringBuilder cList = new StringBuilder();
 		for (Castle castle : CastleManager.getInstance().getCastles().values())
 		{
 			if (castle != null)

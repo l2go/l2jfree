@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
-import javolution.util.FastList;
 
+import java.util.List;
 import com.l2jfree.gameserver.model.L2Manor;
 import com.l2jfree.gameserver.network.packets.L2ServerPacket;
 
@@ -45,7 +45,7 @@ public class ExShowManorDefaultInfo extends L2ServerPacket
 {
 	private static final String _S__FE_1C_EXSHOWSEEDINFO = "[S] FE:1E ExShowManorDefaultInfo";
 	
-	private FastList<Integer> _crops = null;
+	private List<Integer> _crops = null;
 	
 	public ExShowManorDefaultInfo()
 	{

@@ -15,13 +15,13 @@
 package com.l2jfree.gameserver.gameobjects.templates;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
@@ -111,7 +111,7 @@ public final class L2NpcTemplate extends L2CreatureTemplate
 	private EnumSet<ClassId> _teachInfo;
 	
 	/** List of skills of this npc */
-	private FastMap<Integer, L2Skill> _skills;
+	private Map<Integer, L2Skill> _skills;
 	
 	/** List of resist stats for this npc*/
 	private Map<Stats, Double> _vulnerabilities;
@@ -333,7 +333,7 @@ public final class L2NpcTemplate extends L2CreatureTemplate
 		if (drop.isQuestDrop())
 		{
 			//          if (_questDrops == null)
-			//              _questDrops = new FastList<L2DropData>(0);
+			//              _questDrops = new ArrayList<L2DropData>(0);
 			//          _questDrops.add(drop);
 		}
 		else
@@ -374,7 +374,7 @@ public final class L2NpcTemplate extends L2CreatureTemplate
 	public void addSkill(L2Skill skill)
 	{
 		if (_skills == null)
-			_skills = new FastMap<Integer, L2Skill>().setShared(true);
+			_skills = new ConcurrentHashMap<Integer, L2Skill>();
 		
 		_skills.put(skill.getId(), skill);
 	}
@@ -395,7 +395,7 @@ public final class L2NpcTemplate extends L2CreatureTemplate
 		}
 		
 		if (_vulnerabilities == null)
-			_vulnerabilities = new FastMap<Stats, Double>();
+			_vulnerabilities = new LinkedHashMap<Stats, Double>();
 		_vulnerabilities.put(id, vuln);
 	}
 	
@@ -429,7 +429,7 @@ public final class L2NpcTemplate extends L2CreatureTemplate
 	{
 		if (_categories == null)
 			return null;
-		FastList<L2DropData> lst = new FastList<L2DropData>();
+		List<L2DropData> lst = new ArrayList<L2DropData>();
 		for (L2DropCategory tmp : _categories)
 		{
 			lst.addAll(tmp.getAllDrops());

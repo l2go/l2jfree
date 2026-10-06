@@ -18,8 +18,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
-
-import javolution.util.FastList;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,13 +45,13 @@ public class GeoEditorThread extends Thread
 	
 	private OutputStream _out;
 	
-	private final FastList<L2Player> _gms;
+	private final List<L2Player> _gms;
 	
 	public GeoEditorThread(Socket ge)
 	{
 		_geSocket = ge;
 		_working = true;
-		_gms = new FastList<L2Player>();
+		_gms = new ArrayList<L2Player>();
 	}
 	
 	@Override

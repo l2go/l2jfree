@@ -22,7 +22,6 @@ import com.l2jfree.gameserver.handler.IAdminCommandHandler;
 import com.l2jfree.gameserver.model.skills.effects.L2Effect;
 import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
-import com.l2jfree.lang.L2TextBuilder;
 
 public class AdminBuffs implements IAdminCommandHandler
 {
@@ -129,7 +128,7 @@ public class AdminBuffs implements IAdminCommandHandler
 	
 	public void showBuffs(L2Player player, L2Player activeChar)
 	{
-		L2TextBuilder html = L2TextBuilder.newInstance("<html><center><font color=\"LEVEL\">Effects of ");
+		StringBuilder html = StringBuilder.newInstance("<html><center><font color=\"LEVEL\">Effects of ");
 		html.append(player.getName());
 		html.append("</font><center><br>");
 		
@@ -159,7 +158,7 @@ public class AdminBuffs implements IAdminCommandHandler
 		html.append("</html>");
 		
 		NpcHtmlMessage ms = new NpcHtmlMessage(activeChar.getObjectId());
-		ms.setHtml(html.moveToString());
+		ms.setHtml(html.toString());
 		activeChar.sendPacket(ms);
 	}
 	

@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.model.items.templates;
 
-import javolution.util.FastList;
 
+import java.util.List;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.handler.SkillHandler;
@@ -92,8 +92,8 @@ public final class L2Weapon extends L2Equip
 		String[] onCastSkillDefs = set.getString("skills_onCast").split(";");
 		String[] onCritSkillDefs = set.getString("skills_onCrit").split(";");
 		
-		FastList<WeaponSkill> onCastSkills = null;
-		FastList<WeaponSkill> onCritSkills = null;
+		List<WeaponSkill> onCastSkills = null;
+		List<WeaponSkill> onCritSkills = null;
 		
 		// OnCast skills (chance)
 		if (onCastSkillDefs != null && onCastSkillDefs.length > 0)

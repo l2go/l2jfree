@@ -19,9 +19,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +62,7 @@ public class AuctionManager
 	
 	private AuctionManager()
 	{
-		_auctions = new FastList<Auction>();
+		_auctions = new ArrayList<Auction>();
 		load();
 	}
 	

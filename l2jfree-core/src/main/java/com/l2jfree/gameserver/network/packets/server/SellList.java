@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.gameobjects.instance.L2MerchantInstance;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
@@ -33,7 +34,7 @@ public class SellList extends L2ServerPacket
 	private final L2Player _activeChar;
 	private final L2MerchantInstance _lease;
 	private final long _money;
-	private final FastList<L2ItemInstance> _selllist = new FastList<L2ItemInstance>();
+	private final List<L2ItemInstance> _selllist = new ArrayList<L2ItemInstance>();
 	
 	public SellList(L2Player player)
 	{

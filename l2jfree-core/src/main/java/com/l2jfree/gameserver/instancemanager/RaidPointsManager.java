@@ -22,8 +22,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,8 +37,7 @@ public final class RaidPointsManager
 {
 	private static final Logger _log = LoggerFactory.getLogger(RaidPointsManager.class);
 	
-	private static final Map<Integer, Map<Integer, Integer>> _list = new FastMap<Integer, Map<Integer, Integer>>()
-			.setShared(true);
+	private static final Map<Integer, Map<Integer, Integer>> _list = new ConcurrentHashMap<Integer, Map<Integer, Integer>>();
 	
 	public static void init()
 	{

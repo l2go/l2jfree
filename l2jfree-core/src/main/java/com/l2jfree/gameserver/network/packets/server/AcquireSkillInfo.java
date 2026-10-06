@@ -14,14 +14,15 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.l2jfree.gameserver.network.packets.L2ServerPacket;
 
 public class AcquireSkillInfo extends L2ServerPacket
 {
 	private static final String _S__91_AQUIRESKILLINFO = "[S] 91 AquireSkillInfo [dddd d (dddd)]";
-	private final FastList<Req> _reqs;
+	private final List<Req> _reqs;
 	private final int _id, _level, _spCost, _mode;
 	
 	private class Req
@@ -42,7 +43,7 @@ public class AcquireSkillInfo extends L2ServerPacket
 	
 	public AcquireSkillInfo(int id, int level, int spCost, int mode)
 	{
-		_reqs = new FastList<Req>();
+		_reqs = new ArrayList<Req>();
 		_id = id;
 		_level = level;
 		_spCost = spCost;

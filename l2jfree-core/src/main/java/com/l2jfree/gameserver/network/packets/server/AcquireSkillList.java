@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import com.l2jfree.gameserver.network.packets.L2ServerPacket;
 
@@ -58,7 +57,7 @@ public class AcquireSkillList extends L2ServerPacket
 	
 	public AcquireSkillList(SkillType type)
 	{
-		_skills = new FastList<Skill>();
+		_skills = new ArrayList<Skill>();
 		_fishingSkills = type;
 	}
 	

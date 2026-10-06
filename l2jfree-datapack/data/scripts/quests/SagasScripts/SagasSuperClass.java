@@ -14,9 +14,11 @@
  */
 package quests.SagasScripts;
 
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import com.l2jfree.gameserver.gameobjects.L2Attackable;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Npc;
@@ -37,7 +39,7 @@ import com.l2jfree.tools.random.Rnd;
 
 public class SagasSuperClass extends QuestJython
 {
-	private static FastList<Quest> _scripts = new FastList<Quest>();
+	private static List<Quest> _scripts = new ArrayList<Quest>();
 	public String qn = "SagasSuperClass";
 	public int qnu;
 	public int[] NPC = { };
@@ -49,7 +51,7 @@ public class SagasSuperClass extends QuestJython
 	public int[] Y = { };
 	public int[] Z = { };
 	public String[] Text = { };
-	final FastMap<L2Npc, Integer> _SpawnList = new FastMap<L2Npc, Integer>().setShared(true);
+	final Map<L2Npc, Integer> _SpawnList = new ConcurrentHashMap<L2Npc, Integer>();
 	
 	int[] QuestClass[] = { { 0x7f }, { 0x80, 0x81 }, { 0x82 }, { 0x05 }, { 0x14 }, { 0x15 }, { 0x02 }, { 0x03 },
 			{ 0x2e }, { 0x30 }, { 0x33 }, { 0x34 }, { 0x08 }, { 0x17 }, { 0x24 }, { 0x09 }, { 0x18 }, { 0x25 },
@@ -815,7 +817,7 @@ public class SagasSuperClass extends QuestJython
 				L2Party party = player.getParty();
 				if (party != null)
 				{
-					FastList<QuestState> PartyQuestMembers = new FastList<QuestState>();
+					List<QuestState> PartyQuestMembers = new ArrayList<QuestState>();
 					for (L2Player player1 : party.getPartyMembers())
 					{
 						QuestState st1 = findQuest(player1);

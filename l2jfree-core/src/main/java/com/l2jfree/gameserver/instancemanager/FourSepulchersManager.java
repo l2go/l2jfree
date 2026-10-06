@@ -17,14 +17,13 @@ package com.l2jfree.gameserver.instancemanager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -86,31 +85,31 @@ public class FourSepulchersManager extends BossLair
 			{ { 25349, 191231, -85574, -7216, 33380 }, { 25346, 189534, -88969, -7216, 32768 },
 					{ 25342, 173195, -76560, -7215, 49277 }, { 25339, 175591, -72744, -7215, 49317 } }, };
 	
-	protected Map<Integer, Boolean> _archonSpawned = new FastMap<Integer, Boolean>();
-	protected Map<Integer, Boolean> _hallInUse = new FastMap<Integer, Boolean>();
-	protected Map<Integer, int[]> _startHallSpawns = new FastMap<Integer, int[]>();
-	protected Map<Integer, Integer> _hallGateKeepers = new FastMap<Integer, Integer>();
-	protected Map<Integer, Integer> _keyBoxNpc = new FastMap<Integer, Integer>();
-	protected Map<Integer, Integer> _victim = new FastMap<Integer, Integer>();
-	protected Map<Integer, L2Spawn> _executionerSpawns = new FastMap<Integer, L2Spawn>();
-	protected Map<Integer, L2Spawn> _keyBoxSpawns = new FastMap<Integer, L2Spawn>();
-	protected Map<Integer, L2Spawn> _mysteriousBoxSpawns = new FastMap<Integer, L2Spawn>();
-	protected Map<Integer, L2Spawn> _shadowSpawns = new FastMap<Integer, L2Spawn>();
-	protected Map<Integer, List<L2Spawn>> _dukeFinalMobs = new FastMap<Integer, List<L2Spawn>>();
+	protected Map<Integer, Boolean> _archonSpawned = new LinkedHashMap<Integer, Boolean>();
+	protected Map<Integer, Boolean> _hallInUse = new LinkedHashMap<Integer, Boolean>();
+	protected Map<Integer, int[]> _startHallSpawns = new LinkedHashMap<Integer, int[]>();
+	protected Map<Integer, Integer> _hallGateKeepers = new LinkedHashMap<Integer, Integer>();
+	protected Map<Integer, Integer> _keyBoxNpc = new LinkedHashMap<Integer, Integer>();
+	protected Map<Integer, Integer> _victim = new LinkedHashMap<Integer, Integer>();
+	protected Map<Integer, L2Spawn> _executionerSpawns = new LinkedHashMap<Integer, L2Spawn>();
+	protected Map<Integer, L2Spawn> _keyBoxSpawns = new LinkedHashMap<Integer, L2Spawn>();
+	protected Map<Integer, L2Spawn> _mysteriousBoxSpawns = new LinkedHashMap<Integer, L2Spawn>();
+	protected Map<Integer, L2Spawn> _shadowSpawns = new LinkedHashMap<Integer, L2Spawn>();
+	protected Map<Integer, List<L2Spawn>> _dukeFinalMobs = new LinkedHashMap<Integer, List<L2Spawn>>();
 	protected Map<Integer, List<L2SepulcherMonsterInstance>> _dukeMobs =
-			new FastMap<Integer, List<L2SepulcherMonsterInstance>>();
-	protected Map<Integer, List<L2Spawn>> _emperorsGraveNpcs = new FastMap<Integer, List<L2Spawn>>();
-	protected Map<Integer, List<L2Spawn>> _magicalMonsters = new FastMap<Integer, List<L2Spawn>>();
-	protected Map<Integer, List<L2Spawn>> _physicalMonsters = new FastMap<Integer, List<L2Spawn>>();
+			new LinkedHashMap<Integer, List<L2SepulcherMonsterInstance>>();
+	protected Map<Integer, List<L2Spawn>> _emperorsGraveNpcs = new LinkedHashMap<Integer, List<L2Spawn>>();
+	protected Map<Integer, List<L2Spawn>> _magicalMonsters = new LinkedHashMap<Integer, List<L2Spawn>>();
+	protected Map<Integer, List<L2Spawn>> _physicalMonsters = new LinkedHashMap<Integer, List<L2Spawn>>();
 	protected Map<Integer, List<L2SepulcherMonsterInstance>> _viscountMobs =
-			new FastMap<Integer, List<L2SepulcherMonsterInstance>>();
+			new LinkedHashMap<Integer, List<L2SepulcherMonsterInstance>>();
 	
 	protected List<L2Spawn> _physicalSpawns;
 	protected List<L2Spawn> _magicalSpawns;
-	protected FastList<L2Spawn> _managers;
+	protected List<L2Spawn> _managers;
 	protected List<L2Spawn> _dukeFinalSpawns;
 	protected List<L2Spawn> _emperorsGraveSpawns;
-	protected List<L2Npc> _allMobs = new FastList<L2Npc>();
+	protected List<L2Npc> _allMobs = new ArrayList<L2Npc>();
 	
 	protected long _coolDownTimeEnd = 0;
 	protected long _entryTimeEnd = 0;
@@ -242,7 +241,7 @@ public class FourSepulchersManager extends BossLair
 	
 	protected void spawnManagers()
 	{
-		_managers = new FastList<L2Spawn>();
+		_managers = new ArrayList<L2Spawn>();
 		
 		int i = 31921;
 		for (L2Spawn spawnDat; i <= 31924; i++)
@@ -488,7 +487,7 @@ public class FourSepulchersManager extends BossLair
 				L2Spawn spawnDat;
 				L2NpcTemplate template1;
 				
-				_physicalSpawns = new FastList<L2Spawn>();
+				_physicalSpawns = new ArrayList<L2Spawn>();
 				
 				while (rset2.next())
 				{
@@ -559,7 +558,7 @@ public class FourSepulchersManager extends BossLair
 				L2Spawn spawnDat;
 				L2NpcTemplate template1;
 				
-				_magicalSpawns = new FastList<L2Spawn>();
+				_magicalSpawns = new ArrayList<L2Spawn>();
 				
 				while (rset2.next())
 				{
@@ -631,7 +630,7 @@ public class FourSepulchersManager extends BossLair
 				L2Spawn spawnDat;
 				L2NpcTemplate template1;
 				
-				_dukeFinalSpawns = new FastList<L2Spawn>();
+				_dukeFinalSpawns = new ArrayList<L2Spawn>();
 				
 				while (rset2.next())
 				{
@@ -703,7 +702,7 @@ public class FourSepulchersManager extends BossLair
 				L2Spawn spawnDat;
 				L2NpcTemplate template1;
 				
-				_emperorsGraveSpawns = new FastList<L2Spawn>();
+				_emperorsGraveSpawns = new ArrayList<L2Spawn>();
 				
 				while (rset2.next())
 				{
@@ -964,7 +963,7 @@ public class FourSepulchersManager extends BossLair
 		
 		if (Config.ALT_FS_PARTY_MEMBER_COUNT > 1)
 		{
-			List<L2Player> members = new FastList<L2Player>();
+			List<L2Player> members = new ArrayList<L2Player>();
 			for (L2Player mem : player.getParty().getPartyMembers())
 			{
 				if (!mem.isDead() && Util.checkIfInRange(700, player, mem, true))
@@ -995,7 +994,7 @@ public class FourSepulchersManager extends BossLair
 		}
 		else if (player.isInParty())
 		{
-			List<L2Player> members = new FastList<L2Player>();
+			List<L2Player> members = new ArrayList<L2Player>();
 			for (L2Player mem : player.getParty().getPartyMembers())
 			{
 				if (!mem.isDead() && Util.checkIfInRange(700, player, mem, true))
@@ -1063,17 +1062,17 @@ public class FourSepulchersManager extends BossLair
 		if (!isAttackTime())
 			return;
 		
-		FastList<L2Spawn> monsterList;
-		List<L2SepulcherMonsterInstance> mobs = new FastList<L2SepulcherMonsterInstance>();
+		List<L2Spawn> monsterList;
+		List<L2SepulcherMonsterInstance> mobs = new ArrayList<L2SepulcherMonsterInstance>();
 		L2Spawn keyBoxMobSpawn;
 		
 		if (Rnd.get(2) == 0)
 		{
-			monsterList = (FastList<L2Spawn>)_physicalMonsters.get(npcId);
+			monsterList = (List<L2Spawn>)_physicalMonsters.get(npcId);
 		}
 		else
 		{
-			monsterList = (FastList<L2Spawn>)_magicalMonsters.get(npcId);
+			monsterList = (List<L2Spawn>)_magicalMonsters.get(npcId);
 		}
 		
 		if (monsterList != null)
@@ -1183,7 +1182,7 @@ public class FourSepulchersManager extends BossLair
 	
 	public synchronized boolean isViscountMobsAnnihilated(int npcId)
 	{
-		FastList<L2SepulcherMonsterInstance> mobs = (FastList<L2SepulcherMonsterInstance>)_viscountMobs.get(npcId);
+		List<L2SepulcherMonsterInstance> mobs = (List<L2SepulcherMonsterInstance>)_viscountMobs.get(npcId);
 		
 		if (mobs == null)
 			return true;
@@ -1199,7 +1198,7 @@ public class FourSepulchersManager extends BossLair
 	
 	public synchronized boolean isDukeMobsAnnihilated(int npcId)
 	{
-		FastList<L2SepulcherMonsterInstance> mobs = (FastList<L2SepulcherMonsterInstance>)_dukeMobs.get(npcId);
+		List<L2SepulcherMonsterInstance> mobs = (List<L2SepulcherMonsterInstance>)_dukeMobs.get(npcId);
 		
 		if (mobs == null)
 			return true;
@@ -1263,7 +1262,7 @@ public class FourSepulchersManager extends BossLair
 		if (status != null && status)
 			return;
 		
-		FastList<L2Spawn> monsterList = (FastList<L2Spawn>)_dukeFinalMobs.get(npcId);
+		List<L2Spawn> monsterList = (List<L2Spawn>)_dukeFinalMobs.get(npcId);
 		
 		if (monsterList != null)
 		{
@@ -1287,7 +1286,7 @@ public class FourSepulchersManager extends BossLair
 		if (!isAttackTime())
 			return;
 		
-		FastList<L2Spawn> monsterList = (FastList<L2Spawn>)_emperorsGraveNpcs.get(npcId);
+		List<L2Spawn> monsterList = (List<L2Spawn>)_emperorsGraveNpcs.get(npcId);
 		
 		if (monsterList != null)
 		{

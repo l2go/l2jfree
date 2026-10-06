@@ -14,9 +14,9 @@
  */
 package ai.individual;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Future;
-
-import javolution.util.FastList;
 
 import ai.group_template.L2AttackableAIScript;
 
@@ -51,7 +51,7 @@ public class IceFairySirra extends L2AttackableAIScript
 	private static final int SILVER_HEMOCYTE = 8057;
 	private static L2BossZone _freyasZone;
 	private static L2Player _player = null;
-	protected FastList<L2Npc> _allMobs = new FastList<L2Npc>();
+	protected List<L2Npc> _allMobs = new ArrayList<L2Npc>();
 	protected Future<?> _onDeadEventTask = null;
 	
 	public IceFairySirra(int id, String name, String descr)

@@ -14,10 +14,10 @@
  */
 package com.l2jfree.gameserver.model.entity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import javolution.util.FastList;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -38,7 +38,7 @@ public class DimensionalRift
 {
 	protected byte _roomType;
 	protected L2Party _party;
-	protected FastList<Byte> _completedRooms = new FastList<Byte>();
+	protected List<Byte> _completedRooms = new ArrayList<Byte>();
 	private static final long seconds_5 = 5000L;
 	//private static final int MILLISECONDS_IN_MINUTE = 60000;
 	protected byte jumps_current = 0;
@@ -50,8 +50,8 @@ public class DimensionalRift
 	
 	protected byte _choosenRoom = -1;
 	private boolean _hasJumped = false;
-	protected FastList<L2Player> deadPlayers = new FastList<L2Player>();
-	protected FastList<L2Player> revivedInWaitingRoom = new FastList<L2Player>();
+	protected List<L2Player> deadPlayers = new ArrayList<L2Player>();
+	protected List<L2Player> revivedInWaitingRoom = new ArrayList<L2Player>();
 	private boolean isBossRoom = false;
 	
 	public DimensionalRift(L2Party party, byte roomType, byte roomId)
@@ -379,12 +379,12 @@ public class DimensionalRift
 		}
 	}
 	
-	public FastList<L2Player> getDeadMemberList()
+	public List<L2Player> getDeadMemberList()
 	{
 		return deadPlayers;
 	}
 	
-	public FastList<L2Player> getRevivedAtWaitingRoom()
+	public List<L2Player> getRevivedAtWaitingRoom()
 	{
 		return revivedInWaitingRoom;
 	}

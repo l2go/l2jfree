@@ -15,12 +15,12 @@
 package com.l2jfree.gameserver.taskmanager;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,9 +54,8 @@ public final class LeakTaskManager
 	}
 	
 	private final Map<ImmutableReference<L2Player>, Long> _players =
-			new FastMap<ImmutableReference<L2Player>, Long>().setShared(true);
-	private final Map<ImmutableReference<L2Summon>, Long> _summons = new FastMap<ImmutableReference<L2Summon>, Long>()
-			.setShared(true);
+			new ConcurrentHashMap<ImmutableReference<L2Player>, Long>();
+	private final Map<ImmutableReference<L2Summon>, Long> _summons = new ConcurrentHashMap<ImmutableReference<L2Summon>, Long>();
 	
 	private LeakTaskManager()
 	{
@@ -182,7 +181,7 @@ public final class LeakTaskManager
 	
 	private synchronized void check(boolean forced)
 	{
-		FastList<String> list = new FastList<String>();
+		List<String> list = new ArrayList<String>();
 		
 		for (ImmutableReference<L2Player> ref : _players.keySet())
 		{

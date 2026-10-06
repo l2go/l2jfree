@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.cache;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +36,7 @@ public final class WarehouseCacheManager implements Runnable
 		return SingletonHolder._instance;
 	}
 	
-	private final Map<L2Player, Long> _cache = new FastMap<L2Player, Long>();
+	private final Map<L2Player, Long> _cache = new LinkedHashMap<L2Player, Long>();
 	
 	private WarehouseCacheManager()
 	{

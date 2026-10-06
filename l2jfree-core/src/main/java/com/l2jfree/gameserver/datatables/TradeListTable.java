@@ -19,9 +19,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +74,7 @@ public class TradeListTable
 	private static final String DELETE_STOCK = "DELETE FROM merchant_stock WHERE shop_id = ? AND item_template_id = ?";
 	
 	private int _nextListId;
-	private final FastMap<Integer, L2TradeList> _lists = new FastMap<Integer, L2TradeList>();
+	private final Map<Integer, L2TradeList> _lists = new LinkedHashMap<Integer, L2TradeList>();
 	
 	/** Task launching the function for restore count of Item (Clan Hall); the timer is the restock interval in seconds */
 	public class RestoreCount implements Runnable
@@ -266,9 +267,9 @@ public class TradeListTable
 		return null;
 	}
 	
-	public FastList<L2TradeList> getBuyListByNpcId(int npcId)
+	public List<L2TradeList> getBuyListByNpcId(int npcId)
 	{
-		FastList<L2TradeList> lists = new FastList<L2TradeList>();
+		List<L2TradeList> lists = new ArrayList<L2TradeList>();
 		
 		for (L2TradeList list : _lists.values())
 		{

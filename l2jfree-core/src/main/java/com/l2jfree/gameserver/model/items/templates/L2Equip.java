@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.model.items.templates;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +46,8 @@ public abstract class L2Equip extends L2Item
 		String[] itemSkillDefs = set.getString("skills_item").split(";");
 		String[] enchant4SkillDefs = set.getString("enchant4_skill").split(";");
 		
-		FastList<L2Skill> itemSkills = null;
-		FastList<L2Skill> enchant4Skills = null;
+		List<L2Skill> itemSkills = null;
+		List<L2Skill> enchant4Skills = null;
 		
 		// Item skills
 		if (itemSkillDefs != null && itemSkillDefs.length > 0)
@@ -68,9 +69,9 @@ public abstract class L2Equip extends L2Item
 			_enchant4Skills = enchant4Skills.toArray(new L2Skill[enchant4Skills.size()]);
 	}
 	
-	protected FastList<Integer> parseRestriction(String[] from, String restrictType, String itemType)
+	protected List<Integer> parseRestriction(String[] from, String restrictType, String itemType)
 	{
-		FastList<Integer> values = null;
+		List<Integer> values = null;
 		for (String strVal : from)
 		{
 			int intVal = -1;
@@ -89,15 +90,15 @@ public abstract class L2Equip extends L2Item
 				continue;
 			
 			if (values == null)
-				values = new FastList<Integer>();
+				values = new ArrayList<Integer>();
 			values.add(intVal);
 		}
 		return values;
 	}
 	
-	protected FastList<L2Skill> parseSkills(String[] from, String skillType, String itemType)
+	protected List<L2Skill> parseSkills(String[] from, String skillType, String itemType)
 	{
-		FastList<L2Skill> itemSkills = null;
+		List<L2Skill> itemSkills = null;
 		for (String skillStr : from)
 		{
 			if (skillStr.length() == 0)
@@ -128,16 +129,16 @@ public abstract class L2Equip extends L2Item
 			else
 			{
 				if (itemSkills == null)
-					itemSkills = new FastList<L2Skill>();
+					itemSkills = new ArrayList<L2Skill>();
 				itemSkills.add(skill);
 			}
 		}
 		return itemSkills;
 	}
 	
-	protected FastList<WeaponSkill> parseChanceSkills(String[] from, String skillType, String itemType)
+	protected List<WeaponSkill> parseChanceSkills(String[] from, String skillType, String itemType)
 	{
-		FastList<WeaponSkill> itemSkills = null;
+		List<WeaponSkill> itemSkills = null;
 		for (String skillStr : from)
 		{
 			if (skillStr.length() == 0)
@@ -171,7 +172,7 @@ public abstract class L2Equip extends L2Item
 			{
 				//skill.attach(new ConditionGameChance(chance), true);
 				if (itemSkills == null)
-					itemSkills = new FastList<WeaponSkill>();
+					itemSkills = new ArrayList<WeaponSkill>();
 				WeaponSkill ws = new WeaponSkill();
 				ws.skill = skill;
 				ws.chance = chance;

@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.datatables;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
-import javolution.util.FastMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,7 @@ public class LevelUpData
 	
 	private final static Logger _log = LoggerFactory.getLogger(LevelUpData.class);
 	
-	private final FastMap<Integer, L2LvlupData> _lvlTable;
+	private final Map<Integer, L2LvlupData> _lvlTable;
 	
 	public static LevelUpData getInstance()
 	{
@@ -60,7 +60,7 @@ public class LevelUpData
 	
 	private LevelUpData()
 	{
-		_lvlTable = new FastMap<Integer, L2LvlupData>();
+		_lvlTable = new LinkedHashMap<Integer, L2LvlupData>();
 		
 		Connection con = null;
 		try

@@ -20,9 +20,8 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Calendar;
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +57,7 @@ public class Auction
 	private int _currentBid = 0;
 	private int _startingBid = 0;
 	
-	private final Map<Integer, Bidder> _bidders = new FastMap<Integer, Bidder>();
+	private final Map<Integer, Bidder> _bidders = new LinkedHashMap<Integer, Bidder>();
 	
 	private static final String[] ItemTypeName = { "ClanHall" };
 	

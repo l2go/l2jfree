@@ -25,17 +25,16 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -2736,7 +2735,7 @@ public final class L2Player extends L2Playable
 	public PlayerFreight getDepositedFreight(int objectId)
 	{
 		if (_depositedFreight == null)
-			_depositedFreight = new FastList<PlayerFreight>();
+			_depositedFreight = new ArrayList<PlayerFreight>();
 		else
 		{
 			for (PlayerFreight freight : _depositedFreight)
@@ -9533,7 +9532,7 @@ public final class L2Player extends L2Playable
 			if (skillTree == null)
 				return true;
 			
-			final Map<Integer, L2Skill> skills = new FastMap<Integer, L2Skill>();
+			final Map<Integer, L2Skill> skills = new LinkedHashMap<Integer, L2Skill>();
 			
 			for (L2SkillLearn skillInfo : skillTree)
 			{
@@ -12383,7 +12382,7 @@ public final class L2Player extends L2Playable
 	
 	private boolean _canFeed;
 	
-	private final Map<Integer, TimeStamp> _reuseTimeStamps = new FastMap<Integer, TimeStamp>().setShared(true);
+	private final Map<Integer, TimeStamp> _reuseTimeStamps = new ConcurrentHashMap<Integer, TimeStamp>();
 	
 	public Map<Integer, TimeStamp> getReuseTimeStamps()
 	{

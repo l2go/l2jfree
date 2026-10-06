@@ -19,16 +19,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import javolution.util.FastMap;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.GameServer;
@@ -42,7 +39,6 @@ import com.l2jfree.gameserver.network.SystemChatChannelId;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.CreatureSay;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
-import com.l2jfree.lang.L2TextBuilder;
 
 public class RegionBBSManager extends BaseBBSManager
 {
@@ -106,7 +102,7 @@ public class RegionBBSManager extends BaseBBSManager
 	 */
 	private void showOldCommunityPI(L2Player activeChar, String name)
 	{
-		final L2TextBuilder htmlCode = L2TextBuilder.newInstance();
+		final StringBuilder htmlCode = new StringBuilder();
 		htmlCode.append("<html><body><br>");
 		htmlCode.append("<table border=0><tr><td FIXWIDTH=15></td><td align=center>L2J Community Board<img src=\"sek.cbui355\" width=610 height=1></td></tr><tr><td FIXWIDTH=15></td><td>");
 		L2Player player = L2World.getInstance().getPlayer(name);
@@ -204,7 +200,7 @@ public class RegionBBSManager extends BaseBBSManager
 		
 		if (ar1.equals("PM"))
 		{
-			final L2TextBuilder htmlCode = L2TextBuilder.newInstance();
+			final StringBuilder htmlCode = new StringBuilder();
 			htmlCode.append("<html><body><br>");
 			htmlCode.append("<table border=0><tr><td FIXWIDTH=15></td><td align=center>L2J Community Board<img src=\"sek.cbui355\" width=610 height=1></td></tr><tr><td FIXWIDTH=15></td><td>");
 			
@@ -458,7 +454,7 @@ public class RegionBBSManager extends BaseBBSManager
 		}
 		
 		private final List<L2Player> _players = new ArrayList<L2Player>();
-		private final Map<Integer, String> _communityPages = new FastMap<Integer, String>();
+		private final Map<Integer, String> _communityPages = new LinkedHashMap<Integer, String>();
 		
 		public void changeCommunityBoard(L2Player player, PlayerStateOnCommunity maxInfluencedState)
 		{
@@ -531,7 +527,7 @@ public class RegionBBSManager extends BaseBBSManager
 			
 			final List<L2Player> onlinePlayers = _players.subList(fromIndex, toIndex);
 			
-			final L2TextBuilder htmlCode = L2TextBuilder.newInstance();
+			final StringBuilder htmlCode = new StringBuilder();
 			htmlCode.append("<html><body><br>");
 			htmlCode.append("<table width=600>");
 			{
@@ -753,7 +749,7 @@ public class RegionBBSManager extends BaseBBSManager
 			
 			htmlCode.append("</body></html>");
 			
-			return htmlCode.moveToString();
+			return htmlCode.toString();
 		}
 	}
 	

@@ -23,14 +23,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,9 +59,9 @@ public final class Olympiad
 	private static final Logger _log = LoggerFactory.getLogger(Olympiad.class);
 	
 	private static Map<Integer, StatsSet> _nobles;
-	protected static FastList<StatsSet> _heroesToBe;
-	private static FastList<L2Player> _nonClassBasedRegisters;
-	private static Map<Integer, FastList<L2Player>> _classBasedRegisters;
+	protected static List<StatsSet> _heroesToBe;
+	private static List<L2Player> _nonClassBasedRegisters;
+	private static Map<Integer, List<L2Player>> _classBasedRegisters;
 	private static Map<Integer, Integer> _noblesRank;
 	
 	private static final String OLYMPIAD_DATA_FILE = "config/olympiad.properties";
@@ -196,7 +196,7 @@ public final class Olympiad
 	
 	private void load()
 	{
-		_nobles = new FastMap<Integer, StatsSet>();
+		_nobles = new LinkedHashMap<Integer, StatsSet>();
 		
 		Connection con = null;
 		
@@ -341,8 +341,8 @@ public final class Olympiad
 	
 	public void loadNoblesRank()
 	{
-		_noblesRank = new FastMap<Integer, Integer>();
-		Map<Integer, Integer> tmpPlace = new FastMap<Integer, Integer>();
+		_noblesRank = new LinkedHashMap<Integer, Integer>();
+		Map<Integer, Integer> tmpPlace = new LinkedHashMap<Integer, Integer>();
 		
 		Connection con = null;
 		try
@@ -399,8 +399,8 @@ public final class Olympiad
 		if (_period == 1)
 			return;
 		
-		_nonClassBasedRegisters = new FastList<L2Player>();
-		_classBasedRegisters = new FastMap<Integer, FastList<L2Player>>();
+		_nonClassBasedRegisters = new ArrayList<L2Player>();
+		_classBasedRegisters = new LinkedHashMap<Integer, List<L2Player>>();
 		
 		_compStart = Calendar.getInstance();
 		_compStart.set(Calendar.HOUR_OF_DAY, COMP_START);
@@ -530,7 +530,7 @@ public final class Olympiad
 		
 		if (_classBasedRegisters.containsKey(noble.getClassId().getId()))
 		{
-			FastList<L2Player> classed = _classBasedRegisters.get(noble.getClassId().getId());
+			List<L2Player> classed = _classBasedRegisters.get(noble.getClassId().getId());
 			for (L2Player participant : classed)
 			{
 				if (participant.getObjectId() == noble.getObjectId())
@@ -583,7 +583,7 @@ public final class Olympiad
 		{
 			if (_classBasedRegisters.containsKey(noble.getClassId().getId()))
 			{
-				FastList<L2Player> classed = _classBasedRegisters.get(noble.getClassId().getId());
+				List<L2Player> classed = _classBasedRegisters.get(noble.getClassId().getId());
 				classed.add(noble);
 				
 				_classBasedRegisters.remove(noble.getClassId().getId());
@@ -591,7 +591,7 @@ public final class Olympiad
 			}
 			else
 			{
-				FastList<L2Player> classed = new FastList<L2Player>();
+				List<L2Player> classed = new ArrayList<L2Player>();
 				classed.add(noble);
 				
 				_classBasedRegisters.put(noble.getClassId().getId(), classed);
@@ -623,19 +623,19 @@ public final class Olympiad
 		_nobles.put(playerId, stats);
 	}
 	
-	protected static FastList<L2Player> getRegisteredNonClassBased()
+	protected static List<L2Player> getRegisteredNonClassBased()
 	{
 		return _nonClassBasedRegisters;
 	}
 	
-	protected static Map<Integer, FastList<L2Player>> getRegisteredClassBased()
+	protected static Map<Integer, List<L2Player>> getRegisteredClassBased()
 	{
 		return _classBasedRegisters;
 	}
 	
-	protected static FastList<Integer> hasEnoughRegisteredClassed()
+	protected static List<Integer> hasEnoughRegisteredClassed()
 	{
-		FastList<Integer> result = new FastList<Integer>();
+		List<Integer> result = new ArrayList<Integer>();
 		
 		for (Integer classList : getRegisteredClassBased().keySet())
 		{
@@ -670,7 +670,7 @@ public final class Olympiad
 		
 		else if (_classBasedRegisters != null && _classBasedRegisters.containsKey(noble.getClassId().getId()))
 		{
-			FastList<L2Player> classed = _classBasedRegisters.get(noble.getClassId().getId());
+			List<L2Player> classed = _classBasedRegisters.get(noble.getClassId().getId());
 			if (classed != null && classed.contains(noble))
 				result = true;
 		}
@@ -725,7 +725,7 @@ public final class Olympiad
 			_nonClassBasedRegisters.remove(noble);
 		else
 		{
-			FastList<L2Player> classed = _classBasedRegisters.get(noble.getClassId().getId());
+			List<L2Player> classed = _classBasedRegisters.get(noble.getClassId().getId());
 			classed.remove(noble);
 			
 			_classBasedRegisters.remove(noble.getClassId().getId());
@@ -742,7 +742,7 @@ public final class Olympiad
 		if (OlympiadManager.getInstance().getOlympiadGame(player.getOlympiadGameId()) != null)
 			OlympiadManager.getInstance().getOlympiadGame(player.getOlympiadGameId()).handleDisconnect(player);
 		
-		FastList<L2Player> classed = _classBasedRegisters.get(player.getClassId().getId());
+		List<L2Player> classed = _classBasedRegisters.get(player.getClassId().getId());
 		
 		if (_nonClassBasedRegisters.contains(player))
 			_nonClassBasedRegisters.remove(player);
@@ -963,7 +963,7 @@ public final class Olympiad
 		}
 	}
 	
-	public FastMap<Integer, String> getMatchList()
+	public Map<Integer, String> getMatchList()
 	{
 		return OlympiadManager.getInstance().getAllTitles();
 	}
@@ -1056,7 +1056,7 @@ public final class Olympiad
 		
 		if (!_classBasedRegisters.isEmpty())
 		{
-			for (FastList<L2Player> classed : _classBasedRegisters.values())
+			for (List<L2Player> classed : _classBasedRegisters.values())
 				classCount += classed.size();
 		}
 		
@@ -1258,7 +1258,7 @@ public final class Olympiad
 			}
 		}
 		
-		_heroesToBe = new FastList<StatsSet>();
+		_heroesToBe = new ArrayList<StatsSet>();
 		Connection con = null;
 		
 		try
@@ -1267,7 +1267,7 @@ public final class Olympiad
 			PreparedStatement statement;
 			ResultSet rset;
 			StatsSet hero;
-			FastList<StatsSet> soulHounds = new FastList<StatsSet>();
+			List<StatsSet> soulHounds = new ArrayList<StatsSet>();
 			for (int finalElement : HERO_IDS)
 			{
 				statement = con.prepareStatement(OLYMPIAD_GET_HEROS);
@@ -1359,11 +1359,11 @@ public final class Olympiad
 		}
 	}
 	
-	public FastList<String> getClassLeaderBoard(int classId)
+	public List<String> getClassLeaderBoard(int classId)
 	{
 		// if (_period != 1) return;
 		
-		FastList<String> names = new FastList<String>();
+		List<String> names = new ArrayList<String>();
 		Connection con = null;
 		
 		try
@@ -1640,7 +1640,7 @@ public final class Olympiad
 		NpcHtmlMessage message = new NpcHtmlMessage(0);
 		message.setFile(Olympiad.OLYMPIAD_HTML_PATH + "olympiad_observe2.htm");
 		
-		FastMap<Integer, String> matches = getInstance().getMatchList();
+		Map<Integer, String> matches = getInstance().getMatchList();
 		for (int i = 0; i < Olympiad.getStadiumCount(); i++)
 		{
 			int arenaId = i + 1;

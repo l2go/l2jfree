@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
 import com.l2jfree.gameserver.network.packets.L2ServerPacket;
@@ -27,7 +28,7 @@ public class PackageSendableList extends L2ServerPacket
 {
 	private static final String _S__C3_PACKAGESENDABLELIST = "[S] C3 PackageSendableList";
 	
-	private final FastList<L2ItemInstance> _items;
+	private final List<L2ItemInstance> _items;
 	private final int _targetPlayerObjId;
 	private final long _playerAdena;
 	
@@ -36,7 +37,7 @@ public class PackageSendableList extends L2ServerPacket
 		_targetPlayerObjId = playerOID;
 		_playerAdena = sender.getAdena();
 		
-		_items = new FastList<L2ItemInstance>();
+		_items = new ArrayList<L2ItemInstance>();
 		for (L2ItemInstance temp : sender.getInventory().getAvailableItems(true, false))
 		{
 			if (temp != null && temp.isDepositable(false))

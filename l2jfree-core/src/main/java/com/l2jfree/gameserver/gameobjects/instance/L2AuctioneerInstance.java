@@ -16,11 +16,10 @@ package com.l2jfree.gameserver.gameobjects.instance;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-
-import javolution.util.FastMap;
 
 import com.l2jfree.gameserver.gameobjects.L2Npc;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -43,7 +42,7 @@ public final class L2AuctioneerInstance extends L2Npc
 	private static final int COND_BUSY_BECAUSE_OF_SIEGE = 1;
 	private static final int COND_REGULAR = 3;
 	
-	private final Map<Integer, Auction> _pendingAuctions = new FastMap<Integer, Auction>();
+	private final Map<Integer, Auction> _pendingAuctions = new LinkedHashMap<Integer, Auction>();
 	
 	public L2AuctioneerInstance(int objectId, L2NpcTemplate template)
 	{

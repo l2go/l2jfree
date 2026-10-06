@@ -25,11 +25,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Set;
-
-import javolution.util.FastMap;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -61,7 +61,7 @@ public final class HtmCache
 		return SingletonHolder._instance;
 	}
 	
-	private FastMap<String, String> _cache = new FastMap<String, String>(16000);
+	private Map<String, String> _cache = new LinkedHashMap<String, String>(16000);
 	
 	private int _loadedFiles;
 	private int _size;
@@ -99,7 +99,7 @@ public final class HtmCache
 			{
 				ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(getCacheFile())));
 				
-				_cache = (FastMap<String, String>)ois.readObject();
+				_cache = (Map<String, String>)ois.readObject();
 				
 				for (String html : _cache.values())
 				{

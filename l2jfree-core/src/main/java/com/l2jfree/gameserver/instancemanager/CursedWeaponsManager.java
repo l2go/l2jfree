@@ -22,11 +22,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,17 +67,17 @@ public class CursedWeaponsManager
 		return SingletonHolder._instance;
 	}
 	
-	private FastMap<Integer, CursedWeapon> _cursedWeapons;
+	private Map<Integer, CursedWeapon> _cursedWeapons;
 	
 	private CursedWeaponsManager()
 	{
-		_cursedWeapons = new FastMap<Integer, CursedWeapon>();
+		_cursedWeapons = new LinkedHashMap<Integer, CursedWeapon>();
 		load();
 	}
 	
 	public final void reload()
 	{
-		_cursedWeapons = new FastMap<Integer, CursedWeapon>();
+		_cursedWeapons = new LinkedHashMap<Integer, CursedWeapon>();
 		load();
 	}
 	

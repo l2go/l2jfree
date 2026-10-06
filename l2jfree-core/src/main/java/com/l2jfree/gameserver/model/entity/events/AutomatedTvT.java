@@ -17,10 +17,10 @@ package com.l2jfree.gameserver.model.entity.events;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,7 +102,7 @@ public final class AutomatedTvT
 	
 	private final CopyOnWriteArrayList<Integer> registered;
 	private final CopyOnWriteArrayList<L2Player> participants;
-	private final FastMap<Integer, Participant> eventPlayers;
+	private final Map<Integer, Participant> eventPlayers;
 	private Team[] eventTeams;
 	private int[] teamMembers;
 	
@@ -118,7 +118,7 @@ public final class AutomatedTvT
 		// This has no maximum bound, thus configuration changes will not crash anything
 		participants = new CopyOnWriteArrayList<L2Player>();
 		registered = new CopyOnWriteArrayList<Integer>();
-		eventPlayers = new FastMap<Integer, Participant>(Config.AUTO_TVT_PARTICIPANTS_MAX);
+		eventPlayers = new LinkedHashMap<Integer, Participant>(Config.AUTO_TVT_PARTICIPANTS_MAX);
 		eventTeams = null;
 		task = new AutoEventTask();
 		taskDuring = new AutoReviveTask();

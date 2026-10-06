@@ -19,12 +19,12 @@ import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,9 +83,9 @@ public class Quest extends ManagedScript
 	protected static final Logger _log = LoggerFactory.getLogger(Quest.class);
 	
 	/** HashMap containing events from String value of the event */
-	private static Map<String, Quest> _allEventsS = new FastMap<String, Quest>();
+	private static Map<String, Quest> _allEventsS = new LinkedHashMap<String, Quest>();
 	/** HashMap containing lists of timers from the name of the timer */
-	private static Map<String, FastList<QuestTimer>> _allEventTimers = new FastMap<String, FastList<QuestTimer>>();
+	private static Map<String, List<QuestTimer>> _allEventTimers = new LinkedHashMap<String, List<QuestTimer>>();
 	
 	private final ReentrantReadWriteLock _rwLock = new ReentrantReadWriteLock();
 	
@@ -256,11 +256,11 @@ public class Quest extends ManagedScript
 	public void startQuestTimer(String name, long time, L2Npc npc, L2Player player, boolean repeating)
 	{
 		// Add quest timer if timer doesn't already exist
-		FastList<QuestTimer> timers = getQuestTimers(name);
+		List<QuestTimer> timers = getQuestTimers(name);
 		// no timer exists with the same name, at all
 		if (timers == null)
 		{
-			timers = new FastList<QuestTimer>();
+			timers = new ArrayList<QuestTimer>();
 			timers.add(new QuestTimer(this, name, time, npc, player, repeating));
 			_allEventTimers.put(name, timers);
 		}
@@ -286,7 +286,7 @@ public class Quest extends ManagedScript
 	
 	public QuestTimer getQuestTimer(String name, L2Npc npc, L2Player player)
 	{
-		FastList<QuestTimer> qt = getQuestTimers(name);
+		List<QuestTimer> qt = getQuestTimers(name);
 		if (qt == null || qt.isEmpty())
 			return null;
 		
@@ -309,14 +309,14 @@ public class Quest extends ManagedScript
 		return null;
 	}
 	
-	private FastList<QuestTimer> getQuestTimers(String name)
+	private List<QuestTimer> getQuestTimers(String name)
 	{
 		return _allEventTimers.get(name);
 	}
 	
 	public void cancelQuestTimers(String name)
 	{
-		FastList<QuestTimer> timers = getQuestTimers(name);
+		List<QuestTimer> timers = getQuestTimers(name);
 		if (timers == null)
 			return;
 		try
@@ -347,7 +347,7 @@ public class Quest extends ManagedScript
 	{
 		if (timer == null)
 			return;
-		FastList<QuestTimer> timers = getQuestTimers(timer.getName());
+		List<QuestTimer> timers = getQuestTimers(timer.getName());
 		if (timers == null)
 			return;
 		try
@@ -1446,7 +1446,7 @@ public class Quest extends ManagedScript
 		
 		// if the player is in a party, gather a list of all matching party members (possibly
 		// including this player)
-		FastList<L2Player> candidates = new FastList<L2Player>();
+		List<L2Player> candidates = new ArrayList<L2Player>();
 		
 		// get the target for enforcing distance limitations.
 		L2Object target = player.getTarget();
@@ -1501,7 +1501,7 @@ public class Quest extends ManagedScript
 		
 		// if the player is in a party, gather a list of all matching party members (possibly
 		// including this player)
-		FastList<L2Player> candidates = new FastList<L2Player>();
+		List<L2Player> candidates = new ArrayList<L2Player>();
 		
 		// get the target for enforcing distance limitations.
 		L2Object target = player.getTarget();
@@ -1731,7 +1731,7 @@ public class Quest extends ManagedScript
 		// if timers ought to be restarted, the quest can take care of it
 		// with its code (example: save global data indicating what timer must
 		// be restarted).
-		for (FastList<QuestTimer> timers : _allEventTimers.values())
+		for (List<QuestTimer> timers : _allEventTimers.values())
 			for (QuestTimer timer : timers)
 				timer.cancel();
 		_allEventTimers.clear();

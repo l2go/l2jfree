@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.taskmanager;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
-
-import javolution.util.FastSet;
 
 import com.l2jfree.util.concurrent.RunnableStatsManager;
 
@@ -25,10 +24,10 @@ import com.l2jfree.util.concurrent.RunnableStatsManager;
  */
 public abstract class AbstractIterativePeriodicTaskManager<T> extends AbstractPeriodicTaskManager
 {
-	private final Set<T> _startList = new FastSet<T>();
-	private final Set<T> _stopList = new FastSet<T>();
+	private final Set<T> _startList = new LinkedHashSet<T>();
+	private final Set<T> _stopList = new LinkedHashSet<T>();
 	
-	private final FastSet<T> _activeTasks = new FastSet<T>();
+	private final Set<T> _activeTasks = new LinkedHashSet<T>();
 	
 	protected AbstractIterativePeriodicTaskManager(int period)
 	{
@@ -98,9 +97,8 @@ public abstract class AbstractIterativePeriodicTaskManager<T> extends AbstractPe
 			writeUnlock();
 		}
 		
-		for (FastSet.Record r = _activeTasks.head(), end = _activeTasks.tail(); (r = r.getNext()) != end;)
+		for (final T task : _activeTasks)
 		{
-			final T task = _activeTasks.valueOf(r);
 			final long begin = System.nanoTime();
 			
 			try

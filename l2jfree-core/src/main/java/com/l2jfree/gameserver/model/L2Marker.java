@@ -14,20 +14,21 @@
  */
 package com.l2jfree.gameserver.model;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.network.packets.server.RadarControl;
 
 public final class L2Marker
 {
 	private final L2Player _player;
-	private final FastList<MapMarker> _markers;
+	private final List<MapMarker> _markers;
 	
 	public L2Marker(L2Player player)
 	{
 		_player = player;
-		_markers = new FastList<MapMarker>();
+		_markers = new ArrayList<MapMarker>();
 	}
 	
 	/**

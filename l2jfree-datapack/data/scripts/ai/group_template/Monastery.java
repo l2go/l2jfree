@@ -14,9 +14,9 @@
  */
 package ai.group_template;
 
+import java.util.ArrayList;
 import java.util.Collection;
-
-import javolution.util.FastList;
+import java.util.List;
 
 import com.l2jfree.gameserver.datatables.SkillTable;
 import com.l2jfree.gameserver.gameobjects.L2Attackable;
@@ -112,7 +112,7 @@ public class Monastery extends L2AttackableAIScript
 	{
 		if (contains(BASIC_MOBS, npc.getNpcId()))
 		{
-			FastList<L2Playable> result = new FastList<L2Playable>();
+			List<L2Playable> result = new ArrayList<L2Playable>();
 			Collection<L2Object> objs = npc.getKnownList().getKnownObjects().values();
 			for (L2Object obj : objs)
 			{

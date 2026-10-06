@@ -18,10 +18,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Set;
-
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -294,9 +294,9 @@ public final class CCHSiege extends AbstractSiege
 		}
 	}
 	
-	public FastList<L2Player> getAttackersInZone()
+	public List<L2Player> getAttackersInZone()
 	{
-		FastList<L2Player> players = new FastList<L2Player>();
+		List<L2Player> players = new ArrayList<L2Player>();
 		L2Clan clan;
 		for (L2SiegeClan siegeclan : _attackerClans)
 		{
@@ -308,9 +308,9 @@ public final class CCHSiege extends AbstractSiege
 		return players;
 	}
 	
-	public FastList<L2Player> getPlayersInZone()
+	public List<L2Player> getPlayersInZone()
 	{
-		FastList<L2Player> players = new FastList<L2Player>();
+		List<L2Player> players = new ArrayList<L2Player>();
 		
 		for (L2Player player : L2World.getInstance().getAllPlayers())
 		{
@@ -324,9 +324,9 @@ public final class CCHSiege extends AbstractSiege
 		return players;
 	}
 	
-	public FastList<L2Player> getSpectatorsInZone()
+	public List<L2Player> getSpectatorsInZone()
 	{
-		FastList<L2Player> players = new FastList<L2Player>();
+		List<L2Player> players = new ArrayList<L2Player>();
 		
 		for (L2Player player : L2World.getInstance().getAllPlayers())
 		{
@@ -426,7 +426,7 @@ public final class CCHSiege extends AbstractSiege
 	 */
 	public void teleportPlayer(TeleportWhoType teleportWho, TeleportWhereType teleportWhere)
 	{
-		FastList<L2Player> players;
+		List<L2Player> players;
 		switch (teleportWho)
 		{
 			case Attacker:

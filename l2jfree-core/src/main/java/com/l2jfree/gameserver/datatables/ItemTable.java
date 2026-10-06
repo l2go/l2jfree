@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javolution.util.FastList;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -839,7 +837,7 @@ public final class ItemTable
 	public List<L2Item> findItemsByName(String search)
 	{
 		search = search.toLowerCase();
-		List<L2Item> returnVal = new FastList<L2Item>();
+		List<L2Item> returnVal = new ArrayList<L2Item>();
 		
 		if (!search.isEmpty())
 		{

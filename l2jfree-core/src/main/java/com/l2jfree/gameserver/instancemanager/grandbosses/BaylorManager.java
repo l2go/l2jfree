@@ -14,11 +14,10 @@
  */
 package com.l2jfree.gameserver.instancemanager.grandbosses;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastList;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -62,8 +61,8 @@ public class BaylorManager extends BossLair
 			24220009, 24220010, 24220011, 24220012, 24220013, 24220014, 24220015, 24220016, 24220017, 24220018,
 			24220019, 24220020, 24220021, 24220022, 24220024, 24220025, 24220026 };
 	
-	protected List<L2Spawn> _baylorCubeSpawn = new FastList<L2Spawn>();
-	protected List<L2Npc> _baylorCube = new FastList<L2Npc>();
+	protected List<L2Spawn> _baylorCubeSpawn = new ArrayList<L2Spawn>();
+	protected List<L2Npc> _baylorCube = new ArrayList<L2Npc>();
 	
 	// Spawn data of monsters
 	protected L2Spawn _crystalineSpawn1; // Crystaline1
@@ -320,7 +319,7 @@ public class BaylorManager extends BossLair
 		}
 		else
 		{
-			List<L2Player> members = new FastList<L2Player>(); // list of member of teleport candidate.
+			List<L2Player> members = new ArrayList<L2Player>(); // list of member of teleport candidate.
 			for (L2Player mem : pc.getParty().getPartyMembers())
 			{
 				// teleporting it within alive and the range of recognition of the leader of the party.

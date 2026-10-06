@@ -34,7 +34,6 @@ import com.l2jfree.gameserver.network.packets.server.ActionFailed;
 import com.l2jfree.gameserver.network.packets.server.CreatureSay;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.network.packets.server.SocialAction;
-import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.tools.random.Rnd;
 
 public class TVTInstance
@@ -574,7 +573,7 @@ public class TVTInstance
 				boolean bg = false;
 				
 				NpcHtmlMessage nhm = new NpcHtmlMessage(5);
-				L2TextBuilder replyMSG = L2TextBuilder.newInstance("");
+				StringBuilder replyMSG = StringBuilder.newInstance("");
 				
 				replyMSG.append("<html><body>");
 				replyMSG.append("<title>Team vs Team Instanced</title>");
@@ -604,7 +603,7 @@ public class TVTInstance
 				replyMSG.append("</tr></table>");
 				replyMSG.append("</body></html>");
 				
-				nhm.setHtml(replyMSG.moveToString());
+				nhm.setHtml(replyMSG.toString());
 				player.sendPacket(nhm);
 				
 				// Send a Server->Client ActionFailed to the L2Player in

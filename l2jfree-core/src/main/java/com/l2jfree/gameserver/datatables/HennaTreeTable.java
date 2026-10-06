@@ -17,10 +17,10 @@ package com.l2jfree.gameserver.datatables;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class HennaTreeTable
 {
 	private static final Logger _log = LoggerFactory.getLogger(HennaTreeTable.class);
 	
-	private final Map<Integer, L2Henna[]> _hennaTrees = new FastMap<Integer, L2Henna[]>();
+	private final Map<Integer, L2Henna[]> _hennaTrees = new LinkedHashMap<Integer, L2Henna[]>();
 	
 	public static HennaTreeTable getInstance()
 	{
@@ -54,7 +54,7 @@ public class HennaTreeTable
 			while (classlist.next())
 			{
 				classId = classlist.getInt("id");
-				FastList<L2Henna> list = new FastList<L2Henna>();
+				List<L2Henna> list = new ArrayList<L2Henna>();
 				
 				PreparedStatement statement2 =
 						con.prepareStatement("SELECT henna_id FROM henna_class WHERE player_class_id = ?");

@@ -19,9 +19,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-
-import javolution.util.FastList;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -36,7 +36,6 @@ import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.ExMailArrived;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
 import com.l2jfree.gameserver.persistence.WorldTransaction;
-import com.l2jfree.lang.L2TextBuilder;
 
 /**
  * 
@@ -111,9 +110,9 @@ public class MailBBSManager extends BaseBBSManager
 		private boolean unread;
 	}
 	
-	public FastList<UpdateMail> getMail(L2Player activeChar)
+	public List<UpdateMail> getMail(L2Player activeChar)
 	{
-		FastList<UpdateMail> _letters = new FastList<UpdateMail>();
+		List<UpdateMail> _letters = new ArrayList<UpdateMail>();
 		Connection con = null;
 		try
 		{
@@ -243,7 +242,7 @@ public class MailBBSManager extends BaseBBSManager
 		maxIndex = (page == 1 ? page * 14 : (page * 15) - 1);
 		minIndex = maxIndex - 14;
 		
-		final L2TextBuilder html = L2TextBuilder.newInstance();
+		final StringBuilder html = new StringBuilder();
 		html.append("<html>");
 		html.append("<body><br><br>");
 		html.append("<table border=0 cellspacing=0 cellpadding=0 width=810><tr><td width=10></td><td width=800 height=30 align=left>");
@@ -332,7 +331,7 @@ public class MailBBSManager extends BaseBBSManager
 	
 	private void showLetterView(L2Player activeChar, UpdateMail letter)
 	{
-		final L2TextBuilder html = L2TextBuilder.newInstance();
+		final StringBuilder html = new StringBuilder();
 		html.append("<html>");
 		html.append("<body><br><br>");
 		html.append("<table border=0 cellspacing=0 cellpadding=0 width=770><tr><td width=10></td><td height=30 width=760 align=left>");
@@ -401,7 +400,7 @@ public class MailBBSManager extends BaseBBSManager
 		maxIndex = (page == 1 ? page * 14 : (page * 15) - 1);
 		minIndex = maxIndex - 14;
 		
-		final L2TextBuilder html = L2TextBuilder.newInstance();
+		final StringBuilder html = new StringBuilder();
 		html.append("<html>");
 		html.append("<body><br><br>");
 		html.append("<table border=0 cellspacing=0 cellpadding=0 width=810><tr><td width=10></td><td width=800 height=30 align=left>");
@@ -494,7 +493,7 @@ public class MailBBSManager extends BaseBBSManager
 		maxIndex = (page == 1 ? page * 14 : (page * 15) - 1);
 		minIndex = maxIndex - 14;
 		
-		final L2TextBuilder html = L2TextBuilder.newInstance();
+		final StringBuilder html = new StringBuilder();
 		html.append("<html>");
 		html.append("<body><br><br>");
 		html.append("<table border=0 cellspacing=0 cellpadding=0 width=810><tr><td width=10></td><td width=800 height=30 align=left>");
@@ -587,7 +586,7 @@ public class MailBBSManager extends BaseBBSManager
 		maxIndex = (page == 1 ? page * 14 : (page * 15) - 1);
 		minIndex = maxIndex - 14;
 		
-		final L2TextBuilder html = L2TextBuilder.newInstance();
+		final StringBuilder html = new StringBuilder();
 		html.append("<html>");
 		html.append("<body><br><br>");
 		html.append("<table border=0 cellspacing=0 cellpadding=0 width=810><tr><td width=10></td><td width=800 height=30 align=left>");
@@ -676,7 +675,7 @@ public class MailBBSManager extends BaseBBSManager
 	
 	private void showWriteView(L2Player activeChar)
 	{
-		final L2TextBuilder html = L2TextBuilder.newInstance();
+		final StringBuilder html = new StringBuilder();
 		html.append("<html>");
 		html.append("<body><br><br>");
 		html.append("<table border=0 cellspacing=0 cellpadding=0 width=770><tr><td width=10></td><td height=30 width=760 align=left>");
@@ -715,7 +714,7 @@ public class MailBBSManager extends BaseBBSManager
 	
 	private void showWriteView(L2Player activeChar, String parcipientName, UpdateMail letter)
 	{
-		final L2TextBuilder html = L2TextBuilder.newInstance();
+		final StringBuilder html = new StringBuilder();
 		html.append("<html>");
 		html.append("<body><br><br>");
 		html.append("<table border=0 cellspacing=0 cellpadding=0 width=770><tr><td width=10></td><td height=30 width=760 align=left>");
@@ -753,7 +752,7 @@ public class MailBBSManager extends BaseBBSManager
 		html.append("</tr></table>");
 		html.append("</body></html>");
 		
-		send1001(html.moveToString(), activeChar);
+		send1001(html.toString(), activeChar);
 		send1002(activeChar, " ", "Re: " + letter.subject, "0");
 	}
 	

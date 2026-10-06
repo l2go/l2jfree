@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import com.l2jfree.gameserver.model.L2TradeList;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
@@ -31,7 +30,7 @@ public final class BuyListSeed extends L2ServerPacket
 	private static final String _S__E9_BUYLISTSEED = "[S] E9 BuyListSeed [dd h (hdddhhd)]";
 	
 	private final int _manorId;
-	private List<L2ItemInstance> _list = new FastList<L2ItemInstance>();
+	private List<L2ItemInstance> _list = new ArrayList<L2ItemInstance>();
 	private final long _money;
 	
 	public BuyListSeed(L2TradeList list, int manorId, long currentMoney)

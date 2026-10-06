@@ -18,10 +18,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +48,7 @@ public final class FriendListManager
 		return SingletonHolder._instance;
 	}
 	
-	private final Map<Integer, Set<Integer>> _friends = new FastMap<Integer, Set<Integer>>();
+	private final Map<Integer, Set<Integer>> _friends = new LinkedHashMap<Integer, Set<Integer>>();
 	
 	private FriendListManager()
 	{

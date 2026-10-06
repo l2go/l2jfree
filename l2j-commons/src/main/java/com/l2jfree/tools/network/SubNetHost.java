@@ -14,9 +14,9 @@
  */
 package com.l2jfree.tools.network;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import javolution.util.FastList;
 
 /**
  * @author G1ta0
@@ -33,7 +33,7 @@ public class SubNetHost
 	public SubNetHost(String hostName)
 	{
 		_hostname = hostName;
-		_subnets = new FastList<SubNet>();
+		_subnets = new ArrayList<SubNet>();
 	}
 	
 	public String getHostname()

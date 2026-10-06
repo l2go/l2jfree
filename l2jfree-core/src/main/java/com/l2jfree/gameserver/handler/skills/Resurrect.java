@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.handler.skills;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.gameobjects.instance.L2PetInstance;
@@ -44,7 +45,7 @@ public class Resurrect implements ISkillHandler
 			player = (L2Player)activeChar;
 		
 		L2Player targetPlayer;
-		FastList<L2Creature> targetToRes = new FastList<L2Creature>();
+		List<L2Creature> targetToRes = new ArrayList<L2Creature>();
 		
 		for (L2Creature target : targets)
 		{

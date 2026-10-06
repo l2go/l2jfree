@@ -45,7 +45,6 @@ import com.l2jfree.gameserver.model.world.spawn.L2Spawn;
 import com.l2jfree.gameserver.network.packets.server.ActionFailed;
 import com.l2jfree.gameserver.network.packets.server.MagicSkillUse;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
-import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.tools.random.Rnd;
 
 public class VIP
@@ -712,7 +711,7 @@ public class VIP
 		{
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 			
-			L2TextBuilder replyMSG = L2TextBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
 			replyMSG.append("VIP (End NPC)<br><br>");
 			replyMSG.append("Current event...<br1>");
 			replyMSG.append("    ... Team:&nbsp;<font color=\"FFFFFF\">" + _teamName + "</font><br><br>");
@@ -734,7 +733,7 @@ public class VIP
 			}
 			
 			replyMSG.append("</body></html>");
-			adminReply.setHtml(replyMSG.moveToString());
+			adminReply.setHtml(replyMSG.toString());
 			eventPlayer.sendPacket(adminReply);
 			
 			// Send a Server->Client ActionFailed to the L2Player in order to avoid that the client wait another packet
@@ -775,11 +774,11 @@ public class VIP
 				player.addItem("VIP Event: ", _notVipReward, _notVipRewardAmount, player, true, true);
 				
 				NpcHtmlMessage nhm = new NpcHtmlMessage(5);
-				L2TextBuilder replyMSG = L2TextBuilder.newInstance("");
+				StringBuilder replyMSG = StringBuilder.newInstance("");
 				
 				replyMSG.append("<html><body>Your team won the event. Your inventory now contains your reward.</body></html>");
 				
-				nhm.setHtml(replyMSG.moveToString());
+				nhm.setHtml(replyMSG.toString());
 				player.sendPacket(nhm);
 				
 				// Send a Server->Client ActionFailed to the L2Player in order to avoid that the client wait another packet
@@ -800,11 +799,11 @@ public class VIP
 				player.addItem("VIP Event: ", _vipReward, _vipRewardAmount, player, true, true);
 				
 				NpcHtmlMessage nhm = new NpcHtmlMessage(5);
-				L2TextBuilder replyMSG = L2TextBuilder.newInstance("");
+				StringBuilder replyMSG = StringBuilder.newInstance("");
 				
 				replyMSG.append("<html><body>Your team has won the event. Your inventory now contains your reward.</body></html>");
 				
-				nhm.setHtml(replyMSG.moveToString());
+				nhm.setHtml(replyMSG.toString());
 				player.sendPacket(nhm);
 			}
 			else if (player.as(VIPPlayerInfo.class)._isTheVIP)
@@ -812,11 +811,11 @@ public class VIP
 				player.addItem("VIP Event: ", _theVipReward, _theVipRewardAmount, player, true, true);
 				
 				NpcHtmlMessage nhm = new NpcHtmlMessage(5);
-				L2TextBuilder replyMSG = L2TextBuilder.newInstance("");
+				StringBuilder replyMSG = StringBuilder.newInstance("");
 				
 				replyMSG.append("<html><body>Your team has won the event. Your inventory now contains your reward.</body></html>");
 				
-				nhm.setHtml(replyMSG.moveToString());
+				nhm.setHtml(replyMSG.toString());
 				player.sendPacket(nhm);
 				
 				// Send a Server->Client ActionFailed to the L2Player in order to avoid that the client wait another packet
@@ -1017,7 +1016,7 @@ public class VIP
 		{
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 			
-			L2TextBuilder replyMSG = L2TextBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
 			replyMSG.append("VIP (Join NPC)<br><br>");
 			replyMSG.append("Current event...<br1>");
 			replyMSG.append("    ... Team:&nbsp;<font color=\"FFFFFF\">" + _teamName + "</font><br><br>");
@@ -1109,7 +1108,7 @@ public class VIP
 				replyMSG.append("<center>The event is already taking place. Please sign up for the next event.</center>");
 			
 			replyMSG.append("</body></html>");
-			adminReply.setHtml(replyMSG.moveToString());
+			adminReply.setHtml(replyMSG.toString());
 			eventPlayer.sendPacket(adminReply);
 			
 			// Send a Server->Client ActionFailed to the L2Player in order to avoid that the client wait another packet

@@ -18,13 +18,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -237,11 +237,11 @@ public class FortSiege extends AbstractSiege
 	// =========================================================
 	// Data Field
 	// Attacker and Defender
-	private final List<L2SiegeClan> _attackerClans = new FastList<L2SiegeClan>(); // L2SiegeClan
+	private final List<L2SiegeClan> _attackerClans = new ArrayList<L2SiegeClan>(); // L2SiegeClan
 	
 	// Fort setting
-	protected FastMap<Integer, FastList<L2Spawn>> _commanders = new FastMap<Integer, FastList<L2Spawn>>();
-	protected FastList<L2Spawn> _commandersSpawns;
+	protected Map<Integer, List<L2Spawn>> _commanders = new LinkedHashMap<Integer, List<L2Spawn>>();
+	protected List<L2Spawn> _commandersSpawns;
 	private final Fort[] _fort;
 	private boolean _isInProgress = false;
 	private FortSiegeGuardManager _siegeGuardManager;
@@ -511,7 +511,7 @@ public class FortSiege extends AbstractSiege
 	/** Return list of L2Player in the zone. */
 	public List<L2Player> getPlayersInZone()
 	{
-		List<L2Player> lst = new FastList<L2Player>();
+		List<L2Player> lst = new ArrayList<L2Player>();
 		for (L2Creature cha : getZone().getCharactersInside())
 		{
 			if (cha instanceof L2Player)
@@ -523,7 +523,7 @@ public class FortSiege extends AbstractSiege
 	/** Return list of L2Player owning the fort in the zone. */
 	public List<L2Player> getOwnersInZone()
 	{
-		List<L2Player> lst = new FastList<L2Player>();
+		List<L2Player> lst = new ArrayList<L2Player>();
 		for (L2Creature cha : getZone().getCharactersInside())
 		{
 			if (cha instanceof L2Player && ((L2Player)cha).getClan() != null
@@ -536,7 +536,7 @@ public class FortSiege extends AbstractSiege
 	/** Return list of L2Player registered as attacker in the zone. */
 	public List<L2Player> getAttackersInZone()
 	{
-		List<L2Player> players = new FastList<L2Player>();
+		List<L2Player> players = new ArrayList<L2Player>();
 		L2Clan clan;
 		for (L2SiegeClan siegeclan : getAttackerClans())
 		{
@@ -558,7 +558,7 @@ public class FortSiege extends AbstractSiege
 			L2Spawn spawn = instance.getSpawn();
 			if (spawn != null)
 			{
-				FastList<SiegeSpawn> commanders =
+				List<SiegeSpawn> commanders =
 						FortSiegeManager.getInstance().getCommanderSpawnList(getFort().getFortId());
 				for (SiegeSpawn spawn2 : commanders)
 				{
@@ -1027,7 +1027,7 @@ public class FortSiege extends AbstractSiege
 			_commanders.clear();
 			L2Spawn spawnDat;
 			L2NpcTemplate template1;
-			_commandersSpawns = new FastList<L2Spawn>();
+			_commandersSpawns = new ArrayList<L2Spawn>();
 			for (SiegeSpawn _sp : FortSiegeManager.getInstance().getCommanderSpawnList(getFort().getFortId()))
 			{
 				template1 = NpcTable.getInstance().getTemplate(_sp.getNpcId());
@@ -1060,7 +1060,7 @@ public class FortSiege extends AbstractSiege
 	
 	private void spawnFlag(int Id)
 	{
-		FastList<CombatFlag> list = FortSiegeManager.getInstance().getFlagList(Id);
+		List<CombatFlag> list = FortSiegeManager.getInstance().getFlagList(Id);
 		if (list == null)
 			return;
 		
@@ -1072,7 +1072,7 @@ public class FortSiege extends AbstractSiege
 	
 	private void unSpawnFlags()
 	{
-		FastList<CombatFlag> list = FortSiegeManager.getInstance().getFlagList(getFort().getFortId());
+		List<CombatFlag> list = FortSiegeManager.getInstance().getFlagList(getFort().getFortId());
 		if (list == null)
 			return;
 		
@@ -1186,7 +1186,7 @@ public class FortSiege extends AbstractSiege
 		getFort().resetDoors();
 	}
 	
-	public FastMap<Integer, FastList<L2Spawn>> getCommanders()
+	public Map<Integer, List<L2Spawn>> getCommanders()
 	{
 		return _commanders;
 	}

@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import com.l2jfree.gameserver.model.items.ItemInfo;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
@@ -49,7 +48,7 @@ public class PetInventoryUpdate extends L2ServerPacket
 	
 	public PetInventoryUpdate()
 	{
-		this(new FastList<ItemInfo>());
+		this(new ArrayList<ItemInfo>());
 	}
 	
 	public void addItem(L2ItemInstance item)

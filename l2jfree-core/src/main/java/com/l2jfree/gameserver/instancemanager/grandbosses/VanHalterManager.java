@@ -19,12 +19,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -69,31 +67,31 @@ public class VanHalterManager extends BossLair
 	}
 	
 	// List of intruders.
-	protected Map<Integer, List<L2Player>> _bleedingPlayers = new FastMap<Integer, List<L2Player>>();
+	protected Map<Integer, List<L2Player>> _bleedingPlayers = new LinkedHashMap<Integer, List<L2Player>>();
 	
 	// Spawn data of monsters.
-	protected Map<Integer, L2Spawn> _monsterSpawn = new FastMap<Integer, L2Spawn>();
-	protected List<L2Spawn> _royalGuardSpawn = new FastList<L2Spawn>();
-	protected List<L2Spawn> _royalGuardCaptainSpawn = new FastList<L2Spawn>();
-	protected List<L2Spawn> _royalGuardHelperSpawn = new FastList<L2Spawn>();
-	protected List<L2Spawn> _triolRevelationSpawn = new FastList<L2Spawn>();
-	protected List<L2Spawn> _triolRevelationAlive = new FastList<L2Spawn>();
-	protected List<L2Spawn> _guardOfAltarSpawn = new FastList<L2Spawn>();
-	protected Map<Integer, L2Spawn> _cameraMarkerSpawn = new FastMap<Integer, L2Spawn>();
+	protected Map<Integer, L2Spawn> _monsterSpawn = new LinkedHashMap<Integer, L2Spawn>();
+	protected List<L2Spawn> _royalGuardSpawn = new ArrayList<L2Spawn>();
+	protected List<L2Spawn> _royalGuardCaptainSpawn = new ArrayList<L2Spawn>();
+	protected List<L2Spawn> _royalGuardHelperSpawn = new ArrayList<L2Spawn>();
+	protected List<L2Spawn> _triolRevelationSpawn = new ArrayList<L2Spawn>();
+	protected List<L2Spawn> _triolRevelationAlive = new ArrayList<L2Spawn>();
+	protected List<L2Spawn> _guardOfAltarSpawn = new ArrayList<L2Spawn>();
+	protected Map<Integer, L2Spawn> _cameraMarkerSpawn = new LinkedHashMap<Integer, L2Spawn>();
 	protected L2Spawn _ritualOfferingSpawn = null;
 	protected L2Spawn _ritualSacrificeSpawn = null;
 	protected L2Spawn _vanHalterSpawn = null;
 	
 	// Instance of monsters.
-	protected List<L2Npc> _monsters = new FastList<L2Npc>();
-	protected List<L2Npc> _royalGuard = new FastList<L2Npc>();
-	protected List<L2Npc> _royalGuardCaptain = new FastList<L2Npc>();
-	protected List<L2Npc> _royalGuardHepler = new FastList<L2Npc>();
-	protected List<L2Npc> _triolRevelation = new FastList<L2Npc>();
-	protected List<L2Npc> _guardOfAltar = new FastList<L2Npc>();
-	protected Map<Integer, L2Npc> _cameraMarker = new FastMap<Integer, L2Npc>();
-	protected List<L2DoorInstance> _doorOfAltar = new FastList<L2DoorInstance>();
-	protected List<L2DoorInstance> _doorOfSacrifice = new FastList<L2DoorInstance>();
+	protected List<L2Npc> _monsters = new ArrayList<L2Npc>();
+	protected List<L2Npc> _royalGuard = new ArrayList<L2Npc>();
+	protected List<L2Npc> _royalGuardCaptain = new ArrayList<L2Npc>();
+	protected List<L2Npc> _royalGuardHepler = new ArrayList<L2Npc>();
+	protected List<L2Npc> _triolRevelation = new ArrayList<L2Npc>();
+	protected List<L2Npc> _guardOfAltar = new ArrayList<L2Npc>();
+	protected Map<Integer, L2Npc> _cameraMarker = new LinkedHashMap<Integer, L2Npc>();
+	protected List<L2DoorInstance> _doorOfAltar = new ArrayList<L2DoorInstance>();
+	protected List<L2DoorInstance> _doorOfSacrifice = new ArrayList<L2DoorInstance>();
 	protected L2Npc _ritualOffering = null;
 	protected L2Npc _ritualSacrifice = null;
 	protected L2RaidBossInstance _vanHalter = null;
@@ -1066,7 +1064,7 @@ public class VanHalterManager extends BossLair
 			_timeUpTask.cancel(false);
 		_timeUpTask = ThreadPoolManager.getInstance().scheduleGeneral(new TimeUp(), Config.HPH_FIGHTTIMEOFHALTER);
 		
-		Map<Integer, L2Player> _targets = new FastMap<Integer, L2Player>();
+		Map<Integer, L2Player> _targets = new LinkedHashMap<Integer, L2Player>();
 		int i = 0;
 		
 		for (L2Player pc : _vanHalter.getKnownList().getKnownPlayers().values())

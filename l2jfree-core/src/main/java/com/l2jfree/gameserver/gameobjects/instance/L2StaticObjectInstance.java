@@ -36,7 +36,6 @@ import com.l2jfree.gameserver.network.packets.server.ChairSit;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.network.packets.server.ShowTownMap;
 import com.l2jfree.gameserver.network.packets.server.StaticObject;
-import com.l2jfree.lang.L2TextBuilder;
 
 /**
  * @author godson
@@ -260,7 +259,7 @@ public class L2StaticObjectInstance extends L2Creature
 			player.sendPacket(su);
 			
 			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-			L2TextBuilder html1 = L2TextBuilder.newInstance("<html><body><table border=0>");
+			StringBuilder html1 = StringBuilder.newInstance("<html><body><table border=0>");
 			html1.append("<tr><td>S.Y.L. Says:</td></tr>");
 			html1.append("<tr><td>X: " + getX() + "</td></tr>");
 			html1.append("<tr><td>Y: " + getY() + "</td></tr>");
@@ -274,7 +273,7 @@ public class L2StaticObjectInstance extends L2Creature
 			html1.append("<tr><td><br></td></tr>");
 			html1.append("</table></body></html>");
 			
-			html.setHtml(html1.moveToString());
+			html.setHtml(html1.toString());
 			player.sendPacket(html);
 		}
 		else

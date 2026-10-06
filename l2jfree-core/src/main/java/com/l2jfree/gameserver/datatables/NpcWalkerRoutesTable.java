@@ -18,8 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
-
-import javolution.util.FastList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +36,7 @@ public class NpcWalkerRoutesTable
 {
 	private final static Logger _log = LoggerFactory.getLogger(SpawnTable.class);
 	
-	private final FastList<L2NpcWalkerNode> _routes = new FastList<L2NpcWalkerNode>();
+	private final List<L2NpcWalkerNode> _routes = new ArrayList<L2NpcWalkerNode>();
 	
 	public static NpcWalkerRoutesTable getInstance()
 	{
@@ -96,11 +95,11 @@ public class NpcWalkerRoutesTable
 	{
 		ArrayList<L2NpcWalkerNode> _return = new ArrayList<L2NpcWalkerNode>();
 		
-		for (FastList.Node<L2NpcWalkerNode> n = _routes.head(), end = _routes.tail(); (n = n.getNext()) != end;)
+		for (L2NpcWalkerNode n : _routes)
 		{
-			if (n.getValue().getNpcId() == id)
+			if (n.getNpcId() == id)
 			{
-				_return.add(n.getValue());
+				_return.add(n);
 			}
 		}
 		return _return;

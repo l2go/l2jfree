@@ -14,13 +14,12 @@
  */
 package com.l2jfree.gameserver.instancemanager.grandbosses;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -74,8 +73,8 @@ public class BaiumManager extends BossLair
 			{ 114563, 17184, 10076, 49241 }, { 116356, 16402, 10076, 31109 }, { 115015, 16393, 10076, 32760 },
 			{ 115481, 15335, 10076, 16241 }, { 114680, 15407, 10051, 32485 }, { 114886, 14437, 10076, 16868 },
 			{ 115391, 17593, 10076, 55346 }, { 115245, 17558, 10076, 35536 } };
-	protected List<L2Spawn> _angelSpawns = new FastList<L2Spawn>();
-	protected List<L2Npc> _angels = new FastList<L2Npc>();
+	protected List<L2Spawn> _angelSpawns = new ArrayList<L2Spawn>();
+	protected List<L2Npc> _angels = new ArrayList<L2Npc>();
 	
 	// Location of teleport cube.
 	public final static int CUBE_LOCATION[] = { 115203, 16620, 10078, 0 };
@@ -86,10 +85,10 @@ public class BaiumManager extends BossLair
 	protected L2Npc _npcBaium;
 	
 	// Spawn data of monsters.
-	protected Map<Integer, L2Spawn> _monsterSpawn = new FastMap<Integer, L2Spawn>();
+	protected Map<Integer, L2Spawn> _monsterSpawn = new LinkedHashMap<Integer, L2Spawn>();
 	
 	// Instance of monsters.
-	protected List<L2Npc> _monsters = new FastList<L2Npc>();
+	protected List<L2Npc> _monsters = new ArrayList<L2Npc>();
 	
 	// Tasks.
 	protected ScheduledFuture<?> _cubeSpawnTask = null;
@@ -178,7 +177,7 @@ public class BaiumManager extends BossLair
 			_angelSpawns.clear();
 			
 			// 5 random numbers of 10, no duplicates
-			FastList<Integer> random = new FastList<Integer>();
+			List<Integer> random = new ArrayList<Integer>();
 			for (int i = 0; i < 5; i++)
 			{
 				int r = -1;

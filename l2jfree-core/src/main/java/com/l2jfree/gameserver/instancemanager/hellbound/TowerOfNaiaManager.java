@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.instancemanager.hellbound;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,7 @@ public final class TowerOfNaiaManager
 	public static final int ROOM_CONTROLLER_ID = 18494; // Ingenious Contraption
 	public static final int DARION_ID = 25603;
 	
-	public static FastList<TowerOfNaiaRoom> ROOMS = new FastList<TowerOfNaiaRoom>();
+	public static List<TowerOfNaiaRoom> ROOMS = new ArrayList<TowerOfNaiaRoom>();
 	
 	private int _instanceCount = 0;
 	

@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.gameobjects.templates;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.base.ClassId;
@@ -117,7 +116,7 @@ public class L2PlayerTemplate extends L2CreatureTemplate
 	private final double fCollisionRadius;
 	private final double fCollisionHeight;
 	
-	private final List<PlayerTemplateItem> _items = new FastList<PlayerTemplateItem>();
+	private final List<PlayerTemplateItem> _items = new ArrayList<PlayerTemplateItem>();
 	
 	public L2PlayerTemplate(StatsSet set)
 	{

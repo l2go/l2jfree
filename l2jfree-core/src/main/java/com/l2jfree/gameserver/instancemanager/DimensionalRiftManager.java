@@ -18,11 +18,12 @@ import java.awt.Polygon;
 import java.awt.Shape;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,8 +54,8 @@ public class DimensionalRiftManager
 {
 	protected static Logger _log = LoggerFactory.getLogger(DimensionalRiftManager.class);
 	
-	private final FastMap<Byte, FastMap<Byte, DimensionalRiftRoom>> _rooms =
-			new FastMap<Byte, FastMap<Byte, DimensionalRiftRoom>>();
+	private final Map<Byte, Map<Byte, DimensionalRiftRoom>> _rooms =
+			new LinkedHashMap<Byte, Map<Byte, DimensionalRiftRoom>>();
 	private final static int DIMENSIONAL_FRAGMENT_ITEM_ID = 7079;
 	private final static int MAX_PARTY_PER_AREA = 3;
 	
@@ -76,7 +77,7 @@ public class DimensionalRiftManager
 	
 	public boolean isAreaAvailable(byte area)
 	{
-		FastMap<Byte, DimensionalRiftRoom> tmap = _rooms.get(area);
+		Map<Byte, DimensionalRiftRoom> tmap = _rooms.get(area);
 		if (tmap == null)
 			return false;
 		int used = 0;
@@ -160,7 +161,7 @@ public class DimensionalRiftManager
 									}
 									
 									if (!_rooms.containsKey(type))
-										_rooms.put(type, new FastMap<Byte, DimensionalRiftRoom>());
+										_rooms.put(type, new LinkedHashMap<Byte, DimensionalRiftRoom>());
 									
 									_rooms.get(type).put(
 											roomId,
@@ -388,8 +389,8 @@ public class DimensionalRiftManager
 		private final int[] _teleportCoords;
 		private final Shape _s;
 		private final boolean _isBossRoom;
-		private final FastList<L2Spawn> _roomSpawns;
-		protected final FastList<L2Npc> _roomMobs;
+		private final List<L2Spawn> _roomSpawns;
+		protected final List<L2Npc> _roomMobs;
 		private boolean _isUsed = false;
 		
 		public DimensionalRiftRoom(byte type, byte room, int xMin, int xMax, int yMin, int yMax, int zMin, int zMax,
@@ -405,8 +406,8 @@ public class DimensionalRiftManager
 			_zMax = zMax;
 			_teleportCoords = new int[] { xT, yT, zT };
 			_isBossRoom = isBossRoom;
-			_roomSpawns = new FastList<L2Spawn>();
-			_roomMobs = new FastList<L2Npc>();
+			_roomSpawns = new ArrayList<L2Spawn>();
+			_roomMobs = new ArrayList<L2Npc>();
 			_s = new Polygon(new int[] { xMin, xMax, xMax, xMin }, new int[] { yMin, yMin, yMax, yMax }, 4);
 		}
 		
@@ -440,7 +441,7 @@ public class DimensionalRiftManager
 			return _isBossRoom;
 		}
 		
-		public FastList<L2Spawn> getSpawns()
+		public List<L2Spawn> getSpawns()
 		{
 			return _roomSpawns;
 		}

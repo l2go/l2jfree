@@ -15,9 +15,8 @@
 package com.l2jfree.gameserver.templates;
 
 import java.security.InvalidParameterException;
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,7 @@ public class StatsSet
 {
 	private static final Logger _log = LoggerFactory.getLogger(StatsSet.class);
 	
-	private final Map<String, Object> _set = new FastMap<String, Object>();
+	private final Map<String, Object> _set = new LinkedHashMap<String, Object>();
 	
 	protected Object get(String key)
 	{

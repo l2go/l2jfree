@@ -19,8 +19,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
 import java.util.Map;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +53,7 @@ public class SpawnTable
 	private static final String GROUP_WORLD = "WORLD";
 	private static final String GROUP_CUSTOM = "CUSTOM";
 	
-	private final FastMap<Integer, L2Spawn> _spawnTable = new FastMap<Integer, L2Spawn>(50000).setShared(true);
+	private final Map<Integer, L2Spawn> _spawnTable = new ConcurrentHashMap<Integer, L2Spawn>(50000);
 	private int _npcSpawnCount;
 	private int _cSpawnCount;
 	private int _highestDbId;
@@ -419,10 +418,8 @@ public class SpawnTable
 	public void findNPCInstances(L2Player activeChar, int npcId, int teleportIndex)
 	{
 		int index = 0;
-		for (FastMap.Entry<Integer, L2Spawn> entry = _spawnTable.head(), end = _spawnTable.tail(); (entry =
-				entry.getNext()) != end;)
+		for (L2Spawn spawn : _spawnTable.values())
 		{
-			L2Spawn spawn = entry.getValue();
 			if (npcId == spawn.getNpcId())
 			{
 				index++;

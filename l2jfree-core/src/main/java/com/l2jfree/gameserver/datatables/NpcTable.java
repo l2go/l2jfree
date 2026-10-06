@@ -19,12 +19,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
@@ -666,12 +665,12 @@ public final class NpcTable
 		{
 			// save a copy of the old data
 			L2NpcTemplate old = getTemplate(id);
-			FastMap<Integer, L2Skill> skills = null;
+			Map<Integer, L2Skill> skills = null;
 			
 			// L2NpcTemplate.getSkillS() is unmodifiable, so the entrySet() of it can't be used
 			if (old != null && old.getSkills() != null)
 			{
-				skills = new FastMap<Integer, L2Skill>(old.getSkills().size());
+				skills = new LinkedHashMap<Integer, L2Skill>(old.getSkills().size());
 				
 				for (Integer key : old.getSkills().keySet())
 					skills.put(key, old.getSkills().get(key));
@@ -682,7 +681,7 @@ public final class NpcTable
 			if (old != null && old.getDropData() != null)
 				categories = ArrayUtils.addAll(categories, old.getDropData());
 			
-			FastList<ClassId> classIds = new FastList<ClassId>();
+			List<ClassId> classIds = new ArrayList<ClassId>();
 			
 			if (old != null && old.getTeachInfo() != null)
 				classIds.addAll(old.getTeachInfo());
@@ -827,7 +826,7 @@ public final class NpcTable
 	
 	public L2NpcTemplate[] getAllOfLevel(int lvl)
 	{
-		FastList<L2NpcTemplate> list = new FastList<L2NpcTemplate>();
+		List<L2NpcTemplate> list = new ArrayList<L2NpcTemplate>();
 		for (L2NpcTemplate t : _npcs)
 			if (t.getLevel() == lvl)
 				list.add(t);
@@ -836,7 +835,7 @@ public final class NpcTable
 	
 	public L2NpcTemplate[] getAllMonstersOfLevel(int lvl)
 	{
-		FastList<L2NpcTemplate> list = new FastList<L2NpcTemplate>();
+		List<L2NpcTemplate> list = new ArrayList<L2NpcTemplate>();
 		for (L2NpcTemplate t : _npcs)
 			if (t.getLevel() == lvl && t.isAssignableTo(L2MonsterInstance.class))
 				list.add(t);
@@ -845,7 +844,7 @@ public final class NpcTable
 	
 	public L2NpcTemplate[] getAllNpcStartingWith(String letter)
 	{
-		FastList<L2NpcTemplate> list = new FastList<L2NpcTemplate>();
+		List<L2NpcTemplate> list = new ArrayList<L2NpcTemplate>();
 		for (L2NpcTemplate t : _npcs)
 			if (t.getName().startsWith(letter) && t.isAssignableTo(L2Npc.class))
 				list.add(t);
@@ -881,7 +880,7 @@ public final class NpcTable
 	
 	public List<L2NpcTemplate> getMobsByDrop(int itemid)
 	{
-		List<L2NpcTemplate> returnVal = new FastList<L2NpcTemplate>();
+		List<L2NpcTemplate> returnVal = new ArrayList<L2NpcTemplate>();
 		for (L2NpcTemplate tempNpc : _npcs)
 		{
 			List<L2DropData> dropdata = tempNpc.getAllDropData();

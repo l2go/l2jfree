@@ -15,10 +15,11 @@
 package com.l2jfree.gameserver.datatables;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class ExtractableItemsData
 	private final static Logger _log = LoggerFactory.getLogger(ExtractableItemsData.class);
 	
 	//          Map<itemid, L2ExtractableItem>
-	private final FastMap<Integer, L2ExtractableItem> _items = new FastMap<Integer, L2ExtractableItem>();
+	private final Map<Integer, L2ExtractableItem> _items = new LinkedHashMap<Integer, L2ExtractableItem>();
 	
 	public static ExtractableItemsData getInstance()
 	{
@@ -90,7 +91,7 @@ public class ExtractableItemsData
 			if (!ok)
 				continue;
 			
-			FastList<L2ExtractableProductItem> product_temp = new FastList<L2ExtractableProductItem>();
+			List<L2ExtractableProductItem> product_temp = new ArrayList<L2ExtractableProductItem>();
 			
 			for (int i = 0; i < lineSplit.length - 1; i++)
 			{

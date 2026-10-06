@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
-import javolution.text.TextBuilder;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -549,7 +547,7 @@ public class AdminEditChar implements IAdminCommandHandler
 		
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 		adminReply.setFile("data/html/admin/charlist.htm");
-		TextBuilder replyMSG = new TextBuilder();
+		StringBuilder replyMSG = new StringBuilder();
 		for (int x = 0; x < MaxPages; x++)
 		{
 			int pagenr = x + 1;
@@ -763,7 +761,7 @@ public class AdminEditChar implements IAdminCommandHandler
 		L2Player[] players = allPlayers.toArray(new L2Player[allPlayers.size()]);
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 		adminReply.setFile("data/html/admin/charfind.htm");
-		TextBuilder replyMSG = new TextBuilder();
+		StringBuilder replyMSG = new StringBuilder();
 		for (L2Player element : players)
 		{ //Add player info into new Table row
 			name = element.getName();
@@ -811,7 +809,7 @@ public class AdminEditChar implements IAdminCommandHandler
 		int CharactersFound = 0;
 		L2Client client;
 		String name, ip = "0.0.0.0";
-		TextBuilder replyMSG = new TextBuilder();
+		StringBuilder replyMSG = new StringBuilder();
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 		adminReply.setFile("data/html/admin/ipfind.htm");
 		for (L2Player player : players)
@@ -870,7 +868,7 @@ public class AdminEditChar implements IAdminCommandHandler
 				throw new IllegalArgumentException("Player doesn't exist");
 			chars = player.getAccountChars();
 			account = player.getAccountName();
-			TextBuilder replyMSG = new TextBuilder();
+			StringBuilder replyMSG = new StringBuilder();
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 			adminReply.setFile("data/html/admin/accountinfo.htm");
 			for (String charname : chars.values())

@@ -19,8 +19,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,14 +39,14 @@ public class BuffTemplateTable
 	private final static Logger _log = LoggerFactory.getLogger(BuffTemplateTable.class);
 	
 	/** The table containing all buff templates */
-	private final FastMap<Integer, TemplateList> _templates;
+	private final Map<Integer, TemplateList> _templates;
 	
 	/**
 	 * Create and Load the buff templates from SQL Table buff_templates
 	 */
 	private BuffTemplateTable()
 	{
-		_templates = new FastMap<Integer, TemplateList>().setShared(true);
+		_templates = new ConcurrentHashMap<Integer, TemplateList>();
 		reloadBuffTemplates();
 	}
 	
@@ -158,7 +158,7 @@ public class BuffTemplateTable
 	/**
 	 * @return Returns the buff templates
 	 */
-	public FastMap<Integer, TemplateList> getBuffTemplateTable()
+	public Map<Integer, TemplateList> getBuffTemplateTable()
 	{
 		return _templates;
 	}

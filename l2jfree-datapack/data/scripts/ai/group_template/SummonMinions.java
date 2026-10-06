@@ -14,10 +14,14 @@
  */
 package ai.group_template;
 
-import javolution.util.FastList;
-import javolution.util.FastMap;
-import javolution.util.FastSet;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import com.l2jfree.gameserver.gameobjects.L2Attackable;
 import com.l2jfree.gameserver.gameobjects.L2Npc;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -28,10 +32,10 @@ import com.l2jfree.tools.random.Rnd;
 public class SummonMinions extends L2AttackableAIScript
 {
 	private static int HasSpawned;
-	private static FastSet<Integer> myTrackingSet = new FastSet<Integer>(); //Used to track instances of npcs
-	private final FastMap<Integer, FastList<L2Player>> _attackersList =
-			new FastMap<Integer, FastList<L2Player>>().setShared(true);
-	private static final FastMap<Integer, Integer[]> MINIONS = new FastMap<Integer, Integer[]>();
+	private static Set<Integer> myTrackingSet = new LinkedHashSet<Integer>(); //Used to track instances of npcs
+	private final Map<Integer, List<L2Player>> _attackersList =
+			new ConcurrentHashMap<Integer, List<L2Player>>();
+	private static final Map<Integer, Integer[]> MINIONS = new LinkedHashMap<Integer, Integer[]>();
 	
 	static
 	{
@@ -121,7 +125,7 @@ public class SummonMinions extends L2AttackableAIScript
 							{
 								if (_attackersList.get(npcObjId) == null)
 								{
-									FastList<L2Player> player = new FastList<L2Player>();
+									List<L2Player> player = new ArrayList<L2Player>();
 									player.add(member);
 									_attackersList.put(npcObjId, player);
 								}
@@ -133,7 +137,7 @@ public class SummonMinions extends L2AttackableAIScript
 						{
 							if (_attackersList.get(npcObjId) == null)
 							{
-								FastList<L2Player> player = new FastList<L2Player>();
+								List<L2Player> player = new ArrayList<L2Player>();
 								player.add(attacker);
 								_attackersList.put(npcObjId, player);
 							}

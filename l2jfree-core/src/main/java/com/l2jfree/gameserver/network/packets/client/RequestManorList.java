@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.network.packets.client;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.network.packets.L2ClientPacket;
 import com.l2jfree.gameserver.network.packets.server.ExSendManorList;
@@ -43,7 +44,7 @@ public class RequestManorList extends L2ClientPacket
 		if (player == null)
 			return;
 		
-		FastList<String> manorsName = new FastList<String>();
+		List<String> manorsName = new ArrayList<String>();
 		manorsName.add("gludio");
 		manorsName.add("dion");
 		manorsName.add("giran");

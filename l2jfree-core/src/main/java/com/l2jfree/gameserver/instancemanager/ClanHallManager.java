@@ -19,10 +19,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,10 +56,10 @@ public class ClanHallManager
 	
 	private ClanHallManager()
 	{
-		_clanHall = new FastMap<Integer, ClanHall>();
-		_freeClanHall = new FastMap<Integer, ClanHall>();
-		_allClanHalls = new FastMap<Integer, ClanHall>();
-		_townClanHalls = new FastMap<Integer, ClanHall[]>();
+		_clanHall = new LinkedHashMap<Integer, ClanHall>();
+		_freeClanHall = new LinkedHashMap<Integer, ClanHall>();
+		_allClanHalls = new LinkedHashMap<Integer, ClanHall>();
+		_townClanHalls = new LinkedHashMap<Integer, ClanHall[]>();
 		
 		_towns = new Town[8];
 		_towns[0] = new Town(5, "Gludio");
@@ -145,7 +145,7 @@ public class ClanHallManager
 			_log.info("ClanHallManager: loaded " + getFreeClanHalls().size() + " free clan halls");
 			
 			ClanHall[] allHalls = _allClanHalls.values().toArray(new ClanHall[_allClanHalls.size()]);
-			FastList<ClanHall> townHalls = new FastList<ClanHall>();
+			List<ClanHall> townHalls = new ArrayList<ClanHall>();
 			for (Town t : _towns)
 			{
 				for (ClanHall ch : allHalls)

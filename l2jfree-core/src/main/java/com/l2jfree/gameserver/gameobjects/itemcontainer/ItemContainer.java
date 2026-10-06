@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.gameobjects.itemcontainer;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,11 +42,11 @@ public abstract class ItemContainer
 {
 	protected static final Logger _log = LoggerFactory.getLogger(ItemContainer.class);
 	
-	protected final FastList<L2ItemInstance> _items;
+	protected final List<L2ItemInstance> _items;
 	
 	protected ItemContainer()
 	{
-		_items = new FastList<L2ItemInstance>();
+		_items = new ArrayList<L2ItemInstance>();
 	}
 	
 	protected abstract L2Creature getOwner();
@@ -121,9 +122,9 @@ public abstract class ItemContainer
 	 * @param itemId : int designating the ID of the item
 	 * @return List<L2ItemInstance> designating the items list (empty list if not found)
 	 */
-	public FastList<L2ItemInstance> getItemsByItemId(int itemId)
+	public List<L2ItemInstance> getItemsByItemId(int itemId)
 	{
-		FastList<L2ItemInstance> returnList = new FastList<L2ItemInstance>();
+		List<L2ItemInstance> returnList = new ArrayList<L2ItemInstance>();
 		for (L2ItemInstance item : _items)
 		{
 			if (item != null && item.getItemId() == itemId)
@@ -596,7 +597,7 @@ public abstract class ItemContainer
 			_log.error(e.getMessage(), e);
 		}
 		
-		FastList<L2Object> items = new FastList<L2Object>(_items);
+		List<L2Object> items = new ArrayList<L2Object>(_items);
 		_items.clear();
 		
 		L2World.getInstance().removeObjects(items);

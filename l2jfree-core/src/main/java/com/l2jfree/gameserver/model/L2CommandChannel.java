@@ -14,9 +14,9 @@
  */
 package com.l2jfree.gameserver.model;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
-
-import javolution.util.FastList;
 
 import com.l2jfree.gameserver.gameobjects.L2Attackable;
 import com.l2jfree.gameserver.gameobjects.L2Boss;
@@ -179,9 +179,9 @@ public class L2CommandChannel
 	}
 	
 	/** @return list of all Members in Command Channel */
-	public FastList<L2Player> getMembers()
+	public List<L2Player> getMembers()
 	{
-		FastList<L2Player> members = new FastList<L2Player>();
+		List<L2Player> members = new ArrayList<L2Player>();
 		for (L2Party party : getPartys())
 			members.addAll(party.getPartyMembers());
 		return members;

@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.model.skills.effects.impl;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.l2jfree.gameserver.datatables.NpcTable;
 import com.l2jfree.gameserver.gameobjects.L2Attackable;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
@@ -121,7 +122,7 @@ public final class EffectSignetMDam extends L2Effect
 		
 		caster.rechargeShot();
 		
-		FastList<L2Creature> targets = new FastList<L2Creature>();
+		List<L2Creature> targets = new ArrayList<L2Creature>();
 		
 		for (L2Creature cha : _actor.getKnownList().getKnownCharactersInRadius(getSkill().getSkillRadius()))
 		{

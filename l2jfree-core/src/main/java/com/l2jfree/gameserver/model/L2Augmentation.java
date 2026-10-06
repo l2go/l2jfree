@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.model;
 
-import javolution.util.FastList;
 
+import java.util.List;
 import com.l2jfree.gameserver.datatables.AugmentationData;
 import com.l2jfree.gameserver.datatables.SkillTable;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -58,7 +58,7 @@ public final class L2Augmentation
 		
 		public AugmentationStatBoni(int augmentationId)
 		{
-			FastList<AugmentationData.AugStat> as = AugmentationData.getInstance().getAugStatsById(augmentationId);
+			List<AugmentationData.AugStat> as = AugmentationData.getInstance().getAugStatsById(augmentationId);
 			
 			_statFuncs = new Func[as.size()];
 			

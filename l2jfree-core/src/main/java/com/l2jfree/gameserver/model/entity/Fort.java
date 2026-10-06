@@ -19,13 +19,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -51,10 +51,10 @@ public class Fort extends Siegeable<FortSiege>
 	// =========================================================
 	// Data Field
 	private int _fortId = 0;
-	private final List<L2DoorInstance> _doors = new FastList<L2DoorInstance>();
+	private final List<L2DoorInstance> _doors = new ArrayList<L2DoorInstance>();
 	private L2StaticObjectInstance _flagPole = null;
-	private final List<String> _doorDefault = new FastList<String>();
-	private final List<String> _flagPoleStats = new FastList<String>();
+	private final List<String> _doorDefault = new ArrayList<String>();
+	private final List<String> _flagPoleStats = new ArrayList<String>();
 	private FortSiege _siege = null;
 	private Calendar _siegeDate;
 	private long _lastOwnedTime;
@@ -64,7 +64,7 @@ public class Fort extends Siegeable<FortSiege>
 	private int _state = 0;
 	private int _castleId = 0;
 	
-	private final FastMap<Integer, FortFunction> _function;
+	private final Map<Integer, FortFunction> _function;
 	
 	private int _blood = 0;
 	private ScheduledFuture<?> _fortUpdater;
@@ -258,7 +258,7 @@ public class Fort extends Siegeable<FortSiege>
 		load();
 		loadDoor();
 		loadFlagPoles();
-		_function = new FastMap<Integer, FortFunction>();
+		_function = new LinkedHashMap<Integer, FortFunction>();
 		if (getOwnerClan() != null)
 		{
 			setVisibleFlag(true);

@@ -41,7 +41,6 @@ import com.l2jfree.gameserver.network.packets.server.ActionFailed;
 import com.l2jfree.gameserver.network.packets.server.CreatureSay;
 import com.l2jfree.gameserver.network.packets.server.MagicSkillUse;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
-import com.l2jfree.lang.L2TextBuilder;
 
 public class SH
 {
@@ -231,7 +230,7 @@ public class SH
 		try
 		{
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-			L2TextBuilder replyMSG = L2TextBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
 			
 			replyMSG.append("<title>Scavanger Hunt Event</title>");
 			replyMSG.append("<table width=\"300\"><tr>");
@@ -276,7 +275,7 @@ public class SH
 			replyMSG.append("</tr></table>");
 			
 			replyMSG.append("</body></html>");
-			adminReply.setHtml(replyMSG.moveToString());
+			adminReply.setHtml(replyMSG.toString());
 			eventPlayer.sendPacket(adminReply);
 			
 			// Send a Server->Client ActionFailed to the L2Player in order

@@ -23,13 +23,13 @@ import java.lang.management.MonitorInfo;
 import java.lang.management.ThreadInfo;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javolution.util.FastList;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -113,7 +113,7 @@ public abstract class L2Thread extends Thread
 	
 	public static List<String> getStats(Thread t)
 	{
-		List<String> list = new FastList<String>();
+		List<String> list = new ArrayList<String>();
 		
 		long threadId = t.threadId();
 		list.add(t.toString() + " - ID: " + threadId);
@@ -160,7 +160,7 @@ public abstract class L2Thread extends Thread
 	
 	public static List<String> getStats()
 	{
-		List<String> list = new FastList<String>();
+		List<String> list = new ArrayList<String>();
 		
 		list.add(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z").format(new Date()));
 		list.add("");

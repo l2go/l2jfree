@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.datatables;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +59,7 @@ public class ClanTable
 	
 	private ClanTable()
 	{
-		_clans = new FastMap<Integer, L2Clan>();
+		_clans = new LinkedHashMap<Integer, L2Clan>();
 		L2Clan clan;
 		try
 		{

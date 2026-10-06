@@ -19,8 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 
-import javolution.util.FastMap;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -175,7 +173,7 @@ public final class PlayerSkills
 			_log.warn("Non-stored skill " + skill + " was saved for " + getOwner());
 	}
 	
-	private static final class SkillMap extends FastMap<Integer, Integer>
+	private static final class SkillMap extends Map<Integer, Integer>
 	{
 		private static final long serialVersionUID = -222036343002486892L;
 		

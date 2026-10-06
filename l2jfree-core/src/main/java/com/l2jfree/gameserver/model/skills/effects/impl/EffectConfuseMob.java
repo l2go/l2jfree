@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.model.skills.effects.impl;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import com.l2jfree.gameserver.gameobjects.L2Attackable;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
@@ -64,7 +63,7 @@ public final class EffectConfuseMob extends L2Effect
 	@Override
 	protected boolean onActionTime()
 	{
-		List<L2Creature> targetList = new FastList<L2Creature>();
+		List<L2Creature> targetList = new ArrayList<L2Creature>();
 		
 		// Getting the possible targets
 		

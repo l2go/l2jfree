@@ -17,14 +17,13 @@ package com.l2jfree.gameserver.datatables;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,13 +57,13 @@ public class SkillTreeTable
 	private final static Logger _log = LoggerFactory.getLogger(SkillTreeTable.class);
 	
 	private final Map<Integer, L2SkillLearn>[] _skillTrees = new Map[ClassId.values().length];
-	private FastList<L2SkillLearn> _fishingSkillTrees; // all common skills (teached by Fisherman)
-	private FastList<L2SkillLearn> _expandDwarfCraftSkillTrees; // list of special skill for dwarf (expand dwarf craft) learned by class teacher
-	private FastList<L2PledgeSkillLearn> _pledgeSkillTrees; // pledge skill list
-	private FastMap<Integer, L2EnchantSkillLearn> _enchantSkillTrees; // enchant skill list
-	private FastList<L2TransformSkillLearn> _transformSkillTrees; // Transform Skills (Test)
-	private FastList<L2SkillLearn> _specialSkillTrees;
-	private FastList<L2CertificationSkillsLearn> _certificationSkillsTrees; // Special Ability Skills (Hellbound)
+	private List<L2SkillLearn> _fishingSkillTrees; // all common skills (teached by Fisherman)
+	private List<L2SkillLearn> _expandDwarfCraftSkillTrees; // list of special skill for dwarf (expand dwarf craft) learned by class teacher
+	private List<L2PledgeSkillLearn> _pledgeSkillTrees; // pledge skill list
+	private Map<Integer, L2EnchantSkillLearn> _enchantSkillTrees; // enchant skill list
+	private List<L2TransformSkillLearn> _transformSkillTrees; // Transform Skills (Test)
+	private List<L2SkillLearn> _specialSkillTrees;
+	private List<L2CertificationSkillsLearn> _certificationSkillsTrees; // Special Ability Skills (Hellbound)
 	
 	public static SkillTreeTable getInstance()
 	{
@@ -157,7 +156,7 @@ public class SkillTreeTable
 			
 			while (classlist.next())
 			{
-				map = new FastMap<Integer, L2SkillLearn>();
+				map = new LinkedHashMap<Integer, L2SkillLearn>();
 				parentClassId = classlist.getInt("parent_id");
 				classId = classlist.getInt("id");
 				PreparedStatement statement2 =
@@ -213,8 +212,8 @@ public class SkillTreeTable
 		
 		try
 		{
-			_fishingSkillTrees = new FastList<L2SkillLearn>();
-			_expandDwarfCraftSkillTrees = new FastList<L2SkillLearn>();
+			_fishingSkillTrees = new ArrayList<L2SkillLearn>();
+			_expandDwarfCraftSkillTrees = new ArrayList<L2SkillLearn>();
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
@@ -259,7 +258,7 @@ public class SkillTreeTable
 		int count4 = 0;
 		try
 		{
-			_enchantSkillTrees = new FastMap<Integer, L2EnchantSkillLearn>();
+			_enchantSkillTrees = new LinkedHashMap<Integer, L2EnchantSkillLearn>();
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
@@ -315,7 +314,7 @@ public class SkillTreeTable
 		int count5 = 0;
 		try
 		{
-			_pledgeSkillTrees = new FastList<L2PledgeSkillLearn>();
+			_pledgeSkillTrees = new ArrayList<L2PledgeSkillLearn>();
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
@@ -355,7 +354,7 @@ public class SkillTreeTable
 		int count6 = 0;
 		try
 		{
-			_transformSkillTrees = new FastList<L2TransformSkillLearn>();
+			_transformSkillTrees = new ArrayList<L2TransformSkillLearn>();
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
@@ -396,7 +395,7 @@ public class SkillTreeTable
 		int count7 = 0;
 		try
 		{
-			_specialSkillTrees = new FastList<L2SkillLearn>();
+			_specialSkillTrees = new ArrayList<L2SkillLearn>();
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
@@ -433,7 +432,7 @@ public class SkillTreeTable
 		int count8 = 0;
 		try
 		{
-			_certificationSkillsTrees = new FastList<L2CertificationSkillsLearn>();
+			_certificationSkillsTrees = new ArrayList<L2CertificationSkillsLearn>();
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
@@ -875,7 +874,7 @@ public class SkillTreeTable
 	public int getMinLevelForNewFishingSkill(L2Player cha)
 	{
 		int minLevel = 0;
-		List<L2SkillLearn> skills = new FastList<L2SkillLearn>();
+		List<L2SkillLearn> skills = new ArrayList<L2SkillLearn>();
 		
 		skills.addAll(_fishingSkillTrees);
 		
@@ -904,7 +903,7 @@ public class SkillTreeTable
 	public int getMinLevelForNewTransformSkill(L2Player cha)
 	{
 		int minLevel = 0;
-		List<L2TransformSkillLearn> skills = new FastList<L2TransformSkillLearn>();
+		List<L2TransformSkillLearn> skills = new ArrayList<L2TransformSkillLearn>();
 		
 		skills.addAll(_transformSkillTrees);
 		

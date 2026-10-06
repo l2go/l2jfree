@@ -22,12 +22,11 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,10 +61,10 @@ public final class ObjectRestrictions
 	}
 	
 	private final Map<Integer, EnumSet<AvailableRestriction>> _restrictionList =
-			new FastMap<Integer, EnumSet<AvailableRestriction>>();
-	private final Map<Integer, List<PausedTimedEvent>> _pausedActions = new FastMap<Integer, List<PausedTimedEvent>>();
+			new LinkedHashMap<Integer, EnumSet<AvailableRestriction>>();
+	private final Map<Integer, List<PausedTimedEvent>> _pausedActions = new LinkedHashMap<Integer, List<PausedTimedEvent>>();
 	private final Map<Integer, List<TimedRestrictionAction>> _runningActions =
-			new FastMap<Integer, List<TimedRestrictionAction>>();
+			new LinkedHashMap<Integer, List<TimedRestrictionAction>>();
 	
 	private ObjectRestrictions()
 	{

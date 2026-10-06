@@ -18,10 +18,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,11 +53,11 @@ public class AutoChatManager implements SpawnListener
 	
 	private static final int DEFAULT_CHAT_RANGE = 1500;
 	
-	protected final FastMap<Integer, AutoChatInstance> _registeredChats;
+	protected final Map<Integer, AutoChatInstance> _registeredChats;
 	
 	private AutoChatManager()
 	{
-		_registeredChats = new FastMap<Integer, AutoChatInstance>();
+		_registeredChats = new LinkedHashMap<Integer, AutoChatInstance>();
 		restoreChatData();
 		L2Spawn.addSpawnListener(this);
 		_log.info("AutoChatHandler: Loaded " + size() + " handlers in total.");
@@ -342,8 +342,8 @@ public class AutoChatManager implements SpawnListener
 		private boolean _globalChat = false;
 		private boolean _isActive;
 		
-		private final FastMap<Integer, AutoChatDefinition> _chatDefinitions =
-				new FastMap<Integer, AutoChatDefinition>();
+		private final Map<Integer, AutoChatDefinition> _chatDefinitions =
+				new LinkedHashMap<Integer, AutoChatDefinition>();
 		protected ScheduledFuture<?> _chatTask;
 		
 		protected AutoChatInstance(int npcId, String[] chatTexts, long chatDelay, int chatRange, boolean chatRandom,
@@ -501,7 +501,7 @@ public class AutoChatManager implements SpawnListener
 		 */
 		public L2Npc[] getNPCInstanceList()
 		{
-			FastList<L2Npc> npcInsts = new FastList<L2Npc>();
+			List<L2Npc> npcInsts = new ArrayList<L2Npc>();
 			
 			for (AutoChatDefinition chatDefinition : _chatDefinitions.values())
 				npcInsts.add(chatDefinition._npcInstance);
@@ -799,7 +799,7 @@ public class AutoChatManager implements SpawnListener
 					try
 					{
 						L2Npc chatNpc = chatDef._npcInstance;
-						FastList<L2Player> nearbyPlayers = new FastList<L2Player>();
+						List<L2Player> nearbyPlayers = new ArrayList<L2Player>();
 						
 						for (L2Creature player : chatNpc.getKnownList().getKnownCharactersInRadius(chatDef._chatRange))
 							if (player instanceof L2Player && !((L2Player)player).isGM())

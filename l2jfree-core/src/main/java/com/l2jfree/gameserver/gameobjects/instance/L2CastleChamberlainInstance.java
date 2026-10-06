@@ -46,7 +46,6 @@ import com.l2jfree.gameserver.network.packets.server.ExShowSeedSetting;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.util.IllegalPlayerAction;
 import com.l2jfree.gameserver.util.Util;
-import com.l2jfree.lang.L2TextBuilder;
 
 /**
  * Castle Chamberlains implementation used for: - tax rate control - regional
@@ -1819,7 +1818,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 						}
 					}
 					*/
-					L2TextBuilder tList = L2TextBuilder.newInstance(list.size() * 50);
+					StringBuilder tList = StringBuilder.newInstance(list.size() * 50);
 					for (Integer hour : list)
 					{
 						tList.append(SET_TIME[0]);
@@ -1830,7 +1829,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 						tList.append(ampm);
 						tList.append(SET_TIME[3]);
 					}
-					ret.replace("%links%", tList.moveToString());
+					ret.replace("%links%", tList.toString());
 			}
 			return ret;
 		}

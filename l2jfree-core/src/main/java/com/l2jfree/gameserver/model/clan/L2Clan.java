@@ -14,11 +14,10 @@
  */
 package com.l2jfree.gameserver.model.clan;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +70,7 @@ public class L2Clan
 	private String _name;
 	private int _clanId;
 	private L2ClanMember _leader;
-	private final Map<Integer, L2ClanMember> _members = new FastMap<Integer, L2ClanMember>();
+	private final Map<Integer, L2ClanMember> _members = new LinkedHashMap<Integer, L2ClanMember>();
 	
 	private String _allyName;
 	private int _allyId;
@@ -101,14 +100,14 @@ public class L2Clan
 	public static final int PENALTY_TYPE_DISSOLVE_ALLY = 4;
 	
 	private final ClanWarehouse _warehouse = new ClanWarehouse(this);
-	private final List<Integer> _atWarWith = new FastList<Integer>();
-	private final List<Integer> _atWarAttackers = new FastList<Integer>();
+	private final List<Integer> _atWarWith = new ArrayList<Integer>();
+	private final List<Integer> _atWarAttackers = new ArrayList<Integer>();
 	
 	private boolean _hasCrestLarge;
 	
 	private Forum _forum;
 	
-	private final List<L2Skill> _skillList = new FastList<L2Skill>();
+	private final List<L2Skill> _skillList = new ArrayList<L2Skill>();
 	
 	//  Clan Privileges
 	public static final int CP_NOTHING = 0;
@@ -161,10 +160,10 @@ public class L2Clan
 	public static final int RANK_GRAND_DUKE = 10;
 	public static final int RANK_DISTINGUISHED_KING = 11;
 	
-	/** FastMap(Integer, L2Skill) containing all skills of the L2Clan */
-	protected final Map<Integer, L2Skill> _skills = new FastMap<Integer, L2Skill>();
-	protected final Map<Integer, RankPrivs> _privs = new FastMap<Integer, RankPrivs>();
-	protected final Map<Integer, SubPledge> _subPledges = new FastMap<Integer, SubPledge>();
+	/** Map(Integer, L2Skill) containing all skills of the L2Clan */
+	protected final Map<Integer, L2Skill> _skills = new LinkedHashMap<Integer, L2Skill>();
+	protected final Map<Integer, RankPrivs> _privs = new LinkedHashMap<Integer, RankPrivs>();
+	protected final Map<Integer, SubPledge> _subPledges = new LinkedHashMap<Integer, SubPledge>();
 	
 	private int _reputationScore = 0;
 	private int _rank = 0;
@@ -646,7 +645,7 @@ public class L2Clan
 	
 	public List<L2Player> getOnlineMembersList()
 	{
-		List<L2Player> result = new FastList<L2Player>();
+		List<L2Player> result = new ArrayList<L2Player>();
 		for (L2ClanMember temp : _members.values())
 		{
 			if (temp != null)
@@ -2293,7 +2292,7 @@ public class L2Clan
 	
 	public List<L2Player> getOnlineAllyMembers()
 	{
-		List<L2Player> list = new FastList<L2Player>();
+		List<L2Player> list = new ArrayList<L2Player>();
 		if (getAllyId() == 0)
 		{
 			return list;

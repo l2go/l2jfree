@@ -18,10 +18,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Set;
-
-import javolution.util.FastList;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
@@ -718,9 +718,9 @@ public class Siege extends AbstractSiege
 	}
 	
 	/** Return list of L2Player registered as attacker in the zone. */
-	public FastList<L2Player> getAttackersInZone()
+	public List<L2Player> getAttackersInZone()
 	{
-		FastList<L2Player> players = new FastList<L2Player>();
+		List<L2Player> players = new ArrayList<L2Player>();
 		L2Clan clan;
 		for (L2SiegeClan siegeclan : getAttackerClans())
 		{
@@ -735,9 +735,9 @@ public class Siege extends AbstractSiege
 	}
 	
 	/** Return list of L2Player registered as defender but not owner in the zone. */
-	public FastList<L2Player> getDefendersButNotOwnersInZone()
+	public List<L2Player> getDefendersButNotOwnersInZone()
 	{
-		FastList<L2Player> players = new FastList<L2Player>();
+		List<L2Player> players = new ArrayList<L2Player>();
 		L2Clan clan;
 		for (L2SiegeClan siegeclan : getDefenderClans())
 		{
@@ -754,9 +754,9 @@ public class Siege extends AbstractSiege
 	}
 	
 	/** Return list of L2Player in the zone. */
-	public FastList<L2Player> getPlayersInZone()
+	public List<L2Player> getPlayersInZone()
 	{
-		FastList<L2Player> players = new FastList<L2Player>();
+		List<L2Player> players = new ArrayList<L2Player>();
 		
 		for (L2Player player : L2World.getInstance().getAllPlayers())
 		{
@@ -771,9 +771,9 @@ public class Siege extends AbstractSiege
 	}
 	
 	/** Return list of L2Player owning the castle in the zone. */
-	public FastList<L2Player> getOwnersInZone()
+	public List<L2Player> getOwnersInZone()
 	{
-		FastList<L2Player> players = new FastList<L2Player>();
+		List<L2Player> players = new ArrayList<L2Player>();
 		L2Clan clan;
 		for (L2SiegeClan siegeclan : getDefenderClans())
 		{
@@ -790,9 +790,9 @@ public class Siege extends AbstractSiege
 	}
 	
 	/** Return list of L2Player not registered as attacker or defender in the zone. */
-	public FastList<L2Player> getSpectatorsInZone()
+	public List<L2Player> getSpectatorsInZone()
 	{
-		FastList<L2Player> players = new FastList<L2Player>();
+		List<L2Player> players = new ArrayList<L2Player>();
 		
 		for (L2Player player : L2World.getInstance().getAllPlayers())
 		{
@@ -977,7 +977,7 @@ public class Siege extends AbstractSiege
 	 */
 	public void teleportPlayer(TeleportWhoType teleportWho, TeleportWhereType teleportWhere)
 	{
-		FastList<L2Player> players;
+		List<L2Player> players;
 		switch (teleportWho)
 		{
 			case Owner:

@@ -16,8 +16,6 @@ package com.l2jfree.gameserver.handler.admincommands;
 
 import java.util.StringTokenizer;
 
-import javolution.text.TextBuilder;
-
 import com.l2jfree.gameserver.datatables.NpcTable;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -104,7 +102,7 @@ public class AdminFightCalculator implements IAdminCommandHandler
 		
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 		
-		TextBuilder replyMSG = new TextBuilder();
+		StringBuilder replyMSG = new StringBuilder();
 		if (npc1 != null && npc2 != null)
 		{
 			replyMSG.append("<html><title>Selected mobs to fight</title>");
@@ -293,7 +291,7 @@ public class AdminFightCalculator implements IAdminCommandHandler
 		
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 		
-		TextBuilder replyMSG = new TextBuilder();
+		StringBuilder replyMSG = new StringBuilder();
 		replyMSG.append("<html><title>Selected mobs to fight</title>");
 		replyMSG.append("<body>");
 		replyMSG.append("<table>");

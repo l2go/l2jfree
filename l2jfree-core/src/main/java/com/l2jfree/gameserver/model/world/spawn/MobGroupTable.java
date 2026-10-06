@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.model.world.spawn;
 
-import javolution.util.FastMap;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import com.l2jfree.gameserver.gameobjects.instance.L2ControllableMobInstance;
 
 /**
@@ -24,14 +25,14 @@ import com.l2jfree.gameserver.gameobjects.instance.L2ControllableMobInstance;
  */
 public class MobGroupTable
 {
-	private final FastMap<Integer, MobGroup> _groupMap;
+	private final Map<Integer, MobGroup> _groupMap;
 	
 	public static final int FOLLOW_RANGE = 300;
 	public static final int RANDOM_RANGE = 300;
 	
 	private MobGroupTable()
 	{
-		_groupMap = new FastMap<Integer, MobGroup>();
+		_groupMap = new LinkedHashMap<Integer, MobGroup>();
 	}
 	
 	public static MobGroupTable getInstance()

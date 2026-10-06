@@ -16,8 +16,6 @@ package com.l2jfree.gameserver.handler.admincommands;
 
 import java.util.StringTokenizer;
 
-import javolution.text.TextBuilder;
-
 import com.l2jfree.gameserver.gameobjects.L2Object;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.handler.IAdminCommandHandler;
@@ -143,7 +141,7 @@ public class AdminFortSiege implements IAdminCommandHandler
 		int i = 0;
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 		adminReply.setFile("data/html/admin/forts.htm");
-		TextBuilder cList = new TextBuilder();
+		StringBuilder cList = new StringBuilder();
 		for (Fort fort : FortManager.getInstance().getForts())
 		{
 			if (fort != null)

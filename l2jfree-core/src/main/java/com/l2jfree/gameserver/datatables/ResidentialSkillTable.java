@@ -17,10 +17,10 @@ package com.l2jfree.gameserver.datatables;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +47,7 @@ public class ResidentialSkillTable
 		return SingletonHolder.INSTANCE;
 	}
 	
-	private final FastMap<Integer, L2Skill[]> _list = new FastMap<Integer, L2Skill[]>();
+	private final Map<Integer, L2Skill[]> _list = new LinkedHashMap<Integer, L2Skill[]>();
 	
 	private ResidentialSkillTable()
 	{
@@ -62,7 +62,7 @@ public class ResidentialSkillTable
 	
 	private void load()
 	{
-		FastMap<Integer, FastList<L2Skill>> tempMap = new FastMap<Integer, FastList<L2Skill>>();
+		Map<Integer, List<L2Skill>> tempMap = new LinkedHashMap<Integer, List<L2Skill>>();
 		Connection con = null;
 		
 		int skills = 0;
@@ -89,7 +89,7 @@ public class ResidentialSkillTable
 				}
 				if (!tempMap.containsKey(entityId))
 				{
-					FastList<L2Skill> aux = new FastList<L2Skill>();
+					List<L2Skill> aux = new ArrayList<L2Skill>();
 					aux.add(sk);
 					tempMap.put(entityId, aux);
 				}
@@ -100,7 +100,7 @@ public class ResidentialSkillTable
 			statement.close();
 			rs.close();
 			
-			for (Map.Entry<Integer, FastList<L2Skill>> e : tempMap.entrySet())
+			for (Map.Entry<Integer, List<L2Skill>> e : tempMap.entrySet())
 			{
 				_list.put(e.getKey(), e.getValue().toArray(new L2Skill[e.getValue().size()]));
 			}

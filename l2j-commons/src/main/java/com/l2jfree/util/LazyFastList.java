@@ -14,11 +14,10 @@
  */
 package com.l2jfree.util;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
-
-import javolution.util.FastList;
 
 /**
  * @author NB4L1
@@ -34,7 +33,7 @@ public final class LazyFastList<E> extends LazyCollection<E, List<E>> implements
 	@Override
 	protected List<E> initCollection()
 	{
-		return FastList.newInstance();
+		return new ArrayList<E>();
 	}
 	
 	@Override

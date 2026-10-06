@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.instancemanager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
-import javolution.util.FastList;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +49,7 @@ public class CoupleManager
 	
 	// =========================================================
 	// Data Field
-	private FastList<Couple> _couples;
+	private List<Couple> _couples;
 	
 	// =========================================================
 	// Method - Public
@@ -224,10 +224,10 @@ public class CoupleManager
 		return -1;
 	}
 	
-	public final FastList<Couple> getCouples()
+	public final List<Couple> getCouples()
 	{
 		if (_couples == null)
-			_couples = new FastList<Couple>();
+			_couples = new ArrayList<Couple>();
 		return _couples;
 	}
 	

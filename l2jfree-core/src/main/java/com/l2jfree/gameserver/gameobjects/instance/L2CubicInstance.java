@@ -14,10 +14,9 @@
  */
 package com.l2jfree.gameserver.gameobjects.instance;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
-
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +77,7 @@ public class L2CubicInstance
 	protected int _activationchance;
 	protected boolean _active;
 	
-	protected FastList<L2Skill> _skills = new FastList<L2Skill>();
+	protected List<L2Skill> _skills = new ArrayList<L2Skill>();
 	
 	private Future<?> _disappearTask;
 	private Future<?> _actionTask;

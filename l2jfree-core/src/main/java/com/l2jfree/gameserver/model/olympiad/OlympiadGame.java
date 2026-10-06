@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.model.olympiad;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,14 +80,14 @@ public class OlympiadGame
 	public L2Player _playerTwo;
 	public L2Spawn _spawnOne;
 	public L2Spawn _spawnTwo;
-	protected FastList<L2Player> _players;
+	protected List<L2Player> _players;
 	private int x1, y1, z1, x2, y2, z2;
 	public final int _stadiumID;
 	private SystemMessage _sm;
 	private SystemMessage _sm2;
 	private SystemMessage _sm3;
 	
-	protected OlympiadGame(int id, COMP_TYPE type, FastList<L2Player> list)
+	protected OlympiadGame(int id, COMP_TYPE type, List<L2Player> list)
 	{
 		_aborted = false;
 		_gamestarted = false;
@@ -259,7 +260,7 @@ public class OlympiadGame
 				// Remove invalid cubics
 				if (player.getCubics() != null && Config.ALT_OLY_REMOVE_CUBICS)
 				{
-					FastList<Integer> allowedList = new FastList<Integer>();
+					List<Integer> allowedList = new ArrayList<Integer>();
 					
 					for (L2Skill skill : player.getAllSkills())
 					{

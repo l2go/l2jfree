@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import com.l2jfree.gameserver.gameobjects.L2Object;
 import com.l2jfree.gameserver.network.packets.L2ServerPacket;
@@ -27,7 +26,7 @@ import com.l2jfree.gameserver.network.packets.L2ServerPacket;
  */
 public final class ExShowTrace extends L2ServerPacket
 {
-	private final List<Trace> _traces = new FastList<Trace>();
+	private final List<Trace> _traces = new ArrayList<Trace>();
 	
 	public void addTrace(int x, int y, int z, int time)
 	{

@@ -30,7 +30,6 @@ import com.l2jfree.gameserver.network.packets.server.ActionFailed;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
 import com.l2jfree.gameserver.templates.StatsSet;
-import com.l2jfree.lang.L2TextBuilder;
 
 /**
  * Festival of Darkness Guide (Seven Signs)
@@ -309,8 +308,8 @@ public final class L2FestivalGuideInstance extends L2Npc
 						showChatWindow(player, 3, "d", false);
 					break;
 				case 4: // Current High Scores
-					L2TextBuilder strBuffer =
-							L2TextBuilder
+					StringBuilder strBuffer =
+							StringBuilder
 									.newInstance("<html><body>Festival Guide:<br>These are the top scores of the week, for the ");
 					
 					final StatsSet dawnData =
@@ -363,7 +362,7 @@ public final class L2FestivalGuideInstance extends L2Npc
 							+ "_Chat 0\">Go back.</a></body></html>");
 					
 					NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-					html.setHtml(strBuffer.moveToString());
+					html.setHtml(strBuffer.toString());
 					player.sendPacket(html);
 					break;
 				case 8: // Increase the Festival Challenge
@@ -469,7 +468,7 @@ public final class L2FestivalGuideInstance extends L2Npc
 	
 	private final String getStatsTable()
 	{
-		L2TextBuilder tableHtml = L2TextBuilder.newInstance();
+		StringBuilder tableHtml = new StringBuilder();
 		
 		// Get the scores for each of the festival level ranges (types).
 		for (int i = 0; i < 5; i++)
@@ -489,12 +488,12 @@ public final class L2FestivalGuideInstance extends L2Npc
 					+ dawnScore + "</td><td align=\"center\" width=\"130\">" + winningCabal + "</td></tr>");
 		}
 		
-		return tableHtml.moveToString();
+		return tableHtml.toString();
 	}
 	
 	private final String getBonusTable()
 	{
-		L2TextBuilder tableHtml = L2TextBuilder.newInstance();
+		StringBuilder tableHtml = new StringBuilder();
 		
 		// Get the accumulated scores for each of the festival level ranges (types).
 		for (int i = 0; i < 5; i++)
@@ -506,7 +505,7 @@ public final class L2FestivalGuideInstance extends L2Npc
 					+ "</td><td align=\"center\" width=\"150\">" + accumScore + "</td></tr>");
 		}
 		
-		return tableHtml.moveToString();
+		return tableHtml.toString();
 	}
 	
 	private final String calculateDate(String milliFromEpoch)

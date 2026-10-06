@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.gameobjects.instance;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Npc;
@@ -132,7 +131,7 @@ public class L2ControlTowerInstance extends L2Npc
 	public final List<L2Spawn> getGuards()
 	{
 		if (_guards == null)
-			_guards = new FastList<L2Spawn>();
+			_guards = new ArrayList<L2Spawn>();
 		return _guards;
 	}
 }

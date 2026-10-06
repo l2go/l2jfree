@@ -19,10 +19,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.LineNumberReader;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +45,7 @@ public class StaticObjects
 	
 	private StaticObjects()
 	{
-		_staticObjects = new FastMap<Integer, L2StaticObjectInstance>();
+		_staticObjects = new LinkedHashMap<Integer, L2StaticObjectInstance>();
 		parseData();
 		_log.info("StaticObject: Loaded " + _staticObjects.size() + " StaticObject Templates.");
 	}

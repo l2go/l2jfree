@@ -14,9 +14,8 @@
  */
 package ai.group_template;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import com.l2jfree.gameserver.gameobjects.L2Attackable;
 import com.l2jfree.gameserver.gameobjects.L2Npc;
@@ -29,7 +28,7 @@ import com.l2jfree.gameserver.gameobjects.L2Player;
  */
 public class PolymorphingAngel extends L2AttackableAIScript
 {
-	private static final Map<Integer, Integer> ANGELSPAWNS = new FastMap<Integer, Integer>();
+	private static final Map<Integer, Integer> ANGELSPAWNS = new LinkedHashMap<Integer, Integer>();
 	static
 	{
 		ANGELSPAWNS.put(20830, 20859);

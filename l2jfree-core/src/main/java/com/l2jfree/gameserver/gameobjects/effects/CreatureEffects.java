@@ -15,10 +15,9 @@
 package com.l2jfree.gameserver.gameobjects.effects;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -30,7 +29,6 @@ import com.l2jfree.gameserver.model.skills.L2Skill;
 import com.l2jfree.gameserver.model.skills.effects.L2Effect;
 import com.l2jfree.gameserver.model.skills.templates.L2EffectType;
 import com.l2jfree.gameserver.network.packets.server.EffectInfoPacket.EffectInfoPacketList;
-import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.util.ObjectPool;
 
 /**
@@ -121,7 +119,7 @@ public class CreatureEffects
 			_effects = new ArrayList<L2Effect>(4);
 		
 		if (_stackedEffects == null)
-			_stackedEffects = new FastMap<String, StackQueue>(4);
+			_stackedEffects = new LinkedHashMap<String, StackQueue>(4);
 		
 		final int newOrder = getOrder(newEffect);
 		
@@ -317,7 +315,7 @@ public class CreatureEffects
 	 */
 	public final void printStackTrace(String[] stackTypes, L2Effect effect)
 	{
-		L2TextBuilder tb = L2TextBuilder.newInstance();
+		StringBuilder tb = new StringBuilder();
 		
 		tb.append(_owner);
 		
@@ -327,7 +325,7 @@ public class CreatureEffects
 		if (effect != null)
 			tb.append(" -> ").append(effect.getSkill().toString());
 		
-		_log.warn(tb.moveToString(), new IllegalStateException());
+		_log.warn(tb.toString(), new IllegalStateException());
 	}
 	
 	public final synchronized L2Effect getFirstEffect(L2Skill skill)

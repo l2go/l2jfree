@@ -16,17 +16,16 @@ package com.l2jfree.gameserver.datatables;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +69,7 @@ public class RecipeTable
 	private static final Map<L2Player, RecipeItemMaker> _activeMakers = Collections
 			.synchronizedMap(new WeakHashMap<L2Player, RecipeItemMaker>());
 	
-	private final FastMap<Integer, L2RecipeList> _lists;
+	private final Map<Integer, L2RecipeList> _lists;
 	private int[] _itemIds;
 	
 	public static RecipeTable getInstance()
@@ -80,7 +79,7 @@ public class RecipeTable
 	
 	private RecipeTable()
 	{
-		_lists = new FastMap<Integer, L2RecipeList>().setShared(true);
+		_lists = new ConcurrentHashMap<Integer, L2RecipeList>();
 		
 		try
 		{
@@ -110,9 +109,8 @@ public class RecipeTable
 	
 	public L2RecipeList getRecipeByItemId(int itemId)
 	{
-		for (FastMap.Entry<Integer, L2RecipeList> entry = _lists.head(), end = _lists.tail(); (entry = entry.getNext()) != end;)
+		for (L2RecipeList rl : _lists.values())
 		{
-			L2RecipeList rl = entry.getValue();
 			if (rl.getRecipeId() == itemId)
 				return rl;
 		}
@@ -243,9 +241,9 @@ public class RecipeTable
 		if (file.exists())
 		{
 			Document doc = factory.newDocumentBuilder().parse(file);
-			List<L2RecipeInstance> recipePartList = new FastList<L2RecipeInstance>();
-			List<L2RecipeStatInstance> recipeStatUseList = new FastList<L2RecipeStatInstance>();
-			List<L2RecipeStatInstance> recipeAltStatChangeList = new FastList<L2RecipeStatInstance>();
+			List<L2RecipeInstance> recipePartList = new ArrayList<L2RecipeInstance>();
+			List<L2RecipeStatInstance> recipeStatUseList = new ArrayList<L2RecipeStatInstance>();
+			List<L2RecipeStatInstance> recipeAltStatChangeList = new ArrayList<L2RecipeStatInstance>();
 			
 			for (Node n = doc.getFirstChild(); n != null; n = n.getNextSibling())
 			{
@@ -804,7 +802,7 @@ public class RecipeTable
 		{
 			L2RecipeInstance[] recipes = _recipeList.getRecipes();
 			Inventory inv = _target.getInventory();
-			List<TempItem> materials = new FastList<TempItem>();
+			List<TempItem> materials = new ArrayList<TempItem>();
 			SystemMessage sm;
 			
 			for (L2RecipeInstance recipe : recipes)

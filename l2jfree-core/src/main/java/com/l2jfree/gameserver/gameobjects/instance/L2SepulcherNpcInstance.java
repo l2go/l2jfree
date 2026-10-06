@@ -15,10 +15,9 @@
 package com.l2jfree.gameserver.gameobjects.instance;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
-
-import javolution.util.FastMap;
 
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.datatables.DoorTable;
@@ -45,7 +44,7 @@ import com.l2jfree.tools.random.Rnd;
  */
 public class L2SepulcherNpcInstance extends L2Npc
 {
-	protected static Map<Integer, Integer> _hallGateKeepers = new FastMap<Integer, Integer>();
+	protected static Map<Integer, Integer> _hallGateKeepers = new LinkedHashMap<Integer, Integer>();
 	
 	protected Future<?> _closeTask = null;
 	protected Future<?> _spawnNextMysteriousBoxTask = null;

@@ -19,7 +19,6 @@ package com.l2jfree.gameserver.handler.admincommands;
  * @author: FBIagent / fixed by SqueezeD
  *
  */
-import javolution.text.TextBuilder;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.ItemTable;
@@ -274,7 +273,7 @@ public class AdminCTFEngine implements IAdminCommandHandler
 	public void showEditPage(L2Player activeChar)
 	{
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-		TextBuilder replyMSG = new TextBuilder("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		
 		replyMSG.append("<center><font color=\"LEVEL\">[CTF Engine by Darki699]</font></center><br><br><br>");
 		replyMSG.append("<table><tr><td><edit var=\"input1\" width=\"125\"></td><td><edit var=\"input2\" width=\"125\"></td></tr></table>");
@@ -313,7 +312,7 @@ public class AdminCTFEngine implements IAdminCommandHandler
 	public void showControlPage(L2Player activeChar)
 	{
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-		TextBuilder replyMSG = new TextBuilder("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		
 		replyMSG.append("<center><font color=\"LEVEL\">[CTF Engine by Darki699]</font></center><br><br><br>");
 		replyMSG.append("<table border=\"0\"><tr>");
@@ -339,7 +338,7 @@ public class AdminCTFEngine implements IAdminCommandHandler
 	public void showMainPage(L2Player activeChar)
 	{
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-		TextBuilder replyMSG = new TextBuilder("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		
 		replyMSG.append("<center><font color=\"LEVEL\">[CTF Engine by Darki699]</font></center><br><br><br>");
 		

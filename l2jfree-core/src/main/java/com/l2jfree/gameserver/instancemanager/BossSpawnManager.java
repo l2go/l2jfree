@@ -14,9 +14,9 @@
  */
 package com.l2jfree.gameserver.instancemanager;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,10 +40,10 @@ public abstract class BossSpawnManager
 {
 	protected final static Logger _log = LoggerFactory.getLogger(BossSpawnManager.class);
 	
-	protected final FastMap<Integer, L2Boss> _bosses;
-	protected final FastMap<Integer, L2Spawn> _spawns;
-	protected final FastMap<Integer, StatsSet> _storedInfo;
-	protected final FastMap<Integer, ScheduledFuture<?>> _schedules;
+	protected final Map<Integer, L2Boss> _bosses;
+	protected final Map<Integer, L2Spawn> _spawns;
+	protected final Map<Integer, StatsSet> _storedInfo;
+	protected final Map<Integer, ScheduledFuture<?>> _schedules;
 	
 	public static enum StatusEnum
 	{
@@ -54,10 +54,10 @@ public abstract class BossSpawnManager
 	
 	public BossSpawnManager()
 	{
-		_bosses = new FastMap<Integer, L2Boss>().setShared(true);
-		_schedules = new FastMap<Integer, ScheduledFuture<?>>().setShared(true);
-		_storedInfo = new FastMap<Integer, StatsSet>().setShared(true);
-		_spawns = new FastMap<Integer, L2Spawn>().setShared(true);
+		_bosses = new ConcurrentHashMap<Integer, L2Boss>();
+		_schedules = new ConcurrentHashMap<Integer, ScheduledFuture<?>>();
+		_storedInfo = new ConcurrentHashMap<Integer, StatsSet>();
+		_spawns = new ConcurrentHashMap<Integer, L2Spawn>();
 		init();
 	}
 	
@@ -273,12 +273,12 @@ public abstract class BossSpawnManager
 		return _spawns.containsKey(bossId);
 	}
 	
-	public FastMap<Integer, L2Boss> getBosses()
+	public Map<Integer, L2Boss> getBosses()
 	{
 		return _bosses;
 	}
 	
-	public FastMap<Integer, L2Spawn> getSpawns()
+	public Map<Integer, L2Spawn> getSpawns()
 	{
 		return _spawns;
 	}
