@@ -16,7 +16,7 @@ M1 is done when all of these hold:
 
 1. The decision records in [docs/adr](adr/README.md) cover platform and delivery, process model, data, network, data access, release policy, and retirement of 2.x.
 2. `docs/index.md` lists every document with its status, and the vision matches the records.
-3. A pipeline builds the Linux image and runs `docker compose up -d --wait` in CI. The login port answers with its first packet and the world port accepts connections. Pushes to `main` publish the `edge` and `sha-<commit>` images.
+3. A pipeline builds the Linux image and runs `docker compose up -d --wait` in CI. The login port answers with its first packet, and the world port is published and gets its listener in M2. Pushes to `main` publish the `edge` and `sha-<commit>` images.
 4. The required checks in the `main` ruleset match the new pipeline.
 5. The risk register is reviewed.
 
@@ -44,7 +44,7 @@ Work is cut into a few large packages along module boundaries, not into small sl
 | Package | Milestone | Content |
 |---|---|---|
 | WP1. Decisions and direction | M1 | Decision records, vision revision, roadmap, risk register, docs index, retirement of 2.x |
-| WP2. Pipeline and image | M1 | Image on a pinned Arch Linux base, compose bundle, start-to-ready check, first-packet probe, ruleset update |
+| WP2. Pipeline and image | M1 | Image on a pinned Arch Linux base, compose stack, start-to-ready check, first-packet probe, publication, ruleset update. Delivered as a walking skeleton that runs the LoginServer ([deploy](../deploy/README.md)) |
 | WP3. Data | M2 | Schemas, migrations, catalog loader, repository seam for inventory, player, and clan |
 | WP4. Modules and one process | M2 | Contract module, admission in process, dependency rules, configuration model |
 | WP5. Network on Netty | M2 | Netty pipeline, conformance tests, end-to-end smoke test |

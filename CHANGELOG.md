@@ -12,6 +12,10 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - Security policy, contributing guide, code of conduct, support guide, and code owners.
 - Code scanning, dependency review, OpenSSF Scorecard, and a documentation link check.
 - A CI check of the datapack Python scripts with Jython.
+- The Platform 3.0 walking skeleton: a `linux/amd64` image on a pinned Arch Linux base with a pinned Temurin 25 JRE, a Docker Compose stack that publishes ports 2106 and 7777, a content check, and a first-packet probe of the login port.
+- Publication of `edge` and `sha-*` images with a cosign signature, an SBOM, and build provenance, and a daily job that deletes `sha-*` versions older than 30 days.
+- Architecture views as diagrams in `docs/architecture.md`.
+- Monthly Dependabot updates for the image base and the compose images.
 
 ### Changed
 
@@ -21,6 +25,7 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 ### Removed
 
 - The dead plain-HTTP distribution repository in the root build file.
+- The Windows packaging job and the 2.x release job of the pipeline.
 
 ## [2.5.0] - 2026-10-05
 

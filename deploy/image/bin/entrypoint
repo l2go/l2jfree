@@ -1,0 +1,42 @@
+#!/bin/bash
+# Starts the LoginServer. The application tree in the image is read-only, so
+# the configuration is copied to a work directory and adjusted from the
+# environment before the process starts.
+set -euo pipefail
+
+home=/opt/l2jfree/loginserver
+work="${L2JFREE_WORKDIR:-/run/l2jfree/login}"
+
+fail() { echo "entrypoint: $*" >&2; exit 1; }
+
+: "${L2JFREE_DB_URL:?L2JFREE_DB_URL is required}"
+: "${L2JFREE_DB_USER:?L2JFREE_DB_USER is required}"
+: "${L2JFREE_DB_PASSWORD_FILE:?L2JFREE_DB_PASSWORD_FILE is required}"
+[ -s "$L2JFREE_DB_PASSWORD_FILE" ] || fail "the database password file is missing or empty"
+
+mkdir -p "$work"
+cp -r "$home/config" "$work/config"
+cp "$home/servername.xml" "$home/server_names.xsd" "$work/"
+ln -sfn /var/lib/l2jfree/log "$work/log"
+
+# Replaces the value of a key in a .properties file, or adds the key.
+set_prop() {
+	local file="$1" key="$2" value="$3"
+	awk -v k="$key" -v v="$value" 'BEGIN { FS = " = " } $1 == k { print k " = " v; found = 1; next } { print } END { if (!found) print k " = " v }' \
+		"$file" > "$file.tmp"
+	mv "$file.tmp" "$file"
+}
+
+props="$work/config/loginserver.properties"
+set_prop "$props" URL "$L2JFREE_DB_URL"
+set_prop "$props" Login "$L2JFREE_DB_USER"
+set_prop "$props" Password "$(< "$L2JFREE_DB_PASSWORD_FILE")"
+set_prop "$props" LoginServerHostname "${L2JFREE_LOGIN_BIND:-0.0.0.0}"
+
+cd "$work"
+exec java \
+	-Dfile.encoding=UTF-8 \
+	-Dlogback.configurationFile="$work/config/logback.xml" \
+	-Xmx64m \
+	-cp "$work/config:$home/libs/*:$home/*" \
+	com.l2jfree.loginserver.LoginServer
