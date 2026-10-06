@@ -17,8 +17,6 @@ package com.l2jfree.gameserver.network;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.net.InetAddress;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -111,7 +109,7 @@ public final class L2ClientSelectorThread extends NetworkServer<L2Client, L2Clie
 	
 	// ==============================================
 	
-	private final Map<String, Integer> _legalConnections = new ConcurrentHashMap<String, Integer>();
+	private final LegalConnections _legalConnections = new LegalConnections();
 	
 	@Override
 	protected String getVersionInfo()
@@ -130,26 +128,12 @@ public final class L2ClientSelectorThread extends NetworkServer<L2Client, L2Clie
 		
 		final String ip = address.getHostAddress();
 		
-		final Integer count = _legalConnections.get(ip);
-		
-		if (count == null)
-			return false;
-		
-		if (count == 1)
-			_legalConnections.remove(ip);
-		else
-			_legalConnections.put(ip, count - 1);
-		return true;
+		return _legalConnections.consume(ip);
 	}
 	
 	public void legalize(String ip)
 	{
-		final Integer count = _legalConnections.get(ip);
-		
-		if (count == null)
-			_legalConnections.put(ip, 1);
-		else
-			_legalConnections.put(ip, count + 1);
+		_legalConnections.legalize(ip);
 	}
 	
 	@Override

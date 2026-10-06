@@ -51,6 +51,7 @@ import com.l2jfree.gameserver.gameobjects.itemcontainer.Inventory;
 import com.l2jfree.gameserver.gameobjects.knownlist.CreatureKnownList;
 import com.l2jfree.gameserver.gameobjects.shot.CreatureShots;
 import com.l2jfree.gameserver.gameobjects.stat.CreatureStat;
+import com.l2jfree.gameserver.gameobjects.skills.SkillMaps;
 import com.l2jfree.gameserver.gameobjects.status.CreatureStatus;
 import com.l2jfree.gameserver.gameobjects.templates.L2CreatureTemplate;
 import com.l2jfree.gameserver.gameobjects.templates.L2NpcTemplate;
@@ -5583,16 +5584,8 @@ public abstract class L2Creature extends L2Object
 		if (newSkill == null)
 			return null;
 		
-		if (!(_skills instanceof Map<?, ?>)) // map returned by L2NpcTemplate.getSkills()
-		{
-			// L2NpcTemplate.getSkillS() is unmodifiable, so the entrySet() of it can't be used
-			Map<Integer, L2Skill> skills = new ConcurrentHashMap<Integer, L2Skill>(_skills.size());
-			
-			for (Integer key : _skills.keySet())
-				skills.put(key, _skills.get(key));
-			
-			_skills = skills;
-		}
+		// the map of the template of a non-player character is unmodifiable
+		_skills = SkillMaps.modifiable(_skills);
 		
 		// Replace oldSkill by newSkill or Add the newSkill
 		final L2Skill oldSkill = _skills.put(newSkill.getId(), newSkill);

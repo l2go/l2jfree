@@ -609,7 +609,7 @@ public class LoginManager
 	 * @param password
 	 * @param address
 	 */
-	private void handleBadLogin(String user, String password, InetAddress address)
+	void handleBadLogin(String user, String password, InetAddress address)
 	{
 		_logLoginFailed.info("login failed for user : '" + user + "' "
 				+ (address == null ? "null" : address.getHostAddress()));
@@ -691,6 +691,13 @@ public class LoginManager
 		}
 		_logLogin.warn("No such account exists: " + user);
 		return false;
+	}
+	
+	/** @return how many failed logins are counted against the address, 0 if none */
+	int failedLoginCount(InetAddress address)
+	{
+		FailedLoginAttempt attempt = _hackProtection.get(address);
+		return attempt == null ? 0 : attempt.getCount();
 	}
 	
 	public void addConnection(L2Client lc)
