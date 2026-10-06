@@ -353,3 +353,57 @@ jobs:
           subject-name: ${{ env.REGISTRY_IMAGE }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
+
+  # Measures the start of the server under the JVM configurations of ADR-0012. It reports and never fails the pipeline:
+  # a shared runner is too noisy to gate on, and the numbers are read by a person.
+  startup:
+    needs: [build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Download the verified distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: l2jfree-dist
+          path: dist
+
+      - name: Stage the image context
+        run: unzip -q dist/l2jfree-platform-*-dist.zip -d deploy/image
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: deploy/image
+          load: true
+          tags: l2jfree:ci
+          cache-from: type=gha
+
+      - name: Measure the start
+        run: |
+          mkdir -p startup
+          python3 deploy/measure/startup.py --image l2jfree:ci --runs 5 --output startup | tee startup/table.txt
+          {
+            echo "### Start of the server, from the start of the JVM to the open ports"
+            echo
+            cat startup/startup.md
+            echo
+            echo "Cold is the first start on an empty database. Warm is a restart on the loaded database. Resident memory is read ten seconds after the ports open. Runner: $(nproc) CPUs, $(free -m | awk '/Mem:/ {print $2}') MiB."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the numbers
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: startup-measurement
+          path: startup
+          if-no-files-found: ignore
