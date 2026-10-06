@@ -1,0 +1,76 @@
+# Platform 3.0 delivery: `docker compose up -d --wait` is the whole installation
+# (ADR-0002). The stack runs on Docker Desktop (Windows), Colima (macOS), and
+# Docker Engine (Linux).
+#
+# Walking skeleton: the server service runs the LoginServer against MySQL.
+# The world on port 7777 and PostgreSQL arrive in milestone M2, so port 7777 is
+# published but nothing listens on it yet.
+
+name: l2jfree
+
+x-server: &server
+  image: ${L2JFREE_IMAGE:-ghcr.io/l2go/l2jfree:edge}
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+
+services:
+  # Creates the database password once, in a volume shared with the database.
+  secrets:
+    <<: *server
+    entrypoint: ["/opt/l2jfree/bin/init-secrets"]
+    volumes:
+      - secrets:/var/lib/l2jfree/secrets
+    restart: "no"
+
+  db:
+    image: mysql:8.4@sha256:6ea90827b1100f8f2ae306a539f86d2c264a26ed435a2a9f75551dd5c3aeb242
+    environment:
+      MYSQL_DATABASE: l2jfree_ls
+      MYSQL_USER: l2jfree_ls
+      MYSQL_PASSWORD_FILE: /run/l2jfree-secrets/db_password
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    volumes:
+      - dbdata:/var/lib/mysql
+      - secrets:/run/l2jfree-secrets:ro
+      - ../l2jfree-login/sql:/docker-entrypoint-initdb.d:ro
+    depends_on:
+      secrets:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 40
+      start_period: 20s
+    restart: unless-stopped
+
+  login:
+    <<: *server
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      L2JFREE_DB_URL: jdbc:mysql://db:3306/l2jfree_ls
+      L2JFREE_DB_USER: l2jfree_ls
+      L2JFREE_DB_PASSWORD_FILE: /var/lib/l2jfree/secrets/db_password
+    ports:
+      - "${L2JFREE_BIND:-0.0.0.0}:2106:2106"
+      - "${L2JFREE_BIND:-0.0.0.0}:7777:7777"
+    volumes:
+      - secrets:/var/lib/l2jfree/secrets:ro
+      - logs:/var/lib/l2jfree/log
+    tmpfs:
+      - /run/l2jfree:uid=10001,gid=10001,mode=0700
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/2106"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    restart: unless-stopped
+
+volumes:
+  secrets:
+  dbdata:
+  logs:

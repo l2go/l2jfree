@@ -1,0 +1,38 @@
+name: image retention
+
+# Deletes sha-* image versions older than 30 days (ADR-0007). Versions that also
+# carry another tag, such as edge, are kept.
+
+on:
+  schedule:
+    - cron: "23 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  prune:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Delete old sha-* versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cutoff="$(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)"
+          path="/users/${GITHUB_REPOSITORY_OWNER}/packages/container/l2jfree/versions"
+          if ! versions="$(gh api --paginate "$path" 2>/dev/null)"; then
+            echo "No image package to prune yet."
+            exit 0
+          fi
+          echo "$versions" | jq -r --arg cutoff "$cutoff" '
+            .[]
+            | select(.metadata.container.tags | length > 0)
+            | select(all(.metadata.container.tags[]; startswith("sha-")))
+            | select(.updated_at < $cutoff)
+            | .id' | while read -r id; do
+              echo "Deleting image version $id"
+              gh api -X DELETE "$path/$id"
+            done

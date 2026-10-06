@@ -7,6 +7,8 @@ Platform 3.0 is in development. v2.5.0 is the final release of the 2.x line, whi
 | Document | Purpose |
 |---|---|
 | [Roadmap](roadmap.md) | Milestones, exit criteria, and work packages for Platform 3.0 |
+| [Architecture](architecture.md) | Context, containers, walking skeleton, pipeline, and login admission as diagrams |
+| [Deploy](../deploy/README.md) | The Linux image and the Docker Compose stack |
 | [Risk register](risks.md) | Open risks and their mitigations |
 | [Architecture decision records](adr/README.md) | One record per decision, with rationale and consequences |
 | [Platform 3.0 vision](PLATFORM-3.0-VISION.md) | Target platform and design, revised by the decision records |
