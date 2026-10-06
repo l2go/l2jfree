@@ -259,7 +259,7 @@ public class L2StaticObjectInstance extends L2Creature
 			player.sendPacket(su);
 			
 			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-			StringBuilder html1 = StringBuilder.newInstance("<html><body><table border=0>");
+			StringBuilder html1 = new StringBuilder("<html><body><table border=0>");
 			html1.append("<tr><td>S.Y.L. Says:</td></tr>");
 			html1.append("<tr><td>X: " + getX() + "</td></tr>");
 			html1.append("<tr><td>Y: " + getY() + "</td></tr>");

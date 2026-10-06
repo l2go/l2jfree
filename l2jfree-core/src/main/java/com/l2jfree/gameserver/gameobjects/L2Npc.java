@@ -870,7 +870,7 @@ public class L2Npc extends L2Creature
 			}
 			
 			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-			StringBuilder html1 = StringBuilder.newInstance("<html><body>");
+			StringBuilder html1 = new StringBuilder("<html><body>");
 			
 			html1.append("<br><center><font color=\"LEVEL\">[Combat Stats]</font></center>");
 			html1.append("<table border=0 width=\"100%\">");
@@ -1076,7 +1076,7 @@ public class L2Npc extends L2Creature
 								player.addItem("PetUpdate", exchangeItem, 1, player, true, true);
 								
 								NpcHtmlMessage adminReply = new NpcHtmlMessage(getObjectId());
-								StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+								StringBuilder replyMSG = new StringBuilder("<html><body>");
 								replyMSG.append("Congratulations, the evolution suceeded.");
 								replyMSG.append("</body></html>");
 								adminReply.setHtml(replyMSG.toString());
@@ -1099,7 +1099,7 @@ public class L2Npc extends L2Creature
 					else
 					{
 						NpcHtmlMessage adminReply = new NpcHtmlMessage(getObjectId());
-						StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+						StringBuilder replyMSG = new StringBuilder("<html><body>");
 						
 						replyMSG.append("You will need 20.000.000 and have the pet summoned for the ceremony ...");
 						replyMSG.append("</body></html>");
@@ -1171,7 +1171,7 @@ public class L2Npc extends L2Creature
 										new DestroyTemporalSummon(summon, player), 6000);
 								player.addItem("PetUpdate", exchangeItem, 1, player, true, true);
 								NpcHtmlMessage adminReply = new NpcHtmlMessage(getObjectId());
-								StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+								StringBuilder replyMSG = new StringBuilder("<html><body>");
 								
 								replyMSG.append("Congratulations, the evolution suceeded.");
 								replyMSG.append("</body></html>");
@@ -1196,7 +1196,7 @@ public class L2Npc extends L2Creature
 					else
 					{
 						NpcHtmlMessage adminReply = new NpcHtmlMessage(getObjectId());
-						StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+						StringBuilder replyMSG = new StringBuilder("<html><body>");
 						
 						replyMSG.append("You will need 6.000.000 and have the pet summoned for the ceremony ...");
 						replyMSG.append("</body></html>");
@@ -1483,7 +1483,7 @@ public class L2Npc extends L2Creature
 						break;
 					case 2:
 						NpcHtmlMessage Reply = new NpcHtmlMessage(getObjectId());
-						StringBuilder replyMSG = StringBuilder.newInstance("<html><body>Black Judge:<br>");
+						StringBuilder replyMSG = new StringBuilder("<html><body>Black Judge:<br>");
 						
 						if (player.getDeathPenaltyBuffLevel() > 0)
 						{

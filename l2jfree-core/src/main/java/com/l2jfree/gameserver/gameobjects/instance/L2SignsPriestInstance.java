@@ -580,7 +580,7 @@ public class L2SignsPriestInstance extends L2Npc
 					break;
 				case 20: // Seal Status (for when joining a cabal)
 					StringBuilder contentBuffer =
-							StringBuilder.newInstance("<html><body><font color=\"LEVEL\">[ Seal Status ]</font><br>");
+							new StringBuilder("<html><body><font color=\"LEVEL\">[ Seal Status ]</font><br>");
 					
 					for (int i = 1; i < 4; i++)
 					{

@@ -36,7 +36,7 @@ public class ClanPenalty implements IUserCommandHandler
 	{
 		boolean penalty = false;
 		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-		StringBuilder htmlContent = StringBuilder.newInstance("<html><body>");
+		StringBuilder htmlContent = new StringBuilder("<html><body>");
 		htmlContent.append("<center><table width=270 border=0 bgcolor=111111>");
 		htmlContent.append("<tr><td width=170>Penalty</td>");
 		htmlContent.append("<td width=100 align=center>Expiration Date</td></tr>");

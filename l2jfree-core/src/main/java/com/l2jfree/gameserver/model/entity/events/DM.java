@@ -323,7 +323,7 @@ public class DM
 			_topPlayer.sendPacket(su);
 			
 			NpcHtmlMessage nhm = new NpcHtmlMessage(5);
-			StringBuilder replyMSG = StringBuilder.newInstance("");
+			StringBuilder replyMSG = new StringBuilder("");
 			
 			replyMSG.append("<html><body>You won the event. Look in your inventory for the reward.</body></html>");
 			
@@ -561,7 +561,7 @@ public class DM
 		{
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 			
-			StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = new StringBuilder("<html><body>");
 			replyMSG.append("DM Match<br><br><br>");
 			replyMSG.append("Current event...<br1>");
 			replyMSG.append("	... name:&nbsp;<font color=\"00FF00\">" + _eventName + "</font><br1>");

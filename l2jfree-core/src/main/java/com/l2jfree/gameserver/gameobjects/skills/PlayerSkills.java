@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.gameobjects.skills;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -173,7 +174,7 @@ public final class PlayerSkills
 			_log.warn("Non-stored skill " + skill + " was saved for " + getOwner());
 	}
 	
-	private static final class SkillMap extends Map<Integer, Integer>
+	private static final class SkillMap extends LinkedHashMap<Integer, Integer>
 	{
 		private static final long serialVersionUID = -222036343002486892L;
 		

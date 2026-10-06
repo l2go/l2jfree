@@ -307,7 +307,7 @@ public class AdminSiege implements IAdminCommandHandler
 			}
 		}
 		adminReply.replace("%castles%", cList.toString());
-		cList.clear();
+		cList.setLength(0);
 		i = 0;
 		for (ClanHall clanhall : ClanHallManager.getInstance().getClanHalls().values())
 		{
@@ -324,7 +324,7 @@ public class AdminSiege implements IAdminCommandHandler
 			}
 		}
 		adminReply.replace("%clanhalls%", cList.toString());
-		cList.clear();
+		cList.setLength(0);
 		i = 0;
 		for (ClanHall clanhall : ClanHallManager.getInstance().getFreeClanHalls().values())
 		{

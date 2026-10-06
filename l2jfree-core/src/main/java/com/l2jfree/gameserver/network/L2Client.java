@@ -19,7 +19,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
-import java.util.List;
+import java.util.ArrayDeque;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -405,7 +405,7 @@ public final class L2Client extends com.l2jfree.network.Connection<L2Client, L2C
 		return _packetQueue;
 	}
 	
-	private final class ServerPacketQueue extends List<L2ServerPacket> implements Runnable
+	private final class ServerPacketQueue extends ArrayDeque<L2ServerPacket> implements Runnable
 	{
 		private static final long serialVersionUID = 6715576112277597425L;
 		

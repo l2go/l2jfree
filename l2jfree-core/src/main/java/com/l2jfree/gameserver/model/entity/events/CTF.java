@@ -123,7 +123,7 @@ public class CTF
 		{
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 			
-			StringBuilder replyMSG = StringBuilder.newInstance("<html><body><center>");
+			StringBuilder replyMSG = new StringBuilder("<html><body><center>");
 			replyMSG.append("CTF Flag<br><br>");
 			replyMSG.append("<font color=\"00FF00\">" + teamName + "'s Flag</font><br1>");
 			if (eventPlayer.as(CTFPlayerInfo.class)._teamNameCTF != null
@@ -1434,7 +1434,7 @@ public class CTF
 					player.addItem("CTF Event: " + _eventName, _rewardId, _rewardAmount, player, true, true);
 					
 					NpcHtmlMessage nhm = new NpcHtmlMessage(5);
-					StringBuilder replyMSG = StringBuilder.newInstance("");
+					StringBuilder replyMSG = new StringBuilder("");
 					
 					replyMSG.append("<html><body>Your team wins the event. Look in your inventory for the reward.</body></html>");
 					
@@ -1795,7 +1795,7 @@ public class CTF
 		{
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 			
-			StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = new StringBuilder("<html><body>");
 			replyMSG.append("CTF Match<br><br><br>");
 			replyMSG.append("Current event...<br1>");
 			replyMSG.append("   ... description:&nbsp;<font color=\"00FF00\">" + _eventDesc + "</font><br>");

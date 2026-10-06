@@ -210,7 +210,7 @@ public class TvTIMain
 			}
 			
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-			StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = new StringBuilder("<html><body>");
 			
 			replyMSG.append("<title>Team vs Team Instanced</title>");
 			replyMSG.append("<table width=\"300\"><tr>");
@@ -276,7 +276,7 @@ public class TvTIMain
 		try
 		{
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-			StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = new StringBuilder("<html><body>");
 			
 			replyMSG.append("<title>Team vs Team Instanced</title>");
 			replyMSG.append("<table width=\"300\"><tr>");

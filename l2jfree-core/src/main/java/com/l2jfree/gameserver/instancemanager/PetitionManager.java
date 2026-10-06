@@ -504,7 +504,7 @@ public final class PetitionManager
 	public void sendPendingPetitionList(L2Player activeChar)
 	{
 		StringBuilder htmlContent =
-				StringBuilder.newInstance("<html><body>"
+				new StringBuilder("<html><body>"
 						+ "<center><font color=\"LEVEL\">Current Petitions</font><br><table width=\"300\">");
 		SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM HH:mm z");
 		

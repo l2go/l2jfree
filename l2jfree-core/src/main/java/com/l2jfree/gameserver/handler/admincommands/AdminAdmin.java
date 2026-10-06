@@ -478,7 +478,7 @@ public class AdminAdmin implements IAdminCommandHandler
 	{
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(activeChar.getObjectId());
 		
-		StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		replyMSG.append("<center><table width=270><tr><td width=60><button value=\"Admin\" action=\"bypass -h admin_admin\" width=60 height=15 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\"></td><td width=150><font color=\"LEVEL\">Config Server Panel</font></td><td width=60><button value=\"Panel1\" action=\"bypass -h admin_config_server\" width=60 height=15 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\"></td></tr></table></center><br>");
 		replyMSG.append("<center><table width=260>");
 		replyMSG.append("<tr><td><font color=\"LEVEL\">Show GM Login</font> = " + Config.SHOW_GM_LOGIN
@@ -533,7 +533,7 @@ public class AdminAdmin implements IAdminCommandHandler
 	{
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 		
-		StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		replyMSG.append("<center><table width=270><tr><td width=60><button value=\"Admin\" action=\"bypass -h admin_admin\" width=60 height=15 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\"></td><td width=150><font color=\"LEVEL\">Config Server Panel</font></td><td width=60><button value=\"Panel2\" action=\"bypass -h admin_config_server2\" width=60 height=15 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\"></td></tr></table></center><br>");
 		replyMSG.append("<center><table width=260>");
 		replyMSG.append("<tr><td><font color=\"LEVEL\">Auto loot</font> = " + Config.ALT_AUTO_LOOT

@@ -555,7 +555,7 @@ public class AdminEditChar implements IAdminCommandHandler
 					+ "</a></center>");
 		}
 		adminReply.replace("%pages%", replyMSG.toString());
-		replyMSG.clear();
+		replyMSG.setLength(0);
 		for (int i = CharactersStart; i < CharactersEnd; i++)
 		{ //Add player info into new Table row
 			replyMSG.append("<tr><td width=80><a action=\"bypass -h admin_character_info " + players[i].getName()
@@ -776,7 +776,7 @@ public class AdminEditChar implements IAdminCommandHandler
 				break;
 		}
 		adminReply.replace("%results%", replyMSG.toString());
-		replyMSG.clear();
+		replyMSG.setLength(0);
 		if (CharactersFound == 0)
 			replyMSG.append("s. Please try again.");
 		else if (CharactersFound > 20)
@@ -833,7 +833,7 @@ public class AdminEditChar implements IAdminCommandHandler
 				break;
 		}
 		adminReply.replace("%results%", replyMSG.toString());
-		replyMSG.clear();
+		replyMSG.setLength(0);
 		if (CharactersFound == 0)
 			replyMSG.append("s. Maybe they got d/c? :)");
 		else if (CharactersFound > 20)

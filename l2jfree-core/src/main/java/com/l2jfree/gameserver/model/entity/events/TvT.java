@@ -855,7 +855,7 @@ public class TvT
 					_playerWon = 1;
 					
 					NpcHtmlMessage nhm = new NpcHtmlMessage(5);
-					StringBuilder replyMSG = StringBuilder.newInstance("");
+					StringBuilder replyMSG = new StringBuilder("");
 					
 					replyMSG.append("<html><body>Your team wins the event. Look in your inventory for the reward.</body></html>");
 					
@@ -1183,7 +1183,7 @@ public class TvT
 		{
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 			
-			StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = new StringBuilder("<html><body>");
 			replyMSG.append("TvT Match<br><br><br>");
 			replyMSG.append("Current event...<br1>");
 			replyMSG.append("    ... name:&nbsp;<font color=\"00FF00\">" + _eventName + "</font><br1>");

@@ -97,7 +97,7 @@ public final class AllyInfo extends L2ServerPacket
 		//=========================
 		activeChar.sendPacket(SystemMessageId.CLAN_INFO_FOOT);
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		StringBuilder replyMSG = StringBuilder.newInstance("<html><title>Alliance Information</title><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><title>Alliance Information</title><body>");
 		replyMSG.append("<center><img src=\"L2UI_CH3.herotower_deco\" width=256 height=32></center>");
 		for (L2Clan clan : ClanTable.getInstance().getClans())
 		{

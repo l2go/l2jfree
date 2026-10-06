@@ -348,7 +348,7 @@ public final class L2UrnInstance extends L2NpcInstance
 		else
 			rankName = "Master Alchemist";
 		
-		StringBuilder msg = StringBuilder.newInstance("<html><body>");
+		StringBuilder msg = new StringBuilder("<html><body>");
 		msg.append("%npcname%:<br><br>");
 		msg.append(urnEffect + "<BR>");
 		msg.append("You peer into the urn to see " + prodName3 + " (" + prodNum3 + ") !<br>");
@@ -365,7 +365,7 @@ public final class L2UrnInstance extends L2NpcInstance
 	public void showFailureWindow(L2Player player)
 	{
 		
-		StringBuilder msg = StringBuilder.newInstance("<html><body>");
+		StringBuilder msg = new StringBuilder("<html><body>");
 		msg.append("%npcname%:<br><br>");
 		msg.append("The contents burble and boil, smoke and steam rise from the urn.<BR>");
 		msg.append("You peer into the urn to see nothing remains, the temperature was too hot!<br>");
@@ -380,7 +380,7 @@ public final class L2UrnInstance extends L2NpcInstance
 	
 	public void showMessageWindow(L2Player player)
 	{
-		StringBuilder msg = StringBuilder.newInstance("<html><body>");
+		StringBuilder msg = new StringBuilder("<html><body>");
 		msg.append("%npcname%:<br><br>");
 		msg.append("If you have brought the <font color=\"LEVEL\">Mixing Stone</font> then you must insert it to continue!<BR>");
 		msg.append("<table width=200>");

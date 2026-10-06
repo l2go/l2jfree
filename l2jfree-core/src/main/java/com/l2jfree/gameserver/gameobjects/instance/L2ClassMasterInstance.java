@@ -439,7 +439,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 				final int minLevel = getMinLevel(currentClassId.level());
 				if (player.getLevel() >= minLevel || Config.ALT_CLASS_MASTER_ENTIRE_TREE)
 				{
-					final StringBuilder menu = StringBuilder.newInstance(100);
+					final StringBuilder menu = new StringBuilder(100);
 					for (ClassId cid : ClassId.values())
 					{
 						if (validateClassId(currentClassId, cid) && cid.level() == level)
@@ -492,7 +492,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 		
 		msg = msg.replaceAll("%name%", CharTemplateTable.getClassNameById(currentClassId.getId()));
 		
-		final StringBuilder menu = StringBuilder.newInstance(100);
+		final StringBuilder menu = new StringBuilder(100);
 		for (ClassId cid : ClassId.values())
 		{
 			if (validateClassId(currentClassId, cid))

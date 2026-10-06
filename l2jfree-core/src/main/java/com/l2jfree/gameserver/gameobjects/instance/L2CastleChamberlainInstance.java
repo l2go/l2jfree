@@ -1818,7 +1818,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 						}
 					}
 					*/
-					StringBuilder tList = StringBuilder.newInstance(list.size() * 50);
+					StringBuilder tList = new StringBuilder(list.size() * 50);
 					for (Integer hour : list)
 					{
 						tList.append(SET_TIME[0]);

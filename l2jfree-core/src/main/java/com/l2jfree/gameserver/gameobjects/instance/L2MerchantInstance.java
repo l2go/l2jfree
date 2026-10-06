@@ -213,7 +213,7 @@ public class L2MerchantInstance extends L2NpcInstance implements L2Merchant
 		if (!Config.LIST_PET_RENT_NPC.contains(getTemplate().getNpcId()))
 			return;
 		
-		StringBuilder html1 = StringBuilder.newInstance("<html><body>Pet Manager:<br>");
+		StringBuilder html1 = new StringBuilder("<html><body>Pet Manager:<br>");
 		html1.append("You can rent a wyvern or strider for adena.<br>My prices:<br1>");
 		html1.append("<table border=0><tr><td>Ride</td></tr>");
 		html1.append("<tr><td>Wyvern</td><td>Strider</td></tr>");
@@ -283,7 +283,7 @@ public class L2MerchantInstance extends L2NpcInstance implements L2Merchant
 			}
 			
 			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-			StringBuilder html1 = StringBuilder.newInstance("<html><body><table border=0>");
+			StringBuilder html1 = new StringBuilder("<html><body><table border=0>");
 			html1.append("<tr><td>Current Target:</td></tr>");
 			html1.append("<tr><td><br></td></tr>");
 			

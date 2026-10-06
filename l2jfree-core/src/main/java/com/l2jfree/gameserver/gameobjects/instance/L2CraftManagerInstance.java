@@ -156,7 +156,7 @@ public class L2CraftManagerInstance extends L2NpcInstance
 			
 			NpcHtmlMessage npcReply = new NpcHtmlMessage(1);
 			
-			StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = new StringBuilder("<html><body>");
 			
 			replyMSG.append("<center>Items to Crystallize</center>");
 			replyMSG.append("<img src=\"L2UI.SquareWhite\" width=270 height=1> <img src=\"L2UI.SquareBlank\" width=1 height=3>");
@@ -423,7 +423,7 @@ public class L2CraftManagerInstance extends L2NpcInstance
 			
 			NpcHtmlMessage npcReply = new NpcHtmlMessage(1);
 			
-			StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = new StringBuilder("<html><body>");
 			
 			replyMSG.append("<center>List of Recipes</center>");
 			replyMSG.append("<img src=\"L2UI.SquareWhite\" width=270 height=1> <img src=\"L2UI.SquareBlank\" width=1 height=3>");
@@ -529,7 +529,7 @@ public class L2CraftManagerInstance extends L2NpcInstance
 				
 				NpcHtmlMessage npcReply = new NpcHtmlMessage(1);
 				
-				StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+				StringBuilder replyMSG = new StringBuilder("<html><body>");
 				
 				replyMSG.append("<center>Craft Info</center>");
 				replyMSG.append("<img src=\"L2UI.SquareWhite\" width=270 height=1> <img src=\"L2UI.SquareBlank\" width=1 height=3>");
@@ -735,7 +735,7 @@ public class L2CraftManagerInstance extends L2NpcInstance
 	{
 		NpcHtmlMessage npcReply = new NpcHtmlMessage(1);
 		
-		StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		
 		replyMSG.append(getName() + ":<br>");
 		replyMSG.append("Come back later, when you have " + count + " of " + itemname + ".");
@@ -750,7 +750,7 @@ public class L2CraftManagerInstance extends L2NpcInstance
 	{
 		NpcHtmlMessage npcReply = new NpcHtmlMessage(1);
 		
-		StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		
 		replyMSG.append(getName() + ":<br>");
 		

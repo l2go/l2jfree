@@ -711,7 +711,7 @@ public class VIP
 		{
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 			
-			StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = new StringBuilder("<html><body>");
 			replyMSG.append("VIP (End NPC)<br><br>");
 			replyMSG.append("Current event...<br1>");
 			replyMSG.append("    ... Team:&nbsp;<font color=\"FFFFFF\">" + _teamName + "</font><br><br>");
@@ -774,7 +774,7 @@ public class VIP
 				player.addItem("VIP Event: ", _notVipReward, _notVipRewardAmount, player, true, true);
 				
 				NpcHtmlMessage nhm = new NpcHtmlMessage(5);
-				StringBuilder replyMSG = StringBuilder.newInstance("");
+				StringBuilder replyMSG = new StringBuilder("");
 				
 				replyMSG.append("<html><body>Your team won the event. Your inventory now contains your reward.</body></html>");
 				
@@ -799,7 +799,7 @@ public class VIP
 				player.addItem("VIP Event: ", _vipReward, _vipRewardAmount, player, true, true);
 				
 				NpcHtmlMessage nhm = new NpcHtmlMessage(5);
-				StringBuilder replyMSG = StringBuilder.newInstance("");
+				StringBuilder replyMSG = new StringBuilder("");
 				
 				replyMSG.append("<html><body>Your team has won the event. Your inventory now contains your reward.</body></html>");
 				
@@ -811,7 +811,7 @@ public class VIP
 				player.addItem("VIP Event: ", _theVipReward, _theVipRewardAmount, player, true, true);
 				
 				NpcHtmlMessage nhm = new NpcHtmlMessage(5);
-				StringBuilder replyMSG = StringBuilder.newInstance("");
+				StringBuilder replyMSG = new StringBuilder("");
 				
 				replyMSG.append("<html><body>Your team has won the event. Your inventory now contains your reward.</body></html>");
 				
@@ -1016,7 +1016,7 @@ public class VIP
 		{
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 			
-			StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = new StringBuilder("<html><body>");
 			replyMSG.append("VIP (Join NPC)<br><br>");
 			replyMSG.append("Current event...<br1>");
 			replyMSG.append("    ... Team:&nbsp;<font color=\"FFFFFF\">" + _teamName + "</font><br><br>");

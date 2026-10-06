@@ -128,7 +128,7 @@ public class AdminBuffs implements IAdminCommandHandler
 	
 	public void showBuffs(L2Player player, L2Player activeChar)
 	{
-		StringBuilder html = StringBuilder.newInstance("<html><center><font color=\"LEVEL\">Effects of ");
+		StringBuilder html = new StringBuilder("<html><center><font color=\"LEVEL\">Effects of ");
 		html.append(player.getName());
 		html.append("</font><center><br>");
 		

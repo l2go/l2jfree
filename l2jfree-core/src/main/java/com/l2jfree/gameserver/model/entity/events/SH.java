@@ -230,7 +230,7 @@ public class SH
 		try
 		{
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-			StringBuilder replyMSG = StringBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = new StringBuilder("<html><body>");
 			
 			replyMSG.append("<title>Scavanger Hunt Event</title>");
 			replyMSG.append("<table width=\"300\"><tr>");

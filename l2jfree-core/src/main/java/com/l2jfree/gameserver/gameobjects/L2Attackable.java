@@ -524,7 +524,7 @@ public class L2Attackable extends L2Npc
 						continue;
 					
 					// Get the L2Creature corresponding to this attacker
-					attacker = rewarded;
+					attacker = entry.getKey();
 					
 					// Get damages done by this attacker
 					damage = info._damage;
@@ -579,7 +579,7 @@ public class L2Attackable extends L2Npc
 					penalty = 0;
 					
 					// Attacker to be rewarded
-					attacker = entry.getKey();
+					attacker = rewarded;
 					
 					// Total amount of damage done
 					damage = reward._dmg;

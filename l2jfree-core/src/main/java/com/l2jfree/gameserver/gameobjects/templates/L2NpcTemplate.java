@@ -16,6 +16,7 @@ package com.l2jfree.gameserver.gameobjects.templates;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -461,7 +462,7 @@ public final class L2NpcTemplate extends L2CreatureTemplate
 	
 	public Map<Integer, L2Skill> getSkills()
 	{
-		return _skills == null ? null : _skills.unmodifiable();
+		return _skills == null ? null : Collections.unmodifiableMap(_skills);
 	}
 	
 	public void addQuestEvent(Quest.QuestEventType EventType, Quest q)

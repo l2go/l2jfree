@@ -573,7 +573,7 @@ public class TVTInstance
 				boolean bg = false;
 				
 				NpcHtmlMessage nhm = new NpcHtmlMessage(5);
-				StringBuilder replyMSG = StringBuilder.newInstance("");
+				StringBuilder replyMSG = new StringBuilder("");
 				
 				replyMSG.append("<html><body>");
 				replyMSG.append("<title>Team vs Team Instanced</title>");
