@@ -27,12 +27,15 @@ x-server: &server
   security_opt: ["no-new-privileges:true"]
 
 services:
-  # Creates the database passwords once, in a volume shared with the database.
+  # Creates the database passwords once: the superuser password in a volume that
+  # only the database mounts, the two module role passwords in a volume that the
+  # server reads as well.
   secrets:
     <<: *server
     entrypoint: ["/opt/l2jfree/bin/init-secrets"]
     volumes:
       - secrets:/var/lib/l2jfree/secrets
+      - dbsecrets:/var/lib/l2jfree/secrets-db
     restart: "no"
 
   db:
@@ -40,10 +43,11 @@ services:
     environment:
       POSTGRES_DB: l2jfree
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD_FILE: /run/l2jfree-secrets/postgres_password
+      POSTGRES_PASSWORD_FILE: /run/l2jfree-dbsecrets/postgres_password
     volumes:
       - dbdata:/var/lib/postgresql
       - secrets:/run/l2jfree-secrets:ro
+      - dbsecrets:/run/l2jfree-dbsecrets:ro
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
     depends_on:
       secrets:
@@ -93,6 +97,7 @@ services:
 
 volumes:
   secrets:
+  dbsecrets:
   dbdata:
   logs:
   work:

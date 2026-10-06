@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import com.l2jfree.gameserver.network.L2Client;
 import com.l2jfree.gameserver.network.packets.server.ActionFailed;
-import com.l2jfree.mmocore.network.ReceivablePacket;
+import com.l2jfree.network.ReceivablePacket;
 
 class RequestDropItemTest
 {

@@ -78,7 +78,7 @@ class RequestProcureCropListTest
 		final ByteBuffer buffer = ByteBuffer.allocate(20);
 		buffer.putInt(1).putInt(1).putInt(2).putInt(3).putInt(quantity).flip();
 
-		final Field bufferField = Class.forName("com.l2jfree.mmocore.network.AbstractPacket")
+		final Field bufferField = Class.forName("com.l2jfree.network.AbstractPacket")
 				.getDeclaredField("_buf");
 		bufferField.setAccessible(true);
 		bufferField.set(packet, buffer);

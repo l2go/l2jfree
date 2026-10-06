@@ -16,26 +16,27 @@ package com.l2jfree.gameserver.network;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SocketChannel;
+import java.net.InetAddress;
 import java.util.Map;
 
 import javolution.util.FastMap;
 
 import org.apache.commons.lang3.StringUtils;
 
+import io.netty.channel.Channel;
+
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.CoreInfo;
 import com.l2jfree.gameserver.network.packets.L2ClientPacket;
 import com.l2jfree.gameserver.network.packets.L2ServerPacket;
 import com.l2jfree.lang.L2TextBuilder;
-import com.l2jfree.mmocore.network.FloodManager.ErrorMode;
-import com.l2jfree.mmocore.network.IPacketHandler;
-import com.l2jfree.mmocore.network.SelectorConfig;
-import com.l2jfree.mmocore.network.SelectorThread;
+import com.l2jfree.network.FloodManager.ErrorMode;
+import com.l2jfree.network.PacketHandler;
+import com.l2jfree.network.NetworkConfig;
+import com.l2jfree.network.NetworkServer;
 import com.l2jfree.tools.util.HexUtil;
 
-public final class L2ClientSelectorThread extends SelectorThread<L2Client, L2ClientPacket, L2ServerPacket>
+public final class L2ClientSelectorThread extends NetworkServer<L2Client, L2ClientPacket, L2ServerPacket>
 {
 	private static final class SingletonHolder
 	{
@@ -43,8 +44,7 @@ public final class L2ClientSelectorThread extends SelectorThread<L2Client, L2Cli
 		
 		static
 		{
-			final SelectorConfig sc = new SelectorConfig();
-			sc.setSelectorSleepTime(5);
+			final NetworkConfig sc = new NetworkConfig();
 			
 			try
 			{
@@ -65,8 +65,8 @@ public final class L2ClientSelectorThread extends SelectorThread<L2Client, L2Cli
 		return SingletonHolder.INSTANCE;
 	}
 	
-	private L2ClientSelectorThread(SelectorConfig sc,
-			IPacketHandler<L2Client, L2ClientPacket, L2ServerPacket> packetHandler) throws IOException
+	private L2ClientSelectorThread(NetworkConfig sc,
+			PacketHandler<L2Client, L2ClientPacket, L2ServerPacket> packetHandler) throws IOException
 	{
 		super(sc, packetHandler);
 	}
@@ -100,9 +100,9 @@ public final class L2ClientSelectorThread extends SelectorThread<L2Client, L2Cli
 	// ==============================================
 	
 	@Override
-	protected L2Client createClient(SocketChannel socketChannel) throws ClosedChannelException
+	protected L2Client createClient(Channel channel)
 	{
-		return new L2Client(this, socketChannel);
+		return new L2Client(this, channel);
 	}
 	
 	@Override
@@ -122,15 +122,15 @@ public final class L2ClientSelectorThread extends SelectorThread<L2Client, L2Cli
 	}
 	
 	@Override
-	public boolean acceptConnectionFrom(SocketChannel sc)
+	protected boolean acceptConnectionFrom(InetAddress address)
 	{
-		if (!super.acceptConnectionFrom(sc))
+		if (!super.acceptConnectionFrom(address))
 			return false;
 		
 		if (!Config.CONNECTION_FILTERING)
 			return true;
 		
-		final String ip = sc.socket().getInetAddress().getHostAddress();
+		final String ip = address.getHostAddress();
 		
 		final Integer count = _legalConnections.get(ip);
 		

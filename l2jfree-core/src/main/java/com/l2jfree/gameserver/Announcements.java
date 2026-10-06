@@ -39,6 +39,7 @@ import com.l2jfree.gameserver.network.packets.server.CreatureSay;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
 import com.l2jfree.gameserver.script.DateRange;
+import com.l2jfree.gameserver.util.RuntimeData;
 import com.l2jfree.lang.L2TextBuilder;
 
 /**
@@ -66,7 +67,10 @@ public class Announcements
 	public void loadAnnouncements()
 	{
 		_announcements.clear();
-		File file = new File(Config.DATAPACK_ROOT, "data/announcements.txt");
+		// an edit made in the game is kept in the state directory and wins over the list shipped with the datapack
+		File file = RuntimeData.file("announcements.txt");
+		if (!file.exists())
+			file = new File(Config.DATAPACK_ROOT, "data/announcements.txt");
 		if (file.exists())
 		{
 			readFromDisk(file);
@@ -187,7 +191,7 @@ public class Announcements
 	
 	private void saveToDisk()
 	{
-		File file = new File("data/announcements.txt");
+		File file = RuntimeData.file("announcements.txt");
 		FileWriter save = null;
 		
 		try

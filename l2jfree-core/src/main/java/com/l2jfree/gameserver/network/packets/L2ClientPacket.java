@@ -24,8 +24,8 @@ import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.network.L2Client;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.ActionFailed;
-import com.l2jfree.mmocore.network.InvalidPacketException;
-import com.l2jfree.mmocore.network.ReceivablePacket;
+import com.l2jfree.network.InvalidPacketException;
+import com.l2jfree.network.ReceivablePacket;
 
 /**
  * Packets received by the game server from clients

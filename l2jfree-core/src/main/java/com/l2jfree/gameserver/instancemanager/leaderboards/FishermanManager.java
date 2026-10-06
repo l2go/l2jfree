@@ -37,6 +37,7 @@ import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.ItemList;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.util.RuntimeData;
 import com.l2jfree.gameserver.util.Util;
 
 /**
@@ -256,7 +257,7 @@ public class FishermanManager
 		LineNumberReader lnr = null;
 		String lineId = "";
 		FishRank rank = null;
-		File file = new File(Config.DATAPACK_ROOT, "data/fish.dat");
+		File file = RuntimeData.file("fish.dat");
 		
 		try
 		{
@@ -319,7 +320,7 @@ public class FishermanManager
 			pattern += object + " : " + ar.cought + "-" + ar.escaped + " : " + ar.name + "\n";
 		}
 		
-		File file = new File(Config.DATAPACK_ROOT, "data/fish.dat");
+		File file = RuntimeData.file("fish.dat");
 		try
 		{
 			FileWriter fw = new FileWriter(file);

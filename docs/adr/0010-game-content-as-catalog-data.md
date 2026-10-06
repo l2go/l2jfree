@@ -12,7 +12,7 @@ The 2.x line kept game content in about 214 SQL files that an installer ran agai
 1. Game content (item, NPC, and skill templates, spawns, drops, shops, teleports) is one CSV file per catalog table in the datapack. The server loads the files into the `catalog` schema at start when their SHA-256 revision differs from the one in the database.
 2. A change to game content is a change to a CSV file or to the datapack, reviewed in a pull request like any other change.
 3. The optional mods of the 2.x line are not shipped. A mod that should return is ported into the catalog files and the datapack.
-4. A feature of the old server whose data has no home in the accepted schema is removed rather than kept without persistence. Each removal is listed in the changelog.
+4. A feature of the old server whose data has no home in the accepted schema is removed rather than kept without persistence. Each removal is listed in the behavior-change list.
 
 ## Alternatives considered
 

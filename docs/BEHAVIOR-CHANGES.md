@@ -1,6 +1,6 @@
 # Behavior changes since the 2.x line
 
-Platform 3.0 keeps the game rules and the client protocol. Moving the data to PostgreSQL forced a few changes that a player, an operator, or a script author can notice. This is the complete list for the world data. A change that is not here was not made on purpose.
+Platform 3.0 keeps the game rules and the client protocol. Moving the data to PostgreSQL forced a few changes that a player, an operator, or a script author can notice. This list covers the changes that were found and decided on. A difference that is not here is a defect: file it as an issue.
 
 ## Features that are gone
 
@@ -12,7 +12,9 @@ A feature is removed when the accepted data design has no table for it ([ADR-001
 | Community board item auction | Listing, bidding, buying, and creating item lots on the board. The board shows that the auction is not available. The clan hall auction is not affected |
 | Archive of deleted mail | Deleted letters are no longer copied to an archive. The option `MailStoreDeletedLetters` is removed |
 | Old crest files | Crests are read from and written to the `crest` table, not to `.bmp` files. The command `admin_cache_crest_fix` is removed |
-| Optional content mods | The thirteen mods of the 2.x line, which copied files into the server tree and ran SQL by hand |
+| Optional content mods | The thirteen mods of the 2.x line, which copied files into the server tree and ran SQL by hand: Event_Christmas, Event_GlitteringMedal, Event_PlayingWithFire, NPC_Buffer, Shop_ConvertCrystals, Shop_GMShop, Shop_MarksNPC, Shop_PrestigeEnchantScrolls, Shop_PriestTrader, Shop_RecipeAS, Shop_TattooShop_jscript, Shop_TattooShop_multisell, and Teleporter_LuxuryGK |
+| Account manager scripts and the Windows launchers | The scripts that started the login, the game server, and the account manager on Windows and Linux hosts. The server starts from the image, and an account is created at the first login (`AutoCreateAccounts`) |
+| SQL of the two event scripts (`ctf.sql`, `dm.sql`) | They belonged to the removed database installer |
 | Database installer, SQL update scripts, table optimizer, and the dump-based backup | A backup is a `pg_dump` of the `login` and `world` schemas, taken by the operator |
 | Id factory options `Compaction` and `Rebuild` | The schema's foreign keys make rewriting ids impossible. `BitSet`, `Stack`, and `Increment` remain |
 | Admin command `admin_process_auction` | It processed the removed item auction |
@@ -42,6 +44,7 @@ A feature is removed when the accepted data design has no table for it ([ADR-001
 - Settings live in two places: the shipped defaults, read-only, and the operator directory, which overrides single keys ([ADR-0011](adr/0011-configuration-model.md)). The database address, the bind address, and the announced address come from `L2JFREE_*` environment variables.
 - The address a client is sent for the world is worked out once at start. A host name that does not resolve is logged and the client's own address is used.
 - `ConnectionFiltering` is always effective, because the login always supports it.
+- State that the world writes while it runs (the leaderboards `arena.dat` and `fish.dat`, the admin bookmarks, the announcements edited in game, and the geodata bug list) lives in the `state` directory of the working directory, not next to the datapack. The datapack is read-only in the image.
 - The telnet GM check, the jail command, and the item give command use the new names. An unknown character name is reported instead of raising an error.
 
 ## What a script author can notice

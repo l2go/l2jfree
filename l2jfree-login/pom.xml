@@ -30,7 +30,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.l2jfree</groupId>
-			<artifactId>l2j-mmocore</artifactId>
+			<artifactId>l2jfree-network</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

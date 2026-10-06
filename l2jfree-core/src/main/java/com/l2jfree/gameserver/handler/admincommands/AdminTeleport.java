@@ -31,7 +31,6 @@ import javolution.text.TextBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.NpcTable;
 import com.l2jfree.gameserver.datatables.SpawnTable;
@@ -51,6 +50,7 @@ import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.model.world.spawn.L2Spawn;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
+import com.l2jfree.gameserver.util.RuntimeData;
 
 /**
  * This class handles following admin commands:
@@ -292,7 +292,7 @@ public class AdminTeleport implements IAdminCommandHandler
 	
 	private void delbookmark(String Name)
 	{
-		File file = new File(Config.DATAPACK_ROOT, "data/html/admin/tele/bookmark.txt");
+		File file = RuntimeData.file("bookmark.txt");
 		LineNumberReader lnr = null;
 		String bookmarks = "";
 		
@@ -335,7 +335,7 @@ public class AdminTeleport implements IAdminCommandHandler
 	// L2J_JP ADD
 	private void bookmark(L2Player activeChar, String Name)
 	{
-		File file = new File(Config.DATAPACK_ROOT, "data/html/admin/tele/bookmark.txt");
+		File file = RuntimeData.file("bookmark.txt");
 		LineNumberReader lnr = null;
 		String bookmarks = "";
 		String table = "";

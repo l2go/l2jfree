@@ -24,7 +24,7 @@ import com.l2jfree.gameserver.network.L2Client.GameClientState;
 import com.l2jfree.gameserver.network.packets.L2ClientPacket;
 import com.l2jfree.gameserver.network.packets.L2ServerPacket;
 import com.l2jfree.gameserver.network.packets.client.*;
-import com.l2jfree.mmocore.network.IPacketHandler;
+import com.l2jfree.network.PacketHandler;
 
 /**
  * Stateful Packet Handler<BR>
@@ -39,7 +39,7 @@ import com.l2jfree.mmocore.network.IPacketHandler;
  * 
  * @author KenM
  */
-public final class L2ClientPacketHandler implements IPacketHandler<L2Client, L2ClientPacket, L2ServerPacket>
+public final class L2ClientPacketHandler implements PacketHandler<L2Client, L2ClientPacket, L2ServerPacket>
 {
 	private static final Logger _log = LoggerFactory.getLogger(L2ClientPacketHandler.class);
 	

@@ -30,6 +30,11 @@ fi
 
 cd "$work"
 
+# The HTML cache is built from the datapack of the image. The work volume
+# outlives an image update, so a cache from an older image would hide the new
+# pages. The world rebuilds it in seconds.
+rm -f "$work/cache/html.cache"
+
 # The Java options are split on blanks, so L2JFREE_JAVA_OPTS can hold several.
 read -r -a java_opts <<< "${L2JFREE_JAVA_OPTS:--Xms1g -Xmx3g}"
 

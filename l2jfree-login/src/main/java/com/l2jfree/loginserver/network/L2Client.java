@@ -16,14 +16,14 @@ package com.l2jfree.loginserver.network;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SocketChannel;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.netty.channel.Channel;
 
 import com.l2jfree.contract.SessionKey;
 import com.l2jfree.lang.L2TextBuilder;
@@ -33,8 +33,8 @@ import com.l2jfree.loginserver.network.packets.L2ClientPacket;
 import com.l2jfree.loginserver.network.packets.L2ServerPacket;
 import com.l2jfree.loginserver.network.packets.server.LoginFail;
 import com.l2jfree.loginserver.network.packets.server.PlayFail;
-import com.l2jfree.mmocore.network.MMOConnection;
-import com.l2jfree.mmocore.network.SelectorThread;
+import com.l2jfree.network.Connection;
+import com.l2jfree.network.NetworkServer;
 import com.l2jfree.tools.math.ScrambledKeyPair;
 import com.l2jfree.tools.random.Rnd;
 
@@ -43,7 +43,7 @@ import com.l2jfree.tools.random.Rnd;
  * 
  * @author KenM
  */
-public final class L2Client extends MMOConnection<L2Client, L2ClientPacket, L2ServerPacket>
+public final class L2Client extends Connection<L2Client, L2ClientPacket, L2ServerPacket>
 {
 	private static final Logger _log = LoggerFactory.getLogger(L2Client.class);
 	
@@ -72,10 +72,9 @@ public final class L2Client extends MMOConnection<L2Client, L2ClientPacket, L2Se
 	
 	private boolean _card;
 	
-	public L2Client(SelectorThread<L2Client, L2ClientPacket, L2ServerPacket> selectorThread,
-			SocketChannel socketChannel) throws ClosedChannelException
+	public L2Client(NetworkServer<L2Client, L2ClientPacket, L2ServerPacket> networkServer, Channel channel)
 	{
-		super(selectorThread, socketChannel);
+		super(networkServer, channel);
 		
 		_ip = getInetAddress().getHostAddress();
 		

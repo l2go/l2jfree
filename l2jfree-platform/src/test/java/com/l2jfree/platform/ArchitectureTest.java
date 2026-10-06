@@ -49,6 +49,7 @@ class ArchitectureTest
 	private static final String WORLD = "com.l2jfree.gameserver";
 	private static final String CONTRACT = "com.l2jfree.contract";
 	private static final String PLATFORM = "com.l2jfree.platform";
+	private static final String NETWORK = "com.l2jfree.network";
 	
 	private static JavaClasses imported;
 	
@@ -97,6 +98,16 @@ class ArchitectureTest
 			.should().beFreeOfCycles().as("The login module, the world module, and the contract have no cycles")
 			.because("ADR-0003: a cycle between the slices would make the modules depend on each other");
 	
+	static final ArchRule THE_MODULES_DO_NOT_KNOW_THE_PLATFORM = noClasses().that()
+			.resideInAnyPackage(LOGIN + "..", WORLD + "..", CONTRACT + "..").should().dependOnClassesThat()
+			.resideInAPackage(PLATFORM + "..").as("The login module, the world module, and the contract do not depend on the platform")
+			.because("ADR-0003: the platform wires the modules, so a dependency back on it would be a cycle through the launcher");
+	
+	static final ArchRule THE_NETWORK_CORE_KNOWS_NO_MODULE = noClasses().that().resideInAPackage(NETWORK + "..")
+			.should().dependOnClassesThat().resideInAnyPackage(LOGIN + "..", WORLD + "..", CONTRACT + "..", PLATFORM + "..")
+			.as("The network core does not depend on the login module, the world module, the contract, or the platform")
+			.because("ADR-0005: the network core is a reusable transport; the modules use it, never the other way round");
+	
 	// ===================================================================================
 	
 	@Test
@@ -139,6 +150,20 @@ class ArchitectureTest
 	void noCyclesBetweenTheSlices()
 	{
 		NO_CYCLES_BETWEEN_THE_SLICES.check(imported);
+	}
+	
+	@Test
+	@DisplayName("The modules do not depend on the platform")
+	void theModulesDoNotKnowThePlatform()
+	{
+		THE_MODULES_DO_NOT_KNOW_THE_PLATFORM.check(imported);
+	}
+	
+	@Test
+	@DisplayName("The network core does not depend on any module")
+	void theNetworkCoreKnowsNoModule()
+	{
+		THE_NETWORK_CORE_KNOWS_NO_MODULE.check(imported);
 	}
 	
 	// ===================================================================================

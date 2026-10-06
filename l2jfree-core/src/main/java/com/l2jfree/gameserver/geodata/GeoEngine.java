@@ -39,6 +39,7 @@ import com.l2jfree.gameserver.geodata.pathfinding.Node;
 import com.l2jfree.gameserver.geodata.pathfinding.cellnodes.CellPathFinding;
 import com.l2jfree.gameserver.model.Location;
 import com.l2jfree.gameserver.model.world.L2World;
+import com.l2jfree.gameserver.util.RuntimeData;
 import com.l2jfree.tools.geometry.Point3D;
 import com.l2jfree.util.L2Arrays;
 import com.l2jfree.util.LookupTable;
@@ -769,7 +770,7 @@ final class GeoEngine extends GeoData
 		}
 		try
 		{
-			File geo_bugs = new File(Config.DATAPACK_ROOT, "data/geodata/geo_bugs.txt");
+			File geo_bugs = RuntimeData.file("geo_bugs.txt");
 			_geoBugsOut = new BufferedOutputStream(new FileOutputStream(geo_bugs, true));
 		}
 		catch (Exception e)

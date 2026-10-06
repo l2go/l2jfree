@@ -33,7 +33,7 @@ import com.l2jfree.gameserver.network.packets.server.ActionFailed;
 import com.l2jfree.gameserver.network.packets.server.ExHeroList;
 import com.l2jfree.gameserver.network.packets.server.GMViewPledgeInfo;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
-import com.l2jfree.mmocore.network.InvalidPacketException;
+import com.l2jfree.network.InvalidPacketException;
 
 /**
  * This class represents a packet sent when player clicks a link in the chat dialog.

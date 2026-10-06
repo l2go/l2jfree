@@ -23,9 +23,14 @@ jobs:
         run: |
           cutoff="$(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)"
           path="/users/${GITHUB_REPOSITORY_OWNER}/packages/container/l2jfree/versions"
-          if ! versions="$(gh api --paginate "$path" 2>/dev/null)"; then
-            echo "No image package to prune yet."
-            exit 0
+          if ! versions="$(gh api --paginate "$path" 2>"$RUNNER_TEMP/gh-error")"; then
+            # Only a missing package is "nothing to prune"; any other error must fail the run.
+            if grep -q "HTTP 404" "$RUNNER_TEMP/gh-error"; then
+              echo "No image package to prune yet."
+              exit 0
+            fi
+            cat "$RUNNER_TEMP/gh-error" >&2
+            exit 1
           fi
           echo "$versions" | jq -r --arg cutoff "$cutoff" '
             .[]

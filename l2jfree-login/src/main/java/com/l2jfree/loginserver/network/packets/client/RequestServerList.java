@@ -66,7 +66,7 @@ public class RequestServerList extends L2ClientPacket
 	}
 	
 	/**
-	 * @see com.l2jfree.mmocore.network.ReceivablePacket#run()
+	 * @see com.l2jfree.network.ReceivablePacket#run()
 	 */
 	@Override
 	public void runImpl()

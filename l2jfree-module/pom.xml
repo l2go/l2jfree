@@ -27,6 +27,7 @@
 		<jython.artifactId>jython-standalone</jython.artifactId>
 		<opentelemetry.javaagent.version>2.32.0</opentelemetry.javaagent.version>
 		<archunit.version>1.5.1</archunit.version>
+		<netty.version>4.2.7.Final</netty.version>
 		<jfr.argLine></jfr.argLine>
 		<surefire.excludedGroups>integration</surefire.excludedGroups>
 	</properties>
@@ -66,6 +67,13 @@
 				<groupId>org.testcontainers</groupId>
 				<artifactId>testcontainers-bom</artifactId>
 				<version>${testcontainers.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-bom</artifactId>
+				<version>${netty.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -149,7 +157,7 @@
 				<configuration>
 					<!-- Modules with no tests yet must not fail the build. l2j-commons carries the platform test. -->
 					<failIfNoTests>false</failIfNoTests>
-					<!-- Database tests opt in through -Dgroups=integration. The default build stays on unit tests. -->
+					<!-- Database tests opt in through -Dgroups=integration -Dsurefire.excludedGroups= (both: the exclusion above is applied as well, so the group alone selects nothing). The default build stays on unit tests. -->
 					<excludedGroups>${surefire.excludedGroups}</excludedGroups>
 					<!-- JDK 21+ refuses Mockito's self-attach. The agent is declared explicitly. -->
 					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar ${jfr.argLine}</argLine>
@@ -265,7 +273,7 @@
 	</build>
 	<modules>
 		<module>../l2j-commons</module>
-		<module>../l2j-mmocore</module>
+		<module>../l2jfree-network</module>
 		<module>../l2jfree-scripting-engines</module>
 		<module>../l2jfree-contract</module>
 		<module>../l2jfree-login</module>

@@ -46,6 +46,13 @@ class SessionKeyTest
 	}
 	
 	@Test
+	void theTextOfAKeyDoesNotContainTheKey()
+	{
+		assertThat(new SessionKey(1234567, 2345678, 3456789, 4567890).toString()).doesNotContain("1234567")
+				.doesNotContain("2345678").doesNotContain("3456789").doesNotContain("4567890");
+	}
+	
+	@Test
 	void nothingMatchesNull()
 	{
 		assertThat(KEY.matches(null, false)).isFalse();

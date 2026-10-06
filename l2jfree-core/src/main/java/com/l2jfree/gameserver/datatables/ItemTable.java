@@ -330,11 +330,11 @@ public final class ItemTable
 		return rset.wasNull() ? -1 : mana;
 	}
 	
-	/** @return the lifetime of the template in minutes, -1 when the item has no time limit */
+	/** @return the lifetime of the template in whole minutes, rounded up so a limited item never starts expired, -1 when the item has no time limit */
 	private static int getLifetimeMinutes(ResultSet rset) throws SQLException
 	{
 		int seconds = rset.getInt("lifetime_s");
-		return rset.wasNull() ? -1 : seconds / 60;
+		return rset.wasNull() ? -1 : (seconds + 59) / 60;
 	}
 	
 	/** @return the name of the item handler, "none" when the item has none */
