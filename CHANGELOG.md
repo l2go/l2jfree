@@ -17,6 +17,11 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - Architecture views as diagrams in `docs/architecture.md`.
 - PostgreSQL 18 for the login module: the `login` schema and its Flyway migration, a shared migration runner, a pool that sends text untyped, and integration tests against a real database.
 - A decision record for database roles, schemas, and migration at start, and the report of milestone M1.
+- The world data on PostgreSQL 18: the `world` schema with ten migrations, the `catalog` schema loaded from 57 CSV files with a SHA-256 revision, the report views, and a lock that keeps a second server off the database.
+- A transaction scope: everything that runs on a thread inside `WorldTransaction.run` joins one database transaction, so saving a player is atomic.
+- Repositories for the player, the items, and the clans, each with integration tests on a real PostgreSQL 18.
+- A check that prepares every SQL statement of the compiled server (688 today) against the real schema, a schema test for the database conventions, and a data dictionary with entity diagrams generated from the migrated database and compared in CI.
+- Decision record ADR-0010 for game content as catalog data, the database conventions, and a list of the behavior changes since the 2.x line.
 - Monthly Dependabot updates for the image base and the compose images.
 
 ### Changed
@@ -30,6 +35,10 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - The dead plain-HTTP distribution repository in the root build file.
 - The Windows packaging job and the 2.x release job of the pipeline.
 - MySQL from the login module, its SQL files and installer scripts, and the Liquibase compatibility test.
+- MySQL from the game server, the build, and the repository: the database installer, the 214 SQL files of the datapack, the update scripts, the dump-based backup, and the table optimizer.
+- The optional content mods of the 2.x line.
+- Features whose data has no home in the schema: the factions, the community board item auction, and the archive of deleted mail.
+- The experimental Rebuild id factory and the Compaction option.
 
 ## [2.5.0] - 2026-10-05
 
