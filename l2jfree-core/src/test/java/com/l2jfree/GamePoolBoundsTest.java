@@ -41,8 +41,8 @@ class GamePoolBoundsTest
 		password = Config.DATABASE_PASSWORD;
 		maximum = Config.DATABASE_MAX_CONNECTIONS;
 		idle = Config.DATABASE_MIN_IDLE_CONNECTIONS;
-		Config.DATABASE_DRIVER = "com.mysql.cj.jdbc.Driver";
-		Config.DATABASE_URL = "jdbc:mysql://127.0.0.1/l2jfree_test";
+		Config.DATABASE_DRIVER = "org.postgresql.Driver";
+		Config.DATABASE_URL = "jdbc:postgresql://127.0.0.1/l2jfree_test";
 		Config.DATABASE_LOGIN = "test";
 		Config.DATABASE_PASSWORD = "test";
 	}
