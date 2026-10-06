@@ -6,8 +6,6 @@
  */
 package com.l2jfree.loginserver.db;
 
-import java.util.Locale;
-
 import javax.sql.DataSource;
 
 import com.l2jfree.Config;
@@ -18,6 +16,9 @@ import com.zaxxer.hikari.HikariPoolMXBean;
 /** Owns the login server's JDBC connection pool. */
 public final class LoginDataSource implements AutoCloseable
 {
+	/** The schema this module owns. */
+	public static final String SCHEMA = "login";
+	
 	private final HikariDataSource dataSource;
 
 	public LoginDataSource()
@@ -44,12 +45,11 @@ public final class LoginDataSource implements AutoCloseable
 		pool.setMinimumIdle(idleConnections);
 		pool.setConnectionTimeout(30_000);
 		pool.setValidationTimeout(5_000);
-		if (Config.DATABASE_DRIVER.toLowerCase(Locale.ROOT).contains("mysql"))
-		{
-			pool.addDataSourceProperty("cachePrepStmts", "true");
-			pool.addDataSourceProperty("prepStmtCacheSize", "100");
-			pool.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-		}
+		// Text parameters are sent untyped, so the server types them from the column: a login name is
+		// compared as citext (without regard to case) and an address is stored as inet.
+		pool.addDataSourceProperty("stringtype", "unspecified");
+		pool.addDataSourceProperty("currentSchema", SCHEMA);
+		pool.addDataSourceProperty("ApplicationName", "l2jfree-login");
 		pool.setInitializationFailTimeout(30_000);
 		return pool;
 	}

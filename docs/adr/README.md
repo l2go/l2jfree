@@ -12,6 +12,7 @@ Each record states one decision, why it was made, what it costs, and when to rev
 | [0006](0006-data-access-layer.md) | Data access: targeted repository seam | Accepted |
 | [0007](0007-release-policy.md) | One release and continuous images | Accepted |
 | [0008](0008-retire-the-2x-line.md) | Retire the 2.x line | Accepted |
+| [0009](0009-database-roles-schemas-and-migration.md) | Database roles, schemas, and migration at start | Accepted |
 
 ## Format
 

@@ -62,13 +62,13 @@ flowchart TB
 
 ## 3. Walking skeleton (today)
 
-The image that the pipeline builds and publishes now. It proves delivery. The world, PostgreSQL, and the single process arrive in milestone M2.
+The image that the pipeline builds and publishes now. The login module runs on PostgreSQL 18. The world and the single process arrive in milestone M2.
 
 ```mermaid
 flowchart TB
     subgraph stack["compose project l2jfree"]
         secrets["secrets<br/>one-shot, creates the password"]
-        db[("db · MySQL 8.4")]
+        db[("db · PostgreSQL 18<br/>role and schema per module")]
         login["login · LoginServer<br/>Arch Linux amd64 · Temurin 25"]
         secrets --> db
         db --> login

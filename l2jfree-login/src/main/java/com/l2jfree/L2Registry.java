@@ -46,6 +46,7 @@ import com.l2jfree.loginserver.dao.impl.GameserversDAOXml;
 import com.l2jfree.loginserver.db.LoginDataSource;
 import com.l2jfree.loginserver.services.AccountsServices;
 import com.l2jfree.loginserver.services.GameserversServices;
+import com.l2jfree.sql.SchemaMigration;
 
 /**
  * 
@@ -77,6 +78,15 @@ public class L2Registry
 		try
 		{
 			LoginDataSource loginDataSource = new LoginDataSource();
+			try
+			{
+				SchemaMigration.migrate(loginDataSource.getDataSource(), LoginDataSource.SCHEMA, "classpath:db/login");
+			}
+			catch (RuntimeException e)
+			{
+				loginDataSource.close();
+				throw e;
+			}
 			JdbcTransactions transactions = new JdbcTransactions(loginDataSource.getDataSource());
 			AccountsDAO accountsDAO = new AccountsDAOJdbc(transactions);
 			GameserversDAO gameserversDAO = new GameserversDAOJdbc(transactions);

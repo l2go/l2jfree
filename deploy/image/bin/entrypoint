@@ -28,6 +28,7 @@ set_prop() {
 }
 
 props="$work/config/loginserver.properties"
+set_prop "$props" Driver org.postgresql.Driver
 set_prop "$props" URL "$L2JFREE_DB_URL"
 set_prop "$props" Login "$L2JFREE_DB_USER"
 set_prop "$props" Password "$(< "$L2JFREE_DB_PASSWORD_FILE")"

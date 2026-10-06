@@ -133,7 +133,6 @@ jobs:
                 require_entry "$archive" loginserver/loginserver_launcher.bat
                 require_entry "$archive" loginserver/config/loginserver.properties
                 require_entry "$archive" loginserver/config/logback.xml
-                require_entry "$archive" loginserver/sql/accounts.sql
                 require_entry "$archive" loginserver/agents/opentelemetry-javaagent.jar
                 verify_logging_runtime loginserver
                 ;;
@@ -207,8 +206,10 @@ jobs:
             -Dl2jfree.build.revision=${{ github.sha }} \
             verify
           reports="$(find l2jfree-core/target/surefire-reports l2jfree-login/target/surefire-reports -name 'TEST-*.xml' | wc -l | tr -d '[:space:]')"
-          echo "integration reports: ${reports}"
-          test "${reports}" -ge 6
+          expected="$(grep -rl '@Tag("integration")' --include='*.java' l2jfree-core/src/test l2jfree-login/src/test | wc -l | tr -d '[:space:]')"
+          echo "integration reports: ${reports} of ${expected} tagged classes"
+          test "${expected}" -gt 0
+          test "${reports}" -ge "${expected}"
 
   # Builds the Platform 3.0 image from the verified LoginServer distribution,
   # starts the stack with Docker Compose, and probes the login port. A push to

@@ -42,9 +42,5 @@
 			<directory>config/</directory>
 			<outputDirectory>loginserver/config/</outputDirectory>
 		</fileSet>
-		<fileSet>
-			<directory>sql/</directory>
-			<outputDirectory>loginserver/sql/</outputDirectory>
-		</fileSet>
 	</fileSets>
 </assembly>

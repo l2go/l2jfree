@@ -22,7 +22,8 @@
 		<logback.version>1.5.38</logback.version>
 		<commons-lang3.version>3.20.0</commons-lang3.version>
 		<testcontainers.version>2.0.5</testcontainers.version>
-		<liquibase.version>4.33.0</liquibase.version>
+		<postgresql.version>42.7.13</postgresql.version>
+		<flyway.version>13.9.0</flyway.version>
 		<jython.version>2.7.5b1</jython.version>
 		<jython.artifactId>jython-standalone</jython.artifactId>
 		<opentelemetry.javaagent.version>2.32.0</opentelemetry.javaagent.version>
@@ -41,6 +42,21 @@
 	<inceptionYear>2010</inceptionYear>
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>org.postgresql</groupId>
+				<artifactId>postgresql</artifactId>
+				<version>${postgresql.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-core</artifactId>
+				<version>${flyway.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-database-postgresql</artifactId>
+				<version>${flyway.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>io.opentelemetry.javaagent</groupId>
 				<artifactId>opentelemetry-javaagent</artifactId>
