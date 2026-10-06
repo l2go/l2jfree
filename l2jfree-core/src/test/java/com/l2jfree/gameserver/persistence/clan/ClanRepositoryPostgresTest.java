@@ -50,6 +50,7 @@ class ClanRepositoryPostgresTest
 	private static final int THIRD = 981_000_003;
 	private static final int CLAN_A = 981_000_101;
 	private static final int CLAN_B = 981_000_102;
+	private static final int HALL = 32_001;
 	private static final int CLAN_C = 981_000_103;
 	private static final int CREST_1 = 981_000_201;
 	private static final int CREST_2 = 981_000_202;
@@ -146,7 +147,12 @@ class ClanRepositoryPostgresTest
 		_repository.updateClan(new ClanRecord(CLAN_A, PREFIX + "Update", 0, 0, CLAN_A, PREFIX + "Ally", SECOND, 0, 0,
 				CREST_3, -5000, 0, penalty, 4, now + 1_000L, now + 2_000L));
 		_repository.updateLevel(CLAN_A, 5);
-		_repository.updateAuctionBid(CLAN_A, 34);
+		// A clan can only bid on a hall that is on auction.
+		WorldDatabase.execute("DELETE FROM clan_hall WHERE id = " + HALL);
+		WorldDatabase.execute("INSERT INTO clan_hall (id, name, town_name) VALUES (" + HALL + ", 'Test Hall', 'Test Town')");
+		WorldDatabase.execute("INSERT INTO clan_hall_auction (id, item_name, starting_bid, end_at) VALUES (" + HALL
+				+ ", 'Test Hall', 100, now())");
+		_repository.updateAuctionBid(CLAN_A, HALL);
 
 		ClanRecord loaded = _repository.loadClan(CLAN_A);
 		assertThat(loaded.leaderId()).isEqualTo(SECOND);
@@ -159,7 +165,7 @@ class ClanRepositoryPostgresTest
 		assertThat(loaded.memberPenaltyExpiryTime()).isEqualTo(now + 1_000L);
 		assertThat(loaded.dissolveTime()).isEqualTo(now + 2_000L);
 		assertThat(loaded.level()).isEqualTo(5);
-		assertThat(loaded.auctionBidAt()).isEqualTo(34);
+		assertThat(loaded.auctionBidAt()).isEqualTo(HALL);
 		assertThat(string("SELECT alliance_penalty_type FROM clan WHERE id = ?", CLAN_A)).isEqualTo("DISSOLVE_ALLY");
 
 		// A penalty that is over (expiry 0) is stored as no penalty at all, and the alliance name needs an alliance.
@@ -172,6 +178,7 @@ class ClanRepositoryPostgresTest
 		assertThat(loaded.allyPenaltyType()).isZero();
 		assertThat(loaded.auctionBidAt()).isZero();
 		assertThat(string("SELECT alliance_penalty_type FROM clan WHERE id = ?", CLAN_A)).isEmpty();
+		WorldDatabase.execute("DELETE FROM clan_hall WHERE id = " + HALL);
 	}
 
 	@Test
@@ -383,7 +390,7 @@ class ClanRepositoryPostgresTest
 		assertThat(_repository.removeMember(THIRD, joinAllowed, 0)).isTrue();
 
 		assertThat(string("SELECT concat_ws(',', clan_id, pledge_type, academy_join_level, wants_peace, sponsor_player_id, "
-				+ "clan_create_allowed_at) FROM player WHERE id = ?", THIRD)).isEqualTo("0,0,false");
+				+ "clan_create_allowed_at) FROM player WHERE id = ?", THIRD)).isEqualTo("0,0,f");
 		assertThat(string("SELECT clan_join_allowed_at FROM player WHERE id = ?", THIRD)).isNotEmpty();
 		assertThat(Math.abs(timestamp("SELECT clan_join_allowed_at FROM player WHERE id = ?", THIRD) - joinAllowed))
 				.isLessThan(1_000L);

@@ -40,7 +40,7 @@ public final class ReportViews
 		{
 			statement.execute("DO $$ DECLARE v record; BEGIN "
 					+ "FOR v IN SELECT viewname FROM pg_views WHERE schemaname = 'report' LOOP "
-					+ "EXECUTE format('DROP VIEW report.%I CASCADE', v.viewname); END LOOP; END $$");
+					+ "EXECUTE format('DROP VIEW IF EXISTS report.%I CASCADE', v.viewname); END LOOP; END $$");
 		}
 	}
 	
