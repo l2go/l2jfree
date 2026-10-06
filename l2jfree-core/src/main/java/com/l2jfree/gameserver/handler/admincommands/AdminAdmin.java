@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import com.l2jfree.Config;
 import com.l2jfree.L2AutoInitialization;
 import com.l2jfree.gameserver.cache.HtmCache;
-import com.l2jfree.gameserver.communitybbs.Manager.AuctionBBSManager;
 import com.l2jfree.gameserver.datatables.DoorTable;
 import com.l2jfree.gameserver.datatables.GmListTable;
 import com.l2jfree.gameserver.datatables.ItemTable;
@@ -77,7 +76,7 @@ public class AdminAdmin implements IAdminCommandHandler
 			// L2J-FREE
 			"admin_reload_config", "admin_config_server",
 			//"admin_summon",
-			"admin_summon_npc", "admin_unsummon", "admin_memusage", "admin_process_auction", "admin_debug" };
+			"admin_summon_npc", "admin_unsummon", "admin_memusage", "admin_debug" };
 	
 	@Override
 	public boolean useAdminCommand(String command, L2Player activeChar)
@@ -420,13 +419,6 @@ public class AdminAdmin implements IAdminCommandHandler
 						AdminHelpPage.showHelpPage(activeChar, "mods_menu.htm");
 				}
 			}
-		}
-		
-		else if (command.equals("admin_process_auction"))
-		{
-			AuctionBBSManager.getInstance().processAuctions();
-			AuctionBBSManager.getInstance().removeOldAuctions();
-			_log.info("Process Auction Task: launched.");
 		}
 		
 		else if (command.startsWith("admin_debug"))

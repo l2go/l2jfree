@@ -64,7 +64,7 @@ public class PetSkillsTable
 			try
 			{
 				PreparedStatement statement =
-						con.prepareStatement("SELECT id FROM npc WHERE type IN ('L2Pet','L2BabyPet','L2SiegeSummon') ORDER BY id");
+						con.prepareStatement("SELECT id FROM npc_template WHERE instance_type IN ('L2Pet','L2BabyPet','L2SiegeSummon') ORDER BY id");
 				ResultSet petlist = statement.executeQuery();
 				Map<Integer, L2PetSkillLearn> map;
 				L2PetSkillLearn skillLearn;
@@ -73,15 +73,15 @@ public class PetSkillsTable
 					map = new FastMap<Integer, L2PetSkillLearn>();
 					npcId = petlist.getInt("id");
 					PreparedStatement statement2 =
-							con.prepareStatement("SELECT minLvl, skillId, skillLvl FROM pets_skills WHERE templateId=? ORDER BY skillId, skillLvl");
+							con.prepareStatement("SELECT min_level, skill_id, skill_level FROM pet_skill WHERE npc_template_id=? ORDER BY skill_id, skill_level");
 					statement2.setInt(1, npcId);
 					ResultSet skilltree = statement2.executeQuery();
 					
 					while (skilltree.next())
 					{
-						int id = skilltree.getInt("skillId");
-						int lvl = skilltree.getInt("skillLvl");
-						int minLvl = skilltree.getInt("minLvl");
+						int id = skilltree.getInt("skill_id");
+						int lvl = skilltree.getInt("skill_level");
+						int minLvl = skilltree.getInt("min_level");
 						
 						skillLearn = new L2PetSkillLearn(id, lvl, minLvl);
 						map.put(SkillTable.getSkillUID(id, lvl + 1), skillLearn);

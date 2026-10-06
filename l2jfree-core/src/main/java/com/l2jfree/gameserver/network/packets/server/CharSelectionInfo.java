@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.network.packets.server;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -146,7 +147,7 @@ public class CharSelectionInfo extends L2ServerPacket
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT account_name, charId, char_name, level, maxHp, curHp, maxMp, curMp, face, hairStyle, hairColor, sex, heading, x, y, z, exp, sp, karma, pvpkills, pkkills, clanid, race, classid, deletetime, cancraft, title, accesslevel, online, char_slot, lastAccess, base_class, transform_id FROM characters WHERE account_name=?");
+					con.prepareStatement("SELECT id, name, level, max_hp, current_hp, max_mp, current_mp, face, hair_style, hair_color, is_female, x, y, z, exp, sp, karma, clan_id, race_id, active_class_id, delete_at, last_access_at, base_class_id, transformation_id FROM player WHERE account_name=?");
 			statement.setString(1, _loginName);
 			ResultSet charList = statement.executeQuery();
 			
@@ -182,7 +183,7 @@ public class CharSelectionInfo extends L2ServerPacket
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT exp, sp, level FROM character_subclasses WHERE charId=? && class_id=? ORDER BY charId");
+					con.prepareStatement("SELECT exp, sp, level FROM player_subclass WHERE player_id=? AND class_id=?");
 			statement.setInt(1, ObjectId);
 			statement.setInt(2, activeClassId);
 			ResultSet charList = statement.executeQuery();
@@ -211,19 +212,20 @@ public class CharSelectionInfo extends L2ServerPacket
 	
 	private CharSelectInfoPackage restoreChar(ResultSet chardata) throws Exception
 	{
-		int objectId = chardata.getInt("charId");
+		int objectId = chardata.getInt("id");
 		
 		L2Player.disconnectIfOnline(objectId);
 		
-		String name = chardata.getString("char_name");
+		String name = chardata.getString("name");
 		
-		// See if the char must be deleted
-		long deletetime = chardata.getLong("deletetime");
+		// See if the char must be deleted (NULL: no deletion pending, 0)
+		Timestamp deleteAt = chardata.getTimestamp("delete_at");
+		long deletetime = deleteAt == null ? 0L : deleteAt.getTime();
 		if (deletetime > 0)
 		{
 			if (System.currentTimeMillis() > deletetime)
 			{
-				L2Clan clan = ClanTable.getInstance().getClan(chardata.getInt("clanid"));
+				L2Clan clan = ClanTable.getInstance().getClan(chardata.getInt("clan_id"));
 				if (clan != null)
 					clan.removeClanMember(objectId, 0);
 				
@@ -234,28 +236,28 @@ public class CharSelectionInfo extends L2ServerPacket
 		
 		CharSelectInfoPackage charInfopackage = new CharSelectInfoPackage(objectId, name);
 		charInfopackage.setLevel(chardata.getInt("level"));
-		charInfopackage.setMaxHp(chardata.getInt("maxhp"));
-		charInfopackage.setCurrentHp(chardata.getDouble("curhp"));
-		charInfopackage.setMaxMp(chardata.getInt("maxmp"));
-		charInfopackage.setCurrentMp(chardata.getDouble("curmp"));
+		charInfopackage.setMaxHp(chardata.getInt("max_hp"));
+		charInfopackage.setCurrentHp(chardata.getDouble("current_hp"));
+		charInfopackage.setMaxMp(chardata.getInt("max_mp"));
+		charInfopackage.setCurrentMp(chardata.getDouble("current_mp"));
 		charInfopackage.setKarma(chardata.getInt("karma"));
 		
 		charInfopackage.setFace(chardata.getInt("face"));
-		charInfopackage.setHairStyle(chardata.getInt("hairstyle"));
-		charInfopackage.setHairColor(chardata.getInt("haircolor"));
-		charInfopackage.setSex(chardata.getInt("sex"));
+		charInfopackage.setHairStyle(chardata.getInt("hair_style"));
+		charInfopackage.setHairColor(chardata.getInt("hair_color"));
+		charInfopackage.setSex(chardata.getBoolean("is_female") ? 1 : 0);
 		
 		charInfopackage.setExp(chardata.getLong("exp"));
 		charInfopackage.setSp(chardata.getInt("sp"));
-		charInfopackage.setClanId(chardata.getInt("clanid"));
+		charInfopackage.setClanId(chardata.getInt("clan_id")); // NULL (no clan) reads as 0
 		
-		charInfopackage.setRace(chardata.getInt("race"));
+		charInfopackage.setRace(chardata.getInt("race_id"));
 		charInfopackage.setX(chardata.getInt("x"));
 		charInfopackage.setY(chardata.getInt("y"));
 		charInfopackage.setZ(chardata.getInt("z"));
 		
-		final int baseClassId = chardata.getInt("base_class");
-		final int activeClassId = chardata.getInt("classid");
+		final int baseClassId = chardata.getInt("base_class_id");
+		final int activeClassId = chardata.getInt("active_class_id");
 		
 		// if is in subclass, load subclass exp, sp, lvl info
 		if (baseClassId != activeClassId)
@@ -272,7 +274,7 @@ public class CharSelectionInfo extends L2ServerPacket
 		if (weaponId < 1)
 			weaponId = charInfopackage.getPaperdollItemId(Inventory.PAPERDOLL_RHAND);
 		
-		int transformId = chardata.getInt("transform_id");
+		int transformId = chardata.getInt("transformation_id"); // NULL (not transformed) reads as 0
 		
 		//cursed weapon check
 		if (CursedWeaponsManager.getInstance().isCursed(weaponId))
@@ -299,12 +301,12 @@ public class CharSelectionInfo extends L2ServerPacket
 			{
 				con = L2DatabaseFactory.getInstance().getConnection(con);
 				PreparedStatement statement =
-						con.prepareStatement("SELECT augAttributes FROM item_attributes WHERE itemId=?");
+						con.prepareStatement("SELECT augmentation_attributes FROM item_attribute WHERE item_id=?");
 				statement.setInt(1, weaponObjId);
 				ResultSet result = statement.executeQuery();
 				if (result.next())
 				{
-					int augment = result.getInt("augAttributes");
+					int augment = result.getInt("augmentation_attributes"); // NULL (not augmented) reads as 0
 					charInfopackage.setAugmentationId((augment == -1) ? 0 : augment);
 				}
 				
@@ -333,7 +335,8 @@ public class CharSelectionInfo extends L2ServerPacket
 			charInfopackage.setBaseClassId(baseClassId);
 		
 		charInfopackage.setDeleteTimer(deletetime);
-		charInfopackage.setLastAccess(chardata.getLong("lastAccess"));
+		Timestamp lastAccess = chardata.getTimestamp("last_access_at");
+		charInfopackage.setLastAccess(lastAccess == null ? 0L : lastAccess.getTime());
 		return charInfopackage;
 	}
 	

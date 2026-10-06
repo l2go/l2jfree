@@ -14,11 +14,7 @@
  */
 package com.l2jfree.gameserver.network.packets.client;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-
 import com.l2jfree.Config;
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.PetDataTable;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.instancemanager.CursedWeaponsManager;
@@ -28,6 +24,7 @@ import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.L2ClientPacket;
 import com.l2jfree.gameserver.network.packets.server.InventoryUpdate;
+import com.l2jfree.gameserver.persistence.item.ItemRepository;
 import com.l2jfree.gameserver.util.FloodProtector;
 import com.l2jfree.gameserver.util.FloodProtector.Protected;
 import com.l2jfree.gameserver.util.Util;
@@ -148,7 +145,6 @@ public class RequestDestroyItem extends L2ClientPacket
 		
 		if (PetDataTable.isPetItem(itemId))
 		{
-			Connection con = null;
 			try
 			{
 				if (activeChar.getPet() != null && activeChar.getPet().getControlItemId() == _objectId)
@@ -159,19 +155,11 @@ public class RequestDestroyItem extends L2ClientPacket
 				}
 				
 				// if it's a pet control item, delete the pet
-				con = L2DatabaseFactory.getInstance().getConnection(con);
-				PreparedStatement statement = con.prepareStatement("DELETE FROM pets WHERE item_obj_id=?");
-				statement.setInt(1, _objectId);
-				statement.execute();
-				statement.close();
+				ItemRepository.getInstance().deletePet(_objectId);
 			}
 			catch (Exception e)
 			{
 				_log.warn("Could not delete pet. ObjectId: ", e);
-			}
-			finally
-			{
-				L2DatabaseFactory.close(con);
 			}
 		}
 		

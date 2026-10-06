@@ -14,16 +14,11 @@
  */
 package com.l2jfree.gameserver.gameobjects.itemcontainer;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-
 import javolution.util.FastList;
 
 import org.apache.commons.lang3.ArrayUtils;
 
 import com.l2jfree.Config;
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.ArmorSetsTable;
 import com.l2jfree.gameserver.datatables.ItemTable;
 import com.l2jfree.gameserver.datatables.SkillTable;
@@ -44,6 +39,7 @@ import com.l2jfree.gameserver.model.items.templates.L2WeaponType;
 import com.l2jfree.gameserver.model.skills.L2Skill;
 import com.l2jfree.gameserver.model.skills.Stats;
 import com.l2jfree.gameserver.model.world.L2World;
+import com.l2jfree.gameserver.persistence.item.ItemRepository;
 
 /**
  * This class manages inventory
@@ -1566,21 +1562,13 @@ public abstract class Inventory extends ItemContainer
 	@Override
 	public void restore()
 	{
-		Connection con = null;
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement =
-					con.prepareStatement("SELECT object_id, item_id, count, enchant_level, loc, loc_data, custom_type1, custom_type2, mana_left, time FROM items WHERE owner_id=? AND (loc=? OR loc=?) ORDER BY loc_data");
-			statement.setInt(1, getOwnerId());
-			statement.setString(2, getBaseLocation().name());
-			statement.setString(3, getEquipLocation().name());
-			ResultSet inv = statement.executeQuery();
-			
 			L2ItemInstance item;
-			while (inv.next())
+			for (ItemRepository.ItemRow row : ItemRepository.getInstance().loadItems(null, getStoredOwnerKey(),
+					getBaseLocation().name(), getEquipLocation().name()))
 			{
-				item = L2ItemInstance.restoreFromDb(getOwnerId(), inv);
+				item = L2ItemInstance.restoreFromDb(getOwnerId(), row);
 				if (item == null)
 					continue;
 				
@@ -1593,8 +1581,6 @@ public abstract class Inventory extends ItemContainer
 					addItem(item);
 			}
 			
-			inv.close();
-			statement.close();
 			refreshWeight();
 			restoreEquipedItemsPassiveSkill();
 			restoreArmorSetPassiveSkill();
@@ -1602,10 +1588,6 @@ public abstract class Inventory extends ItemContainer
 		catch (Exception e)
 		{
 			_log.warn("Could not restore inventory : ", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
 		}
 	}
 	

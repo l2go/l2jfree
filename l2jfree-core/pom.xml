@@ -51,7 +51,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.testcontainers</groupId>
-			<artifactId>testcontainers-mysql</artifactId>
+			<artifactId>testcontainers-postgresql</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<!-- Replace Trove selectively after profiling its use in hot world loops. -->

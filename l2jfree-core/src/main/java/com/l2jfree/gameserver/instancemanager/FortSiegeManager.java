@@ -131,7 +131,7 @@ public class FortSiegeManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT clan_id FROM fortsiege_clans where clan_id=? and fort_id=?");
+					con.prepareStatement("SELECT clan_id FROM fort_siege_clan WHERE clan_id=? AND fort_id=?");
 			statement.setInt(1, clan.getClanId());
 			statement.setInt(2, fortid);
 			ResultSet rs = statement.executeQuery();

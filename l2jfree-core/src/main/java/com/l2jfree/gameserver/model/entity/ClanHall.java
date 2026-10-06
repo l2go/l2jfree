@@ -18,6 +18,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +40,7 @@ import com.l2jfree.gameserver.model.clan.L2Clan;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.PledgeShowInfoUpdate;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 
 public class ClanHall extends Siegeable<CCHSiege>
 {
@@ -205,21 +208,21 @@ public class ClanHall extends Siegeable<CCHSiege>
 				if (newFunction)
 				{
 					statement =
-							con.prepareStatement("INSERT INTO clanhall_functions (hall_id, type, lvl, lease, rate, endTime) VALUES (?,?,?,?,?,?)");
+							con.prepareStatement("INSERT INTO clan_hall_function (clan_hall_id, function_type, level, lease, rate_ms, end_at) VALUES (?,?,?,?,?,?)");
 					statement.setInt(1, getId());
 					statement.setInt(2, getType());
 					statement.setInt(3, getLvl());
 					statement.setInt(4, getLease());
 					statement.setLong(5, getRate());
-					statement.setLong(6, getEndTime());
+					statement.setTimestamp(6, moment(getEndTime()));
 				}
 				else
 				{
 					statement =
-							con.prepareStatement("UPDATE clanhall_functions SET lvl=?, lease=?, endTime=? WHERE hall_id=? AND type=?");
+							con.prepareStatement("UPDATE clan_hall_function SET level=?, lease=?, end_at=? WHERE clan_hall_id=? AND function_type=?");
 					statement.setInt(1, getLvl());
 					statement.setInt(2, getLease());
-					statement.setLong(3, getEndTime());
+					statement.setTimestamp(3, moment(getEndTime()));
 					statement.setInt(4, getId());
 					statement.setInt(5, getType());
 				}
@@ -237,6 +240,18 @@ public class ClanHall extends Siegeable<CCHSiege>
 				L2DatabaseFactory.close(con);
 			}
 		}
+	}
+	
+	/** Epoch milliseconds as a database moment; 0 or less means "not set" and is NULL. */
+	private static Timestamp moment(long millis)
+	{
+		return millis > 0 ? new Timestamp(millis) : null;
+	}
+	
+	/** A database moment as epoch milliseconds; NULL means "not set" and is 0. */
+	private static long millis(Timestamp moment)
+	{
+		return moment == null ? 0 : moment.getTime();
 	}
 	
 	public ClanHall(int clanHallId, String name, int ownerId, int lease, String desc, String location, long paidUntil,
@@ -347,15 +362,24 @@ public class ClanHall extends Siegeable<CCHSiege>
 			_ownerClan = null;
 		}
 		_isFree = true;
-		for (Map.Entry<Integer, ClanHallFunction> fc : _functions.entrySet())
-			removeFunction(fc.getKey());
-		_functions.clear();
-		_paidUntil = 0;
-		updateDb();
+		// The paid functions and the owner are removed together
+		WorldTransaction.run("Clan hall release", () -> {
+			for (Map.Entry<Integer, ClanHallFunction> fc : _functions.entrySet())
+				removeFunction(fc.getKey());
+			_functions.clear();
+			_paidUntil = 0;
+			updateDb();
+		});
 	}
 	
 	/** Set owner if clan hall is free */
-	public void setOwner(L2Clan clan)
+	public void setOwner(final L2Clan clan)
+	{
+		// Releasing the old owner and storing the new one are one change
+		WorldTransaction.run("Clan hall owner change", () -> setOwnerInTransaction(clan));
+	}
+	
+	private void setOwnerInTransaction(L2Clan clan)
 	{
 		// An owner exists - must not mess with auction, as GM commands call a different method
 		if (!isSiegeable() && _ownerId > 0)
@@ -471,15 +495,16 @@ public class ClanHall extends Siegeable<CCHSiege>
 			PreparedStatement statement;
 			ResultSet rs;
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			statement = con.prepareStatement("SELECT * FROM clanhall_functions WHERE hall_id = ?");
+			statement =
+					con.prepareStatement("SELECT function_type, level, lease, rate_ms, end_at FROM clan_hall_function WHERE clan_hall_id = ?");
 			statement.setInt(1, getId());
 			rs = statement.executeQuery();
 			while (rs.next())
 			{
 				_functions.put(
-						rs.getInt("type"),
-						new ClanHallFunction(rs.getInt("type"), rs.getInt("lvl"), rs.getInt("lease"), 0, rs
-								.getLong("rate"), rs.getLong("endTime"), true));
+						rs.getInt("function_type"),
+						new ClanHallFunction(rs.getInt("function_type"), rs.getInt("level"), rs.getInt("lease"), 0, rs
+								.getLong("rate_ms"), millis(rs.getTimestamp("end_at")), true));
 			}
 			statement.close();
 		}
@@ -502,7 +527,7 @@ public class ClanHall extends Siegeable<CCHSiege>
 		{
 			PreparedStatement statement;
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			statement = con.prepareStatement("DELETE FROM clanhall_functions WHERE hall_id=? AND type=?");
+			statement = con.prepareStatement("DELETE FROM clan_hall_function WHERE clan_hall_id=? AND function_type=?");
 			statement.setInt(1, getId());
 			statement.setInt(2, functionType);
 			statement.execute();
@@ -571,10 +596,16 @@ public class ClanHall extends Siegeable<CCHSiege>
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
 			
-			statement = con.prepareStatement("UPDATE clanhall SET ownerId=?, paidUntil=?, paid=? WHERE id=?");
-			statement.setInt(1, _ownerId);
-			statement.setLong(2, _paidUntil);
-			statement.setInt(3, (_paid) ? 1 : 0);
+			statement = con.prepareStatement("UPDATE clan_hall SET owner_clan_id=?, paid_until_at=?, is_paid=? WHERE id=?");
+			if (_ownerId > 0)
+				statement.setInt(1, _ownerId);
+			else
+				statement.setNull(1, Types.INTEGER); // the hall is free
+			if (_paidUntil == Long.MAX_VALUE)
+				statement.setString(2, "infinity"); // won in a siege: no rent
+			else
+				statement.setTimestamp(2, moment(_paidUntil));
+			statement.setBoolean(3, _paid);
 			statement.setInt(4, _clanHallId);
 			statement.execute();
 			statement.close();
@@ -742,16 +773,16 @@ public class ClanHall extends Siegeable<CCHSiege>
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
 			PreparedStatement ps =
-					con.prepareStatement("SELECT siegeDate,regTimeEnd,regTimeOver FROM clanhall_sieges WHERE hallId=?");
+					con.prepareStatement("SELECT siege_at, registration_end_at, is_registration_over FROM clan_hall_siege WHERE clan_hall_id=?");
 			ps.setInt(1, getId());
 			ResultSet rs = ps.executeQuery();
 			if (rs.next())
 			{
 				_siegeDate = Calendar.getInstance();
-				_siegeDate.setTimeInMillis(rs.getLong("siegeDate"));
+				_siegeDate.setTimeInMillis(millis(rs.getTimestamp("siege_at")));
 				_siegeTimeRegistrationEndDate = Calendar.getInstance();
-				_siegeTimeRegistrationEndDate.setTimeInMillis(rs.getLong("regTimeEnd"));
-				_isTimeRegistrationOver = rs.getBoolean("regTimeOver");
+				_siegeTimeRegistrationEndDate.setTimeInMillis(millis(rs.getTimestamp("registration_end_at")));
+				_isTimeRegistrationOver = rs.getBoolean("is_registration_over");
 			}
 			else
 				_log.warn("Missing contest schedule data for " + getName());

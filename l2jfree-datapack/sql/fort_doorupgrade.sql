@@ -1,8 +1,0 @@
-CREATE TABLE IF NOT EXISTS `fort_doorupgrade` (
-  `doorId` INT(11) NOT NULL DEFAULT 0,
-  `fortId` INT(11) NOT NULL,
-  `hp` INT(11) NOT NULL DEFAULT 0,
-  `pDef` INT(11) NOT NULL DEFAULT 0,
-  `mDef` INT(11) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`doorId`)
-) DEFAULT CHARSET=utf8;

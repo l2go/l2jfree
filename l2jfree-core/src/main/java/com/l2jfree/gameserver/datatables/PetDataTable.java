@@ -89,40 +89,40 @@ public class PetDataTable
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT typeID, level, expMax, hpMax, mpMax, patk, pdef, matk, mdef, acc, evasion, crit, speed, atk_speed, cast_speed, feedMax, feedbattle, feednormal, loadMax, hpregen, mpregen, owner_exp_taken FROM pets_stats");
+					con.prepareStatement("SELECT npc_template_id, level, max_exp, max_hp, max_mp, physical_attack, physical_defense, magic_attack, magic_defense, accuracy, evasion, critical_rate, run_speed, attack_speed, casting_speed, max_feed, feed_battle, feed_normal, max_load, hp_regeneration, mp_regeneration, owner_exp_share FROM pet_stat");
 			ResultSet rset = statement.executeQuery();
 			
 			int petId, petLevel;
 			
 			while (rset.next())
 			{
-				petId = rset.getInt("typeID");
+				petId = rset.getInt("npc_template_id");
 				petLevel = rset.getInt("level");
 				
 				//build the petdata for this level
 				L2PetData petData = new L2PetData();
 				petData.setPetID(petId);
 				petData.setPetLevel(petLevel);
-				petData.setPetMaxExp(rset.getLong("expMax"));
-				petData.setPetMaxHP(rset.getInt("hpMax"));
-				petData.setPetMaxMP(rset.getInt("mpMax"));
-				petData.setPetPAtk(rset.getInt("patk"));
-				petData.setPetPDef(rset.getInt("pdef"));
-				petData.setPetMAtk(rset.getInt("matk"));
-				petData.setPetMDef(rset.getInt("mdef"));
-				petData.setPetAccuracy(rset.getInt("acc"));
+				petData.setPetMaxExp(rset.getLong("max_exp"));
+				petData.setPetMaxHP(rset.getInt("max_hp"));
+				petData.setPetMaxMP(rset.getInt("max_mp"));
+				petData.setPetPAtk(rset.getInt("physical_attack"));
+				petData.setPetPDef(rset.getInt("physical_defense"));
+				petData.setPetMAtk(rset.getInt("magic_attack"));
+				petData.setPetMDef(rset.getInt("magic_defense"));
+				petData.setPetAccuracy(rset.getInt("accuracy"));
 				petData.setPetEvasion(rset.getInt("evasion"));
-				petData.setPetCritical(rset.getInt("crit"));
-				petData.setPetSpeed(rset.getInt("speed"));
-				petData.setPetAtkSpeed(rset.getInt("atk_speed"));
-				petData.setPetCastSpeed(rset.getInt("cast_speed"));
-				petData.setPetMaxFeed(rset.getInt("feedMax"));
-				petData.setPetFeedNormal(rset.getInt("feednormal"));
-				petData.setPetFeedBattle(rset.getInt("feedbattle"));
-				petData.setPetMaxLoad(rset.getInt("loadMax"));
-				petData.setPetRegenHP(rset.getInt("hpregen"));
-				petData.setPetRegenMP(rset.getInt("mpregen"));
-				petData.setOwnerExpTaken(rset.getFloat("owner_exp_taken"));
+				petData.setPetCritical(rset.getInt("critical_rate"));
+				petData.setPetSpeed(rset.getInt("run_speed"));
+				petData.setPetAtkSpeed(rset.getInt("attack_speed"));
+				petData.setPetCastSpeed(rset.getInt("casting_speed"));
+				petData.setPetMaxFeed(rset.getInt("max_feed"));
+				petData.setPetFeedNormal(rset.getInt("feed_normal"));
+				petData.setPetFeedBattle(rset.getInt("feed_battle"));
+				petData.setPetMaxLoad(rset.getInt("max_load"));
+				petData.setPetRegenHP(rset.getInt("hp_regeneration"));
+				petData.setPetRegenMP(rset.getInt("mp_regeneration"));
+				petData.setOwnerExpTaken(rset.getFloat("owner_exp_share"));
 				
 				// if its the first data for this petid, we initialize its level FastMap
 				if (!petTable.containsKey(petId))

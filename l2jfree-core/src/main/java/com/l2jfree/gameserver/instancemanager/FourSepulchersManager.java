@@ -383,7 +383,7 @@ public class FourSepulchersManager extends BossLair
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT id, count, npc_templateid, locx, locy, locz, heading, respawn_delay, key_npc_id FROM four_sepulchers_spawnlist WHERE spawntype = 0 ORDER BY id");
+					con.prepareStatement("SELECT npc_count, npc_template_id, x, y, z, heading, respawn_delay_s, key_npc_template_id FROM four_sepulchers_spawn WHERE spawn_type = 'MYSTERIOUS_BOX' ORDER BY id");
 			ResultSet rset = statement.executeQuery();
 			
 			L2Spawn spawnDat;
@@ -391,24 +391,24 @@ public class FourSepulchersManager extends BossLair
 			
 			while (rset.next())
 			{
-				template1 = NpcTable.getInstance().getTemplate(rset.getInt("npc_templateid"));
+				template1 = NpcTable.getInstance().getTemplate(rset.getInt("npc_template_id"));
 				if (template1 != null)
 				{
 					spawnDat = new L2Spawn(template1);
-					spawnDat.setAmount(rset.getInt("count"));
-					spawnDat.setLocx(rset.getInt("locx"));
-					spawnDat.setLocy(rset.getInt("locy"));
-					spawnDat.setLocz(rset.getInt("locz"));
+					spawnDat.setAmount(rset.getInt("npc_count"));
+					spawnDat.setLocx(rset.getInt("x"));
+					spawnDat.setLocy(rset.getInt("y"));
+					spawnDat.setLocz(rset.getInt("z"));
 					spawnDat.setHeading(rset.getInt("heading"));
-					spawnDat.setRespawnDelay(rset.getInt("respawn_delay"));
+					spawnDat.setRespawnDelay(rset.getInt("respawn_delay_s"));
 					SpawnTable.getInstance().addNewSpawn(spawnDat, false);
-					int keyNpcId = rset.getInt("key_npc_id");
+					int keyNpcId = rset.getInt("key_npc_template_id");
 					_mysteriousBoxSpawns.put(keyNpcId, spawnDat);
 				}
 				else
 				{
 					_log.warn("FourSepulchersManager.LoadMysteriousBox: Data missing in NPC table for ID: "
-							+ rset.getInt("npc_templateid") + ".");
+							+ rset.getInt("npc_template_id") + ".");
 				}
 			}
 			
@@ -474,14 +474,14 @@ public class FourSepulchersManager extends BossLair
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			PreparedStatement statement1 =
-					con.prepareStatement("SELECT DISTINCT key_npc_id FROM four_sepulchers_spawnlist WHERE spawntype = 1 ORDER BY key_npc_id");
+					con.prepareStatement("SELECT DISTINCT key_npc_template_id FROM four_sepulchers_spawn WHERE spawn_type = 'PHYSICAL_MONSTER' ORDER BY key_npc_template_id");
 			ResultSet rset1 = statement1.executeQuery();
 			while (rset1.next())
 			{
-				int keyNpcId = rset1.getInt("key_npc_id");
+				int keyNpcId = rset1.getInt("key_npc_template_id");
 				
 				PreparedStatement statement2 =
-						con.prepareStatement("SELECT id, count, npc_templateid, locx, locy, locz, heading, respawn_delay, key_npc_id FROM four_sepulchers_spawnlist WHERE key_npc_id = ? AND spawntype = 1 ORDER BY id");
+						con.prepareStatement("SELECT npc_count, npc_template_id, x, y, z, heading, respawn_delay_s, key_npc_template_id FROM four_sepulchers_spawn WHERE key_npc_template_id = ? AND spawn_type = 'PHYSICAL_MONSTER' ORDER BY id");
 				statement2.setInt(1, keyNpcId);
 				ResultSet rset2 = statement2.executeQuery();
 				
@@ -492,16 +492,16 @@ public class FourSepulchersManager extends BossLair
 				
 				while (rset2.next())
 				{
-					template1 = NpcTable.getInstance().getTemplate(rset2.getInt("npc_templateid"));
+					template1 = NpcTable.getInstance().getTemplate(rset2.getInt("npc_template_id"));
 					if (template1 != null)
 					{
 						spawnDat = new L2Spawn(template1);
-						spawnDat.setAmount(rset2.getInt("count"));
-						spawnDat.setLocx(rset2.getInt("locx"));
-						spawnDat.setLocy(rset2.getInt("locy"));
-						spawnDat.setLocz(rset2.getInt("locz"));
+						spawnDat.setAmount(rset2.getInt("npc_count"));
+						spawnDat.setLocx(rset2.getInt("x"));
+						spawnDat.setLocy(rset2.getInt("y"));
+						spawnDat.setLocz(rset2.getInt("z"));
 						spawnDat.setHeading(rset2.getInt("heading"));
-						spawnDat.setRespawnDelay(rset2.getInt("respawn_delay"));
+						spawnDat.setRespawnDelay(rset2.getInt("respawn_delay_s"));
 						SpawnTable.getInstance().addNewSpawn(spawnDat, false);
 						_physicalSpawns.add(spawnDat);
 						loaded++;
@@ -509,7 +509,7 @@ public class FourSepulchersManager extends BossLair
 					else
 					{
 						_log.warn("FourSepulchersManager.LoadPhysicalMonsters: Data missing in NPC table for ID: "
-								+ rset2.getInt("npc_templateid") + ".");
+								+ rset2.getInt("npc_template_id") + ".");
 					}
 				}
 				
@@ -545,14 +545,14 @@ public class FourSepulchersManager extends BossLair
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			PreparedStatement statement1 =
-					con.prepareStatement("SELECT DISTINCT key_npc_id FROM four_sepulchers_spawnlist WHERE spawntype = 2 ORDER BY key_npc_id");
+					con.prepareStatement("SELECT DISTINCT key_npc_template_id FROM four_sepulchers_spawn WHERE spawn_type = 'MAGICAL_MONSTER' ORDER BY key_npc_template_id");
 			ResultSet rset1 = statement1.executeQuery();
 			while (rset1.next())
 			{
-				int keyNpcId = rset1.getInt("key_npc_id");
+				int keyNpcId = rset1.getInt("key_npc_template_id");
 				
 				PreparedStatement statement2 =
-						con.prepareStatement("SELECT id, count, npc_templateid, locx, locy, locz, heading, respawn_delay, key_npc_id FROM four_sepulchers_spawnlist WHERE key_npc_id = ? AND spawntype = 2 ORDER BY id");
+						con.prepareStatement("SELECT npc_count, npc_template_id, x, y, z, heading, respawn_delay_s, key_npc_template_id FROM four_sepulchers_spawn WHERE key_npc_template_id = ? AND spawn_type = 'MAGICAL_MONSTER' ORDER BY id");
 				statement2.setInt(1, keyNpcId);
 				ResultSet rset2 = statement2.executeQuery();
 				
@@ -563,16 +563,16 @@ public class FourSepulchersManager extends BossLair
 				
 				while (rset2.next())
 				{
-					template1 = NpcTable.getInstance().getTemplate(rset2.getInt("npc_templateid"));
+					template1 = NpcTable.getInstance().getTemplate(rset2.getInt("npc_template_id"));
 					if (template1 != null)
 					{
 						spawnDat = new L2Spawn(template1);
-						spawnDat.setAmount(rset2.getInt("count"));
-						spawnDat.setLocx(rset2.getInt("locx"));
-						spawnDat.setLocy(rset2.getInt("locy"));
-						spawnDat.setLocz(rset2.getInt("locz"));
+						spawnDat.setAmount(rset2.getInt("npc_count"));
+						spawnDat.setLocx(rset2.getInt("x"));
+						spawnDat.setLocy(rset2.getInt("y"));
+						spawnDat.setLocz(rset2.getInt("z"));
 						spawnDat.setHeading(rset2.getInt("heading"));
-						spawnDat.setRespawnDelay(rset2.getInt("respawn_delay"));
+						spawnDat.setRespawnDelay(rset2.getInt("respawn_delay_s"));
 						SpawnTable.getInstance().addNewSpawn(spawnDat, false);
 						_magicalSpawns.add(spawnDat);
 						loaded++;
@@ -580,7 +580,7 @@ public class FourSepulchersManager extends BossLair
 					else
 					{
 						_log.warn("FourSepulchersManager.LoadMagicalMonsters: Data missing in NPC table for ID: "
-								+ rset2.getInt("npc_templateid") + ".");
+								+ rset2.getInt("npc_template_id") + ".");
 					}
 				}
 				
@@ -617,14 +617,14 @@ public class FourSepulchersManager extends BossLair
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			PreparedStatement statement1 =
-					con.prepareStatement("SELECT DISTINCT key_npc_id FROM four_sepulchers_spawnlist WHERE spawntype = 5 ORDER BY key_npc_id");
+					con.prepareStatement("SELECT DISTINCT key_npc_template_id FROM four_sepulchers_spawn WHERE spawn_type = 'DUKE_FINAL_MONSTER' ORDER BY key_npc_template_id");
 			ResultSet rset1 = statement1.executeQuery();
 			while (rset1.next())
 			{
-				int keyNpcId = rset1.getInt("key_npc_id");
+				int keyNpcId = rset1.getInt("key_npc_template_id");
 				
 				PreparedStatement statement2 =
-						con.prepareStatement("SELECT id, count, npc_templateid, locx, locy, locz, heading, respawn_delay, key_npc_id FROM four_sepulchers_spawnlist WHERE key_npc_id = ? AND spawntype = 5 ORDER BY id");
+						con.prepareStatement("SELECT npc_count, npc_template_id, x, y, z, heading, respawn_delay_s, key_npc_template_id FROM four_sepulchers_spawn WHERE key_npc_template_id = ? AND spawn_type = 'DUKE_FINAL_MONSTER' ORDER BY id");
 				statement2.setInt(1, keyNpcId);
 				ResultSet rset2 = statement2.executeQuery();
 				
@@ -635,16 +635,16 @@ public class FourSepulchersManager extends BossLair
 				
 				while (rset2.next())
 				{
-					template1 = NpcTable.getInstance().getTemplate(rset2.getInt("npc_templateid"));
+					template1 = NpcTable.getInstance().getTemplate(rset2.getInt("npc_template_id"));
 					if (template1 != null)
 					{
 						spawnDat = new L2Spawn(template1);
-						spawnDat.setAmount(rset2.getInt("count"));
-						spawnDat.setLocx(rset2.getInt("locx"));
-						spawnDat.setLocy(rset2.getInt("locy"));
-						spawnDat.setLocz(rset2.getInt("locz"));
+						spawnDat.setAmount(rset2.getInt("npc_count"));
+						spawnDat.setLocx(rset2.getInt("x"));
+						spawnDat.setLocy(rset2.getInt("y"));
+						spawnDat.setLocz(rset2.getInt("z"));
 						spawnDat.setHeading(rset2.getInt("heading"));
-						spawnDat.setRespawnDelay(rset2.getInt("respawn_delay"));
+						spawnDat.setRespawnDelay(rset2.getInt("respawn_delay_s"));
 						SpawnTable.getInstance().addNewSpawn(spawnDat, false);
 						_dukeFinalSpawns.add(spawnDat);
 						loaded++;
@@ -652,7 +652,7 @@ public class FourSepulchersManager extends BossLair
 					else
 					{
 						_log.warn("FourSepulchersManager.LoadDukeMonsters: Data missing in NPC table for ID: "
-								+ rset2.getInt("npc_templateid") + ".");
+								+ rset2.getInt("npc_template_id") + ".");
 					}
 				}
 				
@@ -689,14 +689,14 @@ public class FourSepulchersManager extends BossLair
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			PreparedStatement statement1 =
-					con.prepareStatement("SELECT DISTINCT key_npc_id FROM four_sepulchers_spawnlist WHERE spawntype = 6 ORDER BY key_npc_id");
+					con.prepareStatement("SELECT DISTINCT key_npc_template_id FROM four_sepulchers_spawn WHERE spawn_type = 'EMPEROR_GRAVE_MONSTER' ORDER BY key_npc_template_id");
 			ResultSet rset1 = statement1.executeQuery();
 			while (rset1.next())
 			{
-				int keyNpcId = rset1.getInt("key_npc_id");
+				int keyNpcId = rset1.getInt("key_npc_template_id");
 				
 				PreparedStatement statement2 =
-						con.prepareStatement("SELECT id, count, npc_templateid, locx, locy, locz, heading, respawn_delay, key_npc_id FROM four_sepulchers_spawnlist WHERE key_npc_id = ? AND spawntype = 6 ORDER BY id");
+						con.prepareStatement("SELECT npc_count, npc_template_id, x, y, z, heading, respawn_delay_s, key_npc_template_id FROM four_sepulchers_spawn WHERE key_npc_template_id = ? AND spawn_type = 'EMPEROR_GRAVE_MONSTER' ORDER BY id");
 				statement2.setInt(1, keyNpcId);
 				ResultSet rset2 = statement2.executeQuery();
 				
@@ -707,16 +707,16 @@ public class FourSepulchersManager extends BossLair
 				
 				while (rset2.next())
 				{
-					template1 = NpcTable.getInstance().getTemplate(rset2.getInt("npc_templateid"));
+					template1 = NpcTable.getInstance().getTemplate(rset2.getInt("npc_template_id"));
 					if (template1 != null)
 					{
 						spawnDat = new L2Spawn(template1);
-						spawnDat.setAmount(rset2.getInt("count"));
-						spawnDat.setLocx(rset2.getInt("locx"));
-						spawnDat.setLocy(rset2.getInt("locy"));
-						spawnDat.setLocz(rset2.getInt("locz"));
+						spawnDat.setAmount(rset2.getInt("npc_count"));
+						spawnDat.setLocx(rset2.getInt("x"));
+						spawnDat.setLocy(rset2.getInt("y"));
+						spawnDat.setLocz(rset2.getInt("z"));
 						spawnDat.setHeading(rset2.getInt("heading"));
-						spawnDat.setRespawnDelay(rset2.getInt("respawn_delay"));
+						spawnDat.setRespawnDelay(rset2.getInt("respawn_delay_s"));
 						SpawnTable.getInstance().addNewSpawn(spawnDat, false);
 						_emperorsGraveSpawns.add(spawnDat);
 						loaded++;
@@ -724,7 +724,7 @@ public class FourSepulchersManager extends BossLair
 					else
 					{
 						_log.warn("FourSepulchersManager.LoadEmperorsGraveMonsters: Data missing in NPC table for ID: "
-								+ rset2.getInt("npc_templateid") + ".");
+								+ rset2.getInt("npc_template_id") + ".");
 					}
 				}
 				

@@ -14,14 +14,10 @@
  */
 package com.l2jfree.gameserver.model.entity.faction;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 
 /**
@@ -94,28 +90,10 @@ public class FactionQuest
 		return _minLevel;
 	}
 	
+	/** The faction system has no schema in Platform 3.0: nothing is stored for a started faction quest. */
 	public static void createFactionQuest(L2Player player, int factionQuestId)
 	{
-		Connection con = null;
-		try
-		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement;
-			statement =
-					con.prepareStatement("INSERT INTO character_faction_quests (char_id,faction_quest_id) VALUES (?,?)");
-			statement.setInt(1, player.getObjectId());
-			statement.setInt(2, factionQuestId);
-			statement.executeUpdate();
-			statement.close();
-		}
-		catch (Exception e)
-		{
-			_log.warn("could not insert char faction quest:", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+		// Nothing to store.
 	}
 	
 	public static void endFactionQuest(L2Player player, int factionQuestId)
@@ -125,27 +103,9 @@ public class FactionQuest
 		deleteFactionQuest(player, factionQuestId);
 	}
 	
+	/** The faction system has no schema in Platform 3.0: there is no stored faction quest to delete. */
 	public static void deleteFactionQuest(L2Player player, int factionQuestId)
 	{
-		Connection con = null;
-		try
-		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement;
-			statement =
-					con.prepareStatement("DELETE FROM character_faction_quests WHERE char_id=? AND faction_quest_id=?");
-			statement.setInt(1, player.getObjectId());
-			statement.setInt(2, factionQuestId);
-			statement.executeUpdate();
-			statement.close();
-		}
-		catch (Exception e)
-		{
-			_log.warn("could not delete char faction quest:", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+		// Nothing to delete.
 	}
 }

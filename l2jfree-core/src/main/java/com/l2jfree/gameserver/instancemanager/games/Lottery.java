@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Calendar;
 
 import org.slf4j.Logger;
@@ -41,16 +42,17 @@ public class Lottery
 	protected static Logger _log = LoggerFactory.getLogger(Lottery.class);
 	
 	private static final String INSERT_LOTTERY =
-			"INSERT INTO games(id, idnr, enddate, prize, newprize) VALUES (?, ?, ?, ?, ?)";
-	private static final String UPDATE_PRICE = "UPDATE games SET prize=?, newprize=? WHERE id = 1 AND idnr = ?";
+			"INSERT INTO lottery_round (id, end_at, prize, next_prize) VALUES (?, ?, ?, ?)";
+	private static final String UPDATE_PRICE = "UPDATE lottery_round SET prize = ?, next_prize = ? WHERE id = ?";
 	private static final String UPDATE_LOTTERY =
-			"UPDATE games SET finished=1, prize=?, newprize=?, number1=?, number2=?, prize1=?, prize2=?, prize3=? WHERE id=1 AND idnr=?";
+			"UPDATE lottery_round SET is_finished = true, prize = ?, next_prize = ?, winning_mask_low = ?, winning_mask_high = ?, "
+					+ "first_prize = ?, second_prize = ?, third_prize = ? WHERE id = ?";
 	private static final String SELECT_LAST_LOTTERY =
-			"SELECT idnr, prize, newprize, enddate, finished FROM games WHERE id = 1 ORDER BY idnr DESC LIMIT 1";
+			"SELECT id, prize, next_prize, end_at, is_finished FROM lottery_round ORDER BY id DESC LIMIT 1";
 	private static final String SELECT_LOTTERY_ITEM =
-			"SELECT enchant_level, custom_type2 FROM items WHERE item_id = 4442 AND custom_type1 = ?";
+			"SELECT enchant_level, custom_type2 FROM item WHERE item_template_id = 4442 AND custom_type1 = ?";
 	private static final String SELECT_LOTTERY_TICKET =
-			"SELECT number1, number2, prize1, prize2, prize3 FROM games WHERE id = 1 AND idnr = ?";
+			"SELECT winning_mask_low, winning_mask_high, first_prize, second_prize, third_prize FROM lottery_round WHERE id = ?";
 	
 	protected int _number;
 	protected long _prize;
@@ -157,17 +159,17 @@ public class Lottery
 				
 				if (rset.next())
 				{
-					_number = rset.getInt("idnr");
+					_number = rset.getInt("id");
 					
-					if (rset.getInt("finished") == 1)
+					if (rset.getBoolean("is_finished"))
 					{
 						_number++;
-						_prize = rset.getLong("newprize");
+						_prize = rset.getLong("next_prize");
 					}
 					else
 					{
 						_prize = rset.getLong("prize");
-						_enddate = rset.getLong("enddate");
+						_enddate = rset.getTimestamp("end_at").getTime();
 						
 						if (_enddate <= System.currentTimeMillis() + 2 * MINUTE)
 						{
@@ -248,11 +250,10 @@ public class Lottery
 			{
 				con = L2DatabaseFactory.getInstance().getConnection(con);
 				statement = con.prepareStatement(INSERT_LOTTERY);
-				statement.setInt(1, 1);
-				statement.setInt(2, getId());
-				statement.setLong(3, getEndDate());
+				statement.setInt(1, getId());
+				statement.setTimestamp(2, new Timestamp(getEndDate()));
+				statement.setLong(3, getPrize());
 				statement.setLong(4, getPrize());
-				statement.setLong(5, getPrize());
 				statement.execute();
 				statement.close();
 			}
@@ -528,8 +529,8 @@ public class Lottery
 			
 			if (rset.next())
 			{
-				int curenchant = rset.getInt("number1") & enchant;
-				int curtype2 = rset.getInt("number2") & type2;
+				int curenchant = rset.getInt("winning_mask_low") & enchant;
+				int curtype2 = rset.getInt("winning_mask_high") & type2;
 				
 				if (curenchant == 0 && curtype2 == 0)
 				{
@@ -558,15 +559,15 @@ public class Lottery
 						break;
 					case 5:
 						res[0] = 1;
-						res[1] = rset.getLong("prize1");
+						res[1] = rset.getLong("first_prize");
 						break;
 					case 4:
 						res[0] = 2;
-						res[1] = rset.getLong("prize2");
+						res[1] = rset.getLong("second_prize");
 						break;
 					case 3:
 						res[0] = 3;
-						res[1] = rset.getLong("prize3");
+						res[1] = rset.getLong("third_prize");
 						break;
 					default:
 						res[0] = 4;

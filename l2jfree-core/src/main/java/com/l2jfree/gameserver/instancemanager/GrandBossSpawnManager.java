@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.NpcTable;
@@ -25,6 +26,7 @@ import com.l2jfree.gameserver.gameobjects.L2Boss;
 import com.l2jfree.gameserver.gameobjects.instance.L2GrandBossInstance;
 import com.l2jfree.gameserver.gameobjects.templates.L2NpcTemplate;
 import com.l2jfree.gameserver.model.world.spawn.L2Spawn;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 import com.l2jfree.gameserver.templates.StatsSet;
 
 /**
@@ -32,6 +34,20 @@ import com.l2jfree.gameserver.templates.StatsSet;
  */
 public class GrandBossSpawnManager extends BossSpawnManager
 {
+	/** Spawn point (catalog) and saved state (world) of every boss; without a state row the boss starts at full HP and MP. */
+	private static final String SELECT_BOSSES =
+			"SELECT s.npc_template_id, s.x, s.y, s.z, s.heading, s.respawn_min_delay_s, s.respawn_max_delay_s, t.respawn_at, t.current_hp, t.current_mp "
+					+ "FROM grand_boss_spawn s LEFT JOIN grand_boss_state t ON t.npc_template_id = s.npc_template_id ORDER BY s.npc_template_id";
+	private static final String INSERT_SPAWN =
+			"INSERT INTO grand_boss_spawn (npc_template_id, x, y, z, heading) VALUES (?, ?, ?, ?, ?)";
+	private static final String UPSERT_STATE =
+			"INSERT INTO grand_boss_state (npc_template_id, respawn_at, current_hp, current_mp) VALUES (?, ?, ?, ?) "
+					+ "ON CONFLICT (npc_template_id) DO UPDATE SET respawn_at = EXCLUDED.respawn_at, current_hp = EXCLUDED.current_hp, current_mp = EXCLUDED.current_mp";
+	private static final String UPDATE_SPAWN =
+			"UPDATE grand_boss_spawn SET x = ?, y = ?, z = ?, heading = ? WHERE npc_template_id = ?";
+	private static final String DELETE_SPAWN = "DELETE FROM grand_boss_spawn WHERE npc_template_id = ?";
+	private static final String DELETE_STATE = "DELETE FROM grand_boss_state WHERE npc_template_id = ?";
+
 	public static GrandBossSpawnManager getInstance()
 	{
 		return SingletonHolder._instance;
@@ -46,7 +62,7 @@ public class GrandBossSpawnManager extends BossSpawnManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			PreparedStatement statement = con.prepareStatement("SELECT * from grandboss_spawnlist ORDER BY boss_id");
+			PreparedStatement statement = con.prepareStatement(SELECT_BOSSES);
 			ResultSet rset = statement.executeQuery();
 			
 			L2Spawn spawnDat;
@@ -54,24 +70,33 @@ public class GrandBossSpawnManager extends BossSpawnManager
 			
 			while (rset.next())
 			{
-				template = getValidTemplate(rset.getInt("boss_id"));
+				template = getValidTemplate(rset.getInt("npc_template_id"));
 				if (template != null)
 				{
 					spawnDat = new L2Spawn(template);
-					spawnDat.setLocx(rset.getInt("loc_x"));
-					spawnDat.setLocy(rset.getInt("loc_y"));
-					spawnDat.setLocz(rset.getInt("loc_z"));
+					spawnDat.setLocx(rset.getInt("x"));
+					spawnDat.setLocy(rset.getInt("y"));
+					spawnDat.setLocz(rset.getInt("z"));
 					spawnDat.setHeading(rset.getInt("heading"));
-					spawnDat.setRespawnMinDelay(rset.getInt("respawn_min_delay"));
-					spawnDat.setRespawnMaxDelay(rset.getInt("respawn_max_delay"));
+					spawnDat.setRespawnMinDelay(rset.getInt("respawn_min_delay_s"));
+					spawnDat.setRespawnMaxDelay(rset.getInt("respawn_max_delay_s"));
 					spawnDat.setAmount(1);
-					
-					addNewSpawn(spawnDat, rset.getLong("respawn_time"), rset.getDouble("currentHp"),
-							rset.getDouble("currentMp"), false);
+
+					// NULL means "not waiting for a respawn" (0); no saved HP or MP means full (the status clamps it)
+					Timestamp respawnAt = rset.getTimestamp("respawn_at");
+					double currentHp = rset.getDouble("current_hp");
+					if (rset.wasNull())
+						currentHp = Double.MAX_VALUE;
+					double currentMp = rset.getDouble("current_mp");
+					if (rset.wasNull())
+						currentMp = Double.MAX_VALUE;
+
+					addNewSpawn(spawnDat, respawnAt == null ? 0L : respawnAt.getTime(), currentHp, currentMp, false);
 				}
 				else
 				{
-					_log.warn("GrandBossSpawnManager: Could not load grandboss #" + rset.getInt("boss_id") + " from DB");
+					_log.warn("GrandBossSpawnManager: Could not load grandboss #" + rset.getInt("npc_template_id")
+							+ " from DB");
 				}
 			}
 			
@@ -83,7 +108,7 @@ public class GrandBossSpawnManager extends BossSpawnManager
 		}
 		catch (SQLException e)
 		{
-			_log.warn("GrandBossSpawnManager: Couldnt load grandboss_spawnlist table");
+			_log.warn("GrandBossSpawnManager: Couldnt load grand boss data");
 		}
 		catch (Exception e)
 		{
@@ -98,32 +123,46 @@ public class GrandBossSpawnManager extends BossSpawnManager
 	@Override
 	protected void insertIntoDb(L2Spawn spawnDat, long respawnTime, double currentHP, double currentMP)
 	{
-		Connection con = null;
-		try
-		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement =
-					con.prepareStatement("INSERT INTO grandboss_spawnlist (boss_id,loc_x,loc_y,loc_z,heading,respawn_time,currentHp,currentMp) values(?,?,?,?,?,?,?,?)");
-			statement.setInt(1, spawnDat.getNpcId());
-			statement.setInt(2, spawnDat.getLocx());
-			statement.setInt(3, spawnDat.getLocy());
-			statement.setInt(4, spawnDat.getLocz());
-			statement.setInt(5, spawnDat.getHeading());
-			statement.setLong(6, respawnTime);
-			statement.setDouble(7, currentHP);
-			statement.setDouble(8, currentMP);
-			statement.execute();
-			statement.close();
-		}
-		catch (Exception e)
-		{
-			// Problem with storing spawn
-			_log.warn("GrandBossSpawnManager: Could not store grand boss #" + spawnDat.getNpcId() + " in the DB:", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+		// The spawn point and the state belong together: both rows or none
+		WorldTransaction.run("Storing grand boss #" + spawnDat.getNpcId(), () -> {
+			Connection con = null;
+			try
+			{
+				con = L2DatabaseFactory.getInstance().getConnection(con);
+				PreparedStatement statement = con.prepareStatement(INSERT_SPAWN);
+				statement.setInt(1, spawnDat.getNpcId());
+				statement.setInt(2, spawnDat.getLocx());
+				statement.setInt(3, spawnDat.getLocy());
+				statement.setInt(4, spawnDat.getLocz());
+				statement.setInt(5, spawnDat.getHeading());
+				statement.execute();
+				statement.close();
+
+				saveState(con, spawnDat.getNpcId(), respawnTime, currentHP, currentMP);
+			}
+			catch (SQLException e)
+			{
+				// Problem with storing spawn: the transaction rolls back and logs it
+				throw new IllegalStateException(e);
+			}
+			finally
+			{
+				L2DatabaseFactory.close(con);
+			}
+		});
+	}
+
+	private static void saveState(Connection con, int bossId, long respawnTime, double currentHP, double currentMP)
+			throws SQLException
+	{
+		PreparedStatement statement = con.prepareStatement(UPSERT_STATE);
+		statement.setInt(1, bossId);
+		// 0 means the boss is alive, which is NULL in the database
+		statement.setTimestamp(2, respawnTime == 0L ? null : new Timestamp(respawnTime));
+		statement.setDouble(3, currentHP);
+		statement.setDouble(4, currentMP);
+		statement.execute();
+		statement.close();
 	}
 	
 	@Override
@@ -135,7 +174,7 @@ public class GrandBossSpawnManager extends BossSpawnManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("UPDATE grandboss_spawnlist SET loc_x = ?, loc_y = ?, loc_z = ?, heading = ? WHERE boss_id=?");
+					con.prepareStatement(UPDATE_SPAWN);
 			statement.setInt(1, x);
 			statement.setInt(2, y);
 			statement.setInt(3, z);
@@ -157,26 +196,32 @@ public class GrandBossSpawnManager extends BossSpawnManager
 	@Override
 	protected void deleteFromDb(L2Spawn spawnDat, int bossId)
 	{
-		Connection con = null;
-		
-		try
-		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("DELETE FROM grandboss_spawnlist WHERE boss_id=?");
-			statement.setInt(1, bossId);
-			
-			statement.execute();
-			statement.close();
-		}
-		catch (Exception e)
-		{
-			// Problem with deleting spawn
-			_log.warn("GrandBossSpawnManager: Could not remove grand boss #" + bossId + " from DB: ", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+		// The spawn point and the state belong together: both rows or none
+		WorldTransaction.run("Removing grand boss #" + bossId, () -> {
+			Connection con = null;
+			try
+			{
+				con = L2DatabaseFactory.getInstance().getConnection(con);
+				PreparedStatement statement = con.prepareStatement(DELETE_SPAWN);
+				statement.setInt(1, bossId);
+				statement.execute();
+				statement.close();
+
+				statement = con.prepareStatement(DELETE_STATE);
+				statement.setInt(1, bossId);
+				statement.execute();
+				statement.close();
+			}
+			catch (SQLException e)
+			{
+				// Problem with deleting spawn: the transaction rolls back and logs it
+				throw new IllegalStateException(e);
+			}
+			finally
+			{
+				L2DatabaseFactory.close(con);
+			}
+		});
 	}
 	
 	@Override
@@ -204,18 +249,12 @@ public class GrandBossSpawnManager extends BossSpawnManager
 					continue;
 				}
 				
-				PreparedStatement statement =
-						con.prepareStatement("UPDATE grandboss_spawnlist SET respawn_time = ?, currentHp = ?, currentMp = ? WHERE boss_id = ?");
-				statement.setLong(1, info.getLong("respawnTime"));
-				statement.setDouble(2, info.getDouble("currentHp"));
-				statement.setDouble(3, info.getDouble("currentMp"));
-				statement.setInt(4, bossId);
-				statement.execute();
-				statement.close();
+				saveState(con, bossId, info.getLong("respawnTime"), info.getDouble("currentHp"),
+						info.getDouble("currentMp"));
 			}
 			catch (SQLException e)
 			{
-				_log.error("GrandBossSpawnManager: Couldnt update grandboss_spawnlist table", e);
+				_log.error("GrandBossSpawnManager: Couldnt update grand_boss_state table", e);
 			}
 			finally
 			{

@@ -27,12 +27,8 @@
 			<outputDirectory>gameserver/data/</outputDirectory>
 		</fileSet>
 		<fileSet>
-			<directory>sql/</directory>
-			<outputDirectory>gameserver/sql/</outputDirectory>
-		</fileSet>
-		<fileSet>
-			<directory>optional/</directory>
-			<outputDirectory>gameserver/optional/</outputDirectory>
+			<directory>catalog/</directory>
+			<outputDirectory>gameserver/catalog/</outputDirectory>
 		</fileSet>
 		<fileSet>
 			<directory>doc/</directory>

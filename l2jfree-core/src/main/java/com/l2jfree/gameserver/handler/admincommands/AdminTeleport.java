@@ -600,17 +600,12 @@ public class AdminTeleport implements IAdminCommandHandler
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("UPDATE characters SET x=? WHERE char_name=?");
+			// one statement, so the three coordinates change together
+			PreparedStatement statement = con.prepareStatement("UPDATE player SET x = ?, y = ?, z = ? WHERE name = ?");
 			statement.setInt(1, activeChar.getX());
-			statement.setString(2, name);
-			statement.execute();
-			statement = con.prepareStatement("UPDATE characters SET y=? WHERE char_name=?");
-			statement.setInt(1, activeChar.getY());
-			statement.setString(2, name);
-			statement.execute();
-			statement = con.prepareStatement("UPDATE characters SET z=? WHERE char_name=?");
-			statement.setInt(1, activeChar.getZ());
-			statement.setString(2, name);
+			statement.setInt(2, activeChar.getY());
+			statement.setInt(3, activeChar.getZ());
+			statement.setString(4, name);
 			statement.execute();
 			int count = statement.getUpdateCount();
 			statement.close();

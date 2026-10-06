@@ -50,11 +50,11 @@ public class SkillSpellbookTable
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT skill_id, item_id FROM skill_spellbooks");
+			PreparedStatement statement = con.prepareStatement("SELECT skill_id, item_template_id FROM skill_spellbook");
 			ResultSet spbooks = statement.executeQuery();
 			
 			while (spbooks.next())
-				_skillSpellbooks.put(spbooks.getInt("skill_id"), spbooks.getInt("item_id"));
+				_skillSpellbooks.put(spbooks.getInt("skill_id"), spbooks.getInt("item_template_id"));
 			
 			spbooks.close();
 			statement.close();

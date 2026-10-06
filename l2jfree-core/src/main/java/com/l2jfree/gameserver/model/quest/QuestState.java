@@ -380,10 +380,11 @@ public final class QuestState
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
 			statement =
-					con.prepareStatement("REPLACE INTO character_quest_global_data (charId,var,value) VALUES (?,?,?)");
+					con.prepareStatement("INSERT INTO player_quest_global_variable (player_id, variable_name, value) VALUES (?,?,?) "
+							+ "ON CONFLICT (player_id, variable_name) DO UPDATE SET value = EXCLUDED.value");
 			statement.setInt(1, _player.getObjectId());
 			statement.setString(2, var);
-			statement.setString(3, value);
+			statement.setString(3, value == null ? "" : value);
 			statement.executeUpdate();
 			statement.close();
 		}
@@ -416,7 +417,7 @@ public final class QuestState
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
 			statement =
-					con.prepareStatement("SELECT value FROM character_quest_global_data WHERE charId = ? AND var = ?");
+					con.prepareStatement("SELECT value FROM player_quest_global_variable WHERE player_id = ? AND variable_name = ?");
 			statement.setInt(1, _player.getObjectId());
 			statement.setString(2, var);
 			ResultSet rs = statement.executeQuery();
@@ -447,7 +448,7 @@ public final class QuestState
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
-			statement = con.prepareStatement("DELETE FROM character_quest_global_data WHERE charId = ? AND var = ?");
+			statement = con.prepareStatement("DELETE FROM player_quest_global_variable WHERE player_id = ? AND variable_name = ?");
 			statement.setInt(1, _player.getObjectId());
 			statement.setString(2, var);
 			statement.executeUpdate();

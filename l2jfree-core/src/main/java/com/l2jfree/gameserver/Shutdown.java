@@ -42,7 +42,6 @@ import com.l2jfree.gameserver.network.L2ClientSelectorThread;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
 import com.l2jfree.gameserver.taskmanager.SQLQueue;
-import com.l2jfree.gameserver.util.DatabaseBackupManager;
 import com.l2jfree.gameserver.util.OfflineTradeManager;
 
 /**
@@ -283,8 +282,6 @@ public final class Shutdown extends Thread
 			t.printStackTrace();
 		}
 		
-		if (Config.DATABASE_BACKUP_MAKE_BACKUP_ON_SHUTDOWN)
-			DatabaseBackupManager.makeBackup();
 		
 		if (_mode == ShutdownMode.RESTART)
 			Runtime.getRuntime().halt(2);

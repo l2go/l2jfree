@@ -63,13 +63,13 @@ DROPLIST = {
 def suscribe_members(st) :
   clan=st.getPlayer().getClan().getClanId()
   con=L2DatabaseFactory.getInstance().getConnection(None)
-  offline=con.prepareStatement("SELECT charId FROM characters WHERE clanid=? AND online=0")
+  offline=con.prepareStatement("SELECT id FROM player WHERE clan_id = ? AND NOT is_online")
   offline.setInt(1, clan)
   rs=offline.executeQuery()
   while (rs.next()) :
-    charId=rs.getInt("charId")
+    charId=rs.getInt("id")
     try :
-      insertion = con.prepareStatement("INSERT INTO character_quests (charId,name,var,value) VALUES (?,?,?,?)")
+      insertion = con.prepareStatement("INSERT INTO player_quest_variable (player_id, quest_name, variable_name, value) VALUES (?,?,?,?) ON CONFLICT (player_id, quest_name, variable_name) DO NOTHING")
       insertion.setInt(1, charId)
       insertion.setString(2, qn)
       insertion.setString(3, "<state>")
@@ -87,7 +87,7 @@ def suscribe_members(st) :
 def offlineMemberExit(st) :
   clan=st.getPlayer().getClan().getClanId()
   con=L2DatabaseFactory.getInstance().getConnection(None)
-  offline=con.prepareStatement("DELETE FROM character_quests WHERE name = ? AND charId IN (SELECT charId FROM characters WHERE clanId =? AND online=0")
+  offline=con.prepareStatement("DELETE FROM player_quest_variable WHERE quest_name = ? AND player_id IN (SELECT id FROM player WHERE clan_id = ? AND NOT is_online)")
   offline.setString(1, qn)
   offline.setInt(2, clan)
   try :
@@ -111,7 +111,7 @@ def getLeaderVar(st, var) :
     pass
   leaderId=st.getPlayer().getClan().getLeaderId()
   con=L2DatabaseFactory.getInstance().getConnection(None)
-  offline=con.prepareStatement("SELECT value FROM character_quests WHERE charId=? AND var=? AND name=?")
+  offline=con.prepareStatement("SELECT value FROM player_quest_variable WHERE player_id = ? AND variable_name = ? AND quest_name = ?")
   offline.setInt(1, leaderId)
   offline.setString(2, var)
   offline.setString(3, qn)
@@ -141,7 +141,7 @@ def setLeaderVar(st, var, value) :
   else :
     leaderId=st.getPlayer().getClan().getLeaderId()
     con=L2DatabaseFactory.getInstance().getConnection(None)
-    offline=con.prepareStatement("UPDATE character_quests SET value=? WHERE charId=? AND var=? AND name=?")
+    offline=con.prepareStatement("UPDATE player_quest_variable SET value = ? WHERE player_id = ? AND variable_name = ? AND quest_name = ?")
     offline.setString(1, value)
     offline.setInt(2, leaderId)
     offline.setString(3, var)

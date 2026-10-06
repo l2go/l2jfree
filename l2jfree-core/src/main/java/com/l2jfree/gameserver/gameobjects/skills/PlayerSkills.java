@@ -14,9 +14,6 @@
  */
 package com.l2jfree.gameserver.gameobjects.skills;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,10 +25,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.SkillTable;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.skills.L2Skill;
+import com.l2jfree.gameserver.persistence.player.PlayerRepository;
+import com.l2jfree.gameserver.persistence.player.PlayerRepository.SkillRow;
 import com.l2jfree.util.LookupTable;
 
 public final class PlayerSkills
@@ -65,41 +63,13 @@ public final class PlayerSkills
 		if (oldLevel != null && oldLevel.intValue() == skill.getLevel())
 			return;
 		
-		Connection con = null;
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection();
-			
-			if (oldLevel != null)
-			{
-				PreparedStatement statement =
-						con.prepareStatement("UPDATE character_skills SET skill_level=? WHERE skill_id=? AND charId=? AND class_index=?");
-				statement.setInt(1, skill.getLevel());
-				statement.setInt(2, skill.getId());
-				statement.setInt(3, getOwner().getObjectId());
-				statement.setInt(4, classIndex);
-				statement.execute();
-				statement.close();
-			}
-			else
-			{
-				PreparedStatement statement =
-						con.prepareStatement("INSERT INTO character_skills (charId,skill_id,skill_level,class_index) VALUES (?,?,?,?)");
-				statement.setInt(1, getOwner().getObjectId());
-				statement.setInt(2, skill.getId());
-				statement.setInt(3, skill.getLevel());
-				statement.setInt(4, classIndex);
-				statement.execute();
-				statement.close();
-			}
+			PlayerRepository.getInstance().saveSkill(getOwner().getObjectId(), classIndex, skill.getId(), skill.getLevel());
 		}
 		catch (Exception e)
 		{
 			_log.warn("", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
 		}
 	}
 	
@@ -113,26 +83,13 @@ public final class PlayerSkills
 		if (map.remove(skill) == null)
 			return;
 		
-		Connection con = null;
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection();
-			
-			PreparedStatement statement =
-					con.prepareStatement("DELETE FROM character_skills WHERE skill_id=? AND charId=? AND class_index=?");
-			statement.setInt(1, skill.getId());
-			statement.setInt(2, getOwner().getObjectId());
-			statement.setInt(3, getOwner().getClassIndex());
-			statement.execute();
-			statement.close();
+			PlayerRepository.getInstance().deleteSkill(getOwner().getObjectId(), getOwner().getClassIndex(), skill.getId());
 		}
 		catch (Exception e)
 		{
 			_log.warn("", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
 		}
 	}
 	
@@ -159,14 +116,9 @@ public final class PlayerSkills
 			getOwner().addSkill(skill);
 	}
 	
-	public void deleteSkills(Connection con, int classIndex) throws SQLException
+	public void deleteSkills(int classIndex) throws SQLException
 	{
-		PreparedStatement statement =
-				con.prepareStatement("DELETE FROM character_skills WHERE charId=? AND class_index=?");
-		statement.setInt(1, getOwner().getObjectId());
-		statement.setInt(2, classIndex);
-		statement.execute();
-		statement.close();
+		PlayerRepository.getInstance().deleteSkills(getOwner().getObjectId(), classIndex);
 		
 		_storedSkills.remove(classIndex);
 	}
@@ -185,22 +137,12 @@ public final class PlayerSkills
 		
 		map = new SkillMap();
 		
-		Connection con = null;
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection();
-			
-			PreparedStatement statement =
-					con.prepareStatement("SELECT skill_id,skill_level FROM character_skills WHERE charId=? AND class_index=?");
-			statement.setInt(1, getOwner().getObjectId());
-			statement.setInt(2, classIndex);
-			
-			ResultSet rset = statement.executeQuery();
-			
-			while (rset.next())
+			for (SkillRow row : PlayerRepository.getInstance().loadSkills(getOwner().getObjectId(), classIndex))
 			{
-				final int skillId = rset.getInt("skill_id");
-				final int skillLvl = rset.getInt("skill_level");
+				final int skillId = row.skillId();
+				final int skillLvl = row.skillLevel();
 				
 				map.put(skillId, skillLvl);
 				
@@ -210,17 +152,10 @@ public final class PlayerSkills
 				
 				checkStoredSkill(skill, classIndex);
 			}
-			
-			rset.close();
-			statement.close();
 		}
 		catch (Exception e)
 		{
 			_log.warn("", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
 		}
 		
 		_storedSkills.set(classIndex, map);

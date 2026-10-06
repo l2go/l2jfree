@@ -16,6 +16,8 @@ package com.l2jfree.gameserver.idfactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2DatabaseFactory;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 import com.l2jfree.tools.util.PrimeFinder;
 
 /*
@@ -61,8 +64,6 @@ public class BitSetRebuildFactory extends IdFactory
 			
 			_nextFreeId = new AtomicInteger(_freeIds.nextClearBit(0));
 			
-			Connection con = null;
-			con = L2DatabaseFactory.getInstance().getConnection(con);
 			int nextid;
 			int changedids = 0;
 			// now loop through all already used oids and assign a new clean one
@@ -74,15 +75,40 @@ public class BitSetRebuildFactory extends IdFactory
 					if (!used_ids.contains(nextid))
 						break;
 				}
-				for (String update : ID_UPDATES)
-				{
-					PreparedStatement ps = con.prepareStatement(update);
-					ps.setInt(1, nextid);
-					ps.setInt(2, i);
-					ps.execute();
-					ps.close();
-					changedids++;
-				}
+				final int oldId = i;
+				final int newId = nextid;
+				// All the rows of one id change together
+				boolean changed = WorldTransaction.run("Changing object id " + oldId, () -> {
+					Connection con = null;
+					try
+					{
+						con = L2DatabaseFactory.getInstance().getConnection();
+						// The foreign keys must be deferrable for this; a key that is not deferrable is checked at once
+						try (Statement defer = con.createStatement())
+						{
+							defer.execute("SET CONSTRAINTS ALL DEFERRED");
+						}
+						for (String update : ID_UPDATES)
+						{
+							PreparedStatement ps = con.prepareStatement(update);
+							ps.setInt(1, newId);
+							ps.setInt(2, oldId);
+							ps.execute();
+							ps.close();
+						}
+					}
+					catch (SQLException e)
+					{
+						throw new IllegalStateException(e);
+					}
+					finally
+					{
+						L2DatabaseFactory.close(con);
+					}
+				});
+				if (!changed)
+					throw new IllegalStateException("could not change object id " + oldId + " to " + newId);
+				changedids += ID_UPDATES.length;
 			}
 			_log.info("database rebuild done, changed " + changedids + " ids, set idfactory config to BitSet! ^o^/");
 			System.exit(0);

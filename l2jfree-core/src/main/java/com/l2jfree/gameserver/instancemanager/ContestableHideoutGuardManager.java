@@ -37,7 +37,7 @@ public final class ContestableHideoutGuardManager
 {
 	private static final Logger _log = LoggerFactory.getLogger(ContestableHideoutGuardManager.class);
 	private static final String LOAD_SIEGE_GUARDS =
-			"SELECT id,npcId,x,y,z,heading,respawnDelay FROM clanhall_siege_guards WHERE hallId=?";
+			"SELECT id, npc_template_id, x, y, z, heading, respawn_delay_s FROM clan_hall_siege_guard WHERE clan_hall_id=? ORDER BY id";
 	private final ClanHall _hideout;
 	private L2Spawn[] _guardSpawn = new L2Spawn[0];
 	
@@ -59,14 +59,14 @@ public final class ContestableHideoutGuardManager
 			ResultSet rs = ps.executeQuery();
 			while (rs.next())
 			{
-				L2Spawn s = new L2Spawn(NpcTable.getInstance().getTemplate(rs.getInt("npcId")));
+				L2Spawn s = new L2Spawn(NpcTable.getInstance().getTemplate(rs.getInt("npc_template_id")));
 				s.setId(rs.getInt("id"));
 				s.setAmount(1);
 				s.setLocx(rs.getInt("x"));
 				s.setLocy(rs.getInt("y"));
 				s.setLocz(rs.getInt("z"));
 				s.setHeading(rs.getInt("heading"));
-				s.setRespawnDelay(rs.getInt("respawnDelay"));
+				s.setRespawnDelay(rs.getInt("respawn_delay_s"));
 				s.setLocation(0);
 				guards.add(s);
 			}

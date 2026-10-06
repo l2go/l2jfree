@@ -148,7 +148,7 @@ public class SkillTreeTable
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM class_list ORDER BY id");
+			PreparedStatement statement = con.prepareStatement("SELECT id, COALESCE(parent_class_id, -1) AS parent_id FROM player_class ORDER BY id");
 			ResultSet classlist = statement.executeQuery();
 			
 			Map<Integer, L2SkillLearn> map;
@@ -161,7 +161,7 @@ public class SkillTreeTable
 				parentClassId = classlist.getInt("parent_id");
 				classId = classlist.getInt("id");
 				PreparedStatement statement2 =
-						con.prepareStatement("SELECT class_id, skill_id, level, name, sp, min_level FROM skill_trees where class_id=? ORDER BY skill_id, level");
+						con.prepareStatement("SELECT skill_id, skill_level, skill_name, sp, min_level FROM skill_tree WHERE player_class_id = ? ORDER BY skill_id, skill_level");
 				statement2.setInt(1, classId);
 				ResultSet skilltree = statement2.executeQuery();
 				
@@ -176,8 +176,8 @@ public class SkillTreeTable
 				while (skilltree.next())
 				{
 					int id = skilltree.getInt("skill_id");
-					int lvl = skilltree.getInt("level");
-					String name = skilltree.getString("name");
+					int lvl = skilltree.getInt("skill_level");
+					String name = skilltree.getString("skill_name");
 					int minLvl = skilltree.getInt("min_level");
 					int cost = skilltree.getInt("sp");
 					
@@ -218,7 +218,7 @@ public class SkillTreeTable
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT skill_id, level, name, sp, min_level, costid, cost, isfordwarf FROM fishing_skill_trees ORDER BY skill_id, level");
+					con.prepareStatement("SELECT skill_id, skill_level, skill_name, sp, min_level, cost_item_template_id, cost_item_count, is_dwarven_craft FROM fishing_skill_tree ORDER BY skill_id, skill_level");
 			ResultSet skilltree2 = statement.executeQuery();
 			
 			int prevSkillId = -1;
@@ -226,20 +226,20 @@ public class SkillTreeTable
 			while (skilltree2.next())
 			{
 				int id = skilltree2.getInt("skill_id");
-				int lvl = skilltree2.getInt("level");
-				String name = skilltree2.getString("name");
+				int lvl = skilltree2.getInt("skill_level");
+				String name = skilltree2.getString("skill_name");
 				int minLvl = skilltree2.getInt("min_level");
 				int cost = skilltree2.getInt("sp");
-				int costId = skilltree2.getInt("costid");
-				int costCount = skilltree2.getInt("cost");
-				int isDwarven = skilltree2.getInt("isfordwarf");
+				int costId = skilltree2.getInt("cost_item_template_id");
+				int costCount = skilltree2.getInt("cost_item_count");
+				boolean isDwarven = skilltree2.getBoolean("is_dwarven_craft");
 				
 				if (prevSkillId != id)
 					prevSkillId = id;
 				
 				L2SkillLearn skill = new L2SkillLearn(id, lvl, minLvl, name, cost, costId, costCount);
 				
-				if (isDwarven == 0)
+				if (!isDwarven)
 					_fishingSkillTrees.add(skill);
 				else
 					_expandDwarfCraftSkillTrees.add(skill);
@@ -263,7 +263,7 @@ public class SkillTreeTable
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT skill_id, level, base_lvl, sp, min_skill_lvl, exp, success_rate76, success_rate77, success_rate78, success_rate79, success_rate80, success_rate81, success_rate82, success_rate83, success_rate84, success_rate85 FROM enchant_skill_trees ORDER BY skill_id, level");
+					con.prepareStatement("SELECT skill_id, level, base_level, sp, min_skill_level, exp, success_rate_76, success_rate_77, success_rate_78, success_rate_79, success_rate_80, success_rate_81, success_rate_82, success_rate_83, success_rate_84, success_rate_85 FROM enchant_skill_tree ORDER BY skill_id, level");
 			ResultSet skilltree3 = statement.executeQuery();
 			
 			int prevSkillId = -1;
@@ -272,20 +272,20 @@ public class SkillTreeTable
 			{
 				int id = skilltree3.getInt("skill_id");
 				int lvl = skilltree3.getInt("level");
-				int baseLvl = skilltree3.getInt("base_lvl");
-				int minSkillLvl = skilltree3.getInt("min_skill_lvl");
+				int baseLvl = skilltree3.getInt("base_level");
+				int minSkillLvl = skilltree3.getInt("min_skill_level");
 				int sp = skilltree3.getInt("sp");
 				int exp = skilltree3.getInt("exp");
-				byte rate76 = skilltree3.getByte("success_rate76");
-				byte rate77 = skilltree3.getByte("success_rate77");
-				byte rate78 = skilltree3.getByte("success_rate78");
-				byte rate79 = skilltree3.getByte("success_rate79");
-				byte rate80 = skilltree3.getByte("success_rate80");
-				byte rate81 = skilltree3.getByte("success_rate81");
-				byte rate82 = skilltree3.getByte("success_rate82");
-				byte rate83 = skilltree3.getByte("success_rate83");
-				byte rate84 = skilltree3.getByte("success_rate84");
-				byte rate85 = skilltree3.getByte("success_rate85");
+				byte rate76 = skilltree3.getByte("success_rate_76");
+				byte rate77 = skilltree3.getByte("success_rate_77");
+				byte rate78 = skilltree3.getByte("success_rate_78");
+				byte rate79 = skilltree3.getByte("success_rate_79");
+				byte rate80 = skilltree3.getByte("success_rate_80");
+				byte rate81 = skilltree3.getByte("success_rate_81");
+				byte rate82 = skilltree3.getByte("success_rate_82");
+				byte rate83 = skilltree3.getByte("success_rate_83");
+				byte rate84 = skilltree3.getByte("success_rate_84");
+				byte rate85 = skilltree3.getByte("success_rate_85");
 				
 				if (prevSkillId != id)
 					prevSkillId = id;
@@ -319,7 +319,7 @@ public class SkillTreeTable
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT skill_id, level, name, clan_lvl, repCost, itemId, itemCount FROM pledge_skill_trees ORDER BY skill_id, level");
+					con.prepareStatement("SELECT skill_id, skill_level, skill_name, min_clan_level, reputation_cost, cost_item_template_id, cost_item_count FROM clan_skill_tree ORDER BY skill_id, skill_level");
 			ResultSet skilltree4 = statement.executeQuery();
 			
 			int prevSkillId = -1;
@@ -327,12 +327,12 @@ public class SkillTreeTable
 			while (skilltree4.next())
 			{
 				int id = skilltree4.getInt("skill_id");
-				int lvl = skilltree4.getInt("level");
-				String name = skilltree4.getString("name");
-				int baseLvl = skilltree4.getInt("clan_lvl");
-				int sp = skilltree4.getInt("repCost");
-				int itemId = skilltree4.getInt("itemId");
-				long itemCount = skilltree4.getLong("itemCount");
+				int lvl = skilltree4.getInt("skill_level");
+				String name = skilltree4.getString("skill_name");
+				int baseLvl = skilltree4.getInt("min_clan_level");
+				int sp = skilltree4.getInt("reputation_cost");
+				int itemId = skilltree4.getInt("cost_item_template_id");
+				long itemCount = skilltree4.getLong("cost_item_count");
 				
 				if (prevSkillId != id)
 					prevSkillId = id;
@@ -359,7 +359,7 @@ public class SkillTreeTable
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT race_id, skill_id, item_id, level, name, sp, min_level FROM transform_skill_trees ORDER BY race_id, skill_id, level");
+					con.prepareStatement("SELECT COALESCE(race_id, -1) AS race_id, skill_id, required_item_template_id, skill_level, skill_name, sp, min_level FROM transform_skill_tree ORDER BY race_id NULLS FIRST, skill_id, skill_level");
 			ResultSet skilltree5 = statement.executeQuery();
 			
 			int prevSkillId = -1;
@@ -368,9 +368,9 @@ public class SkillTreeTable
 			{
 				int race_id = skilltree5.getInt("race_id");
 				int skill_id = skilltree5.getInt("skill_id");
-				int item_id = skilltree5.getInt("item_id");
-				int level = skilltree5.getInt("level");
-				String name = skilltree5.getString("name");
+				int item_id = skilltree5.getInt("required_item_template_id");
+				int level = skilltree5.getInt("skill_level");
+				String name = skilltree5.getString("skill_name");
 				int sp = skilltree5.getInt("sp");
 				int min_level = skilltree5.getInt("min_level");
 				
@@ -400,7 +400,7 @@ public class SkillTreeTable
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT skill_id, level, name, costid, cost FROM special_skill_trees ORDER BY skill_id, level");
+					con.prepareStatement("SELECT skill_id, skill_level, skill_name, cost_item_template_id, cost_item_count FROM special_skill_tree ORDER BY skill_id, skill_level");
 			ResultSet skilltree6 = statement.executeQuery();
 			
 			int prevSkillId = -1;
@@ -408,10 +408,10 @@ public class SkillTreeTable
 			while (skilltree6.next())
 			{
 				int id = skilltree6.getInt("skill_id");
-				int lvl = skilltree6.getInt("level");
-				String name = skilltree6.getString("name");
-				int costId = skilltree6.getInt("costid");
-				int costCount = skilltree6.getInt("cost");
+				int lvl = skilltree6.getInt("skill_level");
+				String name = skilltree6.getString("skill_name");
+				int costId = skilltree6.getInt("cost_item_template_id");
+				int costCount = skilltree6.getInt("cost_item_count");
 				
 				if (prevSkillId != id)
 					prevSkillId = id;
@@ -437,7 +437,7 @@ public class SkillTreeTable
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT skill_id, item_id, level, name FROM certification_skill_trees ORDER BY skill_id, level");
+					con.prepareStatement("SELECT skill_id, required_item_template_id, skill_level, skill_name FROM certification_skill_tree ORDER BY skill_id, skill_level");
 			ResultSet skilltree6 = statement.executeQuery();
 			
 			int prevSkillId = -1;
@@ -445,9 +445,9 @@ public class SkillTreeTable
 			while (skilltree6.next())
 			{
 				int skill_id = skilltree6.getInt("skill_id");
-				int item_id = skilltree6.getInt("item_id");
-				int level = skilltree6.getInt("level");
-				String name = skilltree6.getString("name");
+				int item_id = skilltree6.getInt("required_item_template_id");
+				int level = skilltree6.getInt("skill_level");
+				String name = skilltree6.getString("skill_name");
 				
 				if (prevSkillId != skill_id)
 					prevSkillId = skill_id;

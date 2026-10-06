@@ -249,17 +249,19 @@ public class VIP
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT endx,endy,endz,startx,starty,startz FROM VIPinfo WHERE teamID = "
-							+ _team);
+					con.prepareStatement("SELECT end_x, end_y, end_z, start_x, start_y, start_z FROM vip_event_route "
+							+ "WHERE race_id = ?");
+			// VIP team 1 (Human) to 5 (Dwarf) is race id 0 to 4.
+			statement.setInt(1, _team - 1);
 			ResultSet rset = statement.executeQuery();
 			rset.next();
 			
-			_endX = rset.getInt("endx");
-			_endY = rset.getInt("endy");
-			_endZ = rset.getInt("endz");
-			_startX = rset.getInt("startx");
-			_startY = rset.getInt("starty");
-			_startZ = rset.getInt("startz");
+			_endX = rset.getInt("end_x");
+			_endY = rset.getInt("end_y");
+			_endZ = rset.getInt("end_z");
+			_startX = rset.getInt("start_x");
+			_startY = rset.getInt("start_y");
+			_startZ = rset.getInt("start_z");
 			
 			rset.close();
 			statement.close();

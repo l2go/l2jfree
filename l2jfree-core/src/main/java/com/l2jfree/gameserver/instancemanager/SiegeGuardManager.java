@@ -41,8 +41,10 @@ public class SiegeGuardManager
 {
 	private static final Logger _log = LoggerFactory.getLogger(SiegeGuardManager.class);
 	private static final int DEFAULT_GUARD_RESPAWN = 600; // as earlier
-	private static final String LOAD_NPC_GUARDS = "SELECT * FROM castle_siege_guards WHERE castleId=?";
-	private static final String ADD_NPC_GUARD = "INSERT INTO castle_siege_guards VALUES (?,NULL,?,?,?,?,?,?)";
+	private static final String LOAD_NPC_GUARDS =
+			"SELECT id, npc_template_id, x, y, z, heading, respawn_delay_s FROM castle_siege_guard WHERE castle_id=? ORDER BY id";
+	private static final String ADD_NPC_GUARD =
+			"INSERT INTO castle_siege_guard (castle_id, npc_template_id, x, y, z, heading, respawn_delay_s) VALUES (?,?,?,?,?,?,?)";
 	
 	private final Castle _castle;
 	private final FastList<L2Spawn> _siegeGuardSpawn;
@@ -58,10 +60,10 @@ public class SiegeGuardManager
 	/**
 	 * Spawns siege guards only if {@link Config#ALT_SPAWN_SIEGE_GUARD} is true.<BR>
 	 * If the castle is owned by NPCs, loads & spawns guards defined in
-	 * <code>castle_siege_guards</code>, since it was always replaceable (and mercenary
+	 * <code>castle_siege_guard</code>, since it was always replaceable (and mercenary
 	 * positions were always lost after updating).<BR>
 	 * If the castle is owned by a clan, spawns guards defined in
-	 * <code>castle_hired_guards</code>, which contains only mercenary positions.
+	 * <code>castle_hired_guard</code>, which contains only mercenary positions.
 	 * <BR><BR>
 	 * If siege guards are not spawned, mercenary positions are retained, since they
 	 * were not used (they cost quite much to hire).
@@ -189,7 +191,7 @@ public class SiegeGuardManager
 	}
 	
 	/**
-	 * Load guards defined in <CODE>castle_siege_guards</CODE> if castle is
+	 * Load guards defined in <CODE>castle_siege_guard</CODE> if castle is
 	 * owned by NPCs.<BR>
 	 * Calls {@link MercTicketManager#buildSpawns(SiegeGuardManager)} if
 	 * castle is owned by a player clan.
@@ -215,7 +217,7 @@ public class SiegeGuardManager
 			
 			while (rs.next())
 			{
-				template1 = NpcTable.getInstance().getTemplate(rs.getInt("npcId"));
+				template1 = NpcTable.getInstance().getTemplate(rs.getInt("npc_template_id"));
 				if (template1 != null)
 				{
 					spawn1 = new L2Spawn(template1);
@@ -225,12 +227,12 @@ public class SiegeGuardManager
 					spawn1.setLocy(rs.getInt("y"));
 					spawn1.setLocz(rs.getInt("z"));
 					spawn1.setHeading(rs.getInt("heading"));
-					spawn1.setRespawnDelay(rs.getInt("respawnDelay"));
+					spawn1.setRespawnDelay(rs.getInt("respawn_delay_s"));
 					spawn1.setLocation(0);
 					_siegeGuardSpawn.add(spawn1);
 				}
 				else
-					_log.warn("Missing npc data in npc table for id: " + rs.getInt("npcId"));
+					_log.warn("Missing npc data in npc table for id: " + rs.getInt("npc_template_id"));
 			}
 			statement.close();
 		}

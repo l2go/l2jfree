@@ -49,11 +49,11 @@ public final class CharNameTable
 			con = L2DatabaseFactory.getInstance().getConnection();
 			
 			PreparedStatement statement =
-					con.prepareStatement("SELECT charId, account_name, char_name FROM characters");
+					con.prepareStatement("SELECT id, account_name, name FROM player");
 			ResultSet rset = statement.executeQuery();
 			
 			while (rset.next())
-				update(rset.getInt("charId"), rset.getString("account_name"), rset.getString("char_name"));
+				update(rset.getInt("id"), rset.getString("account_name"), rset.getString("name"));
 			
 			rset.close();
 			statement.close();

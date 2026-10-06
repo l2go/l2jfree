@@ -57,22 +57,22 @@ public class NpcWalkerRoutesTable
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT route_id, npc_id, move_point, chatText, move_x, move_y, move_z, delay, running FROM walker_routes ORDER By move_point ASC");
+					con.prepareStatement("SELECT route_number, npc_template_id, point_number, chat_text, x, y, z, delay_s, is_running FROM walker_route ORDER BY point_number ASC");
 			ResultSet rset = statement.executeQuery();
 			L2NpcWalkerNode route;
 			while (rset.next())
 			{
 				route = new L2NpcWalkerNode();
-				route.setRouteId(rset.getInt("route_id"));
-				route.setNpcId(rset.getInt("npc_id"));
-				route.setMovePoint(rset.getString("move_point"));
-				route.setChatText(rset.getString("chatText"));
+				route.setRouteId(rset.getInt("route_number"));
+				route.setNpcId(rset.getInt("npc_template_id"));
+				route.setMovePoint(Integer.toString(rset.getInt("point_number")));
+				route.setChatText(rset.getString("chat_text"));
 				
-				route.setMoveX(rset.getInt("move_x"));
-				route.setMoveY(rset.getInt("move_y"));
-				route.setMoveZ(rset.getInt("move_z"));
-				route.setDelay(rset.getInt("delay"));
-				route.setRunning(rset.getBoolean("running"));
+				route.setMoveX(rset.getInt("x"));
+				route.setMoveY(rset.getInt("y"));
+				route.setMoveZ(rset.getInt("z"));
+				route.setDelay(rset.getInt("delay_s"));
+				route.setRunning(rset.getBoolean("is_running"));
 				
 				_routes.add(route);
 			}

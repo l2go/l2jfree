@@ -1,1 +1,0 @@
-INSERT INTO global_tasks(task,type,last_activation,param1,param2,param3) VALUES ('Restart','TYPE_GLOBAL_TASK','2147483647','1','03:50:00','600');

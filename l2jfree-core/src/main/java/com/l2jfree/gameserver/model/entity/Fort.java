@@ -17,6 +17,8 @@ package com.l2jfree.gameserver.model.entity;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
@@ -42,6 +44,7 @@ import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.PlaySound;
 import com.l2jfree.gameserver.network.packets.server.PledgeShowInfoUpdate;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 
 public class Fort extends Siegeable<FortSiege>
 {
@@ -200,21 +203,21 @@ public class Fort extends Siegeable<FortSiege>
 				if (newFunction)
 				{
 					statement =
-							con.prepareStatement("INSERT INTO fort_functions (fort_id, type, lvl, lease, rate, endTime) VALUES (?,?,?,?,?,?)");
+							con.prepareStatement("INSERT INTO fort_function (fort_id, function_type, level, lease, rate_ms, end_at) VALUES (?,?,?,?,?,?)");
 					statement.setInt(1, getFortId());
 					statement.setInt(2, getType());
 					statement.setInt(3, getLvl());
 					statement.setInt(4, getLease());
 					statement.setLong(5, getRate());
-					statement.setLong(6, getEndTime());
+					statement.setTimestamp(6, moment(getEndTime()));
 				}
 				else
 				{
 					statement =
-							con.prepareStatement("UPDATE fort_functions SET lvl=?, lease=?, endTime=? WHERE fort_id=? AND type=?");
+							con.prepareStatement("UPDATE fort_function SET level=?, lease=?, end_at=? WHERE fort_id=? AND function_type=?");
 					statement.setInt(1, getLvl());
 					statement.setInt(2, getLease());
-					statement.setLong(3, getEndTime());
+					statement.setTimestamp(3, moment(getEndTime()));
 					statement.setInt(4, getFortId());
 					statement.setInt(5, getType());
 				}
@@ -232,6 +235,18 @@ public class Fort extends Siegeable<FortSiege>
 				L2DatabaseFactory.close(con);
 			}
 		}
+	}
+	
+	/** Epoch milliseconds as a database moment; 0 or less means "not set" and is NULL. */
+	private static Timestamp moment(long millis)
+	{
+		return millis > 0 ? new Timestamp(millis) : null;
+	}
+	
+	/** A database moment as epoch milliseconds; NULL means "not set" and is 0. */
+	private static long millis(Timestamp moment)
+	{
+		return moment == null ? 0 : moment.getTime();
 	}
 	
 	// =========================================================
@@ -336,7 +351,15 @@ public class Fort extends Siegeable<FortSiege>
 	 * @param clan
 	 * @param updateClanPoints
 	 */
-	public boolean setOwner(L2Clan clan, boolean updateClansReputation)
+	public boolean setOwner(final L2Clan clan, final boolean updateClansReputation)
+	{
+		// The reputation, the old and the new owner, the contract state and the siege end are stored together.
+		final boolean[] result = new boolean[1];
+		WorldTransaction.run("Fort owner change", () -> result[0] = setOwnerInTransaction(clan, updateClansReputation));
+		return result[0];
+	}
+	
+	private boolean setOwnerInTransaction(L2Clan clan, boolean updateClansReputation)
 	{
 		if (updateClansReputation)
 		{
@@ -384,18 +407,21 @@ public class Fort extends Siegeable<FortSiege>
 		}
 	}
 	
-	public void removeOwner(boolean updateDB)
+	public void removeOwner(final boolean updateDB)
 	{
-		L2Clan clan = getOwnerClan();
+		final L2Clan clan = getOwnerClan();
 		
 		if (clan != null)
 		{
 			clan.setHasFort(0);
 			clan.broadcastToOnlineMembers(new PledgeShowInfoUpdate(clan));
 			setOwnerClan(null);
-			setBloodOathReward(0);
-			if (updateDB)
-				updateOwnerInDB();
+			// The blood oath reward and the owner are stored together
+			WorldTransaction.run("Fort owner removal", () -> {
+				setBloodOathReward(0);
+				if (updateDB)
+					updateOwnerInDB();
+			});
 		}
 	}
 	
@@ -408,7 +434,7 @@ public class Fort extends Siegeable<FortSiege>
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
 			
-			statement = con.prepareStatement("UPDATE fort SET blood=? where id = ?");
+			statement = con.prepareStatement("UPDATE fort SET blood_oath_count=? WHERE id = ?");
 			statement.setInt(1, _blood);
 			statement.setInt(2, getFortId());
 			statement.execute();
@@ -485,7 +511,8 @@ public class Fort extends Siegeable<FortSiege>
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			statement = con.prepareStatement("SELECT * FROM fort WHERE id = ?");
+			statement =
+					con.prepareStatement("SELECT name, siege_at, owned_since_at, owner_clan_id, is_large, contract_state, contract_castle_id, blood_oath_count FROM fort WHERE id = ?");
 			statement.setInt(1, getFortId());
 			rs = statement.executeQuery();
 			
@@ -493,13 +520,13 @@ public class Fort extends Siegeable<FortSiege>
 			{
 				_name = rs.getString("name");
 				_siegeDate = Calendar.getInstance();
-				_siegeDate.setTimeInMillis(rs.getLong("siegeDate"));
-				_lastOwnedTime = rs.getLong("lastOwnedTime");
-				_ownerId = rs.getInt("owner");
-				_fortType = rs.getInt("fortType");
-				_state = rs.getInt("state");
-				_castleId = rs.getInt("castleId");
-				_blood = rs.getInt("blood");
+				_siegeDate.setTimeInMillis(millis(rs.getTimestamp("siege_at")));
+				_lastOwnedTime = millis(rs.getTimestamp("owned_since_at"));
+				_ownerId = rs.getInt("owner_clan_id"); // NULL is 0: held by NPCs
+				_fortType = rs.getBoolean("is_large") ? 1 : 0;
+				_state = rs.getInt("contract_state");
+				_castleId = rs.getInt("contract_castle_id"); // NULL is 0: no contract
+				_blood = rs.getInt("blood_oath_count");
 			}
 			
 			rs.close();
@@ -541,14 +568,15 @@ public class Fort extends Siegeable<FortSiege>
 			PreparedStatement statement;
 			ResultSet rs;
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			statement = con.prepareStatement("Select * from fort_functions where fort_id = ?");
+			statement =
+					con.prepareStatement("SELECT function_type, level, lease, rate_ms, end_at FROM fort_function WHERE fort_id = ?");
 			statement.setInt(1, getFortId());
 			rs = statement.executeQuery();
 			while (rs.next())
 			{
-				_function.put(rs.getInt("type"),
-						new FortFunction(rs.getInt("type"), rs.getInt("lvl"), rs.getInt("lease"), 0,
-								rs.getLong("rate"), rs.getLong("endTime"), true));
+				_function.put(rs.getInt("function_type"),
+						new FortFunction(rs.getInt("function_type"), rs.getInt("level"), rs.getInt("lease"), 0,
+								rs.getLong("rate_ms"), millis(rs.getTimestamp("end_at")), true));
 			}
 			statement.close();
 		}
@@ -571,7 +599,7 @@ public class Fort extends Siegeable<FortSiege>
 		{
 			PreparedStatement statement;
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			statement = con.prepareStatement("DELETE FROM fort_functions WHERE fort_id=? AND type=?");
+			statement = con.prepareStatement("DELETE FROM fort_function WHERE fort_id=? AND function_type=?");
 			statement.setInt(1, getFortId());
 			statement.setInt(2, functionType);
 			statement.execute();
@@ -642,20 +670,19 @@ public class Fort extends Siegeable<FortSiege>
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT * FROM fort_staticobjects WHERE fortId = ? AND objectType = ?");
+					con.prepareStatement("SELECT id, name, x, y, z, range_x_min, range_y_min, range_z_min, range_x_max, range_y_max, range_z_max, hp, p_def, m_def, is_unlockable, starts_open FROM fort_static_object WHERE fort_id = ? AND object_type = 'DOOR'");
 			statement.setInt(1, getFortId());
-			statement.setInt(2, 0);
 			ResultSet rs = statement.executeQuery();
 			
 			while (rs.next())
 			{
 				// Create list of the door default for use when respawning dead doors
 				_doorDefault.add(rs.getString("name") + ";" + rs.getInt("id") + ";" + rs.getInt("x") + ";"
-						+ rs.getInt("y") + ";" + rs.getInt("z") + ";" + rs.getInt("range_xmin") + ";"
-						+ rs.getInt("range_ymin") + ";" + rs.getInt("range_zmin") + ";" + rs.getInt("range_xmax") + ";"
-						+ rs.getInt("range_ymax") + ";" + rs.getInt("range_zmax") + ";" + rs.getInt("hp") + ";"
-						+ rs.getInt("pDef") + ";" + rs.getInt("mDef") + ";" + rs.getString("openType") + ";"
-						+ rs.getString("commanderDoor"));
+						+ rs.getInt("y") + ";" + rs.getInt("z") + ";" + rs.getInt("range_x_min") + ";"
+						+ rs.getInt("range_y_min") + ";" + rs.getInt("range_z_min") + ";" + rs.getInt("range_x_max") + ";"
+						+ rs.getInt("range_y_max") + ";" + rs.getInt("range_z_max") + ";" + rs.getInt("hp") + ";"
+						+ rs.getInt("p_def") + ";" + rs.getInt("m_def") + ";" + rs.getBoolean("is_unlockable") + ";"
+						+ rs.getBoolean("starts_open"));
 				L2DoorInstance door;
 				_doors.add(door = DoorTable.parseLine(_doorDefault.get(_doorDefault.size() - 1)));
 				door.spawnMe(door.getX(), door.getY(), door.getZ());
@@ -683,14 +710,13 @@ public class Fort extends Siegeable<FortSiege>
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT * FROM fort_doorupgrade WHERE doorId IN (SELECT Id FROM fort_staticobjects WHERE fortId = ? AND objectType = ?)");
+					con.prepareStatement("SELECT door_id, hp, physical_defense, magic_defense FROM fort_door_upgrade WHERE fort_id = ?");
 			statement.setInt(1, getFortId());
-			statement.setInt(2, 0);
 			ResultSet rs = statement.executeQuery();
 			
 			while (rs.next())
 			{
-				upgradeDoor(rs.getInt("id"), rs.getInt("hp"), rs.getInt("pDef"), rs.getInt("mDef"));
+				upgradeDoor(rs.getInt("door_id"), rs.getInt("hp"), rs.getInt("physical_defense"), rs.getInt("magic_defense"));
 			}
 			rs.close();
 			statement.close();
@@ -712,9 +738,8 @@ public class Fort extends Siegeable<FortSiege>
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("DELETE FROM fort_doorupgrade WHERE doorId IN (SELECT id FROM fort_staticobjects WHERE fortId = ? AND objectType = ?)");
+					con.prepareStatement("DELETE FROM fort_door_upgrade WHERE fort_id = ?");
 			statement.setInt(1, getFortId());
-			statement.setInt(2, 0);
 			statement.execute();
 			statement.close();
 		}
@@ -735,7 +760,8 @@ public class Fort extends Siegeable<FortSiege>
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("INSERT INTO fort_doorupgrade (doorId, fortId, hp, pDef, mDef) values (?,?,?,?,?)");
+					con.prepareStatement("INSERT INTO fort_door_upgrade (door_id, fort_id, hp, physical_defense, magic_defense) VALUES (?,?,?,?,?) "
+							+ "ON CONFLICT (door_id) DO UPDATE SET fort_id = EXCLUDED.fort_id, hp = EXCLUDED.hp, physical_defense = EXCLUDED.physical_defense, magic_defense = EXCLUDED.magic_defense");
 			statement.setInt(1, doorId);
 			statement.setInt(2, getFortId());
 			statement.setInt(3, hp);
@@ -762,9 +788,8 @@ public class Fort extends Siegeable<FortSiege>
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
 			PreparedStatement statement =
-					con.prepareStatement("SELECT * FROM fort_staticobjects WHERE fortId = ? AND objectType = ?");
+					con.prepareStatement("SELECT id, name, x, y, z FROM fort_static_object WHERE fort_id = ? AND object_type = 'FLAG_POLE'");
 			statement.setInt(1, getFortId());
-			statement.setInt(2, 1);
 			ResultSet rs = statement.executeQuery();
 			while (rs.next())
 			{
@@ -807,11 +832,14 @@ public class Fort extends Siegeable<FortSiege>
 			PreparedStatement statement;
 			
 			statement =
-					con.prepareStatement("UPDATE fort SET owner=?, lastOwnedTime=?, state=?, castleId=?, blood=? WHERE id = ?");
-			statement.setInt(1, clanId);
-			statement.setLong(2, _lastOwnedTime);
+					con.prepareStatement("UPDATE fort SET owner_clan_id=?, owned_since_at=?, contract_state=?, contract_castle_id=?, blood_oath_count=? WHERE id = ?");
+			if (clanId > 0)
+				statement.setInt(1, clanId);
+			else
+				statement.setNull(1, Types.INTEGER); // held by NPCs
+			statement.setTimestamp(2, moment(_lastOwnedTime));
 			statement.setInt(3, 0);
-			statement.setInt(4, 0);
+			statement.setNull(4, Types.SMALLINT); // no contract with a castle
 			statement.setInt(5, getBloodOathReward());
 			statement.setInt(6, getFortId());
 			statement.execute();
@@ -986,9 +1014,12 @@ public class Fort extends Siegeable<FortSiege>
 			con = L2DatabaseFactory.getInstance().getConnection();
 			PreparedStatement statement;
 			
-			statement = con.prepareStatement("UPDATE fort SET state=?, castleId=? WHERE id = ?");
+			statement = con.prepareStatement("UPDATE fort SET contract_state=?, contract_castle_id=? WHERE id = ?");
 			statement.setInt(1, getFortState());
-			statement.setInt(2, getCastleId());
+			if (getCastleId() > 0)
+				statement.setInt(2, getCastleId());
+			else
+				statement.setNull(2, Types.SMALLINT); // no contract with a castle
 			statement.setInt(3, getFortId());
 			statement.execute();
 			statement.close();

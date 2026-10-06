@@ -76,27 +76,31 @@ public class AutoChatManager implements SpawnListener
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			statement = con.prepareStatement("SELECT * FROM auto_chat ORDER BY groupId ASC");
+			statement = con.prepareStatement("SELECT id, npc_template_id, chat_delay_s, chat_range, is_random FROM auto_chat ORDER BY id");
 			rs = statement.executeQuery();
 			
 			while (rs.next())
 			{
-				int groupId = rs.getInt("groupId");
-				int npcId = rs.getInt("npcId");
-				long chatDelay = rs.getLong("chatDelay") * 1000;
-				int chatRange = rs.getInt("chatRange");
-				boolean chatRandom = rs.getBoolean("chatRandom");
+				int groupId = rs.getInt("id");
+				int npcId = rs.getInt("npc_template_id");
+				// NULL means the default (-1): ALT_AUTOCHAT_DELAY and DEFAULT_CHAT_RANGE
+				long chatDelay = rs.getLong("chat_delay_s");
+				chatDelay = rs.wasNull() ? -1 : chatDelay * 1000;
+				int chatRange = rs.getInt("chat_range");
+				if (rs.wasNull())
+					chatRange = -1;
+				boolean chatRandom = rs.getBoolean("is_random");
 				
 				numLoaded++;
 				
-				statement2 = con.prepareStatement("SELECT * FROM auto_chat_text WHERE groupId=?");
+				statement2 = con.prepareStatement("SELECT chat_text FROM auto_chat_text WHERE auto_chat_id = ? ORDER BY chat_text");
 				statement2.setInt(1, groupId);
 				rs2 = statement2.executeQuery();
 				
 				ArrayList<String> chatTexts = new ArrayList<String>();
 				
 				while (rs2.next())
-					chatTexts.add(rs2.getString("chatText"));
+					chatTexts.add(rs2.getString("chat_text"));
 				
 				if (!chatTexts.isEmpty())
 					registerGlobalChat(npcId, chatTexts.toArray(new String[chatTexts.size()]), chatDelay, chatRange,

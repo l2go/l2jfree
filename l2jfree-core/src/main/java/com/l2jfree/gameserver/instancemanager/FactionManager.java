@@ -14,17 +14,11 @@
  */
 package com.l2jfree.gameserver.instancemanager;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-
 import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.model.entity.faction.Faction;
 
 /**
@@ -69,39 +63,8 @@ public class FactionManager
 	// Method - Private
 	private final void load()
 	{
-		Connection con = null;
-		try
-		{
-			PreparedStatement statement;
-			ResultSet rs;
-			
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			
-			statement = con.prepareStatement("Select id from factions order by id");
-			rs = statement.executeQuery();
-			
-			while (rs.next())
-			{
-				Faction faction = new Faction(rs.getInt("id"));
-				getFactions().add(faction);
-				for (FastMap.Entry<Integer, String> e = faction.getTitle().head(), end = faction.getTitle().tail(); (e =
-						e.getNext()) != end;)
-					_listTitles.add(e.getValue().toLowerCase());
-				faction = null;
-			}
-			
-			statement.close();
-			
-			_log.info("Loaded: " + getFactions().size() + " faction(s)");
-		}
-		catch (Exception e)
-		{
-			_log.warn("Exception: FactionsManager.load(): " + e.getMessage(), e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+		// The faction system has no schema in Platform 3.0: there is nothing to load and the list stays empty.
+		_log.info("Loaded: " + getFactions().size() + " faction(s)");
 	}
 	
 	// =========================================================

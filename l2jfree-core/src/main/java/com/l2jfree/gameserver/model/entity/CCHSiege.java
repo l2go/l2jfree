@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.model.entity;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Set;
 
@@ -46,6 +47,7 @@ import com.l2jfree.gameserver.model.zone.L2Zone;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.SiegeInfo;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 import com.l2jfree.gameserver.threadmanager.ExclusiveTask;
 import com.l2jfree.gameserver.util.Broadcast;
 import com.l2jfree.util.L2FastSet;
@@ -160,50 +162,53 @@ public final class CCHSiege extends AbstractSiege
 		{
 			if (Config.USE_MISSING_CCH_MESSAGES)
 				announceToPlayer(SystemMessageId.CLANHALL_SIEGE_ENDED.getSystemMessage(), true);
-			if (bossKiller != null)
-				ClanHallManager.getInstance().setOwner(_hideout.getId(), bossKiller);
-			else
-				ClanHallManager.getInstance().setFree(_hideout.getId());
-			//_hideout.setOwner(bossKiller);
-			SystemMessage sm;
+			// The new owner (or none) and the reputation changes are stored together
+			WorldTransaction.run("Clan hall siege result", () -> {
+				if (bossKiller != null)
+					ClanHallManager.getInstance().setOwner(_hideout.getId(), bossKiller);
+				else
+					ClanHallManager.getInstance().setFree(_hideout.getId());
+				//_hideout.setOwner(bossKiller);
+				SystemMessage sm;
 			
-			if (_oldOwner > 0)
-			{
-				if (_hideout.getOwnerId() <= 0)
+				if (_oldOwner > 0)
 				{
-					L2Clan c = ClanTable.getInstance().getClan(_oldOwner);
-					c.setReputationScore(c.getReputationScore() - calculateRepChange(null, c), true);
-					c.broadcastToOnlineMembers(SystemMessageId.CLAN_LOST_CONTESTED_CLAN_HALL_AND_300_POINTS
-							.getSystemMessage());
+					if (_hideout.getOwnerId() <= 0)
+					{
+						L2Clan c = ClanTable.getInstance().getClan(_oldOwner);
+						c.setReputationScore(c.getReputationScore() - calculateRepChange(null, c), true);
+						c.broadcastToOnlineMembers(SystemMessageId.CLAN_LOST_CONTESTED_CLAN_HALL_AND_300_POINTS
+								.getSystemMessage());
+					}
+					else if (_hideout.getOwnerId() != _oldOwner)
+					{
+						L2Clan old = ClanTable.getInstance().getClan(_oldOwner);
+						L2Clan owner = _hideout.getOwnerClan();
+						int pts = calculateRepChange(owner, old);
+						old.setReputationScore(old.getReputationScore() - pts, true);
+						sm =
+								new SystemMessage(
+										SystemMessageId.OPPOSING_CLAN_CAPTURED_CLAN_HALL_AND_YOUR_CLAN_LOSES_S1_POINTS);
+						sm.addNumber(pts);
+						old.broadcastToOnlineMembers(sm);
+						owner.setReputationScore(owner.getReputationScore() + pts, true);
+						sm =
+								new SystemMessage(
+										SystemMessageId.CLAN_CAPTURED_CONTESTED_CLAN_HALL_AND_S1_POINTS_DEDUCTED_FROM_OPPONENT);
+						sm.addNumber(pts);
+						owner.broadcastToOnlineMembers(sm);
+					}
 				}
-				else if (_hideout.getOwnerId() != _oldOwner)
+				else if (_hideout.getOwnerId() > 0)
 				{
-					L2Clan old = ClanTable.getInstance().getClan(_oldOwner);
-					L2Clan owner = _hideout.getOwnerClan();
-					int pts = calculateRepChange(owner, old);
-					old.setReputationScore(old.getReputationScore() - pts, true);
-					sm =
-							new SystemMessage(
-									SystemMessageId.OPPOSING_CLAN_CAPTURED_CLAN_HALL_AND_YOUR_CLAN_LOSES_S1_POINTS);
+					L2Clan c = _hideout.getOwnerClan();
+					int pts = calculateRepChange(c, null);
+					c.setReputationScore(c.getReputationScore() + pts, true);
+					sm = new SystemMessage(SystemMessageId.CLAN_ACQUIRED_CONTESTED_CLAN_HALL_AND_S1_REPUTATION_POINTS);
 					sm.addNumber(pts);
-					old.broadcastToOnlineMembers(sm);
-					owner.setReputationScore(owner.getReputationScore() + pts, true);
-					sm =
-							new SystemMessage(
-									SystemMessageId.CLAN_CAPTURED_CONTESTED_CLAN_HALL_AND_S1_POINTS_DEDUCTED_FROM_OPPONENT);
-					sm.addNumber(pts);
-					owner.broadcastToOnlineMembers(sm);
+					c.broadcastToOnlineMembers(sm);
 				}
-			}
-			else if (_hideout.getOwnerId() > 0)
-			{
-				L2Clan c = _hideout.getOwnerClan();
-				int pts = calculateRepChange(c, null);
-				c.setReputationScore(c.getReputationScore() + pts, true);
-				sm = new SystemMessage(SystemMessageId.CLAN_ACQUIRED_CONTESTED_CLAN_HALL_AND_S1_REPUTATION_POINTS);
-				sm.addNumber(pts);
-				c.broadcastToOnlineMembers(sm);
-			}
+			});
 			
 			removeFlags(); // Removes all flags. Note: Remove flag before teleporting players
 			teleportPlayer(Siege.TeleportWhoType.Attacker, TeleportWhereType.Town); // Teleport to the second closest town
@@ -212,8 +217,11 @@ public final class CCHSiege extends AbstractSiege
 			_isInProgress = false; // Flag so that siege instance can be started
 			updatePlayerSiegeStateFlags(true);
 			getZone().updateSiegeStatus();
-			saveCastleSiege(); // Save castle specific data
-			clearSiegeClan(); // Clear siege clan from db
+			// The next siege date and the cleared registrations are the stored result of the siege
+			WorldTransaction.run("Clan hall siege end", () -> {
+				saveCastleSiege(); // Save castle specific data
+				clearSiegeClan(); // Clear siege clan from db
+			});
 			loadSiegeClan();
 			_guardManager.despawnSiegeGuards(); // Remove all spawned siege guard from this hall
 			_hideout.spawnDoor(); // Respawn door to hideout
@@ -261,14 +269,14 @@ public final class CCHSiege extends AbstractSiege
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
-			PreparedStatement statement = con.prepareStatement("DELETE FROM siege_clans WHERE castle_id=?");
+			PreparedStatement statement = con.prepareStatement("DELETE FROM clan_hall_siege_clan WHERE clan_hall_id=?");
 			statement.setInt(1, _hideout.getId());
 			statement.executeUpdate();
 			statement.close();
 			
 			if (_hideout.getOwnerId() > 0)
 			{
-				statement = con.prepareStatement("DELETE FROM siege_clans WHERE clan_id=? AND castle_id >= 20");
+				statement = con.prepareStatement("DELETE FROM clan_hall_siege_clan WHERE clan_id=?");
 				statement.setInt(1, _hideout.getOwnerId());
 				statement.executeUpdate();
 				statement.close();
@@ -362,7 +370,7 @@ public final class CCHSiege extends AbstractSiege
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("DELETE FROM siege_clans WHERE castle_id=? and clan_id=?");
+					con.prepareStatement("DELETE FROM clan_hall_siege_clan WHERE clan_hall_id=? AND clan_id=?");
 			statement.setInt(1, _hideout.getId());
 			statement.setInt(2, clanId);
 			statement.execute();
@@ -545,7 +553,7 @@ public final class CCHSiege extends AbstractSiege
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			PreparedStatement statement = con.prepareStatement("SELECT clan_id FROM siege_clans where castle_id=?");
+			PreparedStatement statement = con.prepareStatement("SELECT clan_id FROM clan_hall_siege_clan WHERE clan_hall_id=?");
 			statement.setInt(1, _hideout.getId());
 			ResultSet rs = statement.executeQuery();
 			while (rs.next())
@@ -592,10 +600,12 @@ public final class CCHSiege extends AbstractSiege
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("UPDATE clanhall_sieges SET siegeDate=?,regTimeEnd=?,regTimeOver=? WHERE hallId=?");
-			statement.setLong(1, getSiegeDate().getTimeInMillis());
-			statement.setLong(2, getTimeRegistrationOverDate().getTimeInMillis());
-			statement.setString(3, String.valueOf(getIsTimeRegistrationOver()));
+					con.prepareStatement("UPDATE clan_hall_siege SET siege_at=?, registration_end_at=?, is_registration_over=? WHERE clan_hall_id=?");
+			long siegeDate = getSiegeDate().getTimeInMillis();
+			long registrationEnd = getTimeRegistrationOverDate().getTimeInMillis();
+			statement.setTimestamp(1, siegeDate > 0 ? new Timestamp(siegeDate) : null);
+			statement.setTimestamp(2, registrationEnd > 0 ? new Timestamp(registrationEnd) : null);
+			statement.setBoolean(3, getIsTimeRegistrationOver());
 			statement.setInt(4, _hideout.getId());
 			statement.execute();
 			statement.close();
@@ -619,23 +629,13 @@ public final class CCHSiege extends AbstractSiege
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement;
+			// Clan hall registrations are always attackers and carry no other data, so an update has nothing to store
 			if (!isUpdateRegistration)
 			{
-				statement =
-						con.prepareStatement("INSERT INTO siege_clans (clan_id,castle_id,type,castle_owner) VALUES (?,?,?,0)");
+				PreparedStatement statement =
+						con.prepareStatement("INSERT INTO clan_hall_siege_clan (clan_id, clan_hall_id) VALUES (?,?) ON CONFLICT (clan_hall_id, clan_id) DO NOTHING");
 				statement.setInt(1, clan.getClanId());
 				statement.setInt(2, _hideout.getId());
-				statement.setInt(3, 1);
-				statement.execute();
-				statement.close();
-			}
-			else
-			{
-				statement = con.prepareStatement("UPDATE siege_clans SET type = ? WHERE castle_id = ? AND clan_id = ?");
-				statement.setInt(1, 1);
-				statement.setInt(2, _hideout.getId());
-				statement.setInt(3, clan.getClanId());
 				statement.execute();
 				statement.close();
 			}

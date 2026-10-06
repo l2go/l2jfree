@@ -57,7 +57,7 @@ public class TeleportLocationTable
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT Description, id, loc_x, loc_y, loc_z, price, fornoble FROM teleport");
+					con.prepareStatement("SELECT id, x, y, z, price, is_noble_only FROM teleport");
 			ResultSet rset = statement.executeQuery();
 			L2TeleportLocation teleport;
 			
@@ -66,14 +66,14 @@ public class TeleportLocationTable
 				teleport = new L2TeleportLocation();
 				
 				teleport.setTeleId(rset.getInt("id"));
-				teleport.setLocX(rset.getInt("loc_x"));
-				teleport.setLocY(rset.getInt("loc_y"));
-				teleport.setLocZ(rset.getInt("loc_z"));
+				teleport.setLocX(rset.getInt("x"));
+				teleport.setLocY(rset.getInt("y"));
+				teleport.setLocZ(rset.getInt("z"));
 				if (Config.ALT_GAME_FREE_TELEPORT)
 					teleport.setPrice(0);
 				else
 					teleport.setPrice(rset.getInt("price"));
-				teleport.setIsForNoble(rset.getInt("fornoble") == 1);
+				teleport.setIsForNoble(rset.getBoolean("is_noble_only"));
 				
 				_teleports.put(teleport.getTeleId(), teleport);
 			}

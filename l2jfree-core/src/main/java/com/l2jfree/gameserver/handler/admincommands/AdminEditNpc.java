@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -961,9 +962,13 @@ public class AdminEditNpc implements IAdminCommandHandler
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement stmt =
-					con.prepareStatement("INSERT INTO merchant_buylists (`item_id`,`price`,`shop_id`,`order`) VALUES (?,?,?,?)");
+					con.prepareStatement("INSERT INTO merchant_buylist (item_template_id, price, merchant_shop_id, position) VALUES (?,?,?,?)");
 			stmt.setInt(1, itemID);
-			stmt.setLong(2, price);
+			// a negative price means the reference price of the item, which is NULL in the catalog
+			if (price < 0)
+				stmt.setNull(2, Types.BIGINT);
+			else
+				stmt.setLong(2, price);
 			stmt.setInt(3, tradeListID);
 			stmt.setInt(4, order);
 			stmt.execute();
@@ -992,8 +997,12 @@ public class AdminEditNpc implements IAdminCommandHandler
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement stmt =
-					con.prepareStatement("UPDATE merchant_buylists SET `price` = ? WHERE `shop_id` = ? AND `order` = ?");
-			stmt.setLong(1, price);
+					con.prepareStatement("UPDATE merchant_buylist SET price = ? WHERE merchant_shop_id = ? AND position = ?");
+			// a negative price means the reference price of the item, which is NULL in the catalog
+			if (price < 0)
+				stmt.setNull(1, Types.BIGINT);
+			else
+				stmt.setLong(1, price);
 			stmt.setInt(2, tradeListID);
 			stmt.setInt(3, order);
 			stmt.execute();
@@ -1016,7 +1025,7 @@ public class AdminEditNpc implements IAdminCommandHandler
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement stmt =
-					con.prepareStatement("DELETE FROM merchant_buylists WHERE `shop_id` = ? AND `order` = ?");
+					con.prepareStatement("DELETE FROM merchant_buylist WHERE merchant_shop_id = ? AND position = ?");
 			stmt.setInt(1, tradeListID);
 			stmt.setInt(2, order);
 			stmt.execute();
@@ -1040,13 +1049,13 @@ public class AdminEditNpc implements IAdminCommandHandler
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement stmt =
-					con.prepareStatement("SELECT * FROM merchant_buylists WHERE `shop_id` = ? AND `item_id` = ? AND `price` = ?");
+					con.prepareStatement("SELECT position FROM merchant_buylist WHERE merchant_shop_id = ? AND item_template_id = ? AND price = ?");
 			stmt.setInt(1, tradeListID);
 			stmt.setInt(2, itemID);
 			stmt.setLong(3, price);
 			ResultSet rs = stmt.executeQuery();
 			if (rs.next())
-				order = rs.getInt("order");
+				order = rs.getInt("position");
 			
 			stmt.close();
 			rs.close();
@@ -1070,8 +1079,15 @@ public class AdminEditNpc implements IAdminCommandHandler
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement stmt =
-					con.prepareStatement("INSERT INTO custom_merchant_buylists (`item_id`,`price`,`shop_id`,`order`) values ("
-							+ itemID + "," + price + "," + tradeListID + "," + order + ")");
+					con.prepareStatement("INSERT INTO custom_merchant_buylist (item_template_id, price, merchant_shop_id, position) VALUES (?,?,?,?)");
+			stmt.setInt(1, itemID);
+			// a negative price means the reference price of the item, which is NULL in the catalog
+			if (price < 0)
+				stmt.setNull(2, Types.BIGINT);
+			else
+				stmt.setLong(2, price);
+			stmt.setInt(3, tradeListID);
+			stmt.setInt(4, order);
 			stmt.execute();
 			stmt.close();
 		}
@@ -1098,8 +1114,14 @@ public class AdminEditNpc implements IAdminCommandHandler
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement stmt =
-					con.prepareStatement("UPDATE custom_merchant_buylists SET `price`='" + price
-							+ "' WHERE `shop_id`='" + tradeListID + "' AND `order`='" + order + "'");
+					con.prepareStatement("UPDATE custom_merchant_buylist SET price = ? WHERE merchant_shop_id = ? AND position = ?");
+			// a negative price means the reference price of the item, which is NULL in the catalog
+			if (price < 0)
+				stmt.setNull(1, Types.BIGINT);
+			else
+				stmt.setLong(1, price);
+			stmt.setInt(2, tradeListID);
+			stmt.setInt(3, order);
 			stmt.execute();
 			stmt.close();
 		}
@@ -1120,8 +1142,9 @@ public class AdminEditNpc implements IAdminCommandHandler
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement stmt =
-					con.prepareStatement("DELETE FROM custom_merchant_buylists WHERE `shop_id`='" + tradeListID
-							+ "' AND `order`='" + order + "'");
+					con.prepareStatement("DELETE FROM custom_merchant_buylist WHERE merchant_shop_id = ? AND position = ?");
+			stmt.setInt(1, tradeListID);
+			stmt.setInt(2, order);
 			stmt.execute();
 			stmt.close();
 		}
@@ -1143,11 +1166,13 @@ public class AdminEditNpc implements IAdminCommandHandler
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement stmt =
-					con.prepareStatement("SELECT * FROM custom_merchant_buylists WHERE `shop_id`='" + tradeListID
-							+ "' AND `item_id` ='" + itemID + "' AND `price` = '" + price + "'");
+					con.prepareStatement("SELECT position FROM custom_merchant_buylist WHERE merchant_shop_id = ? AND item_template_id = ? AND price = ?");
+			stmt.setInt(1, tradeListID);
+			stmt.setInt(2, itemID);
+			stmt.setLong(3, price);
 			ResultSet rs = stmt.executeQuery();
 			if (rs.next())
-				order = rs.getInt("order");
+				order = rs.getInt("position");
 			
 			stmt.close();
 			rs.close();
@@ -1480,7 +1505,7 @@ public class AdminEditNpc implements IAdminCommandHandler
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			PreparedStatement statement =
-					con.prepareStatement("SELECT mobId, itemId, min, max, category, chance FROM droplist WHERE mobId = ? AND itemId = ? AND category = ?");
+					con.prepareStatement("SELECT npc_template_id, item_template_id, min_count, max_count, category, chance FROM drop WHERE npc_template_id = ? AND item_template_id = ? AND category = ?");
 			statement.setInt(1, npcId);
 			statement.setInt(2, itemId);
 			statement.setInt(3, category);
@@ -1497,15 +1522,15 @@ public class AdminEditNpc implements IAdminCommandHandler
 			{
 				replyMSG.append("<table>");
 				replyMSG.append("<tr><td>Appertain of NPC</td><td>"
-						+ NpcTable.getInstance().getTemplate(dropData.getInt("mobId")).getName() + "</td></tr>");
+						+ NpcTable.getInstance().getTemplate(dropData.getInt("npc_template_id")).getName() + "</td></tr>");
 				replyMSG.append("<tr><td>ItemName</td><td>"
-						+ ItemTable.getInstance().getTemplate(dropData.getInt("itemId")).getName() + "("
-						+ dropData.getInt("itemId") + ")</td></tr>");
+						+ ItemTable.getInstance().getTemplate(dropData.getInt("item_template_id")).getName() + "("
+						+ dropData.getInt("item_template_id") + ")</td></tr>");
 				replyMSG.append("<tr><td>Category</td><td>" + ((category == -1) ? "sweep" : Integer.toString(category))
 						+ "</td></tr>");
-				replyMSG.append("<tr><td>MIN(" + dropData.getInt("min")
+				replyMSG.append("<tr><td>MIN(" + dropData.getInt("min_count")
 						+ ")</td><td><edit var=\"min\" width=80></td></tr>");
-				replyMSG.append("<tr><td>MAX(" + dropData.getInt("max")
+				replyMSG.append("<tr><td>MAX(" + dropData.getInt("max_count")
 						+ ")</td><td><edit var=\"max\" width=80></td></tr>");
 				replyMSG.append("<tr><td>CHANCE(" + dropData.getInt("chance")
 						+ ")</td><td><edit var=\"chance\" width=80></td></tr>");
@@ -1520,7 +1545,7 @@ public class AdminEditNpc implements IAdminCommandHandler
 						+ category
 						+ " $min $max $chance\"  width=100 height=15 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\">");
 				replyMSG.append("<br><button value=\"DropList\" action=\"bypass -h admin_show_droplist "
-						+ dropData.getInt("mobId")
+						+ dropData.getInt("npc_template_id")
 						+ "\"  width=100 height=15 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\">");
 				replyMSG.append("</center>");
 			}
@@ -1581,7 +1606,7 @@ public class AdminEditNpc implements IAdminCommandHandler
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			PreparedStatement statement =
-					con.prepareStatement("UPDATE droplist SET min=?, max=?, chance=? WHERE mobId=? AND itemId=? AND category=?");
+					con.prepareStatement("UPDATE drop SET min_count = ?, max_count = ?, chance = ? WHERE npc_template_id = ? AND item_template_id = ? AND category = ?");
 			statement.setInt(1, min);
 			statement.setInt(2, max);
 			statement.setInt(3, chance);
@@ -1593,14 +1618,14 @@ public class AdminEditNpc implements IAdminCommandHandler
 			statement.close();
 			
 			PreparedStatement statement2 =
-					con.prepareStatement("SELECT mobId FROM droplist WHERE mobId=? AND itemId=? AND category=?");
+					con.prepareStatement("SELECT npc_template_id FROM drop WHERE npc_template_id = ? AND item_template_id = ? AND category = ?");
 			statement2.setInt(1, npcId);
 			statement2.setInt(2, itemId);
 			statement2.setInt(3, category);
 			
 			ResultSet npcIdRs = statement2.executeQuery();
 			if (npcIdRs.next())
-				npcId = npcIdRs.getInt("mobId");
+				npcId = npcIdRs.getInt("npc_template_id");
 			npcIdRs.close();
 			statement2.close();
 			
@@ -1640,7 +1665,7 @@ public class AdminEditNpc implements IAdminCommandHandler
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			PreparedStatement statement =
-					con.prepareStatement("INSERT INTO droplist(mobId, itemId, min, max, category, chance) values(?,?,?,?,?,?)");
+					con.prepareStatement("INSERT INTO drop (npc_template_id, item_template_id, min_count, max_count, category, chance) VALUES (?,?,?,?,?,?)");
 			statement.setInt(1, npcId);
 			statement.setInt(2, itemId);
 			statement.setInt(3, min);
@@ -1683,7 +1708,7 @@ public class AdminEditNpc implements IAdminCommandHandler
 			if (npcId > 0)
 			{
 				PreparedStatement statement2 =
-						con.prepareStatement("DELETE FROM droplist WHERE mobId=? AND itemId=? AND category=?");
+						con.prepareStatement("DELETE FROM drop WHERE npc_template_id = ? AND item_template_id = ? AND category = ?");
 				statement2.setInt(1, npcId);
 				statement2.setInt(2, itemId);
 				statement2.setInt(3, category);
@@ -1733,7 +1758,7 @@ public class AdminEditNpc implements IAdminCommandHandler
 			
 			npcData.clearAllDropData();
 			
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM droplist WHERE mobId=?");
+			PreparedStatement statement = con.prepareStatement("SELECT item_template_id, min_count, max_count, chance, category FROM drop WHERE npc_template_id = ?");
 			statement.setInt(1, npcId);
 			ResultSet dropDataList = statement.executeQuery();
 			
@@ -1741,9 +1766,9 @@ public class AdminEditNpc implements IAdminCommandHandler
 			{
 				L2DropData dropData = new L2DropData();
 				
-				dropData.setItemId(dropDataList.getInt("itemId"));
-				dropData.setMinDrop(dropDataList.getInt("min"));
-				dropData.setMaxDrop(dropDataList.getInt("max"));
+				dropData.setItemId(dropDataList.getInt("item_template_id"));
+				dropData.setMinDrop(dropDataList.getInt("min_count"));
+				dropData.setMaxDrop(dropDataList.getInt("max_count"));
 				dropData.setChance(dropDataList.getInt("chance"));
 				
 				int category = dropDataList.getInt("category");
@@ -1871,8 +1896,9 @@ public class AdminEditNpc implements IAdminCommandHandler
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			PreparedStatement statement =
-					con.prepareStatement("SELECT npcid, skillid, level FROM npcskills WHERE npcid=" + npcId
-							+ " AND skillid=" + skillId);
+					con.prepareStatement("SELECT npc_template_id, skill_id, skill_level FROM npc_skill WHERE npc_template_id = ? AND skill_id = ?");
+			statement.setInt(1, npcId);
+			statement.setInt(2, skillId);
 			ResultSet skillData = statement.executeQuery();
 			
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
@@ -1884,12 +1910,12 @@ public class AdminEditNpc implements IAdminCommandHandler
 			if (skillData.next())
 			{
 				L2Skill skill =
-						SkillTable.getInstance().getInfo(skillData.getInt("skillid"), skillData.getInt("level"));
+						SkillTable.getInstance().getInfo(skillData.getInt("skill_id"), skillData.getInt("skill_level"));
 				
 				replyMSG.append("<table>");
 				replyMSG.append("<tr><td>NPC</td><td>"
-						+ NpcTable.getInstance().getTemplate(skillData.getInt("npcid")).getName() + "</td></tr>");
-				replyMSG.append("<tr><td>SKILL</td><td>" + skill.getName() + "(" + skillData.getInt("skillid")
+						+ NpcTable.getInstance().getTemplate(skillData.getInt("npc_template_id")).getName() + "</td></tr>");
+				replyMSG.append("<tr><td>SKILL</td><td>" + skill.getName() + "(" + skillData.getInt("skill_id")
 						+ ")</td></tr>");
 				replyMSG.append("<tr><td>Lv(" + skill.getLevel() + ")</td><td><edit var=\"level\" width=50></td></tr>");
 				replyMSG.append("</table>");
@@ -1947,7 +1973,7 @@ public class AdminEditNpc implements IAdminCommandHandler
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			PreparedStatement statement =
-					con.prepareStatement("UPDATE npcskills SET level=? WHERE npcid=? AND skillid=?");
+					con.prepareStatement("UPDATE npc_skill SET skill_level = ? WHERE npc_template_id = ? AND skill_id = ?");
 			statement.setInt(1, level);
 			statement.setInt(2, npcId);
 			statement.setInt(3, skillId);
@@ -2041,7 +2067,7 @@ public class AdminEditNpc implements IAdminCommandHandler
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			PreparedStatement statement =
-					con.prepareStatement("INSERT INTO npcskills(npcid, skillid, level) values(?,?,?)");
+					con.prepareStatement("INSERT INTO npc_skill (npc_template_id, skill_id, skill_level) VALUES (?,?,?)");
 			statement.setInt(1, npcId);
 			statement.setInt(2, skillId);
 			statement.setInt(3, level);
@@ -2086,7 +2112,7 @@ public class AdminEditNpc implements IAdminCommandHandler
 			if (npcId > 0)
 			{
 				PreparedStatement statement2 =
-						con.prepareStatement("DELETE FROM npcskills WHERE npcid=? AND skillid=?");
+						con.prepareStatement("DELETE FROM npc_skill WHERE npc_template_id = ? AND skill_id = ?");
 				statement2.setInt(1, npcId);
 				statement2.setInt(2, skillId);
 				statement2.execute();
@@ -2131,7 +2157,7 @@ public class AdminEditNpc implements IAdminCommandHandler
 			
 			// with out race
 			String _sql =
-					"SELECT npcid, skillid, level FROM npcskills WHERE npcid=? AND (skillid NOT BETWEEN 4290 AND 4302)";
+					"SELECT npc_template_id, skill_id, skill_level FROM npc_skill WHERE npc_template_id = ? AND (skill_id NOT BETWEEN 4290 AND 4302)";
 			
 			PreparedStatement statement = con.prepareStatement(_sql);
 			statement.setInt(1, npcId);
@@ -2140,8 +2166,8 @@ public class AdminEditNpc implements IAdminCommandHandler
 			int i = 1;
 			while (skillDataList.next())
 			{
-				int idval = skillDataList.getInt("skillid");
-				int levelval = skillDataList.getInt("level");
+				int idval = skillDataList.getInt("skill_id");
+				int levelval = skillDataList.getInt("skill_level");
 				L2Skill skillData = SkillTable.getInstance().getInfo(idval, levelval);
 				if (skillData != null)
 				{

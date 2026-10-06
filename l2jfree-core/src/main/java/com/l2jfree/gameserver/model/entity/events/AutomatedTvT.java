@@ -683,7 +683,7 @@ public final class AutomatedTvT
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
-			PreparedStatement ps = con.prepareStatement("UPDATE characters SET heading=?,x=?,y=?,z=? WHERE charId=?");
+			PreparedStatement ps = con.prepareStatement("UPDATE player SET heading = ?, x = ?, y = ?, z = ? WHERE id = ?");
 			ps.setInt(1, loc.getHeading());
 			if (Config.AUTO_TVT_OVERRIDE_TELE_BACK)
 			{

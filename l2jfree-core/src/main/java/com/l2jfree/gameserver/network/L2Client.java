@@ -20,6 +20,7 @@ import java.nio.channels.SocketChannel;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 
 import javolution.util.FastList;
 
@@ -40,9 +41,6 @@ import com.l2jfree.gameserver.network.packets.L2ServerPacket;
 import com.l2jfree.gameserver.network.packets.server.LeaveWorld;
 import com.l2jfree.gameserver.network.packets.server.ServerClose;
 import com.l2jfree.gameserver.threadmanager.FIFORunnableQueue;
-import com.l2jfree.gameserver.util.TableOptimizer;
-import com.l2jfree.gameserver.util.TableOptimizer.CharacterRelatedTable;
-import com.l2jfree.gameserver.util.TableOptimizer.ItemRelatedTable;
 import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.mmocore.network.MMOConnection;
 import com.l2jfree.mmocore.network.SelectorThread;
@@ -189,7 +187,7 @@ public final class L2Client extends MMOConnection<L2Client, L2ClientPacket, L2Se
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT clanId from characters WHERE charId=?");
+			PreparedStatement statement = con.prepareStatement("SELECT clan_id FROM player WHERE id=?");
 			statement.setInt(1, objid);
 			ResultSet rs = statement.executeQuery();
 			byte answer = -1;
@@ -219,8 +217,8 @@ public final class L2Client extends MMOConnection<L2Client, L2ClientPacket, L2Se
 					}
 					else
 					{
-						statement = con.prepareStatement("UPDATE characters SET deletetime=? WHERE charId=?");
-						statement.setLong(1, System.currentTimeMillis() + Config.DELETE_DAYS * 86400000L); // 24*60*60*1000 = 86400000
+						statement = con.prepareStatement("UPDATE player SET delete_at=? WHERE id=?");
+						statement.setTimestamp(1, new Timestamp(System.currentTimeMillis() + Config.DELETE_DAYS * 86400000L)); // 24*60*60*1000 = 86400000
 						statement.setInt(2, objid);
 						statement.execute();
 						statement.close();
@@ -261,7 +259,7 @@ public final class L2Client extends MMOConnection<L2Client, L2ClientPacket, L2Se
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("UPDATE characters SET deletetime=0 WHERE charId=?");
+			PreparedStatement statement = con.prepareStatement("UPDATE player SET delete_at=NULL WHERE id=?");
 			statement.setInt(1, objid);
 			statement.execute();
 			statement.close();
@@ -288,28 +286,8 @@ public final class L2Client extends MMOConnection<L2Client, L2ClientPacket, L2Se
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
 			
-			for (ItemRelatedTable table : TableOptimizer.getItemRelatedTables())
-			{
-				statement = con.prepareStatement(table.getDeleteQuery());
-				statement.setInt(1, objid);
-				statement.execute();
-				statement.close();
-			}
-			
-			for (CharacterRelatedTable table : TableOptimizer.getCharacterRelatedTables())
-			{
-				statement = con.prepareStatement(table.getDeleteQuery());
-				statement.setInt(1, objid);
-				statement.execute();
-				statement.close();
-			}
-			
-			statement = con.prepareStatement("DELETE FROM items WHERE owner_id=?");
-			statement.setInt(1, objid);
-			statement.execute();
-			statement.close();
-			
-			statement = con.prepareStatement("DELETE FROM characters WHERE charId=?");
+			// The tables that belong to the player (items, skills, shortcuts, ...) cascade
+			statement = con.prepareStatement("DELETE FROM player WHERE id=?");
 			statement.setInt(1, objid);
 			statement.execute();
 			statement.close();

@@ -22,14 +22,14 @@ import org.junit.jupiter.api.Test;
 class CursedWeaponIdCompactionTest
 {
 	@Test
-	@DisplayName("id compaction updates cursed_weapons.charId")
+	@DisplayName("id compaction updates cursed_weapon.player_id")
 	void compactionUsesTheCurrentCursedWeaponColumn()
 	{
 		assertThat(IdFactory.ID_UPDATES)
-				.filteredOn(sql -> sql.contains("cursed_weapons"))
+				.filteredOn(sql -> sql.contains("cursed_weapon"))
 				.singleElement()
 				.asString()
-				.contains("charId")
-				.doesNotContain("playerId");
+				.contains("player_id")
+				.doesNotContain("charId");
 	}
 }

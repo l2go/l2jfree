@@ -75,6 +75,8 @@ import com.l2jfree.gameserver.handler.SkillTargetHandler;
 import com.l2jfree.gameserver.handler.UserCommandHandler;
 import com.l2jfree.gameserver.handler.VoicedCommandHandler;
 import com.l2jfree.gameserver.idfactory.IdFactory;
+import com.l2jfree.gameserver.persistence.WorldLock;
+import com.l2jfree.gameserver.persistence.WorldSchemas;
 import com.l2jfree.gameserver.instancemanager.AirShipManager;
 import com.l2jfree.gameserver.instancemanager.AuctionManager;
 import com.l2jfree.gameserver.instancemanager.AutoChatManager;
@@ -151,10 +153,8 @@ import com.l2jfree.gameserver.taskmanager.PacketBroadcaster;
 import com.l2jfree.gameserver.taskmanager.SQLQueue;
 import com.l2jfree.gameserver.taskmanager.tasks.TaskManager;
 import com.l2jfree.gameserver.threadmanager.DeadlockDetector;
-import com.l2jfree.gameserver.util.DatabaseBackupManager;
 import com.l2jfree.gameserver.util.DynamicExtension;
 import com.l2jfree.gameserver.util.OfflineTradeManager;
-import com.l2jfree.gameserver.util.TableOptimizer;
 import com.l2jfree.gameserver.util.Util;
 import com.l2jfree.lang.management.StartupManager;
 import com.l2jfree.util.concurrent.RunnableStatsManager;
@@ -162,6 +162,10 @@ import com.l2jfree.util.concurrent.RunnableStatsManager;
 public final class GameServer extends L2AutoInitialization
 {
 	private static final Calendar _serverStarted = Calendar.getInstance();
+	
+	/** Held for as long as the server runs: it keeps a second server off the same world database. */
+	@SuppressWarnings("unused")
+	private static WorldLock _worldLock;
 	
 	public static void main(String[] args) throws Exception
 	{
@@ -174,7 +178,8 @@ public final class GameServer extends L2AutoInitialization
 		Files.createDirectories(Paths.get("cache"));
 		
 		Util.printSection("Database");
-		L2DatabaseFactory.getInstance();
+		_worldLock = WorldLock.acquire(Config.DATABASE_URL, Config.DATABASE_LOGIN, Config.DATABASE_PASSWORD);
+		WorldSchemas.prepare(L2DatabaseFactory.getInstance().getDataSource(), Paths.get(Config.CATALOG_DIRECTORY));
 		Util.printSection("World");
 		L2World.getInstance();
 		if (Config.IS_TELNET_ENABLED)
@@ -190,10 +195,6 @@ public final class GameServer extends L2AutoInitialization
 			throw new Exception("Could not initialize the ID factory");
 		}
 		_log.info("IdFactory: Free ObjectID's remaining: " + IdFactory.getInstance().size());
-		if (Config.OPTIMIZE_DATABASE)
-			TableOptimizer.optimize();
-		if (Config.DATABASE_BACKUP_MAKE_BACKUP_ON_STARTUP)
-			DatabaseBackupManager.makeBackup();
 		Class.forName(RunnableStatsManager.class.getName());
 		ThreadPoolManager.getInstance();
 		if (Config.DEADLOCKCHECK_INTERVAL > 0)

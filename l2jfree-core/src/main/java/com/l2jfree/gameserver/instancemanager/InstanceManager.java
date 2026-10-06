@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -58,11 +59,12 @@ public class InstanceManager
 	private final Map<Integer, Map<Integer, Long>> _playerInstanceTimes = new FastMap<Integer, Map<Integer, Long>>();
 	
 	private static final String ADD_INSTANCE_TIME =
-			"INSERT INTO character_instance_time (charId,instanceId,time) values (?,?,?) ON DUPLICATE KEY UPDATE time=?";
+			"INSERT INTO player_instance_reentry (player_id, instance_template_id, reenter_at) VALUES (?, ?, ?) "
+					+ "ON CONFLICT (player_id, instance_template_id) DO UPDATE SET reenter_at = EXCLUDED.reenter_at";
 	private static final String RESTORE_INSTANCE_TIMES =
-			"SELECT instanceId,time FROM character_instance_time WHERE charId=?";
+			"SELECT instance_template_id, reenter_at FROM player_instance_reentry WHERE player_id = ?";
 	private static final String DELETE_INSTANCE_TIME =
-			"DELETE FROM character_instance_time WHERE charId=? AND instanceId=?";
+			"DELETE FROM player_instance_reentry WHERE player_id = ? AND instance_template_id = ?";
 	
 	public long getInstanceTime(int playerObjId, int id)
 	{
@@ -92,8 +94,7 @@ public class InstanceManager
 			statement = con.prepareStatement(ADD_INSTANCE_TIME);
 			statement.setInt(1, playerObjId);
 			statement.setInt(2, id);
-			statement.setLong(3, time);
-			statement.setLong(4, time);
+			statement.setTimestamp(3, new Timestamp(time));
 			statement.execute();
 			statement.close();
 			_playerInstanceTimes.get(playerObjId).put(id, time);
@@ -147,8 +148,8 @@ public class InstanceManager
 			
 			while (rset.next())
 			{
-				int id = rset.getInt("instanceId");
-				long time = rset.getLong("time");
+				int id = rset.getInt("instance_template_id");
+				long time = rset.getTimestamp("reenter_at").getTime();
 				if (time < System.currentTimeMillis())
 					deleteInstanceTime(playerObjId, id);
 				else

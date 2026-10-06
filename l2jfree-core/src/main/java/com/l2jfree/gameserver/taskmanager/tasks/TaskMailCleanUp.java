@@ -17,9 +17,9 @@ package com.l2jfree.gameserver.taskmanager.tasks;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 
-import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.communitybbs.Manager.MailBBSManager;
 import com.l2jfree.gameserver.taskmanager.tasks.TaskManager.ExecutedTask;
@@ -43,10 +43,10 @@ public class TaskMailCleanUp extends TaskHandler
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT letterId FROM character_mail WHERE (location = ? OR location = ?) AND deleteDate < ?");
+					con.prepareStatement("SELECT id FROM player_mail WHERE (folder = ? OR folder = ?) AND delete_at < ?");
 			statement.setString(1, "inbox");
 			statement.setString(2, "sentbox");
-			statement.setLong(3, System.currentTimeMillis());
+			statement.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
 			ResultSet result = statement.executeQuery();
 			while (result.next())
 				deleteLetterList.add(result.getInt(1));
@@ -55,8 +55,6 @@ public class TaskMailCleanUp extends TaskHandler
 			
 			for (int letterId : deleteLetterList)
 			{
-				if (Config.MAIL_STORE_DELETED_LETTERS)
-					MailBBSManager.getInstance().storeLetter(letterId);
 				MailBBSManager.getInstance().deleteLetter(letterId);
 			}
 		}

@@ -28,7 +28,7 @@ MIMYU  = 30747
 #kinda bugged, missing refresh, works only when player relog so far
 def EvolvePet(player,item,striderControlItem) :
    con = L2DatabaseFactory.getInstance().getConnection()
-   statement = con.prepareStatement("UPDATE items SET item_id =? WHERE object_id=? AND owner_id=?")
+   statement = con.prepareStatement("UPDATE item SET item_template_id = ? WHERE id = ? AND owner_player_id = ?")
    statement.setInt(1, striderControlItem)
    statement.setInt(2, item.getObjectId())
    statement.setInt(3, player.getObjectId())

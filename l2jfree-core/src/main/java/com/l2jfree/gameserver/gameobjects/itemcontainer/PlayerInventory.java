@@ -14,9 +14,6 @@
  */
 package com.l2jfree.gameserver.gameobjects.itemcontainer;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +21,6 @@ import java.util.Map;
 import javolution.util.FastList;
 
 import com.l2jfree.Config;
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.ItemTable;
 import com.l2jfree.gameserver.gameobjects.L2Object;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -38,6 +34,7 @@ import com.l2jfree.gameserver.model.items.templates.L2EtcItemType;
 import com.l2jfree.gameserver.network.packets.server.InventoryUpdate;
 import com.l2jfree.gameserver.network.packets.server.ItemList;
 import com.l2jfree.gameserver.network.packets.server.StatusUpdate;
+import com.l2jfree.gameserver.persistence.item.ItemRepository;
 import com.l2jfree.util.ArrayBunch;
 
 public class PlayerInventory extends Inventory
@@ -676,24 +673,15 @@ public class PlayerInventory extends Inventory
 	public static int[][] restoreVisibleInventory(int objectId)
 	{
 		int[][] paperdoll = new int[Inventory.PAPERDOLL_TOTALSLOTS][4];
-		Connection con = null;
-		
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement2 =
-					con.prepareStatement("SELECT object_id,item_id,loc_data,enchant_level FROM items WHERE owner_id=? AND loc='PAPERDOLL'");
-			statement2.setInt(1, objectId);
-			ResultSet invdata = statement2.executeQuery();
-			
-			int slot, objId, itemId, enchant, displayId;
-			while (invdata.next())
+			for (ItemRepository.PaperdollEntry entry : ItemRepository.getInstance().loadPaperdoll(objectId))
 			{
-				slot = invdata.getInt("loc_data");
-				objId = invdata.getInt("object_id");
-				itemId = invdata.getInt("item_id");
-				enchant = invdata.getInt("enchant_level");
-				displayId = ItemTable.getInstance().getTemplate(itemId).getItemDisplayId();
+				int slot = entry.slot();
+				int objId = entry.id();
+				int itemId = entry.itemTemplateId();
+				int enchant = entry.enchantLevel();
+				int displayId = ItemTable.getInstance().getTemplate(itemId).getItemDisplayId();
 				
 				paperdoll[slot][0] = objId;
 				paperdoll[slot][1] = itemId;
@@ -707,17 +695,10 @@ public class PlayerInventory extends Inventory
 					paperdoll[Inventory.PAPERDOLL_RHAND][3] = displayId;
 				}
 			}
-			
-			invdata.close();
-			statement2.close();
 		}
 		catch (Exception e)
 		{
 			_log.warn("could not restore inventory:", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
 		}
 		
 		return paperdoll;

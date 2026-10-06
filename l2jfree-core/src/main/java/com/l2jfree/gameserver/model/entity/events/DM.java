@@ -46,6 +46,7 @@ import com.l2jfree.gameserver.network.packets.server.ActionFailed;
 import com.l2jfree.gameserver.network.packets.server.MagicSkillUse;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.network.packets.server.StatusUpdate;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 import com.l2jfree.lang.L2TextBuilder;
 
 public class DM
@@ -470,26 +471,29 @@ public class DM
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			statement = con.prepareStatement("Select * from dm");
+			statement =
+					con.prepareStatement("SELECT name, description, joining_location_name, min_level, max_level, "
+							+ "npc_template_id, npc_x, npc_y, npc_z, reward_item_template_id, reward_count, name_color, "
+							+ "player_x, player_y, player_z FROM dm_event");
 			rs = statement.executeQuery();
 			
 			while (rs.next())
 			{
-				_eventName = rs.getString("eventName");
-				_eventDesc = rs.getString("eventDesc");
-				_joiningLocationName = rs.getString("joiningLocation");
-				_minlvl = rs.getInt("minlvl");
-				_maxlvl = rs.getInt("maxlvl");
-				_npcId = rs.getInt("npcId");
-				_npcX = rs.getInt("npcX");
-				_npcY = rs.getInt("npcY");
-				_npcZ = rs.getInt("npcZ");
-				_rewardId = rs.getInt("rewardId");
-				_rewardAmount = rs.getInt("rewardAmount");
-				_playerColors = rs.getInt("color");
-				_playerX = rs.getInt("playerX");
-				_playerY = rs.getInt("playerY");
-				_playerZ = rs.getInt("playerZ");
+				_eventName = rs.getString("name");
+				_eventDesc = rs.getString("description");
+				_joiningLocationName = rs.getString("joining_location_name");
+				_minlvl = rs.getInt("min_level");
+				_maxlvl = rs.getInt("max_level");
+				_npcId = rs.getInt("npc_template_id");
+				_npcX = rs.getInt("npc_x");
+				_npcY = rs.getInt("npc_y");
+				_npcZ = rs.getInt("npc_z");
+				_rewardId = rs.getInt("reward_item_template_id");
+				_rewardAmount = rs.getInt("reward_count");
+				_playerColors = rs.getInt("name_color");
+				_playerX = rs.getInt("player_x");
+				_playerY = rs.getInt("player_y");
+				_playerZ = rs.getInt("player_z");
 				
 			}
 			statement.close();
@@ -506,18 +510,24 @@ public class DM
 	
 	public static void saveData()
 	{
+		// The old row is replaced by the new one.
+		WorldTransaction.run("DM event save", DM::writeData);
+	}
+	
+	private static void writeData()
+	{
 		Connection con = null;
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
 			
-			statement = con.prepareStatement("Delete from dm");
+			statement = con.prepareStatement("DELETE FROM dm_event");
 			statement.execute();
 			statement.close();
 			
 			statement =
-					con.prepareStatement("INSERT INTO dm (eventName, eventDesc, joiningLocation, minlvl, maxlvl, npcId, npcX, npcY, npcZ, rewardId, rewardAmount, color, playerX, playerY, playerZ ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+					con.prepareStatement("INSERT INTO dm_event (name, description, joining_location_name, min_level, max_level, npc_template_id, npc_x, npc_y, npc_z, reward_item_template_id, reward_count, name_color, player_x, player_y, player_z) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			statement.setString(1, _eventName);
 			statement.setString(2, _eventDesc);
 			statement.setString(3, _joiningLocationName);

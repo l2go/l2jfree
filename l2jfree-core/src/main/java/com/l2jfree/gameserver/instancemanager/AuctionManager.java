@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
 
 import javolution.util.FastList;
@@ -33,45 +34,24 @@ public class AuctionManager
 	protected static Logger _log = LoggerFactory.getLogger(AuctionManager.class);
 	private final List<Auction> _auctions;
 	
-	private static final String[] ITEM_INIT_DATA = {
-			"(22, 0, 'NPC', 'NPC Clan', 'ClanHall', 22, 0, 'Moonstone Hall', 1, 20000000, 0, 1164841200000)",
-			"(23, 0, 'NPC', 'NPC Clan', 'ClanHall', 23, 0, 'Onyx Hall', 1, 20000000, 0, 1164841200000)",
-			"(24, 0, 'NPC', 'NPC Clan', 'ClanHall', 24, 0, 'Topaz Hall', 1, 20000000, 0, 1164841200000)",
-			"(25, 0, 'NPC', 'NPC Clan', 'ClanHall', 25, 0, 'Ruby Hall', 1, 20000000, 0, 1164841200000)",
-			"(26, 0, 'NPC', 'NPC Clan', 'ClanHall', 26, 0, 'Crystal Hall', 1, 20000000, 0, 1164841200000)",
-			"(27, 0, 'NPC', 'NPC Clan', 'ClanHall', 27, 0, 'Onyx Hall', 1, 20000000, 0, 1164841200000)",
-			"(28, 0, 'NPC', 'NPC Clan', 'ClanHall', 28, 0, 'Sapphire Hall', 1, 20000000, 0, 1164841200000)",
-			"(29, 0, 'NPC', 'NPC Clan', 'ClanHall', 29, 0, 'Moonstone Hall', 1, 20000000, 0, 1164841200000)",
-			"(30, 0, 'NPC', 'NPC Clan', 'ClanHall', 30, 0, 'Emerald Hall', 1, 20000000, 0, 1164841200000)",
-			"(31, 0, 'NPC', 'NPC Clan', 'ClanHall', 31, 0, 'The Atramental Barracks', 1, 8000000, 0, 1164841200000)",
-			"(32, 0, 'NPC', 'NPC Clan', 'ClanHall', 32, 0, 'The Scarlet Barracks', 1, 8000000, 0, 1164841200000)",
-			"(33, 0, 'NPC', 'NPC Clan', 'ClanHall', 33, 0, 'The Viridian Barracks', 1, 8000000, 0, 1164841200000)",
-			"(36, 0, 'NPC', 'NPC Clan', 'ClanHall', 36, 0, 'The Golden Chamber', 1, 50000000, 0, 1164841200000)",
-			"(37, 0, 'NPC', 'NPC Clan', 'ClanHall', 37, 0, 'The Silver Chamber', 1, 50000000, 0, 1164841200000)",
-			"(38, 0, 'NPC', 'NPC Clan', 'ClanHall', 38, 0, 'The Mithril Chamber', 1, 50000000, 0, 1164841200000)",
-			"(39, 0, 'NPC', 'NPC Clan', 'ClanHall', 39, 0, 'Silver Manor', 1, 50000000, 0, 1164841200000)",
-			"(40, 0, 'NPC', 'NPC Clan', 'ClanHall', 40, 0, 'Gold Manor', 1, 50000000, 0, 1164841200000)",
-			"(41, 0, 'NPC', 'NPC Clan', 'ClanHall', 41, 0, 'The Bronze Chamber', 1, 50000000, 0, 1164841200000)",
-			"(42, 0, 'NPC', 'NPC Clan', 'ClanHall', 42, 0, 'The Golden Chamber', 1, 50000000, 0, 1164841200000)",
-			"(43, 0, 'NPC', 'NPC Clan', 'ClanHall', 43, 0, 'The Silver Chamber', 1, 50000000, 0, 1164841200000)",
-			"(44, 0, 'NPC', 'NPC Clan', 'ClanHall', 44, 0, 'The Mithril Chamber', 1, 50000000, 0, 1164841200000)",
-			"(45, 0, 'NPC', 'NPC Clan', 'ClanHall', 45, 0, 'The Bronze Chamber', 1, 50000000, 0, 1164841200000)",
-			"(46, 0, 'NPC', 'NPC Clan', 'ClanHall', 46, 0, 'Silver Manor', 1, 50000000, 0, 1164841200000)",
-			"(47, 0, 'NPC', 'NPC Clan', 'ClanHall', 47, 0, 'Moonstone Hall', 1, 50000000, 0, 1164841200000)",
-			"(48, 0, 'NPC', 'NPC Clan', 'ClanHall', 48, 0, 'Onyx Hall', 1, 50000000, 0, 1164841200000)",
-			"(49, 0, 'NPC', 'NPC Clan', 'ClanHall', 49, 0, 'Emerald Hall', 1, 50000000, 0, 1164841200000)",
-			"(50, 0, 'NPC', 'NPC Clan', 'ClanHall', 50, 0, 'Sapphire Hall', 1, 50000000, 0, 1164841200000)",
-			"(51, 0, 'NPC', 'NPC Clan', 'ClanHall', 51, 0, 'Mont Chamber', 1, 50000000, 0, 1164841200000)",
-			"(52, 0, 'NPC', 'NPC Clan', 'ClanHall', 52, 0, 'Astaire Chamber', 1, 50000000, 0, 1164841200000)",
-			"(53, 0, 'NPC', 'NPC Clan', 'ClanHall', 53, 0, 'Aria Chamber', 1, 50000000, 0, 1164841200000)",
-			"(54, 0, 'NPC', 'NPC Clan', 'ClanHall', 54, 0, 'Yiana Chamber', 1, 50000000, 0, 1164841200000)",
-			"(55, 0, 'NPC', 'NPC Clan', 'ClanHall', 55, 0, 'Roien Chamber', 1, 50000000, 0, 1164841200000)",
-			"(56, 0, 'NPC', 'NPC Clan', 'ClanHall', 56, 0, 'Luna Chamber', 1, 50000000, 0, 1164841200000)",
-			"(57, 0, 'NPC', 'NPC Clan', 'ClanHall', 57, 0, 'Traban Chamber', 1, 50000000, 0, 1164841200000)",
-			"(58, 0, 'NPC', 'NPC Clan', 'ClanHall', 58, 0, 'Eisen Hall', 1, 50000000, 0, 1164841200000)",
-			"(59, 0, 'NPC', 'NPC Clan', 'ClanHall', 59, 0, 'Heavy Metal Hall', 1, 50000000, 0, 1164841200000)",
-			"(60, 0, 'NPC', 'NPC Clan', 'ClanHall', 60, 0, 'Molten Ore Hall', 1, 50000000, 0, 1164841200000)",
-			"(61, 0, 'NPC', 'NPC Clan', 'ClanHall', 61, 0, 'Titan Hall', 1, 50000000, 0, 1164841200000)" };
+	/** Names and starting bids (in adena) of the clan halls sold by NPCs, in the order of {@link #ITEM_INIT_IDS}. */
+	private static final String[] ITEM_INIT_NAMES = {
+			"Moonstone Hall", "Onyx Hall", "Topaz Hall", "Ruby Hall", "Crystal Hall", "Onyx Hall", "Sapphire Hall",
+			"Moonstone Hall", "Emerald Hall", "The Atramental Barracks", "The Scarlet Barracks", "The Viridian Barracks",
+			"The Golden Chamber", "The Silver Chamber", "The Mithril Chamber", "Silver Manor", "Gold Manor",
+			"The Bronze Chamber", "The Golden Chamber", "The Silver Chamber", "The Mithril Chamber",
+			"The Bronze Chamber", "Silver Manor", "Moonstone Hall", "Onyx Hall", "Emerald Hall", "Sapphire Hall",
+			"Mont Chamber", "Astaire Chamber", "Aria Chamber", "Yiana Chamber", "Roien Chamber", "Luna Chamber",
+			"Traban Chamber", "Eisen Hall", "Heavy Metal Hall", "Molten Ore Hall", "Titan Hall" };
+
+	private static final long[] ITEM_INIT_BIDS = {
+			20000000L, 20000000L, 20000000L, 20000000L, 20000000L, 20000000L, 20000000L, 20000000L, 20000000L, 8000000L,
+			8000000L, 8000000L, 50000000L, 50000000L, 50000000L, 50000000L, 50000000L, 50000000L, 50000000L, 50000000L,
+			50000000L, 50000000L, 50000000L, 50000000L, 50000000L, 50000000L, 50000000L, 50000000L, 50000000L, 50000000L,
+			50000000L, 50000000L, 50000000L, 50000000L, 50000000L, 50000000L, 50000000L, 50000000L };
+
+	/** The first auction of an NPC clan hall ended on this moment (epoch milliseconds). */
+	private static final long ITEM_INIT_END = 1164841200000L;
 	
 	private static final int[] ITEM_INIT_IDS = { 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 36, 37, 38, 39, 40,
 			41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61 };
@@ -101,7 +81,7 @@ public class AuctionManager
 			PreparedStatement statement;
 			ResultSet rs;
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			statement = con.prepareStatement("SELECT id FROM auction ORDER BY id");
+			statement = con.prepareStatement("SELECT id FROM clan_hall_auction ORDER BY id");
 			rs = statement.executeQuery();
 			while (rs.next())
 				_auctions.add(new Auction(rs.getInt("id")));
@@ -166,7 +146,12 @@ public class AuctionManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
-			statement = con.prepareStatement("INSERT INTO `auction` VALUES " + ITEM_INIT_DATA[found]);
+			statement =
+					con.prepareStatement("INSERT INTO clan_hall_auction (id, item_type, item_name, item_quantity, seller_name, seller_clan_name, starting_bid, current_bid, end_at) VALUES (?, 'ClanHall', ?, 1, 'NPC', 'NPC Clan', ?, 0, ?)");
+			statement.setInt(1, id);
+			statement.setString(2, ITEM_INIT_NAMES[found]);
+			statement.setLong(3, ITEM_INIT_BIDS[found]);
+			statement.setTimestamp(4, new Timestamp(ITEM_INIT_END));
 			statement.execute();
 			statement.close();
 			_auctions.add(new Auction(id));

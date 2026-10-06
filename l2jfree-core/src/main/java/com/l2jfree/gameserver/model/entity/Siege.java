@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.model.entity;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Set;
 
@@ -55,6 +56,7 @@ import com.l2jfree.gameserver.model.zone.L2Zone;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.SiegeInfo;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 import com.l2jfree.gameserver.threadmanager.ExclusiveTask;
 import com.l2jfree.gameserver.util.Broadcast;
 import com.l2jfree.util.L2FastSet;
@@ -320,8 +322,11 @@ public class Siege extends AbstractSiege
 			_isInProgress = false; // Flag so that siege instance can be started
 			updatePlayerSiegeStateFlags(true);
 			getZone().updateSiegeStatus();
-			saveCastleSiege(); // Save castle specific data
-			clearSiegeClan(); // Clear siege clan from db
+			// The next siege date and the cleared registrations are the stored result of the siege
+			WorldTransaction.run("Castle siege end", () -> {
+				saveCastleSiege(); // Save castle specific data
+				clearSiegeClan(); // Clear siege clan from db
+			});
 			removeControlTower(); // Remove all control tower from this castle
 			deactivateZones(); // Control towers removed - bye to danger zone effects
 			_siegeGuardManager.unspawnSiegeGuard(); // Remove all spawned siege guard from this castle
@@ -654,14 +659,20 @@ public class Siege extends AbstractSiege
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("DELETE FROM siege_clans WHERE castle_id=?");
+			PreparedStatement statement = con.prepareStatement("DELETE FROM castle_siege_clan WHERE castle_id=?");
 			statement.setInt(1, getCastle().getCastleId());
 			statement.execute();
 			statement.close();
 			
 			if (getCastle().getOwnerId() > 0)
 			{
-				PreparedStatement statement2 = con.prepareStatement("DELETE FROM siege_clans WHERE clan_id=?");
+				// The owner clan leaves every registration, also those for clan hall sieges
+				PreparedStatement statement2 = con.prepareStatement("DELETE FROM castle_siege_clan WHERE clan_id=?");
+				statement2.setInt(1, getCastle().getOwnerId());
+				statement2.execute();
+				statement2.close();
+
+				statement2 = con.prepareStatement("DELETE FROM clan_hall_siege_clan WHERE clan_id=?");
 				statement2.setInt(1, getCastle().getOwnerId());
 				statement2.execute();
 				statement2.close();
@@ -689,7 +700,7 @@ public class Siege extends AbstractSiege
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("DELETE FROM siege_clans WHERE castle_id=? and type = 2");
+					con.prepareStatement("DELETE FROM castle_siege_clan WHERE castle_id=? AND siege_role = 'DEFENDER_PENDING'");
 			statement.setInt(1, getCastle().getCastleId());
 			statement.execute();
 			statement.close();
@@ -907,7 +918,7 @@ public class Siege extends AbstractSiege
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("DELETE FROM siege_clans WHERE castle_id=? and clan_id=?");
+					con.prepareStatement("DELETE FROM castle_siege_clan WHERE castle_id=? AND clan_id=?");
 			statement.setInt(1, getCastle().getCastleId());
 			statement.setInt(2, clanId);
 			statement.execute();
@@ -1176,19 +1187,19 @@ public class Siege extends AbstractSiege
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			statement = con.prepareStatement("SELECT clan_id,type FROM siege_clans where castle_id=?");
+			statement = con.prepareStatement("SELECT clan_id, siege_role FROM castle_siege_clan WHERE castle_id=?");
 			statement.setInt(1, getCastle().getCastleId());
 			rs = statement.executeQuery();
 			
-			int typeId;
+			String role;
 			while (rs.next())
 			{
-				typeId = rs.getInt("type");
-				if (typeId == 0)
+				role = rs.getString("siege_role");
+				if (role.equals(SiegeClanType.DEFENDER.name()))
 					addDefender(rs.getInt("clan_id"));
-				else if (typeId == 1)
+				else if (role.equals(SiegeClanType.ATTACKER.name()))
 					addAttacker(rs.getInt("clan_id"));
-				else if (typeId == 2)
+				else if (role.equals(SiegeClanType.DEFENDER_PENDING.name()))
 					addDefenderWaiting(rs.getInt("clan_id"));
 			}
 			
@@ -1257,6 +1268,31 @@ public class Siege extends AbstractSiege
 		startAutoTask(); // Prepare auto start siege and end registration
 	}
 	
+	/** Epoch milliseconds as a database moment; 0 or less means "not set" and is NULL. */
+	private static Timestamp moment(long millis)
+	{
+		return millis > 0 ? new Timestamp(millis) : null;
+	}
+
+	/**
+	 * @param typeId 0 = defender, 1 = attacker, 2 = defender waiting
+	 * @return the stored siege role of that registration type
+	 */
+	private static String siegeRole(int typeId)
+	{
+		switch (typeId)
+		{
+			case 0:
+				return SiegeClanType.DEFENDER.name();
+			case 1:
+				return SiegeClanType.ATTACKER.name();
+			case 2:
+				return SiegeClanType.DEFENDER_PENDING.name();
+			default:
+				throw new IllegalArgumentException("Unknown siege registration type " + typeId);
+		}
+	}
+
 	/** Save siege date to database. */
 	public void saveSiegeDate()
 	{
@@ -1268,10 +1304,10 @@ public class Siege extends AbstractSiege
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("UPDATE castle SET siegeDate = ?, regTimeEnd = ?, regTimeOver = ?  WHERE id = ?");
-			statement.setLong(1, getSiegeDate().getTimeInMillis());
-			statement.setLong(2, getTimeRegistrationOverDate().getTimeInMillis());
-			statement.setString(3, String.valueOf(getIsTimeRegistrationOver()));
+					con.prepareStatement("UPDATE castle SET siege_at = ?, registration_end_at = ?, is_registration_over = ? WHERE id = ?");
+			statement.setTimestamp(1, moment(getSiegeDate().getTimeInMillis()));
+			statement.setTimestamp(2, moment(getTimeRegistrationOverDate().getTimeInMillis()));
+			statement.setBoolean(3, getIsTimeRegistrationOver());
 			statement.setInt(4, getCastle().getCastleId());
 			statement.execute();
 			
@@ -1305,17 +1341,18 @@ public class Siege extends AbstractSiege
 			if (!isUpdateRegistration)
 			{
 				statement =
-						con.prepareStatement("INSERT INTO siege_clans (clan_id,castle_id,type,castle_owner) VALUES (?,?,?,0)");
+						con.prepareStatement("INSERT INTO castle_siege_clan (clan_id, castle_id, siege_role) VALUES (?,?,?) "
+								+ "ON CONFLICT (castle_id, clan_id) DO UPDATE SET siege_role = EXCLUDED.siege_role");
 				statement.setInt(1, clan.getClanId());
 				statement.setInt(2, getCastle().getCastleId());
-				statement.setInt(3, typeId);
+				statement.setString(3, siegeRole(typeId));
 				statement.execute();
 				statement.close();
 			}
 			else
 			{
-				statement = con.prepareStatement("UPDATE siege_clans SET type = ? WHERE castle_id = ? AND clan_id = ?");
-				statement.setInt(1, typeId);
+				statement = con.prepareStatement("UPDATE castle_siege_clan SET siege_role = ? WHERE castle_id = ? AND clan_id = ?");
+				statement.setString(1, siegeRole(typeId));
 				statement.setInt(2, getCastle().getCastleId());
 				statement.setInt(3, clan.getClanId());
 				statement.execute();

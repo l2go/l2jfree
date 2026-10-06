@@ -69,14 +69,15 @@ public class ResidentialSkillTable
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM skill_residential ORDER BY entityId");
+			PreparedStatement statement = con.prepareStatement("SELECT castle_id AS entity_id, skill_id, skill_level FROM castle_skill"
+					+ " UNION ALL SELECT fort_id AS entity_id, skill_id, skill_level FROM fort_skill ORDER BY entity_id, skill_id");
 			ResultSet rs = statement.executeQuery();
 			
 			while (rs.next())
 			{
-				int entityId = rs.getInt("entityId");
-				int skillId = rs.getInt("skillId");
-				int skillLvl = rs.getInt("skillLevel");
+				int entityId = rs.getInt("entity_id");
+				int skillId = rs.getInt("skill_id");
+				int skillLvl = rs.getInt("skill_level");
 				
 				L2Skill sk = SkillTable.getInstance().getInfo(skillId, skillLvl);
 				

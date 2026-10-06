@@ -47,6 +47,7 @@ import com.l2jfree.gameserver.model.items.templates.L2Item;
 import com.l2jfree.gameserver.model.items.templates.L2WeaponType;
 import com.l2jfree.gameserver.model.sevensigns.SevenSigns;
 import com.l2jfree.gameserver.model.world.L2World;
+import com.l2jfree.gameserver.persistence.item.ItemRepository;
 import com.l2jfree.gameserver.templates.StatsSet;
 import com.l2jfree.util.L2Collections;
 
@@ -156,36 +157,36 @@ public final class ItemTable
 		_slots.put("none", L2Item.SLOT_NONE);
 	}
 	
-	/** Table of SQL request in order to obtain items from tables [etcitem], [armor], [weapon] */
+	/** Table of SQL request in order to obtain items from tables [etc_item_template], [armor_template], [weapon_template] */
 	private static final String[] SQL_ITEM_SELECTS =
 			{
-					"SELECT item_id, name, crystallizable, item_type, weight, consume_type, material, crystal_type,"
-							+ " duration, time, price, crystal_count, sellable, dropable, destroyable, tradeable, depositable, skills_item, handler FROM etcitem",
+					"SELECT id, name, is_crystallizable, item_type, weight, consume_type, material, crystal_type,"
+							+ " shadow_mana, lifetime_s, price, crystal_count, is_sellable, is_droppable, is_destroyable, is_tradable, is_depositable, item_skills, handler_name FROM etc_item_template",
 					
-					"SELECT item_id, name, bodypart, crystallizable, armor_type, weight,"
-							+ " material, crystal_type, avoid_modify, duration, time, p_def, m_def, mp_bonus,"
-							+ " price, crystal_count, sellable, dropable, destroyable, tradeable, depositable, enchant4_skill, skills_item FROM armor",
+					"SELECT id, name, body_part, is_crystallizable, armor_type, weight,"
+							+ " material, crystal_type, evasion_modifier, shadow_mana, lifetime_s, physical_defense, magic_defense, mp_bonus,"
+							+ " price, crystal_count, is_sellable, is_droppable, is_destroyable, is_tradable, is_depositable, enchant4_skills, item_skills FROM armor_template",
 					
-					"SELECT item_id, name, bodypart, crystallizable, weight, soulshots, spiritshots,"
-							+ " material, crystal_type, p_dam, rnd_dam, weaponType, critical, hit_modify, avoid_modify,"
-							+ " shield_def, shield_def_rate, atk_speed, mp_consume, m_dam, duration, time, price, crystal_count,"
-							+ " sellable,  dropable, destroyable, tradeable, depositable, skills_item, enchant4_skill,"
-							+ " skills_onCast, skills_onCrit, change_weaponId FROM weapon" };
+					"SELECT id, name, body_part, is_crystallizable, weight, soulshot_count, spiritshot_count,"
+							+ " material, crystal_type, physical_damage, random_damage, weapon_type, critical_rate, accuracy_modifier, evasion_modifier,"
+							+ " shield_defense, shield_defense_rate, attack_speed, mp_consumption, magic_damage, shadow_mana, lifetime_s, price, crystal_count,"
+							+ " is_sellable, is_droppable, is_destroyable, is_tradable, is_depositable, item_skills, enchant4_skills,"
+							+ " on_cast_skills, on_critical_skills, change_weapon_template_id FROM weapon_template" };
 	
 	private static final String[] SQL_CUSTOM_ITEM_SELECTS =
 			{
-					"SELECT item_id, item_display_id, name, crystallizable, item_type, weight, consume_type, material, crystal_type,"
-							+ " duration, time, price, crystal_count, sellable, dropable, destroyable, tradeable, depositable, skills_item, handler FROM custom_etcitem",
+					"SELECT id, display_item_id, name, is_crystallizable, item_type, weight, consume_type, material, crystal_type,"
+							+ " shadow_mana, lifetime_s, price, crystal_count, is_sellable, is_droppable, is_destroyable, is_tradable, is_depositable, item_skills, handler_name FROM custom_etc_item_template",
 					
-					"SELECT item_id, item_display_id, name, bodypart, crystallizable, armor_type, weight,"
-							+ " material, crystal_type, avoid_modify, duration, time, p_def, m_def, mp_bonus,"
-							+ " price, crystal_count, sellable, dropable, destroyable, tradeable, depositable, enchant4_skill, skills_item FROM custom_armor",
+					"SELECT id, display_item_id, name, body_part, is_crystallizable, armor_type, weight,"
+							+ " material, crystal_type, evasion_modifier, shadow_mana, lifetime_s, physical_defense, magic_defense, mp_bonus,"
+							+ " price, crystal_count, is_sellable, is_droppable, is_destroyable, is_tradable, is_depositable, enchant4_skills, item_skills FROM custom_armor_template",
 					
-					"SELECT item_id, item_display_id, name, bodypart, crystallizable, weight, soulshots, spiritshots,"
-							+ " material, crystal_type, p_dam, rnd_dam, weaponType, critical, hit_modify, avoid_modify,"
-							+ " shield_def, shield_def_rate, atk_speed, mp_consume, m_dam, duration, time, price, crystal_count,"
-							+ " sellable,  dropable, destroyable, tradeable, depositable, skills_item, enchant4_skill,"
-							+ " skills_onCast, skills_onCrit, change_weaponId FROM custom_weapon" };
+					"SELECT id, display_item_id, name, body_part, is_crystallizable, weight, soulshot_count, spiritshot_count,"
+							+ " material, crystal_type, physical_damage, random_damage, weapon_type, critical_rate, accuracy_modifier, evasion_modifier,"
+							+ " shield_defense, shield_defense_rate, attack_speed, mp_consumption, magic_damage, shadow_mana, lifetime_s, price, crystal_count,"
+							+ " is_sellable, is_droppable, is_destroyable, is_tradable, is_depositable, item_skills, enchant4_skills,"
+							+ " on_cast_skills, on_critical_skills, change_weapon_template_id FROM custom_weapon_template" };
 	
 	private static final class SingletonHolder
 	{
@@ -222,17 +223,17 @@ public final class ItemTable
 				
 				while (rset.next())
 				{
-					if (selectQuery.endsWith("etcitem"))
+					if (selectQuery.endsWith("etc_item_template"))
 					{
 						Item newItem = readItem(rset, false);
 						itemData.put(newItem.id, newItem);
 					}
-					else if (selectQuery.endsWith("armor"))
+					else if (selectQuery.endsWith("armor_template"))
 					{
 						Item newItem = readArmor(rset, false);
 						armorData.put(newItem.id, newItem);
 					}
-					else if (selectQuery.endsWith("weapon"))
+					else if (selectQuery.endsWith("weapon_template"))
 					{
 						Item newItem = readWeapon(rset, false);
 						weaponData.put(newItem.id, newItem);
@@ -264,17 +265,17 @@ public final class ItemTable
 				
 				while (rset.next())
 				{
-					if (selectQuery.endsWith("etcitem"))
+					if (selectQuery.endsWith("etc_item_template"))
 					{
 						Item newItem = readItem(rset, true);
 						itemData.put(newItem.id, newItem);
 					}
-					else if (selectQuery.endsWith("armor"))
+					else if (selectQuery.endsWith("armor_template"))
 					{
 						Item newItem = readArmor(rset, true);
 						armorData.put(newItem.id, newItem);
 					}
-					else if (selectQuery.endsWith("weapon"))
+					else if (selectQuery.endsWith("weapon_template"))
 					{
 						Item newItem = readWeapon(rset, true);
 						weaponData.put(newItem.id, newItem);
@@ -322,6 +323,27 @@ public final class ItemTable
 		}
 	}
 	
+	/** @return the shadow item mana in minutes of wear, -1 when the template is not a shadow item */
+	private static int getShadowMana(ResultSet rset) throws SQLException
+	{
+		int mana = rset.getInt("shadow_mana");
+		return rset.wasNull() ? -1 : mana;
+	}
+	
+	/** @return the lifetime of the template in minutes, -1 when the item has no time limit */
+	private static int getLifetimeMinutes(ResultSet rset) throws SQLException
+	{
+		int seconds = rset.getInt("lifetime_s");
+		return rset.wasNull() ? -1 : seconds / 60;
+	}
+	
+	/** @return the name of the item handler, "none" when the item has none */
+	private static String getHandler(ResultSet rset) throws SQLException
+	{
+		String handler = rset.getString("handler_name");
+		return handler == null ? "none" : handler;
+	}
+	
 	/**
 	 * Returns object Item from the record of the database
 	 * 
@@ -333,9 +355,9 @@ public final class ItemTable
 	{
 		Item item = new Item();
 		item.set = new StatsSet();
-		item.type = _weaponTypes.get(rset.getString("weaponType"));
-		item.id = rset.getInt("item_id");
-		item.displayid = custom ? rset.getInt("item_display_id") : item.id;
+		item.type = _weaponTypes.get(rset.getString("weapon_type"));
+		item.id = rset.getInt("id");
+		item.displayid = custom ? rset.getInt("display_item_id") : item.id;
 		item.name = rset.getString("name");
 		
 		item.set.set("item_id", item.id);
@@ -353,38 +375,38 @@ public final class ItemTable
 			item.set.set("type1", L2Item.TYPE1_WEAPON_RING_EARRING_NECKLACE);
 			item.set.set("type2", L2Item.TYPE2_WEAPON);
 		}
-		item.set.set("bodypart", _slots.get(rset.getString("bodypart")));
+		item.set.set("bodypart", _slots.get(rset.getString("body_part")));
 		item.set.set("material", _materials.get(rset.getString("material")));
 		item.set.set("crystal_type", _crystalTypes.get(rset.getString("crystal_type")));
-		item.set.set("crystallizable", Boolean.valueOf(rset.getString("crystallizable")));
+		item.set.set("crystallizable", rset.getBoolean("is_crystallizable"));
 		item.set.set("weight", rset.getInt("weight"));
-		item.set.set("soulshots", rset.getInt("soulshots"));
-		item.set.set("spiritshots", rset.getInt("spiritshots"));
-		item.set.set("p_dam", rset.getInt("p_dam"));
-		item.set.set("rnd_dam", rset.getInt("rnd_dam"));
-		item.set.set("critical", rset.getInt("critical"));
-		item.set.set("hit_modify", rset.getDouble("hit_modify"));
-		item.set.set("avoid_modify", rset.getInt("avoid_modify"));
-		item.set.set("shield_def", rset.getInt("shield_def"));
-		item.set.set("shield_def_rate", rset.getInt("shield_def_rate"));
-		item.set.set("atk_speed", rset.getInt("atk_speed"));
-		item.set.set("mp_consume", rset.getInt("mp_consume"));
-		item.set.set("m_dam", rset.getInt("m_dam"));
-		item.set.set("duration", rset.getInt("duration"));
-		item.set.set("time", rset.getInt("time"));
-		item.set.set("price", rset.getInt("price"));
+		item.set.set("soulshots", rset.getInt("soulshot_count"));
+		item.set.set("spiritshots", rset.getInt("spiritshot_count"));
+		item.set.set("p_dam", rset.getInt("physical_damage"));
+		item.set.set("rnd_dam", rset.getInt("random_damage"));
+		item.set.set("critical", rset.getInt("critical_rate"));
+		item.set.set("hit_modify", (double)rset.getInt("accuracy_modifier"));
+		item.set.set("avoid_modify", rset.getInt("evasion_modifier"));
+		item.set.set("shield_def", rset.getInt("shield_defense"));
+		item.set.set("shield_def_rate", rset.getInt("shield_defense_rate"));
+		item.set.set("atk_speed", rset.getInt("attack_speed"));
+		item.set.set("mp_consume", rset.getInt("mp_consumption"));
+		item.set.set("m_dam", rset.getInt("magic_damage"));
+		item.set.set("duration", getShadowMana(rset));
+		item.set.set("time", getLifetimeMinutes(rset));
+		item.set.set("price", (int)rset.getLong("price"));
 		item.set.set("crystal_count", rset.getInt("crystal_count"));
-		item.set.set("sellable", Boolean.valueOf(rset.getString("sellable")));
-		item.set.set("dropable", Boolean.valueOf(rset.getString("dropable")));
-		item.set.set("destroyable", Boolean.valueOf(rset.getString("destroyable")));
-		item.set.set("tradeable", Boolean.valueOf(rset.getString("tradeable")));
-		item.set.set("depositable", Boolean.valueOf(rset.getString("depositable")));
+		item.set.set("sellable", rset.getBoolean("is_sellable"));
+		item.set.set("dropable", rset.getBoolean("is_droppable"));
+		item.set.set("destroyable", rset.getBoolean("is_destroyable"));
+		item.set.set("tradeable", rset.getBoolean("is_tradable"));
+		item.set.set("depositable", rset.getBoolean("is_depositable"));
 		
-		item.set.set("skills_item", rset.getString("skills_item"));
-		item.set.set("enchant4_skill", rset.getString("enchant4_skill"));
-		item.set.set("skills_onCast", rset.getString("skills_onCast"));
-		item.set.set("skills_onCrit", rset.getString("skills_onCrit"));
-		item.set.set("change_weaponId", rset.getInt("change_weaponId"));
+		item.set.set("skills_item", rset.getString("item_skills"));
+		item.set.set("enchant4_skill", rset.getString("enchant4_skills"));
+		item.set.set("skills_onCast", rset.getString("on_cast_skills"));
+		item.set.set("skills_onCrit", rset.getString("on_critical_skills"));
+		item.set.set("change_weaponId", rset.getInt("change_weapon_template_id"));
 		
 		if (item.type == L2WeaponType.PET)
 		{
@@ -418,24 +440,24 @@ public final class ItemTable
 		Item item = new Item();
 		item.set = new StatsSet();
 		item.type = _armorTypes.get(rset.getString("armor_type"));
-		item.id = rset.getInt("item_id");
-		item.displayid = custom ? rset.getInt("item_display_id") : item.id;
+		item.id = rset.getInt("id");
+		item.displayid = custom ? rset.getInt("display_item_id") : item.id;
 		item.name = rset.getString("name");
 		
 		item.set.set("item_id", item.id);
 		item.set.set("item_display_id", item.displayid);
 		item.set.set("name", item.name);
-		int bodypart = _slots.get(rset.getString("bodypart"));
+		int bodypart = _slots.get(rset.getString("body_part"));
 		item.set.set("bodypart", bodypart);
-		item.set.set("crystallizable", Boolean.valueOf(rset.getString("crystallizable")));
+		item.set.set("crystallizable", rset.getBoolean("is_crystallizable"));
 		item.set.set("crystal_count", rset.getInt("crystal_count"));
-		item.set.set("sellable", Boolean.valueOf(rset.getString("sellable")));
-		item.set.set("dropable", Boolean.valueOf(rset.getString("dropable")));
-		item.set.set("destroyable", Boolean.valueOf(rset.getString("destroyable")));
-		item.set.set("tradeable", Boolean.valueOf(rset.getString("tradeable")));
-		item.set.set("depositable", Boolean.valueOf(rset.getString("depositable")));
-		item.set.set("enchant4_skill", rset.getString("enchant4_skill"));
-		item.set.set("skills_item", rset.getString("skills_item"));
+		item.set.set("sellable", rset.getBoolean("is_sellable"));
+		item.set.set("dropable", rset.getBoolean("is_droppable"));
+		item.set.set("destroyable", rset.getBoolean("is_destroyable"));
+		item.set.set("tradeable", rset.getBoolean("is_tradable"));
+		item.set.set("depositable", rset.getBoolean("is_depositable"));
+		item.set.set("enchant4_skill", rset.getString("enchant4_skills"));
+		item.set.set("skills_item", rset.getString("item_skills"));
 		
 		if (bodypart == L2Item.SLOT_NECK || bodypart == L2Item.SLOT_HAIR || bodypart == L2Item.SLOT_HAIR2
 				|| bodypart == L2Item.SLOT_HAIRALL || (bodypart & L2Item.SLOT_L_EAR) != 0
@@ -454,13 +476,13 @@ public final class ItemTable
 		item.set.set("weight", rset.getInt("weight"));
 		item.set.set("material", _materials.get(rset.getString("material")));
 		item.set.set("crystal_type", _crystalTypes.get(rset.getString("crystal_type")));
-		item.set.set("avoid_modify", rset.getInt("avoid_modify"));
-		item.set.set("duration", rset.getInt("duration"));
-		item.set.set("time", rset.getInt("time"));
-		item.set.set("p_def", rset.getInt("p_def"));
-		item.set.set("m_def", rset.getInt("m_def"));
+		item.set.set("avoid_modify", rset.getInt("evasion_modifier"));
+		item.set.set("duration", getShadowMana(rset));
+		item.set.set("time", getLifetimeMinutes(rset));
+		item.set.set("p_def", rset.getInt("physical_defense"));
+		item.set.set("m_def", rset.getInt("magic_defense"));
 		item.set.set("mp_bonus", rset.getInt("mp_bonus"));
-		item.set.set("price", rset.getInt("price"));
+		item.set.set("price", (int)rset.getLong("price"));
 		
 		if (item.type == L2ArmorType.PET)
 		{
@@ -509,23 +531,23 @@ public final class ItemTable
 	{
 		Item item = new Item();
 		item.set = new StatsSet();
-		item.id = rset.getInt("item_id");
-		item.displayid = custom ? rset.getInt("item_display_id") : item.id;
+		item.id = rset.getInt("id");
+		item.displayid = custom ? rset.getInt("display_item_id") : item.id;
 		
 		item.set.set("item_id", item.id);
 		item.set.set("item_display_id", item.displayid);
-		item.set.set("crystallizable", Boolean.valueOf(rset.getString("crystallizable")));
+		item.set.set("crystallizable", rset.getBoolean("is_crystallizable"));
 		item.set.set("type1", L2Item.TYPE1_ITEM_QUESTITEM_ADENA);
 		item.set.set("type2", L2Item.TYPE2_OTHER);
 		item.set.set("bodypart", 0);
 		item.set.set("crystal_count", rset.getInt("crystal_count"));
-		item.set.set("sellable", Boolean.valueOf(rset.getString("sellable")));
-		item.set.set("dropable", Boolean.valueOf(rset.getString("dropable")));
-		item.set.set("destroyable", Boolean.valueOf(rset.getString("destroyable")));
-		item.set.set("tradeable", Boolean.valueOf(rset.getString("tradeable")));
-		item.set.set("depositable", Boolean.valueOf(rset.getString("depositable")));
-		item.set.set("skills_item", rset.getString("skills_item"));
-		item.set.set("handler", rset.getString("handler"));
+		item.set.set("sellable", rset.getBoolean("is_sellable"));
+		item.set.set("dropable", rset.getBoolean("is_droppable"));
+		item.set.set("destroyable", rset.getBoolean("is_destroyable"));
+		item.set.set("tradeable", rset.getBoolean("is_tradable"));
+		item.set.set("depositable", rset.getBoolean("is_depositable"));
+		item.set.set("skills_item", rset.getString("item_skills"));
+		item.set.set("handler", getHandler(rset));
 		
 		String itemType = rset.getString("item_type");
 		if (itemType.equals("none"))
@@ -603,9 +625,9 @@ public final class ItemTable
 		item.name = rset.getString("name");
 		item.set.set("name", item.name);
 		
-		item.set.set("duration", rset.getInt("duration"));
-		item.set.set("time", rset.getInt("time"));
-		item.set.set("price", rset.getInt("price"));
+		item.set.set("duration", getShadowMana(rset));
+		item.set.set("time", getLifetimeMinutes(rset));
+		item.set.set("price", (int)rset.getLong("price"));
 		
 		return item;
 	}
@@ -781,23 +803,14 @@ public final class ItemTable
 			// if it's a pet control item, delete the pet as well
 			if (PetDataTable.isPetItem(item.getItemId()))
 			{
-				Connection con = null;
 				try
 				{
 					// Delete the pet in db
-					con = L2DatabaseFactory.getInstance().getConnection(con);
-					PreparedStatement statement = con.prepareStatement("DELETE FROM pets WHERE item_obj_id=?");
-					statement.setInt(1, item.getObjectId());
-					statement.execute();
-					statement.close();
+					ItemRepository.getInstance().deletePet(item.getObjectId());
 				}
 				catch (Exception e)
 				{
 					_log.warn("could not delete pet objectid:", e);
-				}
-				finally
-				{
-					L2DatabaseFactory.close(con);
 				}
 			}
 			

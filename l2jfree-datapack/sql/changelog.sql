@@ -1,9 +1,0 @@
-DROP TABLE IF EXISTS `changelog`;
-CREATE TABLE `changelog` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `udate` date NOT NULL,
-  `introduction` VARCHAR(255) NOT NULL,
-  `text` VARCHAR(4500) NOT NULL,
-  `author` VARCHAR(25) NOT NULL,
-  PRIMARY KEY (`id`)
-) AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;

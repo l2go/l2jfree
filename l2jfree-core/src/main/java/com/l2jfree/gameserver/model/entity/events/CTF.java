@@ -58,6 +58,7 @@ import com.l2jfree.gameserver.network.packets.server.MagicSkillUse;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.network.packets.server.RadarControl;
 import com.l2jfree.gameserver.network.packets.server.SocialAction;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.tools.random.Rnd;
 
@@ -1640,66 +1641,68 @@ public class CTF
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			statement = con.prepareStatement("Select * from ctf");
+			statement =
+					con.prepareStatement("SELECT name, description, joining_location_name, min_level, max_level, "
+							+ "npc_template_id, npc_x, npc_y, npc_z, npc_heading, reward_item_template_id, reward_count, "
+							+ "join_duration_s, event_duration_s, min_players, max_players FROM ctf_event");
 			rs = statement.executeQuery();
 			
-			int teams = 0;
+			boolean eventFound = false;
 			
 			while (rs.next())
 			{
-				_eventName = rs.getString("eventName");
-				_eventDesc = rs.getString("eventDesc");
-				_joiningLocationName = rs.getString("joiningLocation");
-				_minlvl = rs.getInt("minlvl");
-				_maxlvl = rs.getInt("maxlvl");
-				_npcId = rs.getInt("npcId");
-				_npcX = rs.getInt("npcX");
-				_npcY = rs.getInt("npcY");
-				_npcZ = rs.getInt("npcZ");
-				_npcHeading = rs.getInt("npcHeading");
-				_rewardId = rs.getInt("rewardId");
-				_rewardAmount = rs.getInt("rewardAmount");
-				teams = rs.getInt("teamsCount");
-				_joinTime = rs.getInt("joinTime");
-				_eventTime = rs.getInt("eventTime");
-				_minPlayers = rs.getInt("minPlayers");
-				_maxPlayers = rs.getInt("maxPlayers");
+				_eventName = rs.getString("name");
+				_eventDesc = rs.getString("description");
+				_joiningLocationName = rs.getString("joining_location_name");
+				_minlvl = rs.getInt("min_level");
+				_maxlvl = rs.getInt("max_level");
+				_npcId = rs.getInt("npc_template_id");
+				_npcX = rs.getInt("npc_x");
+				_npcY = rs.getInt("npc_y");
+				_npcZ = rs.getInt("npc_z");
+				_npcHeading = rs.getInt("npc_heading");
+				_rewardId = rs.getInt("reward_item_template_id");
+				_rewardAmount = rs.getInt("reward_count");
+				// The columns count seconds, the event counts minutes.
+				_joinTime = rs.getInt("join_duration_s") / 60;
+				_eventTime = rs.getInt("event_duration_s") / 60;
+				_minPlayers = rs.getInt("min_players");
+				_maxPlayers = rs.getInt("max_players");
+				eventFound = true;
 			}
 			statement.close();
 			
-			int index = -1;
-			if (teams > 0)
-				index = 0;
-			while (index < teams && index > -1)
+			if (eventFound)
 			{
-				statement = con.prepareStatement("Select * from ctf_teams where teamId = ?");
-				statement.setInt(1, index);
+				statement =
+						con.prepareStatement("SELECT team_number, name, x, y, z, name_color, flag_x, flag_y, flag_z "
+								+ "FROM ctf_event_team ORDER BY team_number");
 				rs = statement.executeQuery();
+				int index = 0;
 				while (rs.next())
 				{
-					_teams.add(rs.getString("teamName"));
+					_teams.add(rs.getString("name"));
 					_teamPlayersCount.add(0);
 					_teamPointsCount.add(0);
 					_teamColors.add(0);
 					_teamsX.add(0);
 					_teamsY.add(0);
 					_teamsZ.add(0);
-					_teamsX.set(index, rs.getInt("teamX"));
-					_teamsY.set(index, rs.getInt("teamY"));
-					_teamsZ.set(index, rs.getInt("teamZ"));
-					_teamColors.set(index, rs.getInt("teamColor"));
+					_teamsX.set(index, rs.getInt("x"));
+					_teamsY.set(index, rs.getInt("y"));
+					_teamsZ.set(index, rs.getInt("z"));
+					_teamColors.set(index, rs.getInt("name_color"));
 					_flagsX.add(0);
 					_flagsY.add(0);
 					_flagsZ.add(0);
-					_flagsX.set(index, rs.getInt("flagX"));
-					_flagsY.set(index, rs.getInt("flagY"));
-					_flagsZ.set(index, rs.getInt("flagZ"));
+					_flagsX.set(index, rs.getInt("flag_x"));
+					_flagsY.set(index, rs.getInt("flag_y"));
+					_flagsZ.set(index, rs.getInt("flag_z"));
 					_flagSpawns.add(null);
 					_flagIds.add(_FlagNPC);
 					_flagsTaken.add(false);
-					
+					index++;
 				}
-				index++;
 				statement.close();
 			}
 		}
@@ -1715,18 +1718,24 @@ public class CTF
 	
 	public static void saveData()
 	{
+		// The event and its teams are replaced together.
+		WorldTransaction.run("CTF event save", CTF::writeData);
+	}
+	
+	private static void writeData()
+	{
 		Connection con = null;
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
 			
-			statement = con.prepareStatement("Delete from ctf");
+			statement = con.prepareStatement("DELETE FROM ctf_event");
 			statement.execute();
 			statement.close();
 			
 			statement =
-					con.prepareStatement("INSERT INTO ctf (eventName, eventDesc, joiningLocation, minlvl, maxlvl, npcId, npcX, npcY, npcZ, npcHeading, rewardId, rewardAmount, teamsCount, joinTime, eventTime, minPlayers, maxPlayers) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+					con.prepareStatement("INSERT INTO ctf_event (name, description, joining_location_name, min_level, max_level, npc_template_id, npc_x, npc_y, npc_z, npc_heading, reward_item_template_id, reward_count, join_duration_s, event_duration_s, min_players, max_players) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			statement.setString(1, _eventName);
 			statement.setString(2, _eventDesc);
 			statement.setString(3, _joiningLocationName);
@@ -1739,15 +1748,14 @@ public class CTF
 			statement.setInt(10, _npcHeading);
 			statement.setInt(11, _rewardId);
 			statement.setInt(12, _rewardAmount);
-			statement.setInt(13, _teams.size());
-			statement.setInt(14, _joinTime);
-			statement.setInt(15, _eventTime);
-			statement.setInt(16, _minPlayers);
-			statement.setInt(17, _maxPlayers);
+			statement.setInt(13, _joinTime * 60);
+			statement.setInt(14, _eventTime * 60);
+			statement.setInt(15, _minPlayers);
+			statement.setInt(16, _maxPlayers);
 			statement.execute();
 			statement.close();
 			
-			statement = con.prepareStatement("Delete from ctf_teams");
+			statement = con.prepareStatement("DELETE FROM ctf_event_team");
 			statement.execute();
 			statement.close();
 			
@@ -1758,7 +1766,7 @@ public class CTF
 				if (index == -1)
 					return;
 				statement =
-						con.prepareStatement("INSERT INTO ctf_teams (teamId ,teamName, teamX, teamY, teamZ, teamColor, flagX, flagY, flagZ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+						con.prepareStatement("INSERT INTO ctf_event_team (team_number, name, x, y, z, name_color, flag_x, flag_y, flag_z) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 				statement.setInt(1, index);
 				statement.setString(2, teamName);
 				statement.setInt(3, _teamsX.get(index));
@@ -2237,7 +2245,7 @@ public class CTF
 								con = L2DatabaseFactory.getInstance().getConnection(con);
 								
 								PreparedStatement statement =
-										con.prepareStatement("UPDATE characters SET x=?, y=?, z=? WHERE char_name=?");
+										con.prepareStatement("UPDATE player SET x = ?, y = ?, z = ? WHERE name = ?");
 								statement.setInt(1, _npcX);
 								statement.setInt(2, _npcY);
 								statement.setInt(3, _npcZ);

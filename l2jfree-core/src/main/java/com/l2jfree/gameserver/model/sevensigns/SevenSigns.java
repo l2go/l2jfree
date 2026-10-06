@@ -40,6 +40,7 @@ import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.SSQInfo;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 import com.l2jfree.gameserver.templates.StatsSet;
 
 /**
@@ -109,8 +110,19 @@ public class SevenSigns
 	public static final int RED_CONTRIB_POINTS = 10;
 	
 	private final Calendar _calendar = Calendar.getInstance();
-	private final String RESET_CERTIFICATE_SHOPS =
-			"UPDATE merchant_buylists SET count = 300 WHERE shop_id BETWEEN 63881 AND 63889";
+	// A shop without a merchant_stock row has its full catalog stock.
+	private final String RESET_CERTIFICATE_SHOPS = "DELETE FROM merchant_stock WHERE shop_id BETWEEN 63881 AND 63889";
+	private static final String SAVE_PLAYER_DATA = "UPDATE seven_signs_player SET cabal = ?, seal = ?, "
+			+ "red_stone_count = ?, green_stone_count = ?, blue_stone_count = ?, ancient_adena_amount = ?, "
+			+ "contribution_score = ? WHERE player_id = ?";
+	// The status row has one accumulated_bonus column per festival (SevenSignsFestival.FESTIVAL_COUNT = 5).
+	private static final String SAVE_STATUS = "UPDATE seven_signs_status SET current_cycle = ?, active_period = ?, "
+			+ "previous_winner_cabal = ?, dawn_stone_score = ?, dawn_festival_score = ?, dusk_stone_score = ?, "
+			+ "dusk_festival_score = ?, avarice_owner_cabal = ?, gnosis_owner_cabal = ?, strife_owner_cabal = ?, "
+			+ "avarice_dawn_score = ?, gnosis_dawn_score = ?, strife_dawn_score = ?, avarice_dusk_score = ?, "
+			+ "gnosis_dusk_score = ?, strife_dusk_score = ?, festival_cycle = ?, accumulated_bonus0 = ?, "
+			+ "accumulated_bonus1 = ?, accumulated_bonus2 = ?, accumulated_bonus3 = ?, accumulated_bonus4 = ? "
+			+ "WHERE id = 0";
 	
 	protected int _activePeriod;
 	protected int _currentCycle;
@@ -694,21 +706,22 @@ public class SevenSigns
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT charId, cabal, seal, red_stones, green_stones, blue_stones, "
-							+ "ancient_adena_amount, contribution_score FROM seven_signs");
+					con.prepareStatement("SELECT player_id, cabal, seal, red_stone_count, green_stone_count, "
+							+ "blue_stone_count, ancient_adena_amount, contribution_score FROM seven_signs_player");
 			ResultSet rset = statement.executeQuery();
 			
 			while (rset.next())
 			{
-				int charObjId = rset.getInt("charId");
+				int charObjId = rset.getInt("player_id");
+				String cabal = rset.getString("cabal");
 				
 				StatsSet sevenDat = new StatsSet();
 				sevenDat.set("charId", charObjId);
-				sevenDat.set("cabal", rset.getString("cabal"));
+				sevenDat.set("cabal", cabal == null ? "" : cabal);
 				sevenDat.set("seal", rset.getInt("seal"));
-				sevenDat.set("red_stones", rset.getInt("red_stones"));
-				sevenDat.set("green_stones", rset.getInt("green_stones"));
-				sevenDat.set("blue_stones", rset.getInt("blue_stones"));
+				sevenDat.set("red_stones", rset.getInt("red_stone_count"));
+				sevenDat.set("green_stones", rset.getInt("green_stone_count"));
+				sevenDat.set("blue_stones", rset.getInt("blue_stone_count"));
 				sevenDat.set("ancient_adena_amount", rset.getDouble("ancient_adena_amount"));
 				sevenDat.set("contribution_score", rset.getDouble("contribution_score"));
 				
@@ -722,23 +735,28 @@ public class SevenSigns
 			rset.close();
 			statement.close();
 			
-			statement = con.prepareStatement("SELECT * FROM seven_signs_status WHERE id=0");
+			statement =
+					con.prepareStatement("SELECT current_cycle, active_period, previous_winner_cabal, dawn_stone_score, "
+							+ "dawn_festival_score, dusk_stone_score, dusk_festival_score, avarice_owner_cabal, "
+							+ "gnosis_owner_cabal, strife_owner_cabal, avarice_dawn_score, gnosis_dawn_score, "
+							+ "strife_dawn_score, avarice_dusk_score, gnosis_dusk_score, strife_dusk_score "
+							+ "FROM seven_signs_status WHERE id = 0");
 			rset = statement.executeQuery();
 			
 			while (rset.next())
 			{
 				_currentCycle = rset.getInt("current_cycle");
 				_activePeriod = rset.getInt("active_period");
-				_previousWinner = rset.getInt("previous_winner");
+				_previousWinner = rset.getInt("previous_winner_cabal");
 				
 				_dawnStoneScore = rset.getDouble("dawn_stone_score");
 				_dawnFestivalScore = rset.getInt("dawn_festival_score");
 				_duskStoneScore = rset.getDouble("dusk_stone_score");
 				_duskFestivalScore = rset.getInt("dusk_festival_score");
 				
-				_signsSealOwners.put(SEAL_AVARICE, rset.getInt("avarice_owner"));
-				_signsSealOwners.put(SEAL_GNOSIS, rset.getInt("gnosis_owner"));
-				_signsSealOwners.put(SEAL_STRIFE, rset.getInt("strife_owner"));
+				_signsSealOwners.put(SEAL_AVARICE, rset.getInt("avarice_owner_cabal"));
+				_signsSealOwners.put(SEAL_GNOSIS, rset.getInt("gnosis_owner_cabal"));
+				_signsSealOwners.put(SEAL_STRIFE, rset.getInt("strife_owner_cabal"));
 				
 				_signsDawnSealTotals.put(SEAL_AVARICE, rset.getInt("avarice_dawn_score"));
 				_signsDawnSealTotals.put(SEAL_GNOSIS, rset.getInt("gnosis_dawn_score"));
@@ -749,12 +767,6 @@ public class SevenSigns
 			}
 			
 			rset.close();
-			statement.close();
-			
-			statement = con.prepareStatement("UPDATE seven_signs_status SET date=? WHERE id=0");
-			statement.setInt(1, Calendar.getInstance().get(Calendar.DAY_OF_WEEK));
-			statement.execute();
-			
 			statement.close();
 		}
 		catch (SQLException e)
@@ -780,6 +792,12 @@ public class SevenSigns
 	 */
 	public void saveSevenSignsData(L2Player player, boolean updateSettings)
 	{
+		// The players and the status row are saved together.
+		WorldTransaction.run("Seven Signs save", () -> saveSevenSignsDataInternal(player, updateSettings));
+	}
+	
+	private void saveSevenSignsDataInternal(L2Player player, boolean updateSettings)
+	{
 		Connection con = null;
 		
 		if (_log.isDebugEnabled())
@@ -795,17 +813,14 @@ public class SevenSigns
 					if (sevenDat.getInteger("charId") != player.getObjectId())
 						continue;
 				
-				PreparedStatement statement =
-						con.prepareStatement("UPDATE seven_signs SET cabal=?, seal=?, red_stones=?, "
-								+ "green_stones=?, blue_stones=?, " + "ancient_adena_amount=?, contribution_score=? "
-								+ "WHERE charId=?");
-				statement.setString(1, sevenDat.getString("cabal"));
+				PreparedStatement statement = con.prepareStatement(SAVE_PLAYER_DATA);
+				statement.setString(1, toCabalColumn(sevenDat.getString("cabal")));
 				statement.setInt(2, sevenDat.getInteger("seal"));
 				statement.setInt(3, sevenDat.getInteger("red_stones"));
 				statement.setInt(4, sevenDat.getInteger("green_stones"));
 				statement.setInt(5, sevenDat.getInteger("blue_stones"));
-				statement.setDouble(6, sevenDat.getDouble("ancient_adena_amount"));
-				statement.setDouble(7, sevenDat.getDouble("contribution_score"));
+				statement.setLong(6, (long)sevenDat.getDouble("ancient_adena_amount"));
+				statement.setLong(7, (long)sevenDat.getDouble("contribution_score"));
 				statement.setInt(8, sevenDat.getInteger("charId"));
 				statement.execute();
 				
@@ -818,25 +833,13 @@ public class SevenSigns
 			
 			if (updateSettings)
 			{
-				String sqlQuery =
-						"UPDATE seven_signs_status SET current_cycle=?, active_period=?, previous_winner=?, "
-								+ "dawn_stone_score=?, dawn_festival_score=?, dusk_stone_score=?, dusk_festival_score=?, "
-								+ "avarice_owner=?, gnosis_owner=?, strife_owner=?, avarice_dawn_score=?, gnosis_dawn_score=?, "
-								+ "strife_dawn_score=?, avarice_dusk_score=?, gnosis_dusk_score=?, strife_dusk_score=?, "
-								+ "festival_cycle=?, ";
-				
-				for (int i = 0; i < (SevenSignsFestival.FESTIVAL_COUNT); i++)
-					sqlQuery += "accumulated_bonus" + String.valueOf(i) + "=?, ";
-				
-				sqlQuery += "date=? WHERE id=0";
-				
-				PreparedStatement statement = con.prepareStatement(sqlQuery);
+				PreparedStatement statement = con.prepareStatement(SAVE_STATUS);
 				statement.setInt(1, _currentCycle);
 				statement.setInt(2, _activePeriod);
 				statement.setInt(3, _previousWinner);
-				statement.setDouble(4, _dawnStoneScore);
+				statement.setLong(4, (long)_dawnStoneScore);
 				statement.setInt(5, _dawnFestivalScore);
-				statement.setDouble(6, _duskStoneScore);
+				statement.setLong(6, (long)_duskStoneScore);
 				statement.setInt(7, _duskFestivalScore);
 				statement.setInt(8, _signsSealOwners.get(SEAL_AVARICE));
 				statement.setInt(9, _signsSealOwners.get(SEAL_GNOSIS));
@@ -852,8 +855,6 @@ public class SevenSigns
 				for (int i = 0; i < SevenSignsFestival.FESTIVAL_COUNT; i++)
 					statement.setInt(18 + i, SevenSignsFestival.getInstance().getAccumulatedBonus(i));
 				
-				statement.setInt(18 + SevenSignsFestival.FESTIVAL_COUNT,
-						Calendar.getInstance().get(Calendar.DAY_OF_WEEK));
 				statement.execute();
 				
 				statement.close();
@@ -917,6 +918,14 @@ public class SevenSigns
 	 */
 	public int setPlayerInfo(L2Player player, int chosenCabal, int chosenSeal)
 	{
+		// The sign-up row and the saved status are stored together.
+		WorldTransaction.run("Seven Signs sign-up", () -> registerPlayer(player, chosenCabal, chosenSeal));
+		
+		return chosenCabal;
+	}
+	
+	private void registerPlayer(L2Player player, int chosenCabal, int chosenSeal)
+	{
 		int charObjId = player.getObjectId();
 		Connection con = null;
 		StatsSet currPlayerData = getPlayerData(player);
@@ -949,9 +958,9 @@ public class SevenSigns
 			{
 				con = L2DatabaseFactory.getInstance().getConnection(con);
 				PreparedStatement statement =
-						con.prepareStatement("INSERT INTO seven_signs (charId, cabal, seal) VALUES (?,?,?)");
+						con.prepareStatement("INSERT INTO seven_signs_player (player_id, cabal, seal) VALUES (?,?,?)");
 				statement.setInt(1, charObjId);
-				statement.setString(2, getCabalShortName(chosenCabal));
+				statement.setString(2, toCabalColumn(getCabalShortName(chosenCabal)));
 				statement.setInt(3, chosenSeal);
 				statement.execute();
 				
@@ -982,8 +991,12 @@ public class SevenSigns
 		if (_log.isDebugEnabled())
 			_log.info("SevenSigns: " + player.getName() + " has joined the " + getCabalName(chosenCabal) + " for the "
 					+ getSealName(chosenSeal, false) + "!");
-		
-		return chosenCabal;
+	}
+	
+	/** @return the value of the cabal column: NULL for no cabal, otherwise "dawn" or "dusk" */
+	private static String toCabalColumn(String cabal)
+	{
+		return "dawn".equals(cabal) || "dusk".equals(cabal) ? cabal : null;
 	}
 	
 	/**

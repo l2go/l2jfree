@@ -16,7 +16,6 @@
 		<junit.version>6.1.3</junit.version>
 		<assertj.version>3.27.7</assertj.version>
 		<mockito.version>5.24.0</mockito.version>
-		<mysql-connector-j.version>26.7.0</mysql-connector-j.version>
 		<hikaricp.version>7.1.0</hikaricp.version>
 		<slf4j.version>2.0.20</slf4j.version>
 		<logback.version>1.5.38</logback.version>
@@ -149,7 +148,7 @@
 				<configuration>
 					<!-- Modules with no tests yet must not fail the build. l2j-commons carries the platform test. -->
 					<failIfNoTests>false</failIfNoTests>
-					<!-- MySQL tests opt in through -Dgroups=integration. The default build stays on unit tests. -->
+					<!-- Database tests opt in through -Dgroups=integration. The default build stays on unit tests. -->
 					<excludedGroups>${surefire.excludedGroups}</excludedGroups>
 					<!-- JDK 21+ refuses Mockito's self-attach. The agent is declared explicitly. -->
 					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar ${jfr.argLine}</argLine>

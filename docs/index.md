@@ -13,6 +13,7 @@ Platform 3.0 is in development. v2.5.0 is the final release of the 2.x line, whi
 | [Milestone reports](reports/m1-foundation.md) | Plan, result, deviations, and delivery numbers of each closed milestone |
 | [Architecture decision records](adr/README.md) | One record per decision, with rationale and consequences |
 | [Platform 3.0 vision](PLATFORM-3.0-VISION.md) | Target platform and design, revised by the decision records |
+| [Database conventions](DATABASE-CONVENTIONS.md) | The rules of the PostgreSQL schemas; the schema test checks them |
 | [Correctness audit](2026-Q4-CORRECTNESS-AUDIT.md) | Policy for filing and fixing defects; the testing sections are historical |
 
 ## 2.x line (retired)

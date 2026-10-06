@@ -113,12 +113,12 @@ public class AdminJail implements IAdminCommandHandler
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			PreparedStatement statement =
-					con.prepareStatement("UPDATE characters SET x=?, y=?, z=?, in_jail=?, jail_timer=? WHERE char_name=?");
+					con.prepareStatement("UPDATE player SET x=?, y=?, z=?, is_in_jail=?, jail_remaining_ms=? WHERE name=?");
 			statement.setInt(1, L2JailZone.JAIL_LOCATION.getX());
 			statement.setInt(2, L2JailZone.JAIL_LOCATION.getY());
 			statement.setInt(3, L2JailZone.JAIL_LOCATION.getZ());
-			statement.setInt(4, 1);
-			statement.setLong(5, delay * 60000L);
+			statement.setBoolean(4, true);
+			statement.setLong(5, Math.max(0, delay) * 60000L);
 			statement.setString(6, name);
 			
 			statement.execute();
@@ -149,11 +149,11 @@ public class AdminJail implements IAdminCommandHandler
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("UPDATE characters SET x=?, y=?, z=?, in_jail=?, jail_timer=? WHERE char_name=?");
+					con.prepareStatement("UPDATE player SET x=?, y=?, z=?, is_in_jail=?, jail_remaining_ms=? WHERE name=?");
 			statement.setInt(1, 17836);
 			statement.setInt(2, 170178);
 			statement.setInt(3, -3507);
-			statement.setInt(4, 0);
+			statement.setBoolean(4, false);
 			statement.setLong(5, 0);
 			statement.setString(6, name);
 			

@@ -19,15 +19,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
-import com.l2jfree.gameserver.util.TableOptimizer;
-import com.l2jfree.gameserver.util.TableOptimizer.CharacterRelatedTable;
-import com.l2jfree.gameserver.util.TableOptimizer.ItemRelatedTable;
 
 /**
  * This class ...
@@ -38,83 +36,176 @@ public abstract class IdFactory
 {
 	private final static Logger _log = LoggerFactory.getLogger(IdFactory.class);
 	
+	/**
+	 * The statements that move one object id to another, for the compaction of the ids: the key column of every entity
+	 * and every column that refers to it. The foreign keys of the schema are not deferrable, so the compaction needs
+	 * them to be (see {@link BitSetRebuildFactory}).
+	 */
 	protected static final String[] ID_UPDATES = {
-			"UPDATE items                 SET owner_id = ?    WHERE owner_id = ?",
-			"UPDATE items                 SET object_id = ?   WHERE object_id = ?",
-			"UPDATE character_quests      SET charId = ?      WHERE charId = ?",
-			"UPDATE character_blocks      SET charId = ?      WHERE charId = ?",
-			"UPDATE character_friends     SET charId1 = ?     WHERE charId1 = ?",
-			"UPDATE character_friends     SET charId2 = ?     WHERE charId2 = ?",
-			"UPDATE character_hennas      SET charId = ?      WHERE charId = ?",
-			"UPDATE character_recipebook  SET charId = ?      WHERE charId = ?",
-			"UPDATE character_shortcuts   SET charId = ?      WHERE charId = ?",
-			"UPDATE character_shortcuts   SET shortcut_id = ? WHERE shortcut_id = ? AND type = 1", // items
-			"UPDATE character_macroses    SET charId = ?      WHERE charId = ?",
-			"UPDATE character_skills      SET charId = ?      WHERE charId = ?",
-			"UPDATE character_subclasses  SET charId = ?      WHERE charId = ?",
-			"UPDATE characters            SET charId = ?      WHERE charId = ?",
-			"UPDATE characters            SET clanid = ?      WHERE clanid = ?",
-			"UPDATE clan_data             SET clan_id = ?     WHERE clan_id = ?",
-			"UPDATE siege_clans           SET clan_id = ?     WHERE clan_id = ?",
-			"UPDATE clan_data             SET ally_id = ?     WHERE ally_id = ?",
-			"UPDATE clan_data             SET leader_id = ?   WHERE leader_id = ?",
-			"UPDATE pets                  SET item_obj_id = ? WHERE item_obj_id = ?",
-			// Added by DaDummy
-			"UPDATE auction_bid          SET bidderId = ?      WHERE bidderId = ?",
-			"UPDATE character_hennas     SET charId = ?        WHERE charId = ?",
-			"UPDATE clan_wars            SET clan1 = ?         WHERE clan1 = ?",
-			"UPDATE clan_wars            SET clan2 = ?         WHERE clan2 = ?",
-			"UPDATE clanhall             SET ownerId = ?       WHERE ownerId = ?",
-			"UPDATE petitions            SET charId = ?        WHERE charId = ?",
-			"UPDATE posts                SET post_ownerid = ?  WHERE post_ownerid = ?",
-			"UPDATE seven_signs          SET charId = ?        WHERE charId = ?",
-			"UPDATE topic                SET topic_ownerid = ? WHERE topic_ownerid = ?",
-			"UPDATE itemsonground        SET object_id = ?     WHERE object_id = ?",
-			// Added by GDL
-			"UPDATE olympiad_nobles          SET charId = ?         WHERE charId = ?",
-			"UPDATE clan_privs               SET clan_id = ?        WHERE clan_id = ?",
-			"UPDATE clan_skills              SET clan_id = ?        WHERE clan_id = ?",
-			"UPDATE clan_subpledges          SET clan_id = ?        WHERE clan_id = ?",
-			"UPDATE character_effects        SET charId = ?         WHERE charId = ?",
-			"UPDATE character_recommends     SET charId = ?         WHERE charId = ?",
-			"UPDATE character_recommends     SET target_id = ?      WHERE target_id = ?",
-			"UPDATE character_raid_points     SET charId = ?       WHERE charId = ?",
-			"UPDATE character_skill_reuses   SET charId = ?         WHERE charId = ?",
-			"UPDATE couples                  SET id = ?             WHERE id = ?",
-			"UPDATE couples                  SET player1Id = ?      WHERE player1Id = ?",
-			"UPDATE couples                  SET player2Id = ?      WHERE player2Id = ?",
-			"UPDATE cursed_weapons           SET charId = ?         WHERE charId = ?",
-			"UPDATE forums                   SET forum_owner_id = ? WHERE forum_owner_id = ?",
-			"UPDATE heroes                   SET charId = ?         WHERE charId = ?" };
+			// Players
+			"UPDATE player SET id = ? WHERE id = ?",
+			"UPDATE player SET apprentice_player_id = ? WHERE apprentice_player_id = ?",
+			"UPDATE player SET sponsor_player_id = ? WHERE sponsor_player_id = ?",
+			"UPDATE player_subclass SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_subclass_certification SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_skill SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_skill_reuse SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_effect SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_henna SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_shortcut SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_macro SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_teleport_bookmark SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_recipe SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_quest_variable SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_quest_global_variable SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_instance_reentry SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_raid_score SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_birthday SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_name_title_color SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_recommendation_status SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_recommendation SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_recommendation SET recommended_player_id = ? WHERE recommended_player_id = ?",
+			"UPDATE player_friendship SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_friendship SET friend_player_id = ? WHERE friend_player_id = ?",
+			"UPDATE player_block SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_block SET blocked_player_id = ? WHERE blocked_player_id = ?",
+			"UPDATE item SET owner_player_id = ? WHERE owner_player_id = ?",
+			"UPDATE cursed_weapon SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_mail SET player_id = ? WHERE player_id = ?",
+			"UPDATE player_mail SET sender_player_id = ? WHERE sender_player_id = ?",
+			"UPDATE offline_store SET player_id = ? WHERE player_id = ?",
+			"UPDATE offline_store_item SET player_id = ? WHERE player_id = ?",
+			"UPDATE seven_signs_player SET player_id = ? WHERE player_id = ?",
+			"UPDATE olympiad_noble SET player_id = ? WHERE player_id = ?",
+			"UPDATE olympiad_noble_month_end SET player_id = ? WHERE player_id = ?",
+			"UPDATE hero SET player_id = ? WHERE player_id = ?",
+			"UPDATE couple SET player1_id = ? WHERE player1_id = ?",
+			"UPDATE couple SET player2_id = ? WHERE player2_id = ?",
+			"UPDATE forum SET owner_player_id = ? WHERE owner_player_id = ?",
+			"UPDATE forum_topic SET author_player_id = ? WHERE author_player_id = ?",
+			"UPDATE forum_post SET author_player_id = ? WHERE author_player_id = ?",
+			"UPDATE player_restriction SET player_id = ? WHERE player_id = ?",
+			"UPDATE leaderboard_entry SET player_id = ? WHERE player_id = ?",
+			"UPDATE clan SET leader_player_id = ? WHERE leader_player_id = ?",
+			"UPDATE clan_subpledge SET leader_player_id = ? WHERE leader_player_id = ?",
+			"UPDATE clan_hall_auction SET seller_player_id = ? WHERE seller_player_id = ?",
+			// Clans
+			"UPDATE clan SET id = ? WHERE id = ?",
+			"UPDATE player SET clan_id = ? WHERE clan_id = ?",
+			"UPDATE clan SET alliance_id = ? WHERE alliance_id = ?",
+			"UPDATE clan_notice SET clan_id = ? WHERE clan_id = ?",
+			"UPDATE clan_rank_privilege SET clan_id = ? WHERE clan_id = ?",
+			"UPDATE clan_skill SET clan_id = ? WHERE clan_id = ?",
+			"UPDATE clan_subpledge SET clan_id = ? WHERE clan_id = ?",
+			"UPDATE clan_war SET declaring_clan_id = ? WHERE declaring_clan_id = ?",
+			"UPDATE clan_war SET target_clan_id = ? WHERE target_clan_id = ?",
+			"UPDATE item SET owner_clan_id = ? WHERE owner_clan_id = ?",
+			"UPDATE castle_siege_clan SET clan_id = ? WHERE clan_id = ?",
+			"UPDATE fort_siege_clan SET clan_id = ? WHERE clan_id = ?",
+			"UPDATE clan_hall_siege_clan SET clan_id = ? WHERE clan_id = ?",
+			"UPDATE fort SET owner_clan_id = ? WHERE owner_clan_id = ?",
+			"UPDATE clan_hall SET owner_clan_id = ? WHERE owner_clan_id = ?",
+			"UPDATE clan_hall_auction_bid SET clan_id = ? WHERE clan_id = ?",
+			"UPDATE forum SET owner_clan_id = ? WHERE owner_clan_id = ?",
+			// Items and pets (a shortcut can point to an item)
+			"UPDATE item SET id = ? WHERE id = ?",
+			"UPDATE item SET owner_pet_id = ? WHERE owner_pet_id = ?",
+			"UPDATE pet SET item_id = ? WHERE item_id = ?",
+			"UPDATE item_attribute SET item_id = ? WHERE item_id = ?",
+			"UPDATE offline_store_item SET item_id = ? WHERE item_id = ?",
+			"UPDATE player_shortcut SET target_id = ? WHERE target_id = ? AND shortcut_type_id = 1",
+			// Couples, items on the ground, crests
+			"UPDATE couple SET id = ? WHERE id = ?",
+			"UPDATE ground_item SET id = ? WHERE id = ?",
+			"UPDATE clan SET crest_id = ? WHERE crest_id = ?",
+			"UPDATE clan SET large_crest_id = ? WHERE large_crest_id = ?",
+			"UPDATE clan SET alliance_crest_id = ? WHERE alliance_crest_id = ?",
+			"UPDATE crest SET id = ? WHERE id = ?" };
 	
+	/** The statements that look for a column that holds an id of a given range: the same columns as the updates. */
 	protected static final String[] ID_CHECKS = {
-			"SELECT owner_id    FROM items                 WHERE object_id >= ?   AND object_id < ?",
-			"SELECT object_id   FROM items                 WHERE object_id >= ?   AND object_id < ?",
-			"SELECT charId      FROM character_quests      WHERE charId >= ?      AND charId < ?",
-			"SELECT charId      FROM character_blocks      WHERE charId >= ?      AND charId < ?",
-			"SELECT charId      FROM character_effects     WHERE charId >= ?      AND charId < ?",
-			"SELECT charId1     FROM character_friends     WHERE charId1 >= ?     AND charId1 < ?",
-			"SELECT charId2     FROM character_friends     WHERE charId2 >= ?     AND charId2 < ?",
-			"SELECT charId      FROM character_hennas      WHERE charId >= ?      AND charId < ?",
-			"SELECT charId      FROM character_recipebook  WHERE charId >= ?      AND charId < ?",
-			"SELECT charId      FROM character_shortcuts   WHERE charId >= ?      AND charId < ?",
-			"SELECT charId      FROM character_macroses    WHERE charId >= ?      AND charId < ?",
-			"SELECT charId      FROM character_skill_reuses WHERE charId >= ?     AND charId < ?",
-			"SELECT charId      FROM character_skills      WHERE charId >= ?      AND charId < ?",
-			"SELECT charId      FROM character_subclasses  WHERE charId >= ?      AND charId < ?",
-			"SELECT charId      FROM characters            WHERE charId >= ?      AND charId < ?",
-			"SELECT clanid      FROM characters            WHERE clanid >= ?      AND clanid < ?",
-			"SELECT clan_id     FROM clan_data             WHERE clan_id >= ?     AND clan_id < ?",
-			"SELECT clan_id     FROM siege_clans           WHERE clan_id >= ?     AND clan_id < ?",
-			"SELECT ally_id     FROM clan_data             WHERE ally_id >= ?     AND ally_id < ?",
-			"SELECT leader_id   FROM clan_data             WHERE leader_id >= ?   AND leader_id < ?",
-			"SELECT item_obj_id FROM pets                  WHERE item_obj_id >= ? AND item_obj_id < ?",
-			// Added by DaDummy
-			"SELECT charId      FROM seven_signs           WHERE charId >= ?      AND charId < ?",
-			"SELECT object_id   FROM itemsonground         WHERE object_id >= ?   AND object_id < ?" };
+			// Players
+			"SELECT id FROM player WHERE id >= ? AND id < ?",
+			"SELECT apprentice_player_id FROM player WHERE apprentice_player_id >= ? AND apprentice_player_id < ?",
+			"SELECT sponsor_player_id FROM player WHERE sponsor_player_id >= ? AND sponsor_player_id < ?",
+			"SELECT player_id FROM player_subclass WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_subclass_certification WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_skill WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_skill_reuse WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_effect WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_henna WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_shortcut WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_macro WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_teleport_bookmark WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_recipe WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_quest_variable WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_quest_global_variable WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_instance_reentry WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_raid_score WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_birthday WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_name_title_color WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_recommendation_status WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_recommendation WHERE player_id >= ? AND player_id < ?",
+			"SELECT recommended_player_id FROM player_recommendation WHERE recommended_player_id >= ? AND recommended_player_id < ?",
+			"SELECT player_id FROM player_friendship WHERE player_id >= ? AND player_id < ?",
+			"SELECT friend_player_id FROM player_friendship WHERE friend_player_id >= ? AND friend_player_id < ?",
+			"SELECT player_id FROM player_block WHERE player_id >= ? AND player_id < ?",
+			"SELECT blocked_player_id FROM player_block WHERE blocked_player_id >= ? AND blocked_player_id < ?",
+			"SELECT owner_player_id FROM item WHERE owner_player_id >= ? AND owner_player_id < ?",
+			"SELECT player_id FROM cursed_weapon WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM player_mail WHERE player_id >= ? AND player_id < ?",
+			"SELECT sender_player_id FROM player_mail WHERE sender_player_id >= ? AND sender_player_id < ?",
+			"SELECT player_id FROM offline_store WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM offline_store_item WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM seven_signs_player WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM olympiad_noble WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM olympiad_noble_month_end WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM hero WHERE player_id >= ? AND player_id < ?",
+			"SELECT player1_id FROM couple WHERE player1_id >= ? AND player1_id < ?",
+			"SELECT player2_id FROM couple WHERE player2_id >= ? AND player2_id < ?",
+			"SELECT owner_player_id FROM forum WHERE owner_player_id >= ? AND owner_player_id < ?",
+			"SELECT author_player_id FROM forum_topic WHERE author_player_id >= ? AND author_player_id < ?",
+			"SELECT author_player_id FROM forum_post WHERE author_player_id >= ? AND author_player_id < ?",
+			"SELECT player_id FROM player_restriction WHERE player_id >= ? AND player_id < ?",
+			"SELECT player_id FROM leaderboard_entry WHERE player_id >= ? AND player_id < ?",
+			"SELECT leader_player_id FROM clan WHERE leader_player_id >= ? AND leader_player_id < ?",
+			"SELECT leader_player_id FROM clan_subpledge WHERE leader_player_id >= ? AND leader_player_id < ?",
+			"SELECT seller_player_id FROM clan_hall_auction WHERE seller_player_id >= ? AND seller_player_id < ?",
+			// Clans
+			"SELECT id FROM clan WHERE id >= ? AND id < ?",
+			"SELECT clan_id FROM player WHERE clan_id >= ? AND clan_id < ?",
+			"SELECT alliance_id FROM clan WHERE alliance_id >= ? AND alliance_id < ?",
+			"SELECT clan_id FROM clan_notice WHERE clan_id >= ? AND clan_id < ?",
+			"SELECT clan_id FROM clan_rank_privilege WHERE clan_id >= ? AND clan_id < ?",
+			"SELECT clan_id FROM clan_skill WHERE clan_id >= ? AND clan_id < ?",
+			"SELECT clan_id FROM clan_subpledge WHERE clan_id >= ? AND clan_id < ?",
+			"SELECT declaring_clan_id FROM clan_war WHERE declaring_clan_id >= ? AND declaring_clan_id < ?",
+			"SELECT target_clan_id FROM clan_war WHERE target_clan_id >= ? AND target_clan_id < ?",
+			"SELECT owner_clan_id FROM item WHERE owner_clan_id >= ? AND owner_clan_id < ?",
+			"SELECT clan_id FROM castle_siege_clan WHERE clan_id >= ? AND clan_id < ?",
+			"SELECT clan_id FROM fort_siege_clan WHERE clan_id >= ? AND clan_id < ?",
+			"SELECT clan_id FROM clan_hall_siege_clan WHERE clan_id >= ? AND clan_id < ?",
+			"SELECT owner_clan_id FROM fort WHERE owner_clan_id >= ? AND owner_clan_id < ?",
+			"SELECT owner_clan_id FROM clan_hall WHERE owner_clan_id >= ? AND owner_clan_id < ?",
+			"SELECT clan_id FROM clan_hall_auction_bid WHERE clan_id >= ? AND clan_id < ?",
+			"SELECT owner_clan_id FROM forum WHERE owner_clan_id >= ? AND owner_clan_id < ?",
+			// Items and pets (a shortcut can point to an item)
+			"SELECT id FROM item WHERE id >= ? AND id < ?",
+			"SELECT owner_pet_id FROM item WHERE owner_pet_id >= ? AND owner_pet_id < ?",
+			"SELECT item_id FROM pet WHERE item_id >= ? AND item_id < ?",
+			"SELECT item_id FROM item_attribute WHERE item_id >= ? AND item_id < ?",
+			"SELECT item_id FROM offline_store_item WHERE item_id >= ? AND item_id < ?",
+			"SELECT target_id FROM player_shortcut WHERE target_id >= ? AND target_id < ? AND shortcut_type_id = 1",
+			// Couples, items on the ground, crests
+			"SELECT id FROM couple WHERE id >= ? AND id < ?",
+			"SELECT id FROM ground_item WHERE id >= ? AND id < ?",
+			"SELECT crest_id FROM clan WHERE crest_id >= ? AND crest_id < ?",
+			"SELECT large_crest_id FROM clan WHERE large_crest_id >= ? AND large_crest_id < ?",
+			"SELECT alliance_crest_id FROM clan WHERE alliance_crest_id >= ? AND alliance_crest_id < ?",
+			"SELECT id FROM crest WHERE id >= ? AND id < ?" };
 	
-	private static final String[] TIMESTAMPS_CLEAN = { "DELETE FROM character_instance_time WHERE time <= ?",
-			"DELETE FROM character_skill_reuses WHERE expiration <= ?" };
+	private static final String[] TIMESTAMPS_CLEAN = { "DELETE FROM player_instance_reentry WHERE reenter_at <= ?",
+			"DELETE FROM player_skill_reuse WHERE expires_at <= ?" };
 	
 	protected boolean _initialized;
 	
@@ -127,7 +218,6 @@ public abstract class IdFactory
 	protected IdFactory()
 	{
 		setAllCharacterOffline();
-		cleanUpDB();
 		cleanUpTimeStamps();
 	}
 	
@@ -158,7 +248,7 @@ public abstract class IdFactory
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			Statement s2 = con.createStatement();
-			s2.executeUpdate("UPDATE characters SET online = 0;");
+			s2.executeUpdate("UPDATE player SET is_online = false WHERE is_online");
 			if (_log.isDebugEnabled())
 				_log.debug("Updated characters online status.");
 			s2.close();
@@ -166,85 +256,6 @@ public abstract class IdFactory
 		catch (SQLException e)
 		{
 			_log.warn("", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
-	}
-	
-	/**
-	 * Cleans up Database
-	 */
-	protected void cleanUpDB()
-	{
-		// TODO:
-		// Check for more cleanup query
-		// Check order
-		
-		Connection con = null;
-		try
-		{
-			int cleanCount = 0;
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			Statement stmt = con.createStatement();
-			
-			// If a character not exists
-			for (CharacterRelatedTable table : TableOptimizer.getCharacterRelatedTables())
-			{
-				cleanCount += stmt.executeUpdate(table.getCleanQuery());
-			}
-			
-			cleanCount +=
-					stmt.executeUpdate("DELETE FROM clan_data WHERE clan_data.leader_id NOT IN (SELECT charId FROM characters) AND clan_data.clan_id != 6619248;");
-			cleanCount +=
-					stmt.executeUpdate("DELETE FROM items WHERE loc <> 'clanwh' and items.owner_id NOT IN (SELECT charId FROM characters);");
-			
-			// If a clan not exists
-			cleanCount +=
-					stmt.executeUpdate("DELETE FROM auction_bid WHERE auction_bid.bidderId NOT IN (SELECT clan_id FROM clan_data);");
-			cleanCount +=
-					stmt.executeUpdate("DELETE FROM clan_privs WHERE clan_privs.clan_id NOT IN (SELECT clan_id FROM clan_data);");
-			cleanCount +=
-					stmt.executeUpdate("DELETE FROM clan_skills WHERE clan_skills.clan_id NOT IN (SELECT clan_id FROM clan_data);");
-			cleanCount +=
-					stmt.executeUpdate("DELETE FROM clan_subpledges WHERE clan_subpledges.clan_id NOT IN (SELECT clan_id FROM clan_data);");
-			cleanCount +=
-					stmt.executeUpdate("DELETE FROM clan_wars WHERE clan_wars.clan1 NOT IN (SELECT clan_id FROM clan_data) OR clan_wars.clan2 NOT IN (SELECT clan_id FROM clan_data);");
-			cleanCount +=
-					stmt.executeUpdate("DELETE FROM forums WHERE forum_owner_id <> 0 AND forums.forum_owner_id NOT IN (SELECT clan_id FROM clan_data);");
-			cleanCount +=
-					stmt.executeUpdate("DELETE FROM items WHERE loc = 'clanwh' AND items.owner_id NOT IN (SELECT clan_id FROM clan_data);");
-			cleanCount +=
-					stmt.executeUpdate("DELETE FROM siege_clans WHERE siege_clans.clan_id NOT IN (SELECT clan_id FROM clan_data);");
-			
-			stmt.executeUpdate("UPDATE characters SET `clanid`='0', `clan_privs`='0', `clan_join_expiry_time`='0', `clan_create_expiry_time`='0' WHERE characters.clanid NOT IN (SELECT clan_id FROM clan_data);");
-			stmt.executeUpdate("UPDATE clan_subpledges SET leader_id=0 WHERE clan_subpledges.leader_id NOT IN (SELECT charId FROM characters) AND leader_id > 0;");
-			stmt.executeUpdate("UPDATE clan_data SET ally_id=0 WHERE clan_data.ally_id NOT IN (SELECT clanid FROM characters WHERE clanid!=0 GROUP BY clanid);");
-			stmt.executeUpdate("UPDATE clanhall SET ownerId=0, paidUntil=0, paid=0 WHERE clanhall.ownerId NOT IN (SELECT clan_id FROM clan_data);");
-			
-			// If the clanhall isn't free
-			cleanCount +=
-					stmt.executeUpdate("DELETE FROM auction WHERE auction.id IN (SELECT id FROM clanhall WHERE ownerId <> 0) AND auction.sellerId = 0;");
-			cleanCount +=
-					stmt.executeUpdate("DELETE FROM auction_bid WHERE auction_bid.auctionId IN (SELECT id FROM clanhall WHERE ownerId <> 0);");
-			stmt.executeUpdate("UPDATE clan_data SET auction_bid_at = 0 WHERE auction_bid_at NOT IN (SELECT auctionId FROM auction_bid);");
-			// If the clanhall is free
-			cleanCount +=
-					stmt.executeUpdate("DELETE FROM clanhall_functions WHERE clanhall_functions.hall_id NOT IN (SELECT id FROM clanhall WHERE ownerId <> 0);");
-			
-			// If an item not exists
-			for (ItemRelatedTable table : TableOptimizer.getItemRelatedTables())
-			{
-				cleanCount += stmt.executeUpdate(table.getCleanQuery());
-			}
-			
-			stmt.close();
-			_log.info("Cleaned " + cleanCount + " elements from database.");
-		}
-		catch (SQLException e)
-		{
-			_log.error(e.getMessage(), e);
 		}
 		finally
 		{
@@ -263,7 +274,7 @@ public abstract class IdFactory
 			for (String line : TIMESTAMPS_CLEAN)
 			{
 				stmt = con.prepareStatement(line);
-				stmt.setLong(1, System.currentTimeMillis());
+				stmt.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
 				cleanCount += stmt.executeUpdate();
 				stmt.close();
 			}

@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.datatables;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Types;
 import java.util.Map;
 
 import javolution.util.FastMap;
@@ -44,6 +45,14 @@ import com.l2jfree.gameserver.model.world.spawn.L2Spawn;
 public class SpawnTable
 {
 	private final static Logger _log = LoggerFactory.getLogger(SpawnTable.class);
+	
+	private static final String SELECT_SPAWNS = "SELECT id, npc_count, npc_template_id, x, y, z, heading, respawn_delay_s, area_code, period_of_day FROM spawn WHERE spawn_group = ? ORDER BY id";
+	private static final String INSERT_SPAWN = "INSERT INTO spawn (spawn_group, id, npc_count, npc_template_id, x, y, z, heading, respawn_delay_s, area_code) VALUES (?,?,?,?,?,?,?,?,?,?)";
+	private static final String UPDATE_SPAWN = "UPDATE spawn SET npc_count = ?, npc_template_id = ?, x = ?, y = ?, z = ?, heading = ?, respawn_delay_s = ?, area_code = ? WHERE spawn_group = ? AND id = ?";
+	private static final String DELETE_SPAWN = "DELETE FROM spawn WHERE spawn_group = ? AND id = ?";
+	
+	private static final String GROUP_WORLD = "WORLD";
+	private static final String GROUP_CUSTOM = "CUSTOM";
 	
 	private final FastMap<Integer, L2Spawn> _spawnTable = new FastMap<Integer, L2Spawn>(50000).setShared(true);
 	private int _npcSpawnCount;
@@ -76,8 +85,8 @@ public class SpawnTable
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement =
-					con.prepareStatement("SELECT id, count, npc_templateid, locx, locy, locz, heading, respawn_delay, loc_id, periodOfDay FROM spawnlist ORDER BY id");
+			PreparedStatement statement = con.prepareStatement(SELECT_SPAWNS);
+			statement.setString(1, GROUP_WORLD);
 			ResultSet rset = statement.executeQuery();
 			
 			L2Spawn spawnDat;
@@ -85,7 +94,7 @@ public class SpawnTable
 			
 			while (rset.next())
 			{
-				template1 = NpcTable.getInstance().getTemplate(rset.getInt("npc_templateid"));
+				template1 = NpcTable.getInstance().getTemplate(rset.getInt("npc_template_id"));
 				if (template1 != null)
 				{
 					if (template1.isAssignableTo(L2SiegeGuard.class))
@@ -110,25 +119,25 @@ public class SpawnTable
 						spawnDat = new L2Spawn(template1);
 						spawnDat.setId(_npcSpawnCount);
 						spawnDat.setDbId(rset.getInt("id"));
-						spawnDat.setAmount(rset.getInt("count"));
-						spawnDat.setLocx(rset.getInt("locx"));
-						spawnDat.setLocy(rset.getInt("locy"));
-						spawnDat.setLocz(rset.getInt("locz"));
+						spawnDat.setAmount(rset.getInt("npc_count"));
+						spawnDat.setLocx(rset.getInt("x"));
+						spawnDat.setLocy(rset.getInt("y"));
+						spawnDat.setLocz(rset.getInt("z"));
 						spawnDat.setHeading(rset.getInt("heading"));
-						spawnDat.setRespawnDelay(rset.getInt("respawn_delay"));
-						int loc_id = rset.getInt("loc_id");
+						spawnDat.setRespawnDelay(rset.getInt("respawn_delay_s"));
+						int loc_id = rset.getInt("area_code");
 						spawnDat.setLocation(loc_id);
 						
-						switch (rset.getInt("periodOfDay"))
+						switch (rset.getString("period_of_day"))
 						{
-							case 0: // default
+							case "ALWAYS": // default
 								_npcSpawnCount += spawnDat.init(true);
 								break;
-							case 1: // Day
+							case "DAY":
 								DayNightSpawnManager.getInstance().addDayCreature(spawnDat);
 								_npcSpawnCount++;
 								break;
-							case 2: // Night
+							case "NIGHT":
 								DayNightSpawnManager.getInstance().addNightCreature(spawnDat);
 								_npcSpawnCount++;
 								break;
@@ -142,7 +151,7 @@ public class SpawnTable
 				else
 				{
 					_log.warn("SpawnTable: Data missing or incorrect in NPC/Custom NPC table for ID: "
-							+ rset.getInt("npc_templateid") + ".");
+							+ rset.getInt("npc_template_id") + ".");
 				}
 			}
 			rset.close();
@@ -158,8 +167,8 @@ public class SpawnTable
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement =
-					con.prepareStatement("SELECT id, count, npc_templateid, locx, locy, locz, heading, respawn_delay, loc_id, periodOfDay FROM custom_spawnlist ORDER BY id");
+			PreparedStatement statement = con.prepareStatement(SELECT_SPAWNS);
+			statement.setString(1, GROUP_CUSTOM);
 			ResultSet rset = statement.executeQuery();
 			
 			L2Spawn spawnDat;
@@ -169,7 +178,7 @@ public class SpawnTable
 			
 			while (rset.next())
 			{
-				template1 = NpcTable.getInstance().getTemplate(rset.getInt("npc_templateid"));
+				template1 = NpcTable.getInstance().getTemplate(rset.getInt("npc_template_id"));
 				if (template1 != null)
 				{
 					if (template1.isAssignableTo(L2SiegeGuard.class))
@@ -194,26 +203,26 @@ public class SpawnTable
 						spawnDat = new L2Spawn(template1);
 						spawnDat.setId(_npcSpawnCount);
 						spawnDat.setDbId(rset.getInt("id"));
-						spawnDat.setAmount(rset.getInt("count"));
-						spawnDat.setLocx(rset.getInt("locx"));
-						spawnDat.setLocy(rset.getInt("locy"));
-						spawnDat.setLocz(rset.getInt("locz"));
+						spawnDat.setAmount(rset.getInt("npc_count"));
+						spawnDat.setLocx(rset.getInt("x"));
+						spawnDat.setLocy(rset.getInt("y"));
+						spawnDat.setLocz(rset.getInt("z"));
 						spawnDat.setHeading(rset.getInt("heading"));
-						spawnDat.setRespawnDelay(rset.getInt("respawn_delay"));
+						spawnDat.setRespawnDelay(rset.getInt("respawn_delay_s"));
 						spawnDat.setCustom();
-						int loc_id = rset.getInt("loc_id");
+						int loc_id = rset.getInt("area_code");
 						spawnDat.setLocation(loc_id);
 						
-						switch (rset.getInt("periodOfDay"))
+						switch (rset.getString("period_of_day"))
 						{
-							case 0: // default
+							case "ALWAYS": // default
 								_npcSpawnCount += spawnDat.init();
 								break;
-							case 1: // Day
+							case "DAY":
 								DayNightSpawnManager.getInstance().addDayCreature(spawnDat);
 								_npcSpawnCount++;
 								break;
-							case 2: // Night
+							case "NIGHT":
 								DayNightSpawnManager.getInstance().addNightCreature(spawnDat);
 								_npcSpawnCount++;
 								break;
@@ -227,7 +236,7 @@ public class SpawnTable
 				else
 				{
 					_log.warn("SpawnTable: Data missing or incorrect in NPC/Custom NPC table for ID: "
-							+ rset.getInt("npc_templateid") + ".");
+							+ rset.getInt("npc_template_id") + ".");
 				}
 			}
 			rset.close();
@@ -281,19 +290,21 @@ public class SpawnTable
 			try
 			{
 				con = L2DatabaseFactory.getInstance().getConnection(con);
-				PreparedStatement statement =
-						con.prepareStatement("INSERT INTO "
-								+ (spawn.isCustom() ? "custom_spawnlist" : "spawnlist")
-								+ " (id,count,npc_templateid,locx,locy,locz,heading,respawn_delay,loc_id) values(?,?,?,?,?,?,?,?,?)");
-				statement.setInt(1, spawn.getDbId());
-				statement.setInt(2, spawn.getAmount());
-				statement.setInt(3, spawn.getNpcId());
-				statement.setInt(4, spawn.getLocx());
-				statement.setInt(5, spawn.getLocy());
-				statement.setInt(6, spawn.getLocz());
-				statement.setInt(7, spawn.getHeading());
-				statement.setInt(8, spawn.getRespawnDelay() / 1000);
-				statement.setInt(9, spawn.getLocation());
+				PreparedStatement statement = con.prepareStatement(INSERT_SPAWN);
+				statement.setString(1, spawn.isCustom() ? GROUP_CUSTOM : GROUP_WORLD);
+				statement.setInt(2, spawn.getDbId());
+				statement.setInt(3, spawn.getAmount());
+				statement.setInt(4, spawn.getNpcId());
+				statement.setInt(5, spawn.getLocx());
+				statement.setInt(6, spawn.getLocy());
+				statement.setInt(7, spawn.getLocz());
+				statement.setInt(8, spawn.getHeading());
+				statement.setInt(9, spawn.getRespawnDelay() / 1000);
+				// area_code is NULL when the spawn has no location (0)
+				if (spawn.getLocation() == 0)
+					statement.setNull(10, Types.INTEGER);
+				else
+					statement.setInt(10, spawn.getLocation());
 				statement.execute();
 				statement.close();
 			}
@@ -316,10 +327,7 @@ public class SpawnTable
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement =
-					con.prepareStatement("update "
-							+ (spawn.isCustom() ? "custom_spawnlist" : "spawnlist")
-							+ " set count=?,npc_templateid=?,locx=?,locy=?,locz=?,heading=?,respawn_delay=?,loc_id=? where id =?");
+			PreparedStatement statement = con.prepareStatement(UPDATE_SPAWN);
 			statement.setInt(1, spawn.getAmount());
 			statement.setInt(2, spawn.getNpcId());
 			statement.setInt(3, spawn.getLocx());
@@ -327,8 +335,13 @@ public class SpawnTable
 			statement.setInt(5, spawn.getLocz());
 			statement.setInt(6, spawn.getHeading());
 			statement.setInt(7, spawn.getRespawnDelay() / 1000);
-			statement.setInt(8, spawn.getLocation());
-			statement.setInt(9, spawn.getDbId());
+			// area_code is NULL when the spawn has no location (0)
+			if (spawn.getLocation() == 0)
+				statement.setNull(8, Types.INTEGER);
+			else
+				statement.setInt(8, spawn.getLocation());
+			statement.setString(9, spawn.isCustom() ? GROUP_CUSTOM : GROUP_WORLD);
+			statement.setInt(10, spawn.getDbId());
 			
 			statement.execute();
 			statement.close();
@@ -356,10 +369,9 @@ public class SpawnTable
 			try
 			{
 				con = L2DatabaseFactory.getInstance().getConnection(con);
-				PreparedStatement statement =
-						con.prepareStatement("DELETE FROM " + (spawn.isCustom() ? "custom_spawnlist" : "spawnlist")
-								+ " WHERE id=?");
-				statement.setInt(1, spawn.getDbId());
+				PreparedStatement statement = con.prepareStatement(DELETE_SPAWN);
+				statement.setString(1, spawn.isCustom() ? GROUP_CUSTOM : GROUP_WORLD);
+				statement.setInt(2, spawn.getDbId());
 				statement.execute();
 				statement.close();
 			}

@@ -18,20 +18,24 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 
 import gnu.trove.TIntArrayList;
 
 final class PersistedObjectIds
 {
+	/** The key columns of the entities and the crest ids, which share the id range (docs/DATABASE-CONVENTIONS.md, section 3). */
 	private static final String[] QUERIES = {
-		"SELECT charId FROM characters",
-		"SELECT object_id FROM items",
-		"SELECT clan_id FROM clan_data",
-		"SELECT crest_id FROM clan_data",
-		"SELECT crest_large_id FROM clan_data",
-		"SELECT ally_crest_id FROM clan_data",
-		"SELECT id FROM couples",
-		"SELECT object_id FROM itemsonground"
+		"SELECT id FROM player",
+		"SELECT id FROM item",
+		"SELECT id FROM clan",
+		"SELECT item_id FROM pet",
+		"SELECT id FROM ground_item",
+		"SELECT id FROM couple",
+		"SELECT crest_id FROM clan",
+		"SELECT large_crest_id FROM clan",
+		"SELECT alliance_crest_id FROM clan",
+		"SELECT id FROM crest"
 	};
 
 	private PersistedObjectIds()
@@ -57,6 +61,15 @@ final class PersistedObjectIds
 			}
 		}
 		ids.sort();
-		return ids.toNativeArray();
+		
+		// An id can be stored twice: a pet has the id of its control item, and the member clans of an alliance share a crest
+		int[] sorted = ids.toNativeArray();
+		int distinct = 0;
+		for (int i = 0; i < sorted.length; i++)
+		{
+			if (i == 0 || sorted[i] != sorted[i - 1])
+				sorted[distinct++] = sorted[i];
+		}
+		return Arrays.copyOf(sorted, distinct);
 	}
 }

@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.communitybbs.bb;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Types;
 import java.util.List;
 import java.util.Map;
 
@@ -52,7 +53,6 @@ public class Forum
 	private String _forumName;
 	//private int _ForumParent;
 	private int _forumType;
-	private int _forumPost;
 	private int _forumPerm;
 	private final Forum _fParent;
 	private int _ownerID;
@@ -85,7 +85,6 @@ public class Forum
 		_forumId = ForumsBBSManager.getInstance().getANewID();
 		//_ForumParent = parent.getID();
 		_forumType = type;
-		_forumPost = 0;
 		_forumPerm = perm;
 		_fParent = parent;
 		_ownerID = OwnerID;
@@ -105,18 +104,17 @@ public class Forum
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM forums WHERE forum_id=?");
+			PreparedStatement statement = con.prepareStatement("SELECT name, kind, access, COALESCE(owner_player_id, owner_clan_id) AS owner_id FROM forum WHERE id = ?");
 			statement.setInt(1, _forumId);
 			ResultSet result = statement.executeQuery();
 			
 			if (result.next())
 			{
-				_forumName = result.getString("forum_name");
+				_forumName = result.getString("name");
 				//_ForumParent = result.getInt("forum_parent"));
-				_forumPost = result.getInt("forum_post");
-				_forumType = result.getInt("forum_type");
-				_forumPerm = result.getInt("forum_perm");
-				_ownerID = result.getInt("forum_owner_id");
+				_forumType = result.getInt("kind");
+				_forumPerm = result.getInt("access");
+				_ownerID = result.getInt("owner_id");
 			}
 			result.close();
 			statement.close();
@@ -135,18 +133,17 @@ public class Forum
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT * FROM topic WHERE topic_forum_id=? ORDER BY topic_id DESC");
+					con.prepareStatement("SELECT forum_id, topic_number, name, created_at, author_name, author_player_id, kind FROM forum_topic WHERE forum_id = ? ORDER BY topic_number DESC");
 			statement.setInt(1, _forumId);
 			ResultSet result = statement.executeQuery();
 			
 			while (result.next())
 			{
 				Topic t =
-						new Topic(Topic.ConstructorType.RESTORE, result.getInt("topic_id"),
-								result.getInt("topic_forum_id"), result.getString("topic_name"),
-								result.getLong("topic_date"), result.getString("topic_ownername"),
-								result.getInt("topic_ownerid"), result.getInt("topic_type"),
-								result.getInt("topic_reply"));
+						new Topic(Topic.ConstructorType.RESTORE, result.getInt("topic_number"),
+								result.getInt("forum_id"), result.getString("name"),
+								result.getTimestamp("created_at").getTime(), result.getString("author_name"),
+								result.getInt("author_player_id"), result.getInt("kind"), 0);
 				_topic.put(t.getID(), t);
 				if (t.getID() > TopicBBSManager.getInstance().getMaxID(this))
 				{
@@ -175,13 +172,13 @@ public class Forum
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT forum_id FROM forums WHERE forum_parent=?");
+			PreparedStatement statement = con.prepareStatement("SELECT id FROM forum WHERE parent_forum_id = ? ORDER BY id");
 			statement.setInt(1, _forumId);
 			ResultSet result = statement.executeQuery();
 			
 			while (result.next())
 			{
-				Forum f = new Forum(result.getInt("forum_id"), this);
+				Forum f = new Forum(result.getInt("id"), this);
 				_children.add(f);
 				ForumsBBSManager.getInstance().addForum(f);
 			}
@@ -272,14 +269,21 @@ public class Forum
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("INSERT INTO forums (forum_id,forum_name,forum_parent,forum_post,forum_type,forum_perm,forum_owner_id) VALUES (?,?,?,?,?,?,?)");
+					con.prepareStatement("INSERT INTO forum (id, name, parent_forum_id, kind, access, owner_player_id, owner_clan_id) VALUES (?,?,?,?,?,?,?)");
 			statement.setInt(1, _forumId);
 			statement.setString(2, _forumName);
 			statement.setInt(3, _fParent.getID());
-			statement.setInt(4, _forumPost);
-			statement.setInt(5, _forumType);
-			statement.setInt(6, _forumPerm);
-			statement.setInt(7, _ownerID);
+			statement.setInt(4, _forumType);
+			statement.setInt(5, _forumPerm);
+			// A memo or mail forum belongs to a player, a clan forum to a clan, other forums to nobody.
+			if (_ownerID != 0 && (_forumType == MEMO || _forumType == MAIL))
+				statement.setInt(6, _ownerID);
+			else
+				statement.setNull(6, Types.INTEGER);
+			if (_ownerID != 0 && _forumType == CLAN)
+				statement.setInt(7, _ownerID);
+			else
+				statement.setNull(7, Types.INTEGER);
 			statement.execute();
 			statement.close();
 		}

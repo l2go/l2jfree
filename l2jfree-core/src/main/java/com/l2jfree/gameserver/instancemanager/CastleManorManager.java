@@ -37,6 +37,7 @@ import com.l2jfree.gameserver.model.clan.L2Clan;
 import com.l2jfree.gameserver.model.entity.Castle;
 import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.SystemMessageId;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 import com.l2jfree.tools.random.Rnd;
 
 /**
@@ -53,9 +54,10 @@ public class CastleManorManager
 	public static final int PERIOD_CURRENT = 0;
 	public static final int PERIOD_NEXT = 1;
 	
-	private static final String CASTLE_MANOR_LOAD_PROCURE = "SELECT * FROM castle_manor_procure WHERE castle_id=?";
+	private static final String CASTLE_MANOR_LOAD_PROCURE =
+			"SELECT crop_item_template_id, remaining_amount, start_amount, reward_type, price, period FROM castle_manor_procure WHERE castle_id=?";
 	private static final String CASTLE_MANOR_LOAD_PRODUCTION =
-			"SELECT * FROM castle_manor_production WHERE castle_id=?";
+			"SELECT seed_item_template_id, remaining_amount, start_amount, price, period FROM castle_manor_production WHERE castle_id=?";
 	
 	private static final int NEXT_PERIOD_APPROVE = Config.ALT_MANOR_APPROVE_TIME; // 6:00
 	private static final int NEXT_PERIOD_APPROVE_MIN = Config.ALT_MANOR_APPROVE_MIN;
@@ -229,10 +231,10 @@ public class CastleManorManager
 				rs = statement.executeQuery();
 				while (rs.next())
 				{
-					int seedId = rs.getInt("seed_id");
-					int canProduce = rs.getInt("can_produce");
-					int startProduce = rs.getInt("start_produce");
-					int price = rs.getInt("seed_price");
+					int seedId = rs.getInt("seed_item_template_id");
+					long canProduce = rs.getLong("remaining_amount");
+					long startProduce = rs.getLong("start_amount");
+					long price = rs.getLong("price");
 					int period = rs.getInt("period");
 					if (period == PERIOD_CURRENT)
 						production.add(new SeedProduction(seedId, canProduce, price, startProduce));
@@ -251,11 +253,11 @@ public class CastleManorManager
 				rs = statement.executeQuery();
 				while (rs.next())
 				{
-					int cropId = rs.getInt("crop_id");
-					int canBuy = rs.getInt("can_buy");
-					int startBuy = rs.getInt("start_buy");
+					int cropId = rs.getInt("crop_item_template_id");
+					long canBuy = rs.getLong("remaining_amount");
+					long startBuy = rs.getLong("start_amount");
 					int rewardType = rs.getInt("reward_type");
-					int price = rs.getInt("price");
+					long price = rs.getLong("price");
 					int period = rs.getInt("period");
 					if (period == PERIOD_CURRENT)
 						procure.add(new CropProcure(cropId, canBuy, rewardType, startBuy, price));
@@ -390,6 +392,12 @@ public class CastleManorManager
 	}
 	
 	public void setNextPeriod()
+	{
+		// The settlement of all castles (warehouse items, treasury refunds, manor rows) is one transaction.
+		WorldTransaction.run("Manor next period", () -> setNextPeriodTransactional());
+	}
+
+	private void setNextPeriodTransactional()
 	{
 		for (Castle c : CastleManager.getInstance().getCastles().values())
 		{
@@ -585,11 +593,14 @@ public class CastleManorManager
 	
 	public void save()
 	{
-		for (Castle c : CastleManager.getInstance().getCastles().values())
-		{
-			c.saveSeedData();
-			c.saveCropData();
-		}
+		// The manor data of all castles is stored in one transaction.
+		WorldTransaction.run("Manor save", () -> {
+			for (Castle c : CastleManager.getInstance().getCastles().values())
+			{
+				c.saveSeedData();
+				c.saveCropData();
+			}
+		});
 	}
 	
 	@SuppressWarnings("synthetic-access")

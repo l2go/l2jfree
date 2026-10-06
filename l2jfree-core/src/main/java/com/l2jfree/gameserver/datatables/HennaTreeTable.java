@@ -48,7 +48,7 @@ public class HennaTreeTable
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT id FROM class_list");
+			PreparedStatement statement = con.prepareStatement("SELECT id FROM player_class");
 			ResultSet classlist = statement.executeQuery();
 			
 			while (classlist.next())
@@ -57,13 +57,13 @@ public class HennaTreeTable
 				FastList<L2Henna> list = new FastList<L2Henna>();
 				
 				PreparedStatement statement2 =
-						con.prepareStatement("SELECT symbol_id FROM henna_trees where class_id=?");
+						con.prepareStatement("SELECT henna_id FROM henna_class WHERE player_class_id = ?");
 				statement2.setInt(1, classId);
 				ResultSet hennatree = statement2.executeQuery();
 				
 				while (hennatree.next())
 				{
-					int id = hennatree.getInt("symbol_id");
+					int id = hennatree.getInt("henna_id");
 					
 					L2Henna template = HennaTable.getInstance().getTemplate(id);
 					if (template == null)

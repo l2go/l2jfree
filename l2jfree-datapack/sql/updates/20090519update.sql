@@ -1,1 +1,0 @@
-ALTER TABLE `items` CHANGE `time` `time` INT(13) NOT NULL DEFAULT 0;

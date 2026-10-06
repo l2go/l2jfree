@@ -14,16 +14,11 @@
  */
 package com.l2jfree.gameserver.instancemanager;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-
 import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.model.entity.faction.FactionQuest;
 
 /**
@@ -67,37 +62,8 @@ public class FactionQuestManager
 	// Method - Private
 	private final void load()
 	{
-		Connection con = null;
-		try
-		{
-			PreparedStatement statement;
-			ResultSet rs;
-			
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			
-			statement =
-					con.prepareStatement("Select id, faction_id, name, description, reward, mobid, amount, min_level from faction_quests order by id");
-			rs = statement.executeQuery();
-			while (rs.next())
-			{
-				getFactionQuests().add(
-						new FactionQuest(rs.getInt("id"), rs.getInt("faction_id"), rs.getString("name"), rs
-								.getString("description"), rs.getInt("reward"), rs.getInt("mobid"),
-								rs.getInt("amount"), rs.getInt("min_level")));
-			}
-			
-			statement.close();
-			
-			_log.info("Loaded: " + getFactionQuests().size() + " factionquests");
-		}
-		catch (Exception e)
-		{
-			_log.warn("Exception: FactionQuestManager.load(): " + e.getMessage(), e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+		// The faction system has no schema in Platform 3.0: there is nothing to load and the list stays empty.
+		_log.info("Loaded: " + getFactionQuests().size() + " factionquests");
 	}
 	
 	// =========================================================

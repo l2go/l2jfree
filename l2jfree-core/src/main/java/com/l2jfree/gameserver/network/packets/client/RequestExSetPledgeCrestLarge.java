@@ -14,11 +14,6 @@
  */
 package com.l2jfree.gameserver.network.packets.client;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.cache.CrestCache;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.idfactory.IdFactory;
@@ -26,6 +21,7 @@ import com.l2jfree.gameserver.model.clan.L2Clan;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.L2ClientPacket;
 import com.l2jfree.gameserver.network.packets.server.ActionFailed;
+import com.l2jfree.gameserver.persistence.clan.ClanRepository;
 
 /**
  * Format : chdb
@@ -83,13 +79,22 @@ public class RequestExSetPledgeCrestLarge extends L2ClientPacket
 		
 		if (_data == null)
 		{
-			if (!cc.removePledgeCrestLarge(clan.getCrestId()))
+			if (!cc.removePledgeCrestLarge(clan.getCrestLargeId()))
 			{
 				_log.warn("Error deleting large crest of clan:" + clan.getName());
 				requestFailed(SystemMessageId.FILE_NOT_FOUND);
 				return;
 			}
 			
+			try
+			{
+				ClanRepository.getInstance().updateClanLargeCrest(clan.getClanId(), 0);
+			}
+			catch (Exception e)
+			{
+				_log.warn("could not clear the large crest id:", e);
+			}
+			clan.setCrestLargeId(0);
 			clan.setHasCrestLarge(false);
 			sendPacket(SystemMessageId.CLAN_CREST_HAS_BEEN_DELETED);
 			for (L2Player member : clan.getOnlineMembers(0))
@@ -104,32 +109,19 @@ public class RequestExSetPledgeCrestLarge extends L2ClientPacket
 				requestFailed(SystemMessageId.INVALID_INSIGNIA_COLOR);
 				return;
 			}
-			else if (clan.hasCrestLarge() && !cc.removePledgeCrestLarge(clan.getCrestId()))
-			{
-				_log.warn("Error deleting large crest of clan:" + clan.getName());
-				requestFailed(SystemMessageId.FILE_NOT_FOUND);
-				return;
-			}
 			
-			Connection con = null;
 			try
 			{
-				con = L2DatabaseFactory.getInstance().getConnection(con);
-				PreparedStatement statement =
-						con.prepareStatement("UPDATE clan_data SET crest_large_id = ? WHERE clan_id = ?");
-				statement.setInt(1, newId);
-				statement.setInt(2, clan.getClanId());
-				statement.executeUpdate();
-				statement.close();
+				ClanRepository.getInstance().updateClanLargeCrest(clan.getClanId(), newId);
 			}
-			catch (SQLException e)
+			catch (Exception e)
 			{
 				_log.warn("could not update the large crest id:", e);
 			}
-			finally
-			{
-				L2DatabaseFactory.close(con);
-			}
+			
+			// The clan points at the new crest now, so the old image can go
+			if (clan.hasCrestLarge() && !cc.removePledgeCrestLarge(clan.getCrestLargeId()))
+				_log.warn("Error deleting the old large crest of clan:" + clan.getName());
 			
 			clan.setCrestLargeId(newId);
 			clan.setHasCrestLarge(true);

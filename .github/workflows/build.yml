@@ -145,7 +145,7 @@ jobs:
                 ;;
               l2jfree-datapack-*-dist.zip)
                 require_entry "$archive" gameserver/data/scripts.cfg
-                require_entry "$archive" gameserver/sql/characters.sql
+                require_entry "$archive" gameserver/catalog/npc_template.csv
                 ;;
               *)
                 echo "Unexpected release distribution name: $archive"
@@ -198,7 +198,7 @@ jobs:
           java-version: "25"
           cache: maven
 
-      - name: Run MySQL integration tests
+      - name: Run the PostgreSQL integration tests
         run: |
           ./mvnw -B -ntp \
             -Dgroups=integration \
@@ -210,6 +210,16 @@ jobs:
           echo "integration reports: ${reports} of ${expected} tagged classes"
           test "${expected}" -gt 0
           test "${reports}" -ge "${expected}"
+
+      - name: Upload what the database checks wrote
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: l2jfree-database-checks
+          if-no-files-found: ignore
+          path: |
+            l2jfree-core/target/statement-check.txt
+            l2jfree-core/target/database-docs/*
 
   # Builds the Platform 3.0 image from the verified LoginServer distribution,
   # starts the stack with Docker Compose, and probes the login port. A push to

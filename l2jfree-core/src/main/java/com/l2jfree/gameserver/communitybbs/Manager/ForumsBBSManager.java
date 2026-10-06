@@ -70,11 +70,11 @@ public class ForumsBBSManager extends BaseBBSManager
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT forum_id FROM forums WHERE forum_type=0");
+			PreparedStatement statement = con.prepareStatement("SELECT id FROM forum WHERE kind = 0 ORDER BY id");
 			ResultSet result = statement.executeQuery();
 			while (result.next())
 			{
-				int forumId = result.getInt("forum_id");
+				int forumId = result.getInt("id");
 				Forum f = new Forum(forumId, null);
 				addForum(f);
 			}

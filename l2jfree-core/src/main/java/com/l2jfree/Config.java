@@ -120,6 +120,7 @@ public final class Config
 	public static String DATABASE_URL; // Path to access to database
 	public static String DATABASE_LOGIN; // Database login
 	public static String DATABASE_PASSWORD; // Database password
+	public static String CATALOG_DIRECTORY; // Directory of the catalog CSV files, loaded into the catalog schema at start
 	public static int DATABASE_MAX_CONNECTIONS; // Maximum number of connections to the
 	// database
 	public static int DATABASE_MIN_IDLE_CONNECTIONS; // Idle connections kept open, never above the maximum
@@ -215,10 +216,11 @@ public final class Config
 			OPTIONAL_NETWORKS = serverSettings.getProperty("OptionalNetworks", "");
 			PACKET_HANDLER_DEBUG = Boolean.parseBoolean(serverSettings.getProperty("PacketHandlerDebug", "false"));
 			MAXIMUM_ONLINE_USERS = Integer.parseInt(serverSettings.getProperty("MaximumOnlineUsers", "100"));
-			DATABASE_DRIVER = serverSettings.getProperty("Driver", "com.mysql.cj.jdbc.Driver");
-			DATABASE_URL = serverSettings.getProperty("URL", "jdbc:mysql://localhost/l2jfree_gs");
-			DATABASE_LOGIN = serverSettings.getProperty("Login", "root");
+			DATABASE_DRIVER = serverSettings.getProperty("Driver", "org.postgresql.Driver");
+			DATABASE_URL = serverSettings.getProperty("URL", "jdbc:postgresql://localhost/l2jfree");
+			DATABASE_LOGIN = serverSettings.getProperty("Login", "l2jfree_world");
 			DATABASE_PASSWORD = serverSettings.getProperty("Password", "");
+			CATALOG_DIRECTORY = serverSettings.getProperty("CatalogDirectory", "catalog");
 			DATABASE_MAX_CONNECTIONS = Integer.parseInt(serverSettings.getProperty("MaximumDbConnections", "10"));
 			DATABASE_MIN_IDLE_CONNECTIONS = Integer.parseInt(serverSettings.getProperty("MinimumDbIdleConnections", "10"));
 			
@@ -1330,7 +1332,6 @@ public final class Config
 	public static boolean ALT_MASTERWORK_CONFIG;
 	public static boolean ALLOW_MASTERWORK;
 	public static boolean ALLOW_CRITICAL_CRAFT;
-	public static boolean MAIL_STORE_DELETED_LETTERS;
 	public static boolean BAN_CLIENT_EMULATORS;
 	
 	public static boolean SERVER_LIST_CLOCK; // Displays a clock next to the server name ?
@@ -1363,15 +1364,6 @@ public final class Config
 	public static int RETARGET_BLOCKING_PERIOD;
 	
 	// *******************************************************************************************
-	public static boolean DATABASE_BACKUP_MAKE_BACKUP_ON_STARTUP;
-	public static boolean DATABASE_BACKUP_MAKE_BACKUP_ON_SHUTDOWN;
-	public static String DATABASE_BACKUP_DATABASE_NAME;
-	public static String DATABASE_BACKUP_SAVE_PATH;
-	public static boolean DATABASE_BACKUP_COMPRESSION;
-	public static String DATABASE_BACKUP_MYSQLDUMP_PATH;
-	
-	public static boolean OPTIMIZE_DATABASE;
-	
 	public static String HTML_CACHE_FILE;
 	
 	public static boolean BAN_DUPLICATE_ITEM_OWNER;
@@ -1482,8 +1474,6 @@ public final class Config
 			COMMUNITY_TYPE = Integer.parseInt(optionsSettings.getProperty("CommunityType", "1"));
 			BBS_SHOW_PLAYERLIST = Boolean.parseBoolean(optionsSettings.getProperty("BBSShowPlayerList", "false"));
 			BBS_DEFAULT = optionsSettings.getProperty("BBSDefault", "_bbshome");
-			MAIL_STORE_DELETED_LETTERS =
-					Boolean.parseBoolean(optionsSettings.getProperty("MailStoreDeletedLetters", "False"));
 			SHOW_LEVEL_COMMUNITYBOARD =
 					Boolean.parseBoolean(optionsSettings.getProperty("ShowLevelOnCommunityBoard", "False"));
 			SHOW_STATUS_COMMUNITYBOARD =
@@ -1622,20 +1612,6 @@ public final class Config
 			MERCENARY_SAVING_DELAY = Integer.parseInt(optionsSettings.getProperty("MercenaryPosUpdateDelay", "90000"));
 			
 			RETARGET_BLOCKING_PERIOD = Integer.parseInt(optionsSettings.getProperty("CannotRetargetFor", "400"));
-			
-			// *******************************************************************************************
-			// Database Backup Settings
-			DATABASE_BACKUP_MAKE_BACKUP_ON_STARTUP =
-					Boolean.parseBoolean(optionsSettings.getProperty("DatabaseBackupMakeBackupOnStartup", "False"));
-			DATABASE_BACKUP_MAKE_BACKUP_ON_SHUTDOWN =
-					Boolean.parseBoolean(optionsSettings.getProperty("DatabaseBackupMakeBackupOnShutdown", "False"));
-			DATABASE_BACKUP_DATABASE_NAME = optionsSettings.getProperty("DatabaseBackupDatabaseName", "l2jfree_gs");
-			DATABASE_BACKUP_SAVE_PATH = optionsSettings.getProperty("DatabaseBackupSavePath", "/backup/database/");
-			DATABASE_BACKUP_COMPRESSION =
-					Boolean.parseBoolean(optionsSettings.getProperty("DatabaseBackupCompression", "True"));
-			DATABASE_BACKUP_MYSQLDUMP_PATH = optionsSettings.getProperty("DatabaseBackupMysqldumpPath", ".");
-			
-			OPTIMIZE_DATABASE = Boolean.parseBoolean(optionsSettings.getProperty("OptimizeDatabaseTables", "True"));
 			
 			HTML_CACHE_FILE = optionsSettings.getProperty("HtmlCacheFile", "./cache/html.cache");
 			

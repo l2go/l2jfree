@@ -89,7 +89,7 @@ public class AdminChangeAccessLevel implements IAdminCommandHandler
 				{
 					con = L2DatabaseFactory.getInstance().getConnection(con);
 					PreparedStatement statement =
-							con.prepareStatement("UPDATE characters SET accesslevel=? WHERE char_name=?");
+							con.prepareStatement("UPDATE player SET access_level=? WHERE name=?");
 					statement.setInt(1, lvl);
 					statement.setString(2, name);
 					statement.execute();

@@ -61,7 +61,7 @@ public class LastImperialTombSpawnlist
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM lastimperialtomb_spawnlist ORDER BY id");
+			PreparedStatement statement = con.prepareStatement("SELECT id, npc_template_id, npc_count, x, y, z, heading, respawn_delay_s FROM spawn WHERE spawn_group = 'LAST_IMPERIAL_TOMB' ORDER BY id");
 			ResultSet rset = statement.executeQuery();
 			
 			int npcTemplateId;
@@ -70,19 +70,19 @@ public class LastImperialTombSpawnlist
 			
 			while (rset.next())
 			{
-				npcTemplateId = rset.getInt("npc_templateid");
+				npcTemplateId = rset.getInt("npc_template_id");
 				npcTemplate = NpcTable.getInstance().getTemplate(npcTemplateId);
 				
 				if (npcTemplate != null)
 				{
 					spawnDat = new L2Spawn(npcTemplate);
 					spawnDat.setId(rset.getInt("id"));
-					spawnDat.setAmount(rset.getInt("count"));
-					spawnDat.setLocx(rset.getInt("locx"));
-					spawnDat.setLocy(rset.getInt("locy"));
-					spawnDat.setLocz(rset.getInt("locz"));
+					spawnDat.setAmount(rset.getInt("npc_count"));
+					spawnDat.setLocx(rset.getInt("x"));
+					spawnDat.setLocy(rset.getInt("y"));
+					spawnDat.setLocz(rset.getInt("z"));
 					spawnDat.setHeading(rset.getInt("heading"));
-					spawnDat.setRespawnDelay(rset.getInt("respawn_delay"));
+					spawnDat.setRespawnDelay(rset.getInt("respawn_delay_s"));
 					
 					switch (npcTemplateId)
 					{

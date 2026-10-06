@@ -17,6 +17,8 @@ package com.l2jfree.gameserver.communitybbs.bb;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.List;
 
 import javolution.util.FastList;
@@ -76,11 +78,14 @@ public class Post
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("INSERT INTO posts (post_id,post_owner_name,post_ownerid,post_date,post_topic_id,post_forum_id,post_txt) values (?,?,?,?,?,?,?)");
+					con.prepareStatement("INSERT INTO forum_post (post_number, author_name, author_player_id, posted_at, topic_number, forum_id, body) VALUES (?,?,?,?,?,?,?)");
 			statement.setInt(1, cp.postId);
 			statement.setString(2, cp.postOwner);
-			statement.setInt(3, cp.postOwnerId);
-			statement.setLong(4, cp.postDate);
+			if (cp.postOwnerId != 0)
+				statement.setInt(3, cp.postOwnerId);
+			else
+				statement.setNull(3, Types.INTEGER);
+			statement.setTimestamp(4, new Timestamp(cp.postDate));
 			statement.setInt(5, cp.postTopicId);
 			statement.setInt(6, cp.postForumId);
 			statement.setString(7, cp.postTxt);
@@ -124,7 +129,7 @@ public class Post
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("DELETE FROM posts WHERE post_forum_id=? AND post_topic_id=?");
+					con.prepareStatement("DELETE FROM forum_post WHERE forum_id = ? AND topic_number = ?");
 			statement.setInt(1, t.getForumID());
 			statement.setInt(2, t.getID());
 			statement.execute();
@@ -150,20 +155,20 @@ public class Post
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT * FROM posts WHERE post_forum_id=? AND post_topic_id=? ORDER BY post_id ASC");
+					con.prepareStatement("SELECT post_number, author_name, author_player_id, posted_at, topic_number, forum_id, body FROM forum_post WHERE forum_id = ? AND topic_number = ? ORDER BY post_number ASC");
 			statement.setInt(1, t.getForumID());
 			statement.setInt(2, t.getID());
 			ResultSet result = statement.executeQuery();
 			while (result.next())
 			{
 				CPost cp = new CPost();
-				cp.postId = result.getInt("post_id");
-				cp.postOwner = result.getString("post_owner_name");
-				cp.postOwnerId = result.getInt("post_ownerid");
-				cp.postDate = result.getLong("post_date");
-				cp.postTopicId = result.getInt("post_topic_id");
-				cp.postForumId = result.getInt("post_forum_id");
-				cp.postTxt = result.getString("post_txt");
+				cp.postId = result.getInt("post_number");
+				cp.postOwner = result.getString("author_name");
+				cp.postOwnerId = result.getInt("author_player_id");
+				cp.postDate = result.getTimestamp("posted_at").getTime();
+				cp.postTopicId = result.getInt("topic_number");
+				cp.postForumId = result.getInt("forum_id");
+				cp.postTxt = result.getString("body");
 				_post.add(cp);
 			}
 			result.close();
@@ -190,7 +195,7 @@ public class Post
 			CPost cp = getCPost(i);
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("UPDATE posts SET post_txt=? WHERE post_id=? AND post_topic_id=? AND post_forum_id=?");
+					con.prepareStatement("UPDATE forum_post SET body = ? WHERE post_number = ? AND topic_number = ? AND forum_id = ?");
 			statement.setString(1, cp.postTxt);
 			statement.setInt(2, cp.postId);
 			statement.setInt(3, cp.postTopicId);

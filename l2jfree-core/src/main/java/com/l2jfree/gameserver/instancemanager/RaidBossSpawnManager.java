@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.NpcTable;
@@ -25,6 +26,7 @@ import com.l2jfree.gameserver.gameobjects.L2Boss;
 import com.l2jfree.gameserver.gameobjects.instance.L2RaidBossInstance;
 import com.l2jfree.gameserver.gameobjects.templates.L2NpcTemplate;
 import com.l2jfree.gameserver.model.world.spawn.L2Spawn;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 import com.l2jfree.gameserver.templates.StatsSet;
 
 /**
@@ -33,6 +35,20 @@ import com.l2jfree.gameserver.templates.StatsSet;
  */
 public class RaidBossSpawnManager extends BossSpawnManager
 {
+	/** Spawn point (catalog) and saved state (world) of every boss; without a state row the boss starts at full HP and MP. */
+	private static final String SELECT_BOSSES =
+			"SELECT s.npc_template_id, s.npc_count, s.x, s.y, s.z, s.heading, s.respawn_min_delay_s, s.respawn_max_delay_s, t.respawn_at, t.current_hp, t.current_mp "
+					+ "FROM raid_boss_spawn s LEFT JOIN raid_boss_state t ON t.npc_template_id = s.npc_template_id ORDER BY s.npc_template_id";
+	private static final String INSERT_SPAWN =
+			"INSERT INTO raid_boss_spawn (npc_template_id, npc_count, x, y, z, heading) VALUES (?, ?, ?, ?, ?, ?)";
+	private static final String UPSERT_STATE =
+			"INSERT INTO raid_boss_state (npc_template_id, respawn_at, current_hp, current_mp) VALUES (?, ?, ?, ?) "
+					+ "ON CONFLICT (npc_template_id) DO UPDATE SET respawn_at = EXCLUDED.respawn_at, current_hp = EXCLUDED.current_hp, current_mp = EXCLUDED.current_mp";
+	private static final String UPDATE_SPAWN =
+			"UPDATE raid_boss_spawn SET x = ?, y = ?, z = ?, heading = ? WHERE npc_template_id = ?";
+	private static final String DELETE_SPAWN = "DELETE FROM raid_boss_spawn WHERE npc_template_id = ?";
+	private static final String DELETE_STATE = "DELETE FROM raid_boss_state WHERE npc_template_id = ?";
+	
 	public static RaidBossSpawnManager getInstance()
 	{
 		return SingletonHolder._instance;
@@ -47,7 +63,7 @@ public class RaidBossSpawnManager extends BossSpawnManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM raidboss_spawnlist ORDER BY boss_id");
+			PreparedStatement statement = con.prepareStatement(SELECT_BOSSES);
 			ResultSet rset = statement.executeQuery();
 			
 			L2Spawn spawnDat;
@@ -55,24 +71,33 @@ public class RaidBossSpawnManager extends BossSpawnManager
 			
 			while (rset.next())
 			{
-				template = getValidTemplate(rset.getInt("boss_id"));
+				template = getValidTemplate(rset.getInt("npc_template_id"));
 				if (template != null)
 				{
 					spawnDat = new L2Spawn(template);
-					spawnDat.setLocx(rset.getInt("loc_x"));
-					spawnDat.setLocy(rset.getInt("loc_y"));
-					spawnDat.setLocz(rset.getInt("loc_z"));
-					spawnDat.setAmount(rset.getInt("amount"));
+					spawnDat.setLocx(rset.getInt("x"));
+					spawnDat.setLocy(rset.getInt("y"));
+					spawnDat.setLocz(rset.getInt("z"));
+					spawnDat.setAmount(rset.getInt("npc_count"));
 					spawnDat.setHeading(rset.getInt("heading"));
-					spawnDat.setRespawnMinDelay(rset.getInt("respawn_min_delay"));
-					spawnDat.setRespawnMaxDelay(rset.getInt("respawn_max_delay"));
+					spawnDat.setRespawnMinDelay(rset.getInt("respawn_min_delay_s"));
+					spawnDat.setRespawnMaxDelay(rset.getInt("respawn_max_delay_s"));
 					
-					addNewSpawn(spawnDat, rset.getLong("respawn_time"), rset.getDouble("currentHp"),
-							rset.getDouble("currentMp"), false);
+					// NULL means "not waiting for a respawn" (0); no saved HP or MP means full (the status clamps it)
+					Timestamp respawnAt = rset.getTimestamp("respawn_at");
+					double currentHp = rset.getDouble("current_hp");
+					if (rset.wasNull())
+						currentHp = Double.MAX_VALUE;
+					double currentMp = rset.getDouble("current_mp");
+					if (rset.wasNull())
+						currentMp = Double.MAX_VALUE;
+					
+					addNewSpawn(spawnDat, respawnAt == null ? 0L : respawnAt.getTime(), currentHp, currentMp, false);
 				}
 				else
 				{
-					_log.warn("RaidBossSpawnManager: Could not load raidboss #" + rset.getInt("boss_id") + " from DB");
+					_log.warn("RaidBossSpawnManager: Could not load raidboss #" + rset.getInt("npc_template_id")
+							+ " from DB");
 				}
 			}
 			
@@ -84,7 +109,7 @@ public class RaidBossSpawnManager extends BossSpawnManager
 		}
 		catch (SQLException e)
 		{
-			_log.warn("RaidBossSpawnManager: Couldnt load raidboss_spawnlist table");
+			_log.warn("RaidBossSpawnManager: Couldnt load raid boss data");
 		}
 		catch (Exception e)
 		{
@@ -99,33 +124,47 @@ public class RaidBossSpawnManager extends BossSpawnManager
 	@Override
 	protected void insertIntoDb(L2Spawn spawnDat, long respawnTime, double currentHP, double currentMP)
 	{
-		Connection con = null;
-		try
-		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement =
-					con.prepareStatement("INSERT INTO raidboss_spawnlist (boss_id,amount,loc_x,loc_y,loc_z,heading,respawn_time,currentHp,currentMp) VALUES(?,?,?,?,?,?,?,?,?)");
-			statement.setInt(1, spawnDat.getNpcId());
-			statement.setInt(2, spawnDat.getAmount());
-			statement.setInt(3, spawnDat.getLocx());
-			statement.setInt(4, spawnDat.getLocy());
-			statement.setInt(5, spawnDat.getLocz());
-			statement.setInt(6, spawnDat.getHeading());
-			statement.setLong(7, respawnTime);
-			statement.setDouble(8, currentHP);
-			statement.setDouble(9, currentMP);
-			statement.execute();
-			statement.close();
-		}
-		catch (Exception e)
-		{
-			// Problem with storing spawn
-			_log.warn("RaidBossSpawnManager: Could not store raidboss #" + spawnDat.getNpcId() + " in the DB:", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+		// The spawn point and the state belong together: both rows or none
+		WorldTransaction.run("Storing raid boss #" + spawnDat.getNpcId(), () -> {
+			Connection con = null;
+			try
+			{
+				con = L2DatabaseFactory.getInstance().getConnection(con);
+				PreparedStatement statement = con.prepareStatement(INSERT_SPAWN);
+				statement.setInt(1, spawnDat.getNpcId());
+				statement.setInt(2, spawnDat.getAmount());
+				statement.setInt(3, spawnDat.getLocx());
+				statement.setInt(4, spawnDat.getLocy());
+				statement.setInt(5, spawnDat.getLocz());
+				statement.setInt(6, spawnDat.getHeading());
+				statement.execute();
+				statement.close();
+				
+				saveState(con, spawnDat.getNpcId(), respawnTime, currentHP, currentMP);
+			}
+			catch (SQLException e)
+			{
+				// Problem with storing spawn: the transaction rolls back and logs it
+				throw new IllegalStateException(e);
+			}
+			finally
+			{
+				L2DatabaseFactory.close(con);
+			}
+		});
+	}
+	
+	private static void saveState(Connection con, int bossId, long respawnTime, double currentHP, double currentMP)
+			throws SQLException
+	{
+		PreparedStatement statement = con.prepareStatement(UPSERT_STATE);
+		statement.setInt(1, bossId);
+		// 0 means the boss is alive, which is NULL in the database
+		statement.setTimestamp(2, respawnTime == 0L ? null : new Timestamp(respawnTime));
+		statement.setDouble(3, currentHP);
+		statement.setDouble(4, currentMP);
+		statement.execute();
+		statement.close();
 	}
 	
 	@Override
@@ -137,7 +176,7 @@ public class RaidBossSpawnManager extends BossSpawnManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("UPDATE raidboss_spawnlist SET loc_x = ?, loc_y = ?, loc_z = ?, heading = ? WHERE boss_id=?");
+					con.prepareStatement(UPDATE_SPAWN);
 			statement.setInt(1, x);
 			statement.setInt(2, y);
 			statement.setInt(3, z);
@@ -159,25 +198,32 @@ public class RaidBossSpawnManager extends BossSpawnManager
 	@Override
 	protected void deleteFromDb(L2Spawn spawnDat, int bossId)
 	{
-		Connection con = null;
-		
-		try
-		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("DELETE FROM raidboss_spawnlist WHERE boss_id=?");
-			statement.setInt(1, bossId);
-			statement.execute();
-			statement.close();
-		}
-		catch (Exception e)
-		{
-			// Problem with deleting spawn
-			_log.warn("RaidBossSpawnManager: Could not remove raidboss #" + bossId + " from DB: ", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+		// The spawn point and the state belong together: both rows or none
+		WorldTransaction.run("Removing raid boss #" + bossId, () -> {
+			Connection con = null;
+			try
+			{
+				con = L2DatabaseFactory.getInstance().getConnection(con);
+				PreparedStatement statement = con.prepareStatement(DELETE_SPAWN);
+				statement.setInt(1, bossId);
+				statement.execute();
+				statement.close();
+				
+				statement = con.prepareStatement(DELETE_STATE);
+				statement.setInt(1, bossId);
+				statement.execute();
+				statement.close();
+			}
+			catch (SQLException e)
+			{
+				// Problem with deleting spawn: the transaction rolls back and logs it
+				throw new IllegalStateException(e);
+			}
+			finally
+			{
+				L2DatabaseFactory.close(con);
+			}
+		});
 	}
 	
 	@Override
@@ -199,18 +245,12 @@ public class RaidBossSpawnManager extends BossSpawnManager
 				if (info == null)
 					continue;
 				
-				PreparedStatement statement =
-						con.prepareStatement("UPDATE raidboss_spawnlist SET respawn_time = ?, currentHp = ?, currentMp = ? WHERE boss_id = ?");
-				statement.setLong(1, info.getLong("respawnTime"));
-				statement.setDouble(2, info.getDouble("currentHp"));
-				statement.setDouble(3, info.getDouble("currentMp"));
-				statement.setInt(4, bossId);
-				statement.execute();
-				statement.close();
+				saveState(con, bossId, info.getLong("respawnTime"), info.getDouble("currentHp"),
+						info.getDouble("currentMp"));
 			}
 			catch (SQLException e)
 			{
-				_log.error("RaidBossSpawnManager: Couldnt update raidboss_spawnlist table", e);
+				_log.error("RaidBossSpawnManager: Couldnt update raid_boss_state table", e);
 			}
 			finally
 			{

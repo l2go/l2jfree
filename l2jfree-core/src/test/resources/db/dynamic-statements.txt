@@ -1,0 +1,3 @@
+# Statements the compiler concatenates at run time cannot be prepared by GameServerStatementsPostgresTest.
+# Each line is a text that appears in the class and statement, followed by the reason it is safe.
+# A line is matched with String.contains against "class: statement".

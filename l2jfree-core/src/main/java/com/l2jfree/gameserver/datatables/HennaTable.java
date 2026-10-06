@@ -31,7 +31,7 @@ public class HennaTable
 {
 	private static final Logger _log = LoggerFactory.getLogger(HennaTable.class);
 	private static final String LOAD_HENNA =
-			"SELECT symbol_id,symbol_name,dye_id,dye_amount,price,mod_INT,mod_STR,mod_CON,mod_MEN,mod_DEX,mod_WIT FROM henna";
+			"SELECT id, name, dye_item_template_id, dye_count, price, intelligence_bonus, strength_bonus, constitution_bonus, mental_bonus, dexterity_bonus, wit_bonus FROM henna";
 	
 	private final FastMap<Integer, L2Henna> _henna = new FastMap<Integer, L2Henna>().setShared(true);
 	
@@ -71,20 +71,20 @@ public class HennaTable
 	{
 		while (hennaData.next())
 		{
-			int id = hennaData.getInt("symbol_id");
+			int id = hennaData.getInt("id");
 			
 			StatsSet hennaDat = new StatsSet();
 			hennaDat.set("symbol_id", id);
-			hennaDat.set("symbol_name", hennaData.getString("symbol_name"));
-			hennaDat.set("dye_id", hennaData.getInt("dye_id"));
+			hennaDat.set("symbol_name", hennaData.getString("name"));
+			hennaDat.set("dye_id", hennaData.getInt("dye_item_template_id"));
 			hennaDat.set("price", hennaData.getInt("price"));
-			hennaDat.set("dye_amount", hennaData.getInt("dye_amount"));
-			hennaDat.set("mod_INT", hennaData.getInt("mod_INT"));
-			hennaDat.set("mod_STR", hennaData.getInt("mod_STR"));
-			hennaDat.set("mod_CON", hennaData.getInt("mod_CON"));
-			hennaDat.set("mod_MEN", hennaData.getInt("mod_MEN"));
-			hennaDat.set("mod_DEX", hennaData.getInt("mod_DEX"));
-			hennaDat.set("mod_WIT", hennaData.getInt("mod_WIT"));
+			hennaDat.set("dye_amount", hennaData.getInt("dye_count"));
+			hennaDat.set("mod_INT", hennaData.getInt("intelligence_bonus"));
+			hennaDat.set("mod_STR", hennaData.getInt("strength_bonus"));
+			hennaDat.set("mod_CON", hennaData.getInt("constitution_bonus"));
+			hennaDat.set("mod_MEN", hennaData.getInt("mental_bonus"));
+			hennaDat.set("mod_DEX", hennaData.getInt("dexterity_bonus"));
+			hennaDat.set("mod_WIT", hennaData.getInt("wit_bonus"));
 			
 			_henna.put(id, new L2Henna(hennaDat));
 		}

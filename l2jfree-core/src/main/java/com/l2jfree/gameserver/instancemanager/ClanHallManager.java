@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Map;
 
 import javolution.util.FastList;
@@ -97,19 +98,25 @@ public class ClanHallManager
 			PreparedStatement statement;
 			ResultSet rs;
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			statement = con.prepareStatement("SELECT * FROM clanhall ORDER BY id");
+			statement = con.prepareStatement("SELECT id, name, owner_clan_id, lease, description, town_name, paid_until_at, paid_until_at = 'infinity' AS is_paid_forever, grade, is_paid FROM clan_hall ORDER BY id");
 			rs = statement.executeQuery();
 			while (rs.next())
 			{
 				id = rs.getInt("id");
 				Name = rs.getString("name");
-				ownerId = rs.getInt("ownerId");
+				ownerId = rs.getInt("owner_clan_id"); // NULL is 0: the hall is free
 				lease = rs.getInt("lease");
-				Desc = rs.getString("desc");
-				Location = rs.getString("location");
-				paidUntil = rs.getLong("paidUntil");
-				grade = rs.getInt("Grade");
-				paid = rs.getBoolean("paid");
+				Desc = rs.getString("description");
+				Location = rs.getString("town_name");
+				if (rs.getBoolean("is_paid_forever")) // won in a siege: no rent
+					paidUntil = Long.MAX_VALUE;
+				else
+				{
+					Timestamp paidUntilAt = rs.getTimestamp("paid_until_at");
+					paidUntil = paidUntilAt == null ? 0 : paidUntilAt.getTime();
+				}
+				grade = rs.getInt("grade");
+				paid = rs.getBoolean("is_paid");
 				
 				ClanHall ch = new ClanHall(id, Name, ownerId, lease, Desc, Location, paidUntil, grade, paid);
 				if (ownerId == 0)

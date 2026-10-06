@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.communitybbs.Manager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -26,7 +27,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.CharNameTable;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -35,6 +35,7 @@ import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.ExMailArrived;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 import com.l2jfree.lang.L2TextBuilder;
 
 /**
@@ -107,7 +108,7 @@ public class MailBBSManager extends BaseBBSManager
 		private long sentDate;
 		private String deleteDateFormated;
 		private long deleteDate;
-		private String unread;
+		private boolean unread;
 	}
 	
 	public FastList<UpdateMail> getMail(L2Player activeChar)
@@ -118,24 +119,25 @@ public class MailBBSManager extends BaseBBSManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT * FROM character_mail WHERE charId = ? ORDER BY letterId DESC");
+					con.prepareStatement("SELECT id, player_id, sender_player_id, folder, recipient_names, subject, message, sent_at, delete_at, is_unread FROM player_mail WHERE player_id = ? ORDER BY id DESC");
 			statement.setInt(1, activeChar.getObjectId());
 			ResultSet result = statement.executeQuery();
 			while (result.next())
 			{
 				UpdateMail letter = new UpdateMail();
-				letter.charId = result.getInt("charId");
-				letter.letterId = result.getInt("letterId");
-				letter.senderId = result.getInt("senderId");
-				letter.location = result.getString("location");
-				letter.recipientNames = result.getString("recipientNames");
+				letter.charId = result.getInt("player_id");
+				letter.letterId = (int) result.getLong("id");
+				// NULL (sender deleted) is read as 0, which getCharName shows as "No Name"
+				letter.senderId = result.getInt("sender_player_id");
+				letter.location = result.getString("folder");
+				letter.recipientNames = result.getString("recipient_names");
 				letter.subject = result.getString("subject");
 				letter.message = result.getString("message");
-				letter.sentDate = result.getLong("sentDate");
+				letter.sentDate = result.getTimestamp("sent_at").getTime();
 				letter.sentDateFormated = new SimpleDateFormat("yyyy-MM-dd").format(new Date(letter.sentDate));
-				letter.deleteDate = result.getLong("deleteDate");
+				letter.deleteDate = result.getTimestamp("delete_at").getTime();
 				letter.deleteDateFormated = new SimpleDateFormat("yyyy-MM-dd").format(new Date(letter.deleteDate));
-				letter.unread = result.getString("unread");
+				letter.unread = result.getBoolean("is_unread");
 				_letters.add(letter);
 			}
 			result.close();
@@ -210,7 +212,7 @@ public class MailBBSManager extends BaseBBSManager
 		{
 			UpdateMail letter = getLetter(activeChar, Integer.parseInt(command.substring(21)));
 			showLetterView(activeChar, letter);
-			if (!letter.unread.equals("false"))
+			if (letter.unread)
 				setLetterToRead(letter.letterId);
 		}
 		else if (command.startsWith("_maillist_0_1_0_reply "))
@@ -221,8 +223,6 @@ public class MailBBSManager extends BaseBBSManager
 		else if (command.startsWith("_maillist_0_1_0_delete "))
 		{
 			UpdateMail letter = getLetter(activeChar, Integer.parseInt(command.substring(23)));
-			if (Config.MAIL_STORE_DELETED_LETTERS)
-				storeLetter(letter.letterId);
 			deleteLetter(letter.letterId);
 			showInbox(activeChar, 1);
 		}
@@ -759,6 +759,12 @@ public class MailBBSManager extends BaseBBSManager
 	
 	private void sendLetter(String recipients, String subject, String message, L2Player activeChar)
 	{
+		// The copies in the recipient mailboxes and the copy in the sender's sentbox belong together.
+		WorldTransaction.run("send community board mail", () -> sendLetterInTransaction(recipients, subject, message, activeChar));
+	}
+	
+	private void sendLetterInTransaction(String recipients, String subject, String message, L2Player activeChar)
+	{
 		Connection con = null;
 		try
 		{
@@ -772,6 +778,11 @@ public class MailBBSManager extends BaseBBSManager
 			
 			if (subject.isEmpty())
 				subject = "(no subject)";
+			
+			// The columns have a length limit: subject 12, recipient names 200, message 3000
+			subject = StringUtils.left(subject, 12);
+			message = StringUtils.left(message, 3000);
+			final String storedRecipients = StringUtils.left(recipients, 200);
 			
 			for (UpdateMail letter : getMail(activeChar))
 				if (date < letter.sentDate + Long.valueOf("86400000") && letter.location.equals("sentbox"))
@@ -809,16 +820,16 @@ public class MailBBSManager extends BaseBBSManager
 				else if (countRecips < 5 && !activeChar.isGM() || activeChar.isGM())
 				{
 					PreparedStatement statement =
-							con.prepareStatement("INSERT INTO character_mail (charId, senderId, location, recipientNames, subject, message, sentDate, deleteDate, unread) VALUES (?,?,?,?,?,?,?,?,?)");
+							con.prepareStatement("INSERT INTO player_mail (player_id, sender_player_id, folder, recipient_names, subject, message, sent_at, delete_at, is_unread) VALUES (?,?,?,?,?,?,?,?,?)");
 					statement.setInt(1, recipId);
 					statement.setInt(2, activeChar.getObjectId());
 					statement.setString(3, "inbox");
-					statement.setString(4, recipients);
+					statement.setString(4, storedRecipients);
 					statement.setString(5, subject);
 					statement.setString(6, message);
-					statement.setLong(7, date);
-					statement.setLong(8, date + Long.valueOf("7948804000"));
-					statement.setString(9, "true");
+					statement.setTimestamp(7, new Timestamp(date));
+					statement.setTimestamp(8, new Timestamp(date + Long.valueOf("7948804000")));
+					statement.setBoolean(9, true);
 					statement.execute();
 					statement.close();
 					sent = true;
@@ -835,16 +846,16 @@ public class MailBBSManager extends BaseBBSManager
 			}
 			// Create a copy into activeChar's sent box
 			PreparedStatement statement =
-					con.prepareStatement("INSERT INTO character_mail (charId, senderId, location, recipientNames, subject, message, sentDate, deleteDate, unread) VALUES (?,?,?,?,?,?,?,?,?)");
+					con.prepareStatement("INSERT INTO player_mail (player_id, sender_player_id, folder, recipient_names, subject, message, sent_at, delete_at, is_unread) VALUES (?,?,?,?,?,?,?,?,?)");
 			statement.setInt(1, activeChar.getObjectId());
 			statement.setInt(2, activeChar.getObjectId());
 			statement.setString(3, "sentbox");
-			statement.setString(4, recipients);
+			statement.setString(4, storedRecipients);
 			statement.setString(5, subject);
 			statement.setString(6, message);
-			statement.setLong(7, date);
-			statement.setLong(8, date + Long.valueOf("7948804000"));
-			statement.setString(9, "false");
+			statement.setTimestamp(7, new Timestamp(date));
+			statement.setTimestamp(8, new Timestamp(date + Long.valueOf("7948804000")));
+			statement.setBoolean(9, false);
 			statement.execute();
 			statement.close();
 			
@@ -882,59 +893,13 @@ public class MailBBSManager extends BaseBBSManager
 		return false;
 	}
 	
-	public void storeLetter(int letterId)
-	{
-		Connection con = null;
-		try
-		{
-			int ownerId, senderId;
-			long date;
-			String recipientNames, subject, message;
-			
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement =
-					con.prepareStatement("SELECT charId, senderId, recipientNames, subject, message, sentDate  FROM character_mail WHERE letterId = ?");
-			statement.setInt(1, letterId);
-			ResultSet result = statement.executeQuery();
-			result.next();
-			ownerId = result.getInt("charId");
-			senderId = result.getInt("senderId");
-			recipientNames = result.getString("recipientNames");
-			subject = result.getString("subject");
-			message = result.getString("message");
-			date = result.getLong("sentDate");
-			result.close();
-			statement.close();
-			
-			statement =
-					con.prepareStatement("INSERT INTO character_mail_deleted (ownerId, letterId, senderId, recipientNames, subject, message, date) VALUES (?,?,?,?,?,?,?)");
-			statement.setInt(1, ownerId);
-			statement.setInt(2, letterId);
-			statement.setInt(3, senderId);
-			statement.setString(4, recipientNames);
-			statement.setString(5, subject);
-			statement.setString(6, message);
-			statement.setLong(7, date);
-			statement.execute();
-			statement.close();
-		}
-		catch (Exception e)
-		{
-			_log.warn("couldnt store letter " + letterId, e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
-	}
-	
 	public void deleteLetter(int letterId)
 	{
 		Connection con = null;
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("DELETE FROM character_mail WHERE letterId = ?");
+			PreparedStatement statement = con.prepareStatement("DELETE FROM player_mail WHERE id = ?");
 			statement.setInt(1, letterId);
 			statement.execute();
 			statement.close();
@@ -956,8 +921,8 @@ public class MailBBSManager extends BaseBBSManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("UPDATE character_mail SET unread = ? WHERE letterId = ?");
-			statement.setString(1, "false");
+					con.prepareStatement("UPDATE player_mail SET is_unread = ? WHERE id = ?");
+			statement.setBoolean(1, false);
 			statement.setInt(2, letterId);
 			statement.execute();
 			statement.close();
@@ -1000,7 +965,7 @@ public class MailBBSManager extends BaseBBSManager
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT accesslevel FROM characters WHERE charId = ?");
+			PreparedStatement statement = con.prepareStatement("SELECT access_level FROM player WHERE id = ?");
 			statement.setInt(1, charId);
 			ResultSet result = statement.executeQuery();
 			result.next();
@@ -1028,12 +993,12 @@ public class MailBBSManager extends BaseBBSManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT COUNT(*) FROM character_mail WHERE charId = ? AND location = ?");
+					con.prepareStatement("SELECT COUNT(*) FROM player_mail WHERE player_id = ? AND folder = ?");
 			statement.setInt(1, charId);
 			statement.setString(2, "inbox");
 			ResultSet result = statement.executeQuery();
 			result.next();
-			isFull = result.getInt(1) >= 100;
+			isFull = result.getLong(1) >= 100;
 			result.close();
 			statement.close();
 		}
@@ -1058,13 +1023,13 @@ public class MailBBSManager extends BaseBBSManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT COUNT(*) FROM character_mail WHERE charId = ? AND location = ? AND unread = ?");
+					con.prepareStatement("SELECT COUNT(*) FROM player_mail WHERE player_id = ? AND folder = ? AND is_unread = ?");
 			statement.setInt(1, activeChar.getObjectId());
 			statement.setString(2, "inbox");
-			statement.setString(3, "true");
+			statement.setBoolean(3, true);
 			ResultSet result = statement.executeQuery();
 			result.next();
-			hasUnreadMail = result.getInt(1) > 0;
+			hasUnreadMail = result.getLong(1) > 0;
 			result.close();
 			statement.close();
 		}

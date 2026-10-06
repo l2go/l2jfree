@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
@@ -51,6 +52,7 @@ import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.CreatureSay;
 import com.l2jfree.gameserver.network.packets.server.MagicSkillUse;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 import com.l2jfree.gameserver.templates.StatsSet;
 import com.l2jfree.gameserver.util.Util;
 import com.l2jfree.tools.random.Rnd;
@@ -69,7 +71,16 @@ public class SevenSignsFestival implements SpawnListener
 	protected static Logger _log = LoggerFactory.getLogger(SevenSignsFestival.class);
 	
 	private static final String GET_CLAN_NAME =
-			"SELECT clan_name FROM clan_data WHERE clan_id = (SELECT clanid FROM characters WHERE char_name = ?)";
+			"SELECT name FROM clan WHERE id = (SELECT clan_id FROM player WHERE name = ?)";
+	private static final String LOAD_FESTIVALS =
+			"SELECT festival_level, cabal, cycle, scored_at, score, member_names FROM seven_signs_festival";
+	// The status row has one accumulated_bonus column per festival (FESTIVAL_COUNT = 5).
+	private static final String LOAD_STATUS = "SELECT festival_cycle, accumulated_bonus0, accumulated_bonus1, "
+			+ "accumulated_bonus2, accumulated_bonus3, accumulated_bonus4 FROM seven_signs_status WHERE id = 0";
+	private static final String SAVE_FESTIVAL =
+			"INSERT INTO seven_signs_festival (festival_level, cabal, cycle, scored_at, score, member_names) "
+					+ "VALUES (?,?,?,?,?,?) ON CONFLICT (festival_level, cabal, cycle) DO UPDATE SET "
+					+ "scored_at = EXCLUDED.scored_at, score = EXCLUDED.score, member_names = EXCLUDED.member_names";
 	
 	/**
 	 * These length settings are important! :) All times are relative to the ELAPSED time (in ms) since a festival begins. Festival manager start is the time
@@ -726,24 +737,23 @@ public class SevenSignsFestival implements SpawnListener
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			statement =
-					con.prepareStatement("SELECT festivalId, cabal, cycle, date, score, members "
-							+ "FROM seven_signs_festival");
+			statement = con.prepareStatement(LOAD_FESTIVALS);
 			rset = statement.executeQuery();
 			
 			while (rset.next())
 			{
 				int festivalCycle = rset.getInt("cycle");
-				int festivalId = rset.getInt("festivalId");
+				int festivalId = rset.getInt("festival_level");
 				String cabal = rset.getString("cabal");
+				Timestamp scoredAt = rset.getTimestamp("scored_at");
 				
 				StatsSet festivalDat = new StatsSet();
 				festivalDat.set("festivalId", festivalId);
 				festivalDat.set("cabal", cabal);
 				festivalDat.set("cycle", festivalCycle);
-				festivalDat.set("date", rset.getString("date"));
+				festivalDat.set("date", String.valueOf(scoredAt == null ? 0 : scoredAt.getTime()));
 				festivalDat.set("score", rset.getInt("score"));
-				festivalDat.set("members", rset.getString("members"));
+				festivalDat.set("members", rset.getString("member_names"));
 				
 				if (_log.isDebugEnabled())
 					_log.debug("SevenSignsFestival: Loaded data from DB for (Cycle = " + festivalCycle + ", Oracle = "
@@ -764,15 +774,7 @@ public class SevenSignsFestival implements SpawnListener
 			rset.close();
 			statement.close();
 			
-			String query = "SELECT festival_cycle, ";
-			
-			for (int i = 0; i < FESTIVAL_COUNT - 1; i++)
-				
-				query += "accumulated_bonus" + String.valueOf(i) + ", ";
-			query += "accumulated_bonus" + String.valueOf(FESTIVAL_COUNT - 1) + " ";
-			query += "FROM seven_signs_status WHERE id=0";
-			
-			statement = con.prepareStatement(query);
+			statement = con.prepareStatement(LOAD_STATUS);
 			rset = statement.executeQuery();
 			
 			while (rset.next())
@@ -808,6 +810,12 @@ public class SevenSignsFestival implements SpawnListener
 	 */
 	public void saveFestivalData(boolean updateSettings)
 	{
+		// The results of all festivals and the Seven Signs status are saved together.
+		WorldTransaction.run("Festival results save", () -> saveFestivalDataInternal(updateSettings));
+	}
+	
+	private void saveFestivalDataInternal(boolean updateSettings)
+	{
 		Connection con = null;
 		PreparedStatement statement = null;
 		
@@ -826,38 +834,16 @@ public class SevenSignsFestival implements SpawnListener
 					int festivalId = festivalDat.getInteger("festivalId");
 					String cabal = festivalDat.getString("cabal");
 					
-					// Try to update an existing record.
-					statement =
-							con.prepareStatement("UPDATE seven_signs_festival SET date=?, score=?, members=? WHERE cycle=? AND cabal=? AND festivalId=?");
-					statement.setLong(1, Long.valueOf(festivalDat.getString("date")));
-					statement.setInt(2, festivalDat.getInteger("score"));
-					statement.setString(3, festivalDat.getString("members"));
-					statement.setInt(4, festivalCycle);
-					statement.setString(5, cabal);
-					statement.setInt(6, festivalId);
+					long scoredAt = Long.parseLong(festivalDat.getString("date"));
+					String members = festivalDat.getString("members");
 					
-					// If there was no record to update, assume it doesn't exist and add a new one,
-					// otherwise continue with the next record to store.
-					if (statement.executeUpdate() > 0)
-					{
-						if (_log.isDebugEnabled())
-							_log.debug("SevenSignsFestival: Updated data in DB (Cycle = " + festivalCycle
-									+ ", Cabal = " + cabal + ", FestID = " + festivalId + ")");
-						
-						statement.close();
-						continue;
-					}
-					
-					statement.close();
-					
-					statement =
-							con.prepareStatement("INSERT INTO seven_signs_festival (festivalId, cabal, cycle, date, score, members) VALUES (?,?,?,?,?,?)");
+					statement = con.prepareStatement(SAVE_FESTIVAL);
 					statement.setInt(1, festivalId);
 					statement.setString(2, cabal);
 					statement.setInt(3, festivalCycle);
-					statement.setLong(4, Long.valueOf(festivalDat.getString("date")));
+					statement.setTimestamp(4, scoredAt == 0 ? null : new Timestamp(scoredAt));
 					statement.setInt(5, festivalDat.getInteger("score"));
-					statement.setString(6, festivalDat.getString("members"));
+					statement.setString(6, members == null ? "" : members);
 					statement.execute();
 					statement.close();
 					
@@ -957,7 +943,7 @@ public class SevenSignsFestival implements SpawnListener
 				ResultSet rset = statement.executeQuery();
 				if (rset.next())
 				{
-					String clanName = rset.getString("clan_name");
+					String clanName = rset.getString("name");
 					if (clanName != null)
 					{
 						L2Clan clan = ClanTable.getInstance().getClanByName(clanName);

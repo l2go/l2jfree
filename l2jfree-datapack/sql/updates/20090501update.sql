@@ -1,1 +1,0 @@
-ALTER TABLE `items` MODIFY `mana_left` SMALLINT NOT NULL DEFAULT -1;
