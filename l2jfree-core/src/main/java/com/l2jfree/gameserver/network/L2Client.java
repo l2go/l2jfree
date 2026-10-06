@@ -42,7 +42,6 @@ import com.l2jfree.gameserver.network.packets.server.LeaveWorld;
 import com.l2jfree.gameserver.network.packets.server.ServerClose;
 import com.l2jfree.gameserver.threadmanager.FIFORunnableQueue;
 import com.l2jfree.lang.L2TextBuilder;
-import com.l2jfree.network.Connection;
 import com.l2jfree.network.NetworkServer;
 import com.l2jfree.tools.security.BlowFishKeygen;
 import com.l2jfree.tools.security.GameCrypt;
@@ -53,7 +52,7 @@ import com.l2jfree.util.concurrent.RunnableStatsManager;
  * 
  * @author KenM
  */
-public final class L2Client extends Connection<L2Client, L2ClientPacket, L2ServerPacket>
+public final class L2Client extends com.l2jfree.network.Connection<L2Client, L2ClientPacket, L2ServerPacket>
 {
 	private static final Logger _log = LoggerFactory.getLogger(L2Client.class);
 	

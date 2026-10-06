@@ -235,7 +235,9 @@ class NetworkServerTest
 			final Peer peer = _server.connections.get(0);
 			
 			final String filler = "y".repeat(1000);
-			final int count = 4000; // about 8 MB, far over the default high-water mark of 1 MiB
+			// about 1.5 MB: over the default high-water mark of 1 MiB, but small enough for the socket buffers. Written
+			// without flushing in between, it would stand in the outbound buffer and close a healthy client.
+			final int count = 1500;
 			final Thread sender = new Thread(() -> {
 				for (int i = 0; i < count; i++)
 					peer.sendPacket(new TestProtocol.Text(filler));
