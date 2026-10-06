@@ -42,14 +42,21 @@ public final class PostgresWorld
 		return dataSource;
 	}
 	
-	/** Creates the extension and the given schemas, as the init script does before the first start. */
-	public static void prepare(TestDatabase database, String... schemas) throws SQLException
+	/**
+	 * Creates the extension and the given schemas, as the init script does before the first start. A failure is an
+	 * unchecked exception, so a test setup method needs no {@code throws}.
+	 */
+	public static void prepare(TestDatabase database, String... schemas)
 	{
 		try (Connection connection = database.connect(); Statement statement = connection.createStatement())
 		{
 			statement.execute("CREATE EXTENSION IF NOT EXISTS citext SCHEMA public");
 			for (String schema : schemas)
 				statement.execute("CREATE SCHEMA IF NOT EXISTS " + schema);
+		}
+		catch (SQLException e)
+		{
+			throw new IllegalStateException("Cannot prepare the test database " + database.jdbcUrl(), e);
 		}
 	}
 	
