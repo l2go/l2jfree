@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledFuture;
 
 import com.l2jfree.Config;
@@ -71,27 +72,27 @@ public class VanHalterManager extends BossLair
 	
 	// Spawn data of monsters.
 	protected Map<Integer, L2Spawn> _monsterSpawn = new LinkedHashMap<Integer, L2Spawn>();
-	protected List<L2Spawn> _royalGuardSpawn = new ArrayList<L2Spawn>();
-	protected List<L2Spawn> _royalGuardCaptainSpawn = new ArrayList<L2Spawn>();
-	protected List<L2Spawn> _royalGuardHelperSpawn = new ArrayList<L2Spawn>();
-	protected List<L2Spawn> _triolRevelationSpawn = new ArrayList<L2Spawn>();
-	protected List<L2Spawn> _triolRevelationAlive = new ArrayList<L2Spawn>();
-	protected List<L2Spawn> _guardOfAltarSpawn = new ArrayList<L2Spawn>();
+	protected List<L2Spawn> _royalGuardSpawn = new CopyOnWriteArrayList<L2Spawn>();
+	protected List<L2Spawn> _royalGuardCaptainSpawn = new CopyOnWriteArrayList<L2Spawn>();
+	protected List<L2Spawn> _royalGuardHelperSpawn = new CopyOnWriteArrayList<L2Spawn>();
+	protected List<L2Spawn> _triolRevelationSpawn = new CopyOnWriteArrayList<L2Spawn>();
+	protected List<L2Spawn> _triolRevelationAlive = new CopyOnWriteArrayList<L2Spawn>();
+	protected List<L2Spawn> _guardOfAltarSpawn = new CopyOnWriteArrayList<L2Spawn>();
 	protected Map<Integer, L2Spawn> _cameraMarkerSpawn = new LinkedHashMap<Integer, L2Spawn>();
 	protected L2Spawn _ritualOfferingSpawn = null;
 	protected L2Spawn _ritualSacrificeSpawn = null;
 	protected L2Spawn _vanHalterSpawn = null;
 	
 	// Instance of monsters.
-	protected List<L2Npc> _monsters = new ArrayList<L2Npc>();
-	protected List<L2Npc> _royalGuard = new ArrayList<L2Npc>();
-	protected List<L2Npc> _royalGuardCaptain = new ArrayList<L2Npc>();
-	protected List<L2Npc> _royalGuardHepler = new ArrayList<L2Npc>();
-	protected List<L2Npc> _triolRevelation = new ArrayList<L2Npc>();
-	protected List<L2Npc> _guardOfAltar = new ArrayList<L2Npc>();
+	protected List<L2Npc> _monsters = new CopyOnWriteArrayList<L2Npc>();
+	protected List<L2Npc> _royalGuard = new CopyOnWriteArrayList<L2Npc>();
+	protected List<L2Npc> _royalGuardCaptain = new CopyOnWriteArrayList<L2Npc>();
+	protected List<L2Npc> _royalGuardHepler = new CopyOnWriteArrayList<L2Npc>();
+	protected List<L2Npc> _triolRevelation = new CopyOnWriteArrayList<L2Npc>();
+	protected List<L2Npc> _guardOfAltar = new CopyOnWriteArrayList<L2Npc>();
 	protected Map<Integer, L2Npc> _cameraMarker = new LinkedHashMap<Integer, L2Npc>();
-	protected List<L2DoorInstance> _doorOfAltar = new ArrayList<L2DoorInstance>();
-	protected List<L2DoorInstance> _doorOfSacrifice = new ArrayList<L2DoorInstance>();
+	protected List<L2DoorInstance> _doorOfAltar = new CopyOnWriteArrayList<L2DoorInstance>();
+	protected List<L2DoorInstance> _doorOfSacrifice = new CopyOnWriteArrayList<L2DoorInstance>();
 	protected L2Npc _ritualOffering = null;
 	protected L2Npc _ritualSacrifice = null;
 	protected L2RaidBossInstance _vanHalter = null;

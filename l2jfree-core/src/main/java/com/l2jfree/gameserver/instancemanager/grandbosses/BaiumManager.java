@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledFuture;
 
 import com.l2jfree.Config;
@@ -73,8 +74,8 @@ public class BaiumManager extends BossLair
 			{ 114563, 17184, 10076, 49241 }, { 116356, 16402, 10076, 31109 }, { 115015, 16393, 10076, 32760 },
 			{ 115481, 15335, 10076, 16241 }, { 114680, 15407, 10051, 32485 }, { 114886, 14437, 10076, 16868 },
 			{ 115391, 17593, 10076, 55346 }, { 115245, 17558, 10076, 35536 } };
-	protected List<L2Spawn> _angelSpawns = new ArrayList<L2Spawn>();
-	protected List<L2Npc> _angels = new ArrayList<L2Npc>();
+	protected List<L2Spawn> _angelSpawns = new CopyOnWriteArrayList<L2Spawn>();
+	protected List<L2Npc> _angels = new CopyOnWriteArrayList<L2Npc>();
 	
 	// Location of teleport cube.
 	public final static int CUBE_LOCATION[] = { 115203, 16620, 10078, 0 };
@@ -88,7 +89,7 @@ public class BaiumManager extends BossLair
 	protected Map<Integer, L2Spawn> _monsterSpawn = new LinkedHashMap<Integer, L2Spawn>();
 	
 	// Instance of monsters.
-	protected List<L2Npc> _monsters = new ArrayList<L2Npc>();
+	protected List<L2Npc> _monsters = new CopyOnWriteArrayList<L2Npc>();
 	
 	// Tasks.
 	protected ScheduledFuture<?> _cubeSpawnTask = null;

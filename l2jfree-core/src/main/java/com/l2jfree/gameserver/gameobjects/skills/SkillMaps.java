@@ -27,15 +27,15 @@ public final class SkillMaps
 	{
 	}
 	
-	/** @return the skills if they can be changed, else a changeable copy of them */
+	/** @return the skills if the creature owns them, else a changeable copy of them, empty if there are none */
 	public static <V> Map<Integer, V> modifiable(Map<Integer, V> skills)
 	{
-		if (!(skills instanceof Map<?, ?>))
-		{
-			Map<Integer, V> copy = new ConcurrentHashMap<Integer, V>(skills.size());
+		if (skills instanceof ConcurrentHashMap<?, ?>)
+			return skills;
+		
+		Map<Integer, V> copy = new ConcurrentHashMap<Integer, V>();
+		if (skills != null)
 			copy.putAll(skills);
-			return copy;
-		}
-		return skills;
+		return copy;
 	}
 }

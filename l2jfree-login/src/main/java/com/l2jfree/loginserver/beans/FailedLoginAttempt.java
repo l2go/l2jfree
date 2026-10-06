@@ -33,7 +33,7 @@ public class FailedLoginAttempt
 		_lastPassword = lastPassword;
 	}
 	
-	public void increaseCounter(String password)
+	public synchronized void increaseCounter(String password)
 	{
 		if (!_lastPassword.equals(password))
 		{
@@ -58,7 +58,7 @@ public class FailedLoginAttempt
 		}
 	}
 	
-	public int getCount()
+	public synchronized int getCount()
 	{
 		return _count;
 	}

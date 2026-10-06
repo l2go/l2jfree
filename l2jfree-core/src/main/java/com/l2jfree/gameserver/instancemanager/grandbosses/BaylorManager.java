@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.instancemanager.grandbosses;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledFuture;
 
 import com.l2jfree.Config;
@@ -61,8 +62,8 @@ public class BaylorManager extends BossLair
 			24220009, 24220010, 24220011, 24220012, 24220013, 24220014, 24220015, 24220016, 24220017, 24220018,
 			24220019, 24220020, 24220021, 24220022, 24220024, 24220025, 24220026 };
 	
-	protected List<L2Spawn> _baylorCubeSpawn = new ArrayList<L2Spawn>();
-	protected List<L2Npc> _baylorCube = new ArrayList<L2Npc>();
+	protected List<L2Spawn> _baylorCubeSpawn = new CopyOnWriteArrayList<L2Spawn>();
+	protected List<L2Npc> _baylorCube = new CopyOnWriteArrayList<L2Npc>();
 	
 	// Spawn data of monsters
 	protected L2Spawn _crystalineSpawn1; // Crystaline1

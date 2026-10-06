@@ -43,10 +43,8 @@ public final class CCHLeaderStatus extends AttackableStatus
 		CCHSiege siege = CCHManager.getInstance().getSiege(player.getClan());
 		if (siege != null && siege.equals(getActiveChar().getSiege()))
 		{
-			Integer previousValue = getActiveChar().getDamageTable().get(player.getClanId());
-			int newValue = (previousValue == null ? 0 : previousValue.intValue()) + (int)value;
-			
-			getActiveChar().getDamageTable().put(player.getClanId(), newValue);
+			// several attackers of one clan hit at the same time
+			getActiveChar().getDamageTable().merge(player.getClanId(), (int)value, Integer::sum);
 		}
 	}
 	

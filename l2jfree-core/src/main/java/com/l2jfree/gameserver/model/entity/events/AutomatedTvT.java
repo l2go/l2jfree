@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.model.entity.events;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledFuture;
 
@@ -118,7 +118,7 @@ public final class AutomatedTvT
 		// This has no maximum bound, thus configuration changes will not crash anything
 		participants = new CopyOnWriteArrayList<L2Player>();
 		registered = new CopyOnWriteArrayList<Integer>();
-		eventPlayers = new LinkedHashMap<Integer, Participant>(Config.AUTO_TVT_PARTICIPANTS_MAX);
+		eventPlayers = new ConcurrentHashMap<Integer, Participant>(Config.AUTO_TVT_PARTICIPANTS_MAX);
 		eventTeams = null;
 		task = new AutoEventTask();
 		taskDuring = new AutoReviveTask();

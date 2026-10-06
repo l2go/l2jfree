@@ -93,7 +93,6 @@ public final class L2ClientSelectorThread extends
 	{
 		L2Client client = new L2Client(this, channel);
 		client.sendPacket(new Init(client));
-		LoginManager.getInstance().addConnection(client);
 		return client;
 	}
 	

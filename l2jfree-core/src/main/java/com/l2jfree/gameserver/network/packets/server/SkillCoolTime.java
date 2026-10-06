@@ -14,6 +14,9 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.gameobjects.L2Player.TimeStamp;
 import com.l2jfree.gameserver.network.L2Client;
@@ -42,8 +45,10 @@ public final class SkillCoolTime extends StaticPacket
 			return;
 		
 		writeC(0xc7);
-		writeD(activeChar.getReuseTimeStamps().size()); // list size
-		for (TimeStamp ts : activeChar.getReuseTimeStamps().values())
+		// the size and the entries come from one copy: the stamps change while the packet is written
+		List<TimeStamp> stamps = new ArrayList<TimeStamp>(activeChar.getReuseTimeStamps().values());
+		writeD(stamps.size()); // list size
+		for (TimeStamp ts : stamps)
 		{
 			writeD(ts.getSkillId());
 			writeD(0x00);

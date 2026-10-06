@@ -29,27 +29,18 @@ final class LegalConnections
 	/** Announces one more connection from the address. */
 	void legalize(String ip)
 	{
-		final Integer count = _counts.get(ip);
-		
-		if (count == null)
-			_counts.put(ip, 1);
-		else
-			_counts.put(ip, count + 1);
+		_counts.merge(ip, 1, Integer::sum);
 	}
 	
 	/** @return true if the address was announced, and then takes one announcement from it */
 	boolean consume(String ip)
 	{
-		final Integer count = _counts.get(ip);
-		
-		if (count == null)
-			return false;
-		
-		if (count == 1)
-			_counts.remove(ip);
-		else
-			_counts.put(ip, count - 1);
-		return true;
+		final boolean[] announced = new boolean[1];
+		_counts.computeIfPresent(ip, (key, count) -> {
+			announced[0] = true;
+			return count == 1 ? null : count - 1;
+		});
+		return announced[0];
 	}
 	
 	/** @return how many connections of the address are announced and not yet made */
