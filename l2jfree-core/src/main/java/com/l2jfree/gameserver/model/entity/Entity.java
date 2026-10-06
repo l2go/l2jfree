@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.model.entity;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,7 +109,7 @@ public class Entity
 	
 	protected List<L2Player> getPlayersInside()
 	{
-		List<L2Player> lst = new FastList<L2Player>();
+		List<L2Player> lst = new ArrayList<L2Player>();
 		for (L2Creature cha : getZone().getCharactersInside())
 		{
 			if (cha instanceof L2Player)

@@ -19,11 +19,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -571,17 +570,17 @@ public class SevenSignsFestival implements SpawnListener
 	
 	private SevenSignsFestival()
 	{
-		_accumulatedBonuses = new FastList<Integer>();
+		_accumulatedBonuses = new ArrayList<Integer>();
 		
-		_dawnFestivalParticipants = new FastMap<Integer, List<L2Player>>();
-		_dawnPreviousParticipants = new FastMap<Integer, List<L2Player>>();
-		_dawnFestivalScores = new FastMap<Integer, Long>();
+		_dawnFestivalParticipants = new LinkedHashMap<Integer, List<L2Player>>();
+		_dawnPreviousParticipants = new LinkedHashMap<Integer, List<L2Player>>();
+		_dawnFestivalScores = new LinkedHashMap<Integer, Long>();
 		
-		_duskFestivalParticipants = new FastMap<Integer, List<L2Player>>();
-		_duskPreviousParticipants = new FastMap<Integer, List<L2Player>>();
-		_duskFestivalScores = new FastMap<Integer, Long>();
+		_duskFestivalParticipants = new LinkedHashMap<Integer, List<L2Player>>();
+		_duskPreviousParticipants = new LinkedHashMap<Integer, List<L2Player>>();
+		_duskFestivalScores = new LinkedHashMap<Integer, Long>();
 		
-		_festivalData = new FastMap<Integer, Map<Integer, StatsSet>>();
+		_festivalData = new LinkedHashMap<Integer, Map<Integer, StatsSet>>();
 		
 		restoreFestivalData();
 		
@@ -765,7 +764,7 @@ public class SevenSignsFestival implements SpawnListener
 				Map<Integer, StatsSet> tempData = _festivalData.get(festivalCycle);
 				
 				if (tempData == null)
-					tempData = new FastMap<Integer, StatsSet>();
+					tempData = new LinkedHashMap<Integer, StatsSet>();
 				
 				tempData.put(festivalId, festivalDat);
 				_festivalData.put(festivalCycle, tempData);
@@ -995,7 +994,7 @@ public class SevenSignsFestival implements SpawnListener
 		_duskFestivalScores.clear();
 		
 		// Set up a new data set for the current cycle of festivals
-		Map<Integer, StatsSet> newData = new FastMap<Integer, StatsSet>();
+		Map<Integer, StatsSet> newData = new LinkedHashMap<Integer, StatsSet>();
 		
 		for (int i = 0; i < FESTIVAL_COUNT * 2; i++)
 		{
@@ -1170,7 +1169,7 @@ public class SevenSignsFestival implements SpawnListener
 	
 	public void setParticipants(int oracle, int festivalId, L2Party festivalParty)
 	{
-		List<L2Player> participants = new FastList<L2Player>();
+		List<L2Player> participants = new ArrayList<L2Player>();
 		
 		if (festivalParty != null)
 		{
@@ -1346,7 +1345,7 @@ public class SevenSignsFestival implements SpawnListener
 			if (thisCabalHighScore < otherCabalHighScore)
 				return false;
 			
-			partyMembers = new FastList<String>();
+			partyMembers = new ArrayList<String>();
 			List<L2Player> prevParticipants = getPreviousParticipants(oracle, festivalId);
 			
 			// Record a string list of the party members involved.
@@ -1534,7 +1533,7 @@ public class SevenSignsFestival implements SpawnListener
 		
 		public FestivalManager()
 		{
-			_festivalInstances = new FastMap<Integer, L2DarknessFestival>();
+			_festivalInstances = new LinkedHashMap<Integer, L2DarknessFestival>();
 			_managerInstance = this;
 			
 			// Increment the cycle counter.
@@ -1833,8 +1832,8 @@ public class SevenSignsFestival implements SpawnListener
 		{
 			_cabal = cabal;
 			_levelRange = levelRange;
-			_originalLocations = new FastMap<L2Player, FestivalSpawn>();
-			_npcInsts = new FastList<L2FestivalMonsterInstance>();
+			_originalLocations = new LinkedHashMap<L2Player, FestivalSpawn>();
+			_npcInsts = new ArrayList<L2FestivalMonsterInstance>();
 			
 			if (cabal == SevenSigns.CABAL_DAWN)
 			{
@@ -1851,7 +1850,7 @@ public class SevenSignsFestival implements SpawnListener
 			
 			// FOR TESTING!
 			if (_participants == null)
-				_participants = new FastList<L2Player>();
+				_participants = new ArrayList<L2Player>();
 			
 			festivalInit();
 		}

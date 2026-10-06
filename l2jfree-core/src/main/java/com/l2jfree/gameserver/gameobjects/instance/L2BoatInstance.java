@@ -20,10 +20,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.LineNumberReader;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
-
-import javolution.util.FastMap;
 
 import org.apache.commons.io.IOUtils;
 
@@ -124,7 +123,7 @@ public class L2BoatInstance extends L2Creature
 		public void parseLine(String line)
 		{
 			// L2BoatPath bp = new L2BoatPath();
-			_path = new FastMap<Integer, L2BoatPoint>();
+			_path = new LinkedHashMap<Integer, L2BoatPoint>();
 			StringTokenizer st = new StringTokenizer(line, ";");
 			Integer.parseInt(st.nextToken());
 			max = Integer.parseInt(st.nextToken());
@@ -590,7 +589,7 @@ public class L2BoatInstance extends L2Creature
 			Collection<L2Player> knownPlayers = getKnownList().getKnownPlayers().values();
 			if (knownPlayers != null && !knownPlayers.isEmpty())
 			{
-				_inboat = new FastMap<Integer, L2Player>();
+				_inboat = new LinkedHashMap<Integer, L2Player>();
 				int i = 0;
 				for (L2Player player : knownPlayers)
 				{
@@ -627,7 +626,7 @@ public class L2BoatInstance extends L2Creature
 			Collection<L2Player> knownPlayers = getKnownList().getKnownPlayers().values();
 			if (knownPlayers != null && !knownPlayers.isEmpty())
 			{
-				_inboat = new FastMap<Integer, L2Player>();
+				_inboat = new LinkedHashMap<Integer, L2Player>();
 				int i = 0;
 				for (L2Player player : knownPlayers)
 				{

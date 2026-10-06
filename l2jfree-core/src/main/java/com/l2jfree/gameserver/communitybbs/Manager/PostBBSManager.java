@@ -16,18 +16,16 @@ package com.l2jfree.gameserver.communitybbs.Manager;
 
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
-
-import javolution.util.FastMap;
 
 import com.l2jfree.gameserver.communitybbs.bb.Forum;
 import com.l2jfree.gameserver.communitybbs.bb.Post;
 import com.l2jfree.gameserver.communitybbs.bb.Post.CPost;
 import com.l2jfree.gameserver.communitybbs.bb.Topic;
 import com.l2jfree.gameserver.gameobjects.L2Player;
-import com.l2jfree.lang.L2TextBuilder;
 
 public class PostBBSManager extends BaseBBSManager
 {
@@ -41,7 +39,7 @@ public class PostBBSManager extends BaseBBSManager
 	
 	private PostBBSManager()
 	{
-		_postByTopic = new FastMap<Topic, Post>();
+		_postByTopic = new LinkedHashMap<Topic, Post>();
 	}
 	
 	public Post getGPosttByTopic(Topic t)
@@ -186,7 +184,7 @@ public class PostBBSManager extends BaseBBSManager
 	 */
 	private void showHtmlEditPost(Topic topic, L2Player activeChar, Forum forum, Post p)
 	{
-		final L2TextBuilder html = L2TextBuilder.newInstance();
+		final StringBuilder html = new StringBuilder();
 		html.append("<html>");
 		html.append("<body><br><br>");
 		html.append("<table border=0 width=610><tr><td width=10></td><td width=600 align=left>");
@@ -235,7 +233,7 @@ public class PostBBSManager extends BaseBBSManager
 		html.append("</body>");
 		html.append("</html>");
 		
-		send1001(html.moveToString(), activeChar);
+		send1001(html.toString(), activeChar);
 		send1002(activeChar, p.getCPost(0).postTxt, topic.getName(),
 				DateFormat.getInstance().format(new Date(topic.getDate())));
 	}
@@ -251,7 +249,7 @@ public class PostBBSManager extends BaseBBSManager
 		Post p = getGPosttByTopic(topic);
 		Locale locale = Locale.getDefault();
 		DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.FULL, locale);
-		final L2TextBuilder html = L2TextBuilder.newInstance();
+		final StringBuilder html = new StringBuilder();
 		html.append("<html><body><br><br>");
 		html.append("<table border=0 width=610><tr><td width=10></td><td width=600 align=left>");
 		html.append("<a action=\"bypass _bbshome\">HOME</a>&nbsp;>&nbsp;<a action=\"bypass _bbsmemo\">Memo Form</a>");

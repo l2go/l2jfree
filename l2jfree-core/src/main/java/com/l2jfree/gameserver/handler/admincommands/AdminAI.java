@@ -27,7 +27,6 @@ import com.l2jfree.gameserver.gameobjects.ai.L2CreatureAI;
 import com.l2jfree.gameserver.handler.IAdminCommandHandler;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
-import com.l2jfree.lang.L2TextBuilder;
 
 public class AdminAI implements IAdminCommandHandler
 {
@@ -54,9 +53,8 @@ public class AdminAI implements IAdminCommandHandler
 			String param1 = ai.getIntentionArg1() == null ? "--" : ai.getIntentionArg1().toString();
 			
 			NpcHtmlMessage html = new NpcHtmlMessage(target.getObjectId());
-			L2TextBuilder html1 =
-					L2TextBuilder
-							.newInstance("<html><body><center><font color=\"LEVEL\">AI Information</font></center><br><br>");
+			StringBuilder html1 =
+					new StringBuilder("<html><body><center><font color=\"LEVEL\">AI Information</font></center><br><br>");
 			
 			html1.append("<font color=\"LEVEL\">Intention</font>");
 			html1.append("<table border=\"0\" width=\"100%\">");
@@ -93,7 +91,7 @@ public class AdminAI implements IAdminCommandHandler
 			html1.append("<button value=\"Refresh\" action=\"bypass -h admin_show_ai\" width=60 height=20 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\">");
 			
 			html1.append("</body></html>");
-			html.setHtml(html1.moveToString());
+			html.setHtml(html1.toString());
 			activeChar.sendPacket(html);
 		}
 		

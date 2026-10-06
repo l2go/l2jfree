@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.datatables;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
-import javolution.util.FastMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,11 +33,11 @@ public final class ArmorSetsTable
 {
 	private static final Logger _log = LoggerFactory.getLogger(ArmorSetsTable.class);
 	
-	private final FastMap<Integer, L2ArmorSet> _armorSets;
+	private final Map<Integer, L2ArmorSet> _armorSets;
 	
 	private ArmorSetsTable()
 	{
-		_armorSets = new FastMap<Integer, L2ArmorSet>().setShared(true);
+		_armorSets = new ConcurrentHashMap<Integer, L2ArmorSet>();
 		loadData();
 	}
 	

@@ -15,13 +15,10 @@
 package com.l2jfree.util.concurrent;
 
 import java.lang.reflect.Array;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import javolution.util.FastCollection;
-import javolution.util.FastCollection.Record;
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.l2jfree.lang.L2Entity;
 import com.l2jfree.util.L2Collections;
@@ -33,8 +30,8 @@ public abstract class L2EntityMap<T extends L2Entity<Integer>>
 {
 	private final int _initialSize;
 	
-	private boolean _initialized = false;
-	private Map<Integer, T> _map = L2Collections.emptyMap();
+	private volatile boolean _initialized = false;
+	private volatile Map<Integer, T> _map = L2Collections.emptyMap();
 	
 	private void init()
 	{
@@ -44,10 +41,13 @@ public abstract class L2EntityMap<T extends L2Entity<Integer>>
 			{
 				if (!_initialized)
 				{
-					if (_initialSize < 0)
-						_map = new FastMap<Integer, T>().setShared(this instanceof L2SharedEntityMap<?>);
+					final int initialSize = Math.max(_initialSize, 16);
+					
+					// Only the shared map is read and iterated without the subclass lock.
+					if (this instanceof L2SharedEntityMap<?>)
+						_map = new ConcurrentHashMap<Integer, T>(initialSize);
 					else
-						_map = new FastMap<Integer, T>(_initialSize).setShared(this instanceof L2SharedEntityMap<?>);
+						_map = HashMap.newHashMap(initialSize);
 					
 					_initialized = true;
 				}
@@ -147,17 +147,8 @@ public abstract class L2EntityMap<T extends L2Entity<Integer>>
 		if (_map.isEmpty())
 			return;
 		
-		Collection<T> values = _map.values();
-		
-		if (values instanceof FastCollection<?>)
-		{
-			FastCollection<T> values2 = (FastCollection<T>)values;
-			
-			for (Record r = values2.head(), end = values2.tail(); (r = r.getNext()) != end;)
-				executable.execute(values2.valueOf(r));
-		}
-		else
-			throw new RuntimeException("Shouldn't happen!");
+		for (T value : _map.values())
+			executable.execute(value);
 	}
 	
 	@Override

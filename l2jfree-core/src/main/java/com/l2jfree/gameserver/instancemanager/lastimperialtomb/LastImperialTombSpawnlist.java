@@ -17,9 +17,8 @@ package com.l2jfree.gameserver.instancemanager.lastimperialtomb;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,12 +37,12 @@ public class LastImperialTombSpawnlist
 {
 	private final static Logger _log = LoggerFactory.getLogger(LastImperialTombSpawnlist.class);
 	
-	private static List<L2Spawn> _Room1SpawnList1st = new FastList<L2Spawn>();
-	private static List<L2Spawn> _Room1SpawnList2nd = new FastList<L2Spawn>();
-	private static List<L2Spawn> _Room1SpawnList3rd = new FastList<L2Spawn>();
-	private static List<L2Spawn> _Room1SpawnList4th = new FastList<L2Spawn>();
-	private static List<L2Spawn> _Room2InsideSpawnList = new FastList<L2Spawn>();
-	private static List<L2Spawn> _Room2OutsideSpawnList = new FastList<L2Spawn>();
+	private static List<L2Spawn> _Room1SpawnList1st = new ArrayList<L2Spawn>();
+	private static List<L2Spawn> _Room1SpawnList2nd = new ArrayList<L2Spawn>();
+	private static List<L2Spawn> _Room1SpawnList3rd = new ArrayList<L2Spawn>();
+	private static List<L2Spawn> _Room1SpawnList4th = new ArrayList<L2Spawn>();
+	private static List<L2Spawn> _Room2InsideSpawnList = new ArrayList<L2Spawn>();
+	private static List<L2Spawn> _Room2OutsideSpawnList = new ArrayList<L2Spawn>();
 	
 	private LastImperialTombSpawnlist()
 	{

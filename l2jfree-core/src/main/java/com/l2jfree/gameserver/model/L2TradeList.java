@@ -14,15 +14,14 @@
  */
 package com.l2jfree.gameserver.model;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
 
 public class L2TradeList
 {
-	private final FastList<L2ItemInstance> _items;
+	private final List<L2ItemInstance> _items;
 	private final int _listId;
 	private boolean _gm;
 	private boolean _custom;
@@ -31,7 +30,7 @@ public class L2TradeList
 	
 	public L2TradeList(int listId)
 	{
-		_items = new FastList<L2ItemInstance>();
+		_items = new ArrayList<L2ItemInstance>();
 		_listId = listId;
 	}
 	
@@ -140,7 +139,7 @@ public class L2TradeList
 	/**
 	 * @return Returns the items.
 	 */
-	public FastList<L2ItemInstance> getItems()
+	public List<L2ItemInstance> getItems()
 	{
 		return _items;
 	}

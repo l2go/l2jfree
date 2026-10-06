@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.instancemanager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
-import javolution.util.FastList;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +50,7 @@ public final class ContestableHideoutGuardManager
 	public final void load()
 	{
 		Connection con = null;
-		FastList<L2Spawn> guards = new FastList<L2Spawn>(50);
+		List<L2Spawn> guards = new ArrayList<L2Spawn>(50);
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();

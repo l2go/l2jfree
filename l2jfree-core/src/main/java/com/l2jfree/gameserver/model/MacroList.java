@@ -14,12 +14,11 @@
  */
 package com.l2jfree.gameserver.model;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
-
-import javolution.text.TextBuilder;
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +41,7 @@ public class MacroList
 	private final L2Player _owner;
 	private int _revision;
 	private int _macroId;
-	private final FastMap<Integer, L2Macro> _macroses = new FastMap<Integer, L2Macro>();
+	private final Map<Integer, L2Macro> _macroses = new LinkedHashMap<Integer, L2Macro>();
 	
 	public MacroList(L2Player owner)
 	{
@@ -124,7 +123,7 @@ public class MacroList
 	{
 		try
 		{
-			TextBuilder sb = new TextBuilder();
+			StringBuilder sb = new StringBuilder();
 			for (L2MacroCmd cmd : macro.commands)
 			{
 				sb.append(cmd.type).append(',');
@@ -172,7 +171,7 @@ public class MacroList
 				String name = row.name();
 				String descr = row.description();
 				String acronym = row.acronym();
-				List<L2MacroCmd> commands = new FastList<L2MacroCmd>();
+				List<L2MacroCmd> commands = new ArrayList<L2MacroCmd>();
 				StringTokenizer st1 = new StringTokenizer(row.commands(), ";");
 				while (st1.hasMoreTokens())
 				{

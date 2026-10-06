@@ -15,8 +15,7 @@
 package ai.individual;
 
 import java.util.Map;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import ai.group_template.L2AttackableAIScript;
 
@@ -44,7 +43,7 @@ public class Core extends L2AttackableAIScript
 	//private static final int PERUM = 29012;
 	//private static final int PREMO = 29013;
 	
-	private final FastMap<Integer, CoreStatus> _status = new FastMap<Integer, CoreStatus>().setShared(true);
+	private final Map<Integer, CoreStatus> _status = new ConcurrentHashMap<Integer, CoreStatus>();
 	
 	public Core(int id, String name, String descr)
 	{

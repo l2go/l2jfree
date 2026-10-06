@@ -21,12 +21,10 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -89,8 +87,8 @@ public class Castle extends Siegeable<Siege>
 	private static final String CASTLE_TRAP_LOAD = "SELECT level FROM castle_trap_upgrade WHERE castle_id=? AND side=?";
 	private static final String CASTLE_TRAPS_REMOVE = "DELETE FROM castle_trap_upgrade WHERE castle_id=?";
 	
-	private final FastList<L2DoorInstance> _doors = new FastList<L2DoorInstance>();
-	private final FastList<String> _doorDefault = new FastList<String>();
+	private final List<L2DoorInstance> _doors = new ArrayList<L2DoorInstance>();
+	private final List<String> _doorDefault = new ArrayList<String>();
 	private int _castleId = 0;
 	private Siege _siege = null;
 	private Calendar _siegeDate;
@@ -101,7 +99,7 @@ public class Castle extends Siegeable<Siege>
 	private double _taxRate = 1.0;
 	private long _treasury = 0;
 	private int _nbArtifact = 1;
-	private final Map<Integer, Integer> _engrave = new FastMap<Integer, Integer>();
+	private final Map<Integer, Integer> _engrave = new LinkedHashMap<Integer, Integer>();
 	private final int[] _gate = { Integer.MIN_VALUE, 0, 0 };
 	private final Map<Integer, CastleFunction> _function;
 	private ScheduledFuture<?> _taxUpdate = null;
@@ -296,7 +294,7 @@ public class Castle extends Siegeable<Siege>
 		
 		load();
 		loadDoor();
-		_function = new FastMap<Integer, CastleFunction>();
+		_function = new LinkedHashMap<Integer, CastleFunction>();
 		if (getOwnerId() != 0)
 		{
 			loadFunctions();
@@ -924,7 +922,7 @@ public class Castle extends Siegeable<Siege>
 		return null;
 	}
 	
-	public final FastList<L2DoorInstance> getDoors()
+	public final List<L2DoorInstance> getDoors()
 	{
 		return _doors;
 	}

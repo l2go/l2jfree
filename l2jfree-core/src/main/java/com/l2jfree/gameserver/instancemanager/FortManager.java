@@ -17,10 +17,10 @@ package com.l2jfree.gameserver.instancemanager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,13 +41,13 @@ public class FortManager implements InstanceListManager
 	
 	// =========================================================
 	
-	protected FastMap<Integer, Integer> _envoyCastles = new FastMap<Integer, Integer>();
-	protected FastMap<Integer, FastList<L2Spawn>> _npcCommanders = new FastMap<Integer, FastList<L2Spawn>>();
-	protected FastMap<Integer, FastList<L2Spawn>> _siegeNpcs = new FastMap<Integer, FastList<L2Spawn>>();
-	protected FastMap<Integer, FastList<L2Spawn>> _specialEnvoys = new FastMap<Integer, FastList<L2Spawn>>();
-	protected FastList<L2Spawn> _npcCommandersSpawns;
-	protected FastList<L2Spawn> _siegeNpcsSpawns;
-	protected FastList<L2Spawn> _specialEnvoysSpawns;
+	protected Map<Integer, Integer> _envoyCastles = new LinkedHashMap<Integer, Integer>();
+	protected Map<Integer, List<L2Spawn>> _npcCommanders = new LinkedHashMap<Integer, List<L2Spawn>>();
+	protected Map<Integer, List<L2Spawn>> _siegeNpcs = new LinkedHashMap<Integer, List<L2Spawn>>();
+	protected Map<Integer, List<L2Spawn>> _specialEnvoys = new LinkedHashMap<Integer, List<L2Spawn>>();
+	protected List<L2Spawn> _npcCommandersSpawns;
+	protected List<L2Spawn> _siegeNpcsSpawns;
+	protected List<L2Spawn> _specialEnvoysSpawns;
 	protected int _respawnTime;
 	
 	public static final FortManager getInstance()
@@ -229,7 +229,7 @@ public class FortManager implements InstanceListManager
 	public final List<Fort> getForts()
 	{
 		if (_forts == null)
-			_forts = new FastList<Fort>();
+			_forts = new ArrayList<Fort>();
 		return _forts;
 	}
 	
@@ -314,7 +314,7 @@ public class FortManager implements InstanceListManager
 				
 				L2Spawn spawnDat;
 				L2NpcTemplate template1;
-				_npcCommandersSpawns = new FastList<L2Spawn>();
+				_npcCommandersSpawns = new ArrayList<L2Spawn>();
 				while (rset2.next())
 				{
 					template1 = NpcTable.getInstance().getTemplate(rset2.getInt("npc_template_id"));
@@ -377,7 +377,7 @@ public class FortManager implements InstanceListManager
 				
 				L2Spawn spawnDat;
 				L2NpcTemplate template1;
-				_siegeNpcsSpawns = new FastList<L2Spawn>();
+				_siegeNpcsSpawns = new ArrayList<L2Spawn>();
 				while (rset2.next())
 				{
 					template1 = NpcTable.getInstance().getTemplate(rset2.getInt("npc_template_id"));
@@ -441,7 +441,7 @@ public class FortManager implements InstanceListManager
 				
 				L2Spawn spawnDat;
 				L2NpcTemplate template1;
-				_specialEnvoysSpawns = new FastList<L2Spawn>();
+				_specialEnvoysSpawns = new ArrayList<L2Spawn>();
 				while (rset2.next())
 				{
 					int castleId = rset2.getInt("castle_id");
@@ -485,7 +485,7 @@ public class FortManager implements InstanceListManager
 	
 	public void spawnNpcCommanders()
 	{
-		FastList<L2Spawn> monsterList = _npcCommanders.get(getFort().getFortId());
+		List<L2Spawn> monsterList = _npcCommanders.get(getFort().getFortId());
 		if (monsterList != null)
 		{
 			for (L2Spawn spawnDat : monsterList)
@@ -498,7 +498,7 @@ public class FortManager implements InstanceListManager
 	
 	public void despawnNpcCommanders()
 	{
-		FastList<L2Spawn> monsterList = _npcCommanders.get(getFort().getFortId());
+		List<L2Spawn> monsterList = _npcCommanders.get(getFort().getFortId());
 		if (monsterList != null)
 		{
 			for (L2Spawn spawnDat : monsterList)
@@ -511,7 +511,7 @@ public class FortManager implements InstanceListManager
 	
 	public void spawnSuspiciousMerchant()
 	{
-		FastList<L2Spawn> monsterList = _siegeNpcs.get(getFort().getFortId());
+		List<L2Spawn> monsterList = _siegeNpcs.get(getFort().getFortId());
 		if (monsterList != null)
 		{
 			for (L2Spawn spawnDat : monsterList)
@@ -524,7 +524,7 @@ public class FortManager implements InstanceListManager
 	
 	public void despawnSuspiciousMerchant()
 	{
-		FastList<L2Spawn> monsterList = _siegeNpcs.get(getFort().getFortId());
+		List<L2Spawn> monsterList = _siegeNpcs.get(getFort().getFortId());
 		if (monsterList != null)
 		{
 			for (L2Spawn spawnDat : monsterList)
@@ -537,7 +537,7 @@ public class FortManager implements InstanceListManager
 	
 	public void spawnSpecialEnvoys()
 	{
-		FastList<L2Spawn> monsterList = _specialEnvoys.get(getFort().getFortId());
+		List<L2Spawn> monsterList = _specialEnvoys.get(getFort().getFortId());
 		if (monsterList != null)
 		{
 			for (L2Spawn spawnDat : monsterList)
@@ -550,7 +550,7 @@ public class FortManager implements InstanceListManager
 	
 	public void despawnSpecialEnvoys()
 	{
-		FastList<L2Spawn> monsterList = _specialEnvoys.get(getFort().getFortId());
+		List<L2Spawn> monsterList = _specialEnvoys.get(getFort().getFortId());
 		if (monsterList != null)
 		{
 			for (L2Spawn spawnDat : monsterList)

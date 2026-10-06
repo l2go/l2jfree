@@ -46,12 +46,6 @@
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
-		<!-- Javolution 5.4.1 is the last MMORPG development suitable version of Javolution. It is not recommend to be updated to a newer version. -->
-		<dependency>
-			<groupId>javolution</groupId>
-			<artifactId>javolution</artifactId>
-			<version>5.4.1</version>
-		</dependency>
 		<dependency>
 			<groupId>com.l2jfree</groupId>
 			<artifactId>l2jfree-test-support</artifactId>

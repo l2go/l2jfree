@@ -15,8 +15,7 @@
 package com.l2jfree.gameserver.model;
 
 import java.util.Map;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +32,7 @@ public final class ShortCuts
 {
 	private static final Logger _log = LoggerFactory.getLogger(ShortCuts.class);
 	
-	private final Map<Integer, L2ShortCut> _shortCuts = new FastMap<Integer, L2ShortCut>().setShared(true);
+	private final Map<Integer, L2ShortCut> _shortCuts = new ConcurrentHashMap<Integer, L2ShortCut>();
 	private final L2Player _owner;
 	
 	public ShortCuts(L2Player owner)

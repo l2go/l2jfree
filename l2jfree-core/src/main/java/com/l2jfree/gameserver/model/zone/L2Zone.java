@@ -21,8 +21,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
@@ -344,9 +343,9 @@ public class L2Zone implements FuncOwner
 		return _removeEnter;
 	}
 	
-	private final FastMap<L2Creature, Boolean> _charactersInside = new FastMap<L2Creature, Boolean>().setShared(true);
+	private final Map<L2Creature, Boolean> _charactersInside = new ConcurrentHashMap<L2Creature, Boolean>();
 	
-	protected final FastMap<L2Creature, Boolean> getCharactersInsideMap()
+	protected final Map<L2Creature, Boolean> getCharactersInsideMap()
 	{
 		return _charactersInside;
 	}

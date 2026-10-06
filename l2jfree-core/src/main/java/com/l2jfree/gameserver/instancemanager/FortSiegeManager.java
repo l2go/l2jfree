@@ -17,11 +17,11 @@ package com.l2jfree.gameserver.instancemanager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,8 +60,8 @@ public class FortSiegeManager
 	}
 	
 	// Fort Siege settings
-	private FastMap<Integer, FastList<SiegeSpawn>> _commanderSpawnList;
-	private FastMap<Integer, FastList<CombatFlag>> _flagList;
+	private Map<Integer, List<SiegeSpawn>> _commanderSpawnList;
+	private Map<Integer, List<CombatFlag>> _flagList;
 	
 	private List<FortSiege> _sieges;
 	
@@ -171,13 +171,13 @@ public class FortSiegeManager
 			L2Properties siegeSettings = new L2Properties(Config.FORTSIEGE_CONFIGURATION_FILE).setLog(false);
 			
 			// Siege spawns settings
-			_commanderSpawnList = new FastMap<Integer, FastList<SiegeSpawn>>();
-			_flagList = new FastMap<Integer, FastList<CombatFlag>>();
+			_commanderSpawnList = new LinkedHashMap<Integer, List<SiegeSpawn>>();
+			_flagList = new LinkedHashMap<Integer, List<CombatFlag>>();
 			
 			for (Fort fort : FortManager.getInstance().getForts())
 			{
-				FastList<SiegeSpawn> _commanderSpawns = new FastList<SiegeSpawn>();
-				FastList<CombatFlag> _flagSpawns = new FastList<CombatFlag>();
+				List<SiegeSpawn> _commanderSpawns = new ArrayList<SiegeSpawn>();
+				List<CombatFlag> _flagSpawns = new ArrayList<CombatFlag>();
 				
 				for (int i = 1; i < 5; i++)
 				{
@@ -257,7 +257,7 @@ public class FortSiegeManager
 	
 	// =========================================================
 	// Property - Public
-	public final FastList<SiegeSpawn> getCommanderSpawnList(int _fortId)
+	public final List<SiegeSpawn> getCommanderSpawnList(int _fortId)
 	{
 		if (_commanderSpawnList.containsKey(_fortId))
 			return _commanderSpawnList.get(_fortId);
@@ -265,7 +265,7 @@ public class FortSiegeManager
 		return null;
 	}
 	
-	public final FastList<CombatFlag> getFlagList(int _fortId)
+	public final List<CombatFlag> getFlagList(int _fortId)
 	{
 		if (_flagList.containsKey(_fortId))
 			return _flagList.get(_fortId);
@@ -303,14 +303,14 @@ public class FortSiegeManager
 	public final List<FortSiege> getSieges()
 	{
 		if (_sieges == null)
-			_sieges = new FastList<FortSiege>();
+			_sieges = new ArrayList<FortSiege>();
 		return _sieges;
 	}
 	
 	public final void addSiege(FortSiege fortSiege)
 	{
 		if (_sieges == null)
-			_sieges = new FastList<FortSiege>();
+			_sieges = new ArrayList<FortSiege>();
 		_sieges.add(fortSiege);
 	}
 	
@@ -326,7 +326,7 @@ public class FortSiegeManager
 		
 		Fort fort = FortManager.getInstance().getFort(player);
 		
-		FastList<CombatFlag> fcf = _flagList.get(fort.getFortId());
+		List<CombatFlag> fcf = _flagList.get(fort.getFortId());
 		for (CombatFlag cf : fcf)
 		{
 			if (cf.itemInstance == item)
@@ -433,7 +433,7 @@ public class FortSiegeManager
 	public void dropCombatFlag(L2Player player)
 	{
 		Fort fort = FortManager.getInstance().getFort(player);
-		FastList<CombatFlag> fcf = _flagList.get(fort.getFortId());
+		List<CombatFlag> fcf = _flagList.get(fort.getFortId());
 		for (CombatFlag cf : fcf)
 		{
 			if (cf.playerId == player.getObjectId())

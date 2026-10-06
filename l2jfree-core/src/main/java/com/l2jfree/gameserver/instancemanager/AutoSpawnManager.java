@@ -17,11 +17,12 @@ package com.l2jfree.gameserver.instancemanager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,14 +77,14 @@ public class AutoSpawnManager
 	private static final int DEFAULT_RESPAWN = 3600000; //1 hour in millisecs
 	private static final int DEFAULT_DESPAWN = 3600000; //1 hour in millisecs
 	
-	protected FastMap<Integer, AutoSpawnInstance> _registeredSpawns;
-	protected FastMap<Integer, ScheduledFuture<?>> _runningSpawns;
+	protected Map<Integer, AutoSpawnInstance> _registeredSpawns;
+	protected Map<Integer, ScheduledFuture<?>> _runningSpawns;
 	protected boolean _activeState = true;
 	
 	private AutoSpawnManager()
 	{
-		_registeredSpawns = new FastMap<Integer, AutoSpawnInstance>();
-		_runningSpawns = new FastMap<Integer, ScheduledFuture<?>>();
+		_registeredSpawns = new LinkedHashMap<Integer, AutoSpawnInstance>();
+		_runningSpawns = new LinkedHashMap<Integer, ScheduledFuture<?>>();
 		
 		restoreSpawnData();
 	}
@@ -114,8 +115,8 @@ public class AutoSpawnManager
 		}
 		
 		// create clean list
-		_registeredSpawns = new FastMap<Integer, AutoSpawnInstance>();
-		_runningSpawns = new FastMap<Integer, ScheduledFuture<?>>();
+		_registeredSpawns = new LinkedHashMap<Integer, AutoSpawnInstance>();
+		_runningSpawns = new LinkedHashMap<Integer, ScheduledFuture<?>>();
 		
 		// load
 		restoreSpawnData();
@@ -400,9 +401,9 @@ public class AutoSpawnManager
 		return null;
 	}
 	
-	public FastMap<Integer, AutoSpawnInstance> getAutoSpawnInstances(int npcId)
+	public Map<Integer, AutoSpawnInstance> getAutoSpawnInstances(int npcId)
 	{
-		FastMap<Integer, AutoSpawnInstance> spawnInstList = new FastMap<Integer, AutoSpawnInstance>();
+		Map<Integer, AutoSpawnInstance> spawnInstList = new LinkedHashMap<Integer, AutoSpawnInstance>();
 		
 		for (AutoSpawnInstance spawnInst : _registeredSpawns.values())
 			if (spawnInst.getNpcId() == npcId)
@@ -643,8 +644,8 @@ public class AutoSpawnManager
 		protected int _spawnCount = 1;
 		protected int _lastLocIndex = -1;
 		
-		private final FastList<L2Npc> _npcList = new FastList<L2Npc>();
-		private final FastList<Location> _locList = new FastList<Location>();
+		private final List<L2Npc> _npcList = new ArrayList<L2Npc>();
+		private final List<Location> _locList = new ArrayList<Location>();
 		
 		private boolean _spawnActive;
 		private boolean _randomSpawn = false;
@@ -722,7 +723,7 @@ public class AutoSpawnManager
 		
 		public L2Spawn[] getSpawns()
 		{
-			FastList<L2Spawn> npcSpawns = new FastList<L2Spawn>();
+			List<L2Spawn> npcSpawns = new ArrayList<L2Spawn>();
 			
 			for (L2Npc npcInst : _npcList)
 				npcSpawns.add(npcInst.getSpawn());

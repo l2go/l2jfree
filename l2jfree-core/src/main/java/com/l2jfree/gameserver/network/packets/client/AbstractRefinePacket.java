@@ -16,8 +16,7 @@ package com.l2jfree.gameserver.network.packets.client;
 
 import java.util.Arrays;
 import java.util.Map;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -40,7 +39,7 @@ public abstract class AbstractRefinePacket extends L2ClientPacket
 	protected static final int GEMSTONE_C = 2131;
 	protected static final int GEMSTONE_B = 2132;
 	
-	private static final Map<Integer, LifeStone> _lifeStones = new FastMap<Integer, LifeStone>().setShared(true);
+	private static final Map<Integer, LifeStone> _lifeStones = new ConcurrentHashMap<Integer, LifeStone>();
 	
 	protected static final class LifeStone
 	{

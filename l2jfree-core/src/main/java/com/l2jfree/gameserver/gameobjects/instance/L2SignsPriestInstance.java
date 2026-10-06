@@ -29,7 +29,6 @@ import com.l2jfree.gameserver.network.packets.server.InventoryUpdate;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.network.packets.server.StatusUpdate;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
-import com.l2jfree.lang.L2TextBuilder;
 
 /**
  * Dawn/Dusk Seven Signs Priest Instance
@@ -580,8 +579,8 @@ public class L2SignsPriestInstance extends L2Npc
 					showChatWindow(player, val, fileSuffix, false);
 					break;
 				case 20: // Seal Status (for when joining a cabal)
-					L2TextBuilder contentBuffer =
-							L2TextBuilder.newInstance("<html><body><font color=\"LEVEL\">[ Seal Status ]</font><br>");
+					StringBuilder contentBuffer =
+							new StringBuilder("<html><body><font color=\"LEVEL\">[ Seal Status ]</font><br>");
 					
 					for (int i = 1; i < 4; i++)
 					{
@@ -598,7 +597,7 @@ public class L2SignsPriestInstance extends L2Npc
 							+ "\">Go back.</a></body></html>");
 					
 					NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-					html.setHtml(contentBuffer.moveToString());
+					html.setHtml(contentBuffer.toString());
 					player.sendPacket(html);
 					break;
 				default:

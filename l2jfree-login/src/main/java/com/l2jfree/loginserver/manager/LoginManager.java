@@ -23,14 +23,14 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.RSAKeyGenParameterSpec;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.Cipher;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,7 +84,7 @@ public class LoginManager
 	}
 	
 	/** Authed Clients on LoginServer*/
-	protected Map<String, L2Client> _loginServerClients = new FastMap<String, L2Client>().setShared(true);
+	protected Map<String, L2Client> _loginServerClients = new ConcurrentHashMap<String, L2Client>();
 	
 	/** Accounts that are in the world. Changed only under the lock of {@link #_loginServerClients}. */
 	private final Set<String> _accountsInWorld = ConcurrentHashMap.newKeySet();
@@ -110,7 +110,7 @@ public class LoginManager
 		SYSTEM_ERROR
 	}
 	
-	private FastList<L2Client> _connections;
+	private List<L2Client> _connections;
 	
 	/**
 	 * Private constructor to avoid direct instantiation.
@@ -122,13 +122,13 @@ public class LoginManager
 		{
 			_log.info("LoginManager: initializing.");
 			
-			_hackProtection = new FastMap<InetAddress, FailedLoginAttempt>();
+			_hackProtection = new LinkedHashMap<InetAddress, FailedLoginAttempt>();
 			
 			_keyPairs = new ScrambledKeyPair[10];
 			
 			_service = L2Registry.getAccountsServices();
 			
-			_connections = new FastList<L2Client>();
+			_connections = new ArrayList<L2Client>();
 			
 			KeyPairGenerator keygen = null;
 			
@@ -172,10 +172,10 @@ public class LoginManager
 	 */
 	LoginManager(AccountsServices service)
 	{
-		_hackProtection = new FastMap<InetAddress, FailedLoginAttempt>();
+		_hackProtection = new LinkedHashMap<InetAddress, FailedLoginAttempt>();
 		_keyPairs = new ScrambledKeyPair[0];
 		_service = service;
-		_connections = new FastList<L2Client>();
+		_connections = new ArrayList<L2Client>();
 		_blowfishKeys = new byte[0][];
 	}
 	

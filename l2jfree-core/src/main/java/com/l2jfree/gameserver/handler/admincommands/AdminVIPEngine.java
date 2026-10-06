@@ -19,7 +19,6 @@ package com.l2jfree.gameserver.handler.admincommands;
  * @author  CubicVirtuoso - William McMahon
  */
 
-import javolution.text.TextBuilder;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.handler.IAdminCommandHandler;
@@ -360,7 +359,7 @@ public class AdminVIPEngine implements IAdminCommandHandler
 	public void showMainPage(L2Player activeChar)
 	{
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-		TextBuilder replyMSG = new TextBuilder("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		
 		replyMSG.append("<center><font color=\"LEVEL\">[VIP Engine - By CubicVirtuoso]</font></center><br><br><br>");
 		replyMSG.append("<table><tr><td><edit var=\"input1\" width=\"50\"></td><td><edit var=\"input2\" width=\"50\"></td><td><edit var=\"input3\" width\"50\"></td></tr></table>");

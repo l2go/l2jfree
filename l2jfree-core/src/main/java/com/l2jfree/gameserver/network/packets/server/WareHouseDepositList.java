@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
 import com.l2jfree.gameserver.network.packets.L2ServerPacket;
@@ -35,7 +36,7 @@ public class WareHouseDepositList extends L2ServerPacket
 	private static final String _S__41_WAREHOUSEDEPOSITLIST = "[S] 41 WareHouseDepositList";
 	
 	private final long _playerAdena;
-	private final FastList<L2ItemInstance> _items;
+	private final List<L2ItemInstance> _items;
 	private final int _whType;
 	
 	public WareHouseDepositList(L2Player player, int type)
@@ -45,7 +46,7 @@ public class WareHouseDepositList extends L2ServerPacket
 		final boolean isPrivate = _whType == PRIVATE;
 		_playerAdena = player.getAdena();
 		
-		_items = new FastList<L2ItemInstance>();
+		_items = new ArrayList<L2ItemInstance>();
 		
 		for (L2ItemInstance temp : player.getInventory().getAvailableItems(true, isPrivate))
 		{

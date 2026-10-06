@@ -136,7 +136,7 @@
 		<plugins>
 			<plugin>
 				<!-- The build refuses what the decisions forbid: an old Maven or JDK, the retired MySQL and Liquibase libraries
-					(ADR-0004), and a dependency declared twice with different versions. -->
+					(ADR-0004), the retired Javolution and Trove collections, and a dependency declared twice with different versions. -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
 				<version>3.5.0</version>
@@ -161,6 +161,8 @@
 										<exclude>com.mysql:*</exclude>
 										<exclude>mysql:*</exclude>
 										<exclude>org.liquibase:*</exclude>
+										<exclude>javolution:*</exclude>
+										<exclude>net.sf.trove4j:*</exclude>
 									</excludes>
 								</bannedDependencies>
 							</rules>

@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.templates;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +27,7 @@ public class ValidatingStatsSet extends StatsSet
 {
 	private static final Logger _log = LoggerFactory.getLogger(ValidatingStatsSet.class);
 	
-	private final Map<String, Object> _nonRequestedStats = new FastMap<String, Object>();
+	private final Map<String, Object> _nonRequestedStats = new LinkedHashMap<String, Object>();
 	
 	private String _description;
 	private boolean _validating = true;

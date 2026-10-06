@@ -19,10 +19,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.LineNumberReader;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
-
-import javolution.util.FastMap;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -45,7 +44,7 @@ public class BoatManager
 	
 	// =========================================================
 	// Data Field
-	private final Map<Integer, L2BoatInstance> _staticItems = new FastMap<Integer, L2BoatInstance>();
+	private final Map<Integer, L2BoatInstance> _staticItems = new LinkedHashMap<Integer, L2BoatInstance>();
 	
 	// =========================================================
 	// Constructor

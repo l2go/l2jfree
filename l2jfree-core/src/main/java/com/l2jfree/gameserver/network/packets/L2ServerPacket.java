@@ -14,7 +14,7 @@
  */
 package com.l2jfree.gameserver.network.packets;
 
-import gnu.trove.TIntArrayList;
+import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,7 +126,7 @@ public abstract class L2ServerPacket extends SendablePacket<L2Client, L2ClientPa
 	
 	private static int[] initPaperdollSlots(boolean writeJewels)
 	{
-		TIntArrayList slots = new TIntArrayList();
+		IntStream.Builder slots = IntStream.builder();
 		
 		slots.add(Inventory.PAPERDOLL_UNDER);
 		if (writeJewels)
@@ -159,7 +159,7 @@ public abstract class L2ServerPacket extends SendablePacket<L2Client, L2ClientPa
 		if (Config.PACKET_FINAL)
 			slots.add(Inventory.PAPERDOLL_BELT); // CT2.3
 			
-		return slots.toNativeArray();
+		return slots.build().toArray();
 	}
 	
 	protected final void writePaperdollObjectIds(PlayerInventory inv, boolean writeJewels)

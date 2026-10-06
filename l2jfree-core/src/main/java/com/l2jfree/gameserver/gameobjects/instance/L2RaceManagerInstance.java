@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.gameobjects.instance;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.gameobjects.L2Npc;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -42,7 +43,7 @@ public class L2RaceManagerInstance extends L2Npc
 	public static final int LANES = 8;
 	public static final int WINDOW_START = 0;
 	
-	private static FastList<L2RaceManagerInstance> _managers;
+	private static List<L2RaceManagerInstance> _managers;
 	protected static int _raceNumber = 4;
 	
 	// Time Constants
@@ -70,7 +71,7 @@ public class L2RaceManagerInstance extends L2Npc
 		if (_notInitialized)
 		{
 			_notInitialized = false;
-			_managers = new FastList<L2RaceManagerInstance>();
+			_managers = new ArrayList<L2RaceManagerInstance>();
 			
 			ThreadPoolManager s = ThreadPoolManager.getInstance();
 			s.scheduleGeneralAtFixedRate(new Announcement(SystemMessageId.MONSRACE_TICKETS_AVAILABLE_FOR_S1_RACE), 0,

@@ -14,10 +14,9 @@
  */
 package com.l2jfree.gameserver.instancemanager.lastimperialtomb;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastList;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -44,22 +43,22 @@ public class LastImperialTombManager extends BossLair
 	private static boolean _isInvaded = false;
 	
 	// Instance list of monsters.
-	protected static List<L2Npc> _hallAlarmDevices = new FastList<L2Npc>();
-	protected static List<L2Npc> _darkChoirPlayers = new FastList<L2Npc>();
-	protected static List<L2Npc> _darkChoirCaptains = new FastList<L2Npc>();
-	protected static List<L2Npc> _room1Monsters = new FastList<L2Npc>();
-	protected static List<L2Npc> _room2InsideMonsters = new FastList<L2Npc>();
-	protected static List<L2Npc> _room2OutsideMonsters = new FastList<L2Npc>();
+	protected static List<L2Npc> _hallAlarmDevices = new ArrayList<L2Npc>();
+	protected static List<L2Npc> _darkChoirPlayers = new ArrayList<L2Npc>();
+	protected static List<L2Npc> _darkChoirCaptains = new ArrayList<L2Npc>();
+	protected static List<L2Npc> _room1Monsters = new ArrayList<L2Npc>();
+	protected static List<L2Npc> _room2InsideMonsters = new ArrayList<L2Npc>();
+	protected static List<L2Npc> _room2OutsideMonsters = new ArrayList<L2Npc>();
 	
 	// Instance list of doors.
-	protected static List<L2DoorInstance> _room1Doors = new FastList<L2DoorInstance>();
-	protected static List<L2DoorInstance> _room2InsideDoors = new FastList<L2DoorInstance>();
-	protected static List<L2DoorInstance> _room2OutsideDoors = new FastList<L2DoorInstance>();
+	protected static List<L2DoorInstance> _room1Doors = new ArrayList<L2DoorInstance>();
+	protected static List<L2DoorInstance> _room2InsideDoors = new ArrayList<L2DoorInstance>();
+	protected static List<L2DoorInstance> _room2OutsideDoors = new ArrayList<L2DoorInstance>();
 	protected static L2DoorInstance _room3Door = null;
 	
 	// Instance list of players.
-	protected static List<L2Player> _partyLeaders = new FastList<L2Player>();
-	protected static List<L2Player> _registedPlayers = new FastList<L2Player>();
+	protected static List<L2Player> _partyLeaders = new ArrayList<L2Player>();
+	protected static List<L2Player> _registedPlayers = new ArrayList<L2Player>();
 	protected static L2Player _commander = null;
 	
 	// Frintezza's Magic Force Field Removal Scroll.

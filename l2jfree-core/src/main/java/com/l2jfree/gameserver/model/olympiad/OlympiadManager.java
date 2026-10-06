@@ -14,10 +14,10 @@
  */
 package com.l2jfree.gameserver.model.olympiad;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.olympiad.Olympiad.COMP_TYPE;
@@ -56,7 +56,7 @@ class OlympiadManager implements Runnable
 	
 	OlympiadManager()
 	{
-		_olympiadInstances = new FastMap<Integer, OlympiadGame>();
+		_olympiadInstances = new LinkedHashMap<Integer, OlympiadGame>();
 	}
 	
 	public static OlympiadManager getInstance()
@@ -70,7 +70,7 @@ class OlympiadManager implements Runnable
 		if (Olympiad.getInstance().isOlympiadEnd())
 			return;
 		
-		Map<Integer, OlympiadGameTask> _gamesQueue = new FastMap<Integer, OlympiadGameTask>();
+		Map<Integer, OlympiadGameTask> _gamesQueue = new LinkedHashMap<Integer, OlympiadGameTask>();
 		while (Olympiad.getInstance().inCompPeriod())
 		{
 			if (Olympiad.getNobleCount() == 0)
@@ -88,7 +88,7 @@ class OlympiadManager implements Runnable
 			int _gamesQueueSize = 0;
 			
 			// _compStarted = true;
-			FastList<Integer> readyClasses = Olympiad.hasEnoughRegisteredClassed();
+			List<Integer> readyClasses = Olympiad.hasEnoughRegisteredClassed();
 			boolean readyNonClassed = Olympiad.hasEnoughRegisteredNonClassed();
 			if (readyClasses != null || readyNonClassed)
 			{
@@ -366,8 +366,8 @@ class OlympiadManager implements Runnable
 		return (_olympiadInstances == null) ? null : _olympiadInstances;
 	}
 	
-	protected FastList<L2Player> getRandomClassList(Map<Integer, FastList<L2Player>> list,
-			FastList<Integer> classList)
+	protected List<L2Player> getRandomClassList(Map<Integer, List<L2Player>> list,
+			List<Integer> classList)
 	{
 		if (list == null || classList == null || list.size() == 0 || classList.size() == 0)
 			return null;
@@ -375,9 +375,9 @@ class OlympiadManager implements Runnable
 		return list.get(classList.get(Rnd.nextInt(classList.size())));
 	}
 	
-	protected FastList<L2Player> nextOpponents(FastList<L2Player> list)
+	protected List<L2Player> nextOpponents(List<L2Player> list)
 	{
-		FastList<L2Player> opponents = new FastList<L2Player>();
+		List<L2Player> opponents = new ArrayList<L2Player>();
 		if (list.size() == 0)
 			return opponents;
 		int loopCount = (list.size() / 2);
@@ -400,7 +400,7 @@ class OlympiadManager implements Runnable
 		
 	}
 	
-	protected boolean existNextOpponents(FastList<L2Player> list)
+	protected boolean existNextOpponents(List<L2Player> list)
 	{
 		if (list == null)
 			return false;
@@ -415,9 +415,9 @@ class OlympiadManager implements Runnable
 		
 	}
 	
-	protected FastMap<Integer, String> getAllTitles()
+	protected Map<Integer, String> getAllTitles()
 	{
-		FastMap<Integer, String> titles = new FastMap<Integer, String>();
+		Map<Integer, String> titles = new LinkedHashMap<Integer, String>();
 		
 		for (OlympiadGame instance : _olympiadInstances.values())
 		{

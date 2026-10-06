@@ -17,8 +17,7 @@ package com.l2jfree.gameserver.model.world;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,10 +80,10 @@ public final class L2World
 	private final L2EntityMap<L2Object> _objects = new L2ReadWriteEntityMap<L2Object>(50000);
 	
 	/** all the players in game */
-	private final Map<String, L2Player> _players = new FastMap<String, L2Player>(1000).setShared(true);
+	private final Map<String, L2Player> _players = new ConcurrentHashMap<String, L2Player>(1000);
 	
 	/** pets and their owner id */
-	private final Map<Integer, L2PetInstance> _pets = new FastMap<Integer, L2PetInstance>(100).setShared(true);
+	private final Map<Integer, L2PetInstance> _pets = new ConcurrentHashMap<Integer, L2PetInstance>(100);
 	
 	private final L2WorldRegion[][] _worldRegions = new L2WorldRegion[REGIONS_X + 1][REGIONS_Y + 1];
 	

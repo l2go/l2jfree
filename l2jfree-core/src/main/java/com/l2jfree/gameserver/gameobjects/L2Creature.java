@@ -20,14 +20,14 @@ import static com.l2jfree.gameserver.gameobjects.ai.CtrlIntention.AI_INTENTION_I
 import static com.l2jfree.gameserver.gameobjects.ai.CtrlIntention.AI_INTENTION_MOVE_TO;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -209,7 +209,7 @@ public abstract class L2Creature extends L2Object
 	/** Table of Calculators containing all used calculator */
 	private Calculator[] _calculators;
 	
-	/** FastMap(Integer, L2Skill) containing all skills of the L2Creature */
+	/** Map(Integer, L2Skill) containing all skills of the L2Creature */
 	private Map<Integer, L2Skill> _skills;
 	private ChanceSkillList _chanceSkills;
 	/** Current force buff this caster is casting to a target */
@@ -286,7 +286,7 @@ public abstract class L2Creature extends L2Object
 					skillChanged(null, skill);
 		}
 		else
-			_skills = new FastMap<Integer, L2Skill>().setShared(true);
+			_skills = new ConcurrentHashMap<Integer, L2Skill>();
 		
 		setIsInvul(true);
 	}
@@ -5583,10 +5583,10 @@ public abstract class L2Creature extends L2Object
 		if (newSkill == null)
 			return null;
 		
-		if (!(_skills instanceof FastMap<?, ?>)) // map returned by L2NpcTemplate.getSkills()
+		if (!(_skills instanceof Map<?, ?>)) // map returned by L2NpcTemplate.getSkills()
 		{
 			// L2NpcTemplate.getSkillS() is unmodifiable, so the entrySet() of it can't be used
-			FastMap<Integer, L2Skill> skills = new FastMap<Integer, L2Skill>(_skills.size()).setShared(true);
+			Map<Integer, L2Skill> skills = new ConcurrentHashMap<Integer, L2Skill>(_skills.size());
 			
 			for (Integer key : _skills.keySet())
 				skills.put(key, _skills.get(key));
@@ -6206,7 +6206,7 @@ public abstract class L2Creature extends L2Object
 			return false;
 		
 		if (_disabledSkills == null)
-			_disabledSkills = new FastMap<Integer, ScheduledFuture<?>>();
+			_disabledSkills = new LinkedHashMap<Integer, ScheduledFuture<?>>();
 		
 		final ScheduledFuture<?> oldTask = _disabledSkills.get(skillId);
 		

@@ -17,9 +17,8 @@ package com.l2jfree.gameserver.datatables;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,9 +51,9 @@ public class FishTable
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			_fishsEasy = new FastList<FishData>();
-			_fishsNormal = new FastList<FishData>();
-			_fishsHard = new FastList<FishData>();
+			_fishsEasy = new ArrayList<FishData>();
+			_fishsNormal = new ArrayList<FishData>();
+			_fishsHard = new ArrayList<FishData>();
 			FishData fish;
 			PreparedStatement statement =
 					con.prepareStatement("SELECT item_template_id, level, name, hp, hp_regeneration, fish_type, fish_group, guts, guts_check_interval_ms, bite_wait_ms, combat_duration_ms FROM fish ORDER BY item_template_id");
@@ -112,7 +111,7 @@ public class FishTable
 	 */
 	public List<FishData> getFish(int lvl, int type, int group)
 	{
-		List<FishData> result = new FastList<FishData>();
+		List<FishData> result = new ArrayList<FishData>();
 		List<FishData> _fishs = null;
 		switch (group)
 		{

@@ -20,11 +20,9 @@ import java.io.FileWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
-
-import javolution.text.TextBuilder;
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1234,7 +1232,7 @@ public class AdminSortMultisellItems implements IAdminCommandHandler
 	private void showHelp(L2Player activeChar)
 	{
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-		TextBuilder replyMSG = new TextBuilder("<html><title>Multisells from ItemTable</title><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><title>Multisells from ItemTable</title><body>");
 		
 		replyMSG.append("<center><font color=\"LEVEL\">[Multisell Engine by Darki699]</font></center><br><br>");
 		replyMSG.append("<center>//sortmulti <opCommand 1> <opCommand 2> ...</center><br>");
@@ -1409,7 +1407,7 @@ public class AdminSortMultisellItems implements IAdminCommandHandler
 	{
 		if (spellItemList == null)
 		{
-			spellItemList = new FastList<Integer>();
+			spellItemList = new ArrayList<Integer>();
 			
 			for (ClassId classId : ClassId.values())
 			{

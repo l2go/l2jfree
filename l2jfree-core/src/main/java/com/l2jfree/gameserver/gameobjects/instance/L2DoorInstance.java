@@ -50,7 +50,6 @@ import com.l2jfree.gameserver.network.packets.server.ConfirmDlg;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.network.packets.server.StaticObject;
 import com.l2jfree.lang.L2Math;
-import com.l2jfree.lang.L2TextBuilder;
 
 public class L2DoorInstance extends L2Creature
 {
@@ -540,7 +539,7 @@ public class L2DoorInstance extends L2Creature
 			sendInfo(player);
 			
 			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-			L2TextBuilder html1 = L2TextBuilder.newInstance("<html><body><table border=0>");
+			StringBuilder html1 = new StringBuilder("<html><body><table border=0>");
 			html1.append("<tr><td>S.Y.L. Says:</td></tr>");
 			html1.append("<tr><td>Current HP  " + getStatus().getCurrentHp() + "</td></tr>");
 			html1.append("<tr><td>Max HP      " + getMaxHp() + "</td></tr>");
@@ -568,7 +567,7 @@ public class L2DoorInstance extends L2Creature
 			html1.append("<td><button value=\"Delete\" action=\"bypass -h admin_delete\" width=40 height=15 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\"></td>");
 			html1.append("</tr></table></body></html>");
 			
-			html.setHtml(html1.moveToString());
+			html.setHtml(html1.toString());
 			player.sendPacket(html);
 		}
 		else

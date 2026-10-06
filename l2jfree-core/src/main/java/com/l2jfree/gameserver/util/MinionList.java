@@ -14,11 +14,10 @@
  */
 package com.l2jfree.gameserver.util;
 
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-
-import javolution.util.FastMap;
-import javolution.util.FastSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +42,7 @@ public final class MinionList
 	
 	/** List containing the current spawned minions for this L2MonsterInstance */
 	private final Set<L2MinionInstance> minionReferences = new L2FastSet<L2MinionInstance>().setShared(true);
-	private final Map<L2MinionInstance, Long> _respawnTasks = new FastMap<L2MinionInstance, Long>().setShared(true);
+	private final Map<L2MinionInstance, Long> _respawnTasks = new ConcurrentHashMap<L2MinionInstance, Long>();
 	private final L2MonsterInstance master;
 	
 	public MinionList(L2MonsterInstance pMaster)
@@ -87,7 +86,7 @@ public final class MinionList
 	
 	public int lazyCountSpawnedMinionsGroups()
 	{
-		Set<Integer> seenGroups = new FastSet<Integer>();
+		Set<Integer> seenGroups = new LinkedHashSet<Integer>();
 		for (L2MinionInstance minion : getSpawnedMinions())
 		{
 			if (minion != null)

@@ -20,7 +20,6 @@ package com.l2jfree.gameserver.handler.admincommands;
  * 
  */
 
-import javolution.text.TextBuilder;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.handler.IAdminCommandHandler;
@@ -140,7 +139,7 @@ public class AdminSHEngine implements IAdminCommandHandler
 	public void showMainPage(L2Player activeChar)
 	{
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-		TextBuilder replyMSG = new TextBuilder("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		
 		replyMSG.append("<title>[Scavenger Hunt Engine]</title>");
 		replyMSG.append("<center><font color=\"LEVEL\">[Main Page]</font></center><br><br>");

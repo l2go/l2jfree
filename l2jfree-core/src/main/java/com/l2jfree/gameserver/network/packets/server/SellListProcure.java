@@ -14,11 +14,10 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.instancemanager.CastleManager;
@@ -32,8 +31,8 @@ public class SellListProcure extends L2ServerPacket
 	
 	private final L2Player _activeChar;
 	private final long _money;
-	private final Map<L2ItemInstance, Long> _sellList = new FastMap<L2ItemInstance, Long>();
-	private List<CropProcure> _procureList = new FastList<CropProcure>();
+	private final Map<L2ItemInstance, Long> _sellList = new LinkedHashMap<L2ItemInstance, Long>();
+	private List<CropProcure> _procureList = new ArrayList<CropProcure>();
 	private final int _castle;
 	
 	public SellListProcure(L2Player player, int castleId)

@@ -15,18 +15,21 @@
 package com.l2jfree.util;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * A map that allocates its backing map on the first write. A shared map is backed by a {@link ConcurrentHashMap},
+ * so it does not keep insertion order; lookups with a {@code null} key find nothing instead of failing.
+ * 
  * @author NB4L1
  */
 public final class LazyFastMap<K, V> implements Map<K, V>
 {
-	private boolean _initialized = false;
-	private Map<K, V> _map = L2Collections.emptyMap();
+	private volatile boolean _initialized = false;
+	private volatile Map<K, V> _map = L2Collections.emptyMap();
 	
 	private boolean _shared = false;
 	
@@ -38,7 +41,7 @@ public final class LazyFastMap<K, V> implements Map<K, V>
 			{
 				if (!_initialized)
 				{
-					_map = new FastMap<K, V>().setShared(_shared);
+					_map = _shared ? new ConcurrentHashMap<K, V>() : new LinkedHashMap<K, V>();
 					_initialized = true;
 				}
 			}
@@ -53,7 +56,7 @@ public final class LazyFastMap<K, V> implements Map<K, V>
 		{
 			if (_initialized)
 			{
-				((FastMap<K, V>)_map).setShared(true);
+				_map = new ConcurrentHashMap<K, V>(_map);
 			}
 		}
 		
@@ -69,13 +72,13 @@ public final class LazyFastMap<K, V> implements Map<K, V>
 	@Override
 	public boolean containsKey(Object key)
 	{
-		return _map.containsKey(key);
+		return key != null && _map.containsKey(key);
 	}
 	
 	@Override
 	public boolean containsValue(Object value)
 	{
-		return _map.containsValue(value);
+		return value != null && _map.containsValue(value);
 	}
 	
 	@Override
@@ -87,7 +90,7 @@ public final class LazyFastMap<K, V> implements Map<K, V>
 	@Override
 	public V get(Object key)
 	{
-		return _map.get(key);
+		return key == null ? null : _map.get(key);
 	}
 	
 	@Override
@@ -121,7 +124,7 @@ public final class LazyFastMap<K, V> implements Map<K, V>
 	@Override
 	public V remove(Object key)
 	{
-		return _map.remove(key);
+		return key == null ? null : _map.remove(key);
 	}
 	
 	@Override

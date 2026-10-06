@@ -32,7 +32,6 @@ import com.l2jfree.gameserver.network.packets.server.TutorialShowHtml;
 import com.l2jfree.gameserver.network.packets.server.TutorialShowQuestionMark;
 import com.l2jfree.gameserver.util.FloodProtector;
 import com.l2jfree.gameserver.util.FloodProtector.Protected;
-import com.l2jfree.lang.L2TextBuilder;
 
 public final class L2ClassMasterInstance extends L2NpcInstance
 {
@@ -84,7 +83,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 			}
 			
 			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-			L2TextBuilder sb = L2TextBuilder.newInstance();
+			StringBuilder sb = new StringBuilder();
 			sb.append("<html><body>");
 			sb.append(getName() + ":<br>");
 			sb.append("<br>");
@@ -181,7 +180,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 			for (Quest q : Quest.findAllEvents())
 				sb.append("Event: <a action=\"bypass -h Quest " + q.getName() + "\">" + q.getDescr() + "</a><br>");
 			sb.append("</body></html>");
-			html.setHtml(sb.moveToString());
+			html.setHtml(sb.toString());
 			player.sendPacket(html);
 			
 		}
@@ -272,14 +271,14 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 				player.sendPacket(SystemMessageId.CLASS_TRANSFER);
 			
 			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-			L2TextBuilder sb = L2TextBuilder.newInstance();
+			StringBuilder sb = new StringBuilder();
 			sb.append("<html><body>");
 			sb.append(getName() + ":<br>");
 			sb.append("<br>");
 			sb.append("You have now become a <font color=\"LEVEL\">"
 					+ CharTemplateTable.getClassNameById(player.getClassId().getId()) + "</font>.");
 			sb.append("</body></html>");
-			html.setHtml(sb.moveToString());
+			html.setHtml(sb.toString());
 			player.sendPacket(html);
 			
 			// Update the overloaded status of the L2Player
@@ -440,7 +439,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 				final int minLevel = getMinLevel(currentClassId.level());
 				if (player.getLevel() >= minLevel || Config.ALT_CLASS_MASTER_ENTIRE_TREE)
 				{
-					final L2TextBuilder menu = L2TextBuilder.newInstance(100);
+					final StringBuilder menu = new StringBuilder(100);
 					for (ClassId cid : ClassId.values())
 					{
 						if (validateClassId(currentClassId, cid) && cid.level() == level)
@@ -457,7 +456,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 					{
 						html.setFile("data/html/classmaster/template.htm");
 						html.replace("%name%", CharTemplateTable.getClassNameById(currentClassId.getId()));
-						html.replace("%menu%", menu.moveToString());
+						html.replace("%menu%", menu.toString());
 					}
 					else
 					{
@@ -493,7 +492,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 		
 		msg = msg.replaceAll("%name%", CharTemplateTable.getClassNameById(currentClassId.getId()));
 		
-		final L2TextBuilder menu = L2TextBuilder.newInstance(100);
+		final StringBuilder menu = new StringBuilder(100);
 		for (ClassId cid : ClassId.values())
 		{
 			if (validateClassId(currentClassId, cid))
@@ -520,7 +519,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 			menu.append("</table><br><br>");
 		}
 		
-		msg = msg.replaceAll("%menu%", menu.moveToString());
+		msg = msg.replaceAll("%menu%", menu.toString());
 		player.sendPacket(new TutorialShowHtml(msg));
 	}
 	

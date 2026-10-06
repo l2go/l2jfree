@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.gameobjects.instance;
 
-import javolution.util.FastMap;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import com.l2jfree.gameserver.datatables.ClanTable;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.status.CCHLeaderStatus;
@@ -33,7 +34,7 @@ import com.l2jfree.gameserver.model.entity.ClanHall;
  */
 public final class L2CCHBossInstance extends L2MonsterInstance
 {
-	private final FastMap<Integer, Integer> _damage;
+	private final Map<Integer, Integer> _damage;
 	private final int _hideoutIndex;
 	
 	/**
@@ -44,7 +45,7 @@ public final class L2CCHBossInstance extends L2MonsterInstance
 	{
 		super(objectId, template);
 		getStatus();
-		_damage = new FastMap<Integer, Integer>().setShared(true);
+		_damage = new ConcurrentHashMap<Integer, Integer>();
 		switch (getNpcId())
 		{
 			case 35410:
@@ -89,7 +90,7 @@ public final class L2CCHBossInstance extends L2MonsterInstance
 		return true;
 	}
 	
-	public final FastMap<Integer, Integer> getDamageTable()
+	public final Map<Integer, Integer> getDamageTable()
 	{
 		return _damage;
 	}

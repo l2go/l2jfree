@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.gameobjects.itemcontainer;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import com.l2jfree.gameserver.gameobjects.L2Npc;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
@@ -64,7 +63,7 @@ public class NpcInventory extends Inventory
 	 */
 	public L2ItemInstance[] getAllItemsByItemId(int itemId)
 	{
-		List<L2ItemInstance> list = new FastList<L2ItemInstance>();
+		List<L2ItemInstance> list = new ArrayList<L2ItemInstance>();
 		for (L2ItemInstance item : _items)
 		{
 			if (item.getItemId() == itemId)

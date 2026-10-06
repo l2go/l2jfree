@@ -18,8 +18,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import javolution.util.FastMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class CastleManager implements InstanceListManager
 {
 	protected static Logger _log = LoggerFactory.getLogger(CastleManager.class);
 	
-	private FastMap<Integer, Castle> _castles;
+	private Map<Integer, Castle> _castles;
 	
 	public static final CastleManager getInstance()
 	{
@@ -162,10 +162,10 @@ public class CastleManager implements InstanceListManager
 		return null;
 	}
 	
-	public final FastMap<Integer, Castle> getCastles()
+	public final Map<Integer, Castle> getCastles()
 	{
 		if (_castles == null)
-			_castles = new FastMap<Integer, Castle>();
+			_castles = new LinkedHashMap<Integer, Castle>();
 		return _castles;
 	}
 	

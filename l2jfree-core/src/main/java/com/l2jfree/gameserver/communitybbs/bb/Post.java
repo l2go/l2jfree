@@ -19,9 +19,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +56,7 @@ public class Post
 	//public enum ConstructorType {REPLY, CREATE };
 	public Post(String _PostOwner, int _PostOwnerID, long date, int tid, int _PostForumID, String txt)
 	{
-		_post = new FastList<CPost>();
+		_post = new ArrayList<CPost>();
 		CPost cp = new CPost();
 		cp.postId = 0;
 		cp.postOwner = _PostOwner;
@@ -104,7 +103,7 @@ public class Post
 	
 	public Post(Topic t)
 	{
-		_post = new FastList<CPost>();
+		_post = new ArrayList<CPost>();
 		load(t);
 	}
 	

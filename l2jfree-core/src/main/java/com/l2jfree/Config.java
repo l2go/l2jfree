@@ -24,14 +24,13 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
-import javolution.util.FastMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -2610,7 +2609,7 @@ public final class Config
 	// *******************************************************************************************
 	public static final String COMMAND_PRIVILEGES_FILE = "./config/command-privileges.properties";
 	// *******************************************************************************************
-	public static final Map<String, Integer> GM_COMMAND_PRIVILEGES = new FastMap<String, Integer>();
+	public static final Map<String, Integer> GM_COMMAND_PRIVILEGES = new LinkedHashMap<String, Integer>();
 	
 	// *******************************************************************************************
 	private static final class CommandPrivilegesConfig extends ConfigPropertiesLoader
@@ -3836,15 +3835,15 @@ public final class Config
 	
 	public static class ClassMasterSettings
 	{
-		private final FastMap<Integer, FastMap<Integer, Integer>> _claimItems;
-		private final FastMap<Integer, FastMap<Integer, Integer>> _rewardItems;
-		private final FastMap<Integer, Boolean> _allowedClassChange;
+		private final Map<Integer, Map<Integer, Integer>> _claimItems;
+		private final Map<Integer, Map<Integer, Integer>> _rewardItems;
+		private final Map<Integer, Boolean> _allowedClassChange;
 		
 		public ClassMasterSettings(String _configLine)
 		{
-			_claimItems = new FastMap<Integer, FastMap<Integer, Integer>>();
-			_rewardItems = new FastMap<Integer, FastMap<Integer, Integer>>();
-			_allowedClassChange = new FastMap<Integer, Boolean>();
+			_claimItems = new LinkedHashMap<Integer, Map<Integer, Integer>>();
+			_rewardItems = new LinkedHashMap<Integer, Map<Integer, Integer>>();
+			_allowedClassChange = new LinkedHashMap<Integer, Boolean>();
 			if (_configLine != null)
 				parseConfigLine(_configLine.trim());
 		}
@@ -3860,7 +3859,7 @@ public final class Config
 				
 				_allowedClassChange.put(job, true);
 				
-				FastMap<Integer, Integer> _items = new FastMap<Integer, Integer>();
+				Map<Integer, Integer> _items = new LinkedHashMap<Integer, Integer>();
 				// parse items needed for class change
 				if (st.hasMoreTokens())
 				{
@@ -3877,7 +3876,7 @@ public final class Config
 				
 				_claimItems.put(job, _items);
 				
-				_items = new FastMap<Integer, Integer>();
+				_items = new LinkedHashMap<Integer, Integer>();
 				// parse gifts after class change
 				if (st.hasMoreTokens())
 				{
@@ -3906,7 +3905,7 @@ public final class Config
 			return false;
 		}
 		
-		public FastMap<Integer, Integer> getRewardItems(int job)
+		public Map<Integer, Integer> getRewardItems(int job)
 		{
 			if (_rewardItems.containsKey(job))
 				return _rewardItems.get(job);
@@ -3914,7 +3913,7 @@ public final class Config
 			return null;
 		}
 		
-		public FastMap<Integer, Integer> getRequireItems(int job)
+		public Map<Integer, Integer> getRequireItems(int job)
 		{
 			if (_claimItems.containsKey(job))
 				return _claimItems.get(job);

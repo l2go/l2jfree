@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
-import javolution.util.FastList;
 
+import java.util.List;
 import com.l2jfree.gameserver.instancemanager.FortSiegeManager;
 import com.l2jfree.gameserver.instancemanager.FortSiegeManager.SiegeSpawn;
 import com.l2jfree.gameserver.model.entity.Fort;
@@ -63,7 +63,7 @@ public class ExShowFortressSiegeInfo extends L2ServerPacket
 		
 		writeD(_fortId); // Fortress Id
 		writeD(_size); // Total Barracks Count
-		FastList<SiegeSpawn> commanders = FortSiegeManager.getInstance().getCommanderSpawnList(_fortId);
+		List<SiegeSpawn> commanders = FortSiegeManager.getInstance().getCommanderSpawnList(_fortId);
 		if (commanders != null && !commanders.isEmpty())
 		{
 			switch (commanders.size())

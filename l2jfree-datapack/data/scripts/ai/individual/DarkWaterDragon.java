@@ -14,10 +14,13 @@
  */
 package ai.individual;
 
-import javolution.util.FastList;
-import javolution.util.FastMap;
-import javolution.util.FastSet;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import ai.group_template.L2AttackableAIScript;
 
 import com.l2jfree.gameserver.datatables.NpcTable;
@@ -36,9 +39,9 @@ public class DarkWaterDragon extends L2AttackableAIScript
 	private static final int DETRACTOR1 = 22270;
 	private static final int DETRACTOR2 = 22271;
 	private static int _HasSpawned1; //If true, first Shades were already spawned
-	private static FastSet<Integer> secondSpawn = new FastSet<Integer>(); //Used to track if second Shades were already spawned
-	private static FastSet<Integer> myTrackingSet = new FastSet<Integer>(); //Used to track instances of npcs
-	private static FastMap<Integer, L2Player> _idmap = new FastMap<Integer, L2Player>(); //Used to track instances of npcs
+	private static Set<Integer> secondSpawn = new LinkedHashSet<Integer>(); //Used to track if second Shades were already spawned
+	private static Set<Integer> myTrackingSet = new LinkedHashSet<Integer>(); //Used to track instances of npcs
+	private static Map<Integer, L2Player> _idmap = new LinkedHashMap<Integer, L2Player>(); //Used to track instances of npcs
 	
 	public DarkWaterDragon(int id, String name, String descr)
 	{
@@ -143,7 +146,7 @@ public class DarkWaterDragon extends L2AttackableAIScript
 				//Spawn first 5 shades on first attack on Dark Water Dragon
 				int x = npc.getX();
 				int y = npc.getY();
-				FastList<L2Attackable> _Shades = new FastList<L2Attackable>();
+				List<L2Attackable> _Shades = new ArrayList<L2Attackable>();
 				_Shades.add((L2Attackable)addSpawn(SHADE1, x + 100, y + 100, npc.getZ(), 0, false, 0));
 				_Shades.add((L2Attackable)addSpawn(SHADE2, x + 100, y - 100, npc.getZ(), 0, false, 0));
 				_Shades.add((L2Attackable)addSpawn(SHADE1, x - 100, y + 100, npc.getZ(), 0, false, 0));
@@ -165,7 +168,7 @@ public class DarkWaterDragon extends L2AttackableAIScript
 				//Spawn second 5 shades on half hp of on Dark Water Dragon
 				int x = npc.getX();
 				int y = npc.getY();
-				FastList<L2Attackable> _Shades = new FastList<L2Attackable>();
+				List<L2Attackable> _Shades = new ArrayList<L2Attackable>();
 				_Shades.add((L2Attackable)this.addSpawn(SHADE2, x + 100, y + 100, npc.getZ(), 0, false, 0));
 				_Shades.add((L2Attackable)this.addSpawn(SHADE1, x + 100, y - 100, npc.getZ(), 0, false, 0));
 				_Shades.add((L2Attackable)this.addSpawn(SHADE2, x - 100, y + 100, npc.getZ(), 0, false, 0));

@@ -47,7 +47,6 @@ import com.l2jfree.gameserver.network.packets.server.MagicSkillUse;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.network.packets.server.StatusUpdate;
 import com.l2jfree.gameserver.persistence.WorldTransaction;
-import com.l2jfree.lang.L2TextBuilder;
 
 public class DM
 {
@@ -324,11 +323,11 @@ public class DM
 			_topPlayer.sendPacket(su);
 			
 			NpcHtmlMessage nhm = new NpcHtmlMessage(5);
-			L2TextBuilder replyMSG = L2TextBuilder.newInstance("");
+			StringBuilder replyMSG = new StringBuilder("");
 			
 			replyMSG.append("<html><body>You won the event. Look in your inventory for the reward.</body></html>");
 			
-			nhm.setHtml(replyMSG.moveToString());
+			nhm.setHtml(replyMSG.toString());
 			_topPlayer.sendPacket(nhm);
 			
 			// Send a Server->Client ActionFailed to the L2Player in order to avoid that the client wait another packet
@@ -562,7 +561,7 @@ public class DM
 		{
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 			
-			L2TextBuilder replyMSG = L2TextBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = new StringBuilder("<html><body>");
 			replyMSG.append("DM Match<br><br><br>");
 			replyMSG.append("Current event...<br1>");
 			replyMSG.append("	... name:&nbsp;<font color=\"00FF00\">" + _eventName + "</font><br1>");
@@ -609,7 +608,7 @@ public class DM
 			}
 			
 			replyMSG.append("</body></html>");
-			adminReply.setHtml(replyMSG.moveToString());
+			adminReply.setHtml(replyMSG.toString());
 			eventPlayer.sendPacket(adminReply);
 			
 			// Send a Server->Client ActionFailed to the L2Player in order to avoid that the client wait another packet

@@ -14,8 +14,10 @@
  */
 package com.l2jfree.gameserver.model.entity.faction;
 
-import javolution.util.FastList;
-import javolution.util.FastMap;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author evill33t
@@ -28,9 +30,9 @@ public class Faction
 	private float _points = 0;
 	private int _joinprice = 0;
 	private int _side = 0; // 0 = Neutral 1 = Good 2 = Evil
-	private final FastList<Integer> _list_classes = new FastList<Integer>();
-	private final FastList<Integer> _list_npcs = new FastList<Integer>();
-	private final FastMap<Integer, String> _list_title = new FastMap<Integer, String>();
+	private final List<Integer> _list_classes = new ArrayList<Integer>();
+	private final List<Integer> _list_npcs = new ArrayList<Integer>();
+	private final Map<Integer, String> _list_title = new LinkedHashMap<Integer, String>();
 	
 	/**
 	 * The faction system has no schema in Platform 3.0 (the tables factions, faction_members, faction_quests, and
@@ -66,17 +68,17 @@ public class Faction
 		return _points;
 	}
 	
-	public final FastList<Integer> getClassList()
+	public final List<Integer> getClassList()
 	{
 		return _list_classes;
 	}
 	
-	public final FastList<Integer> getNpcList()
+	public final List<Integer> getNpcList()
 	{
 		return _list_npcs;
 	}
 	
-	public final FastMap<Integer, String> getTitle()
+	public final Map<Integer, String> getTitle()
 	{
 		return _list_title;
 	}

@@ -14,9 +14,9 @@
  */
 package com.l2jfree.gameserver.model.entity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
-
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,7 +120,7 @@ public class Duel
 		private final double _cp;
 		private final boolean _paDuel;
 		private int _x, _y, _z;
-		private FastList<L2Effect> _debuffs;
+		private List<L2Effect> _debuffs;
 		
 		public PlayerCondition(L2Player player, boolean partyDuel)
 		{
@@ -161,7 +161,7 @@ public class Duel
 		public void registerDebuff(L2Effect debuff)
 		{
 			if (_debuffs == null)
-				_debuffs = new FastList<L2Effect>();
+				_debuffs = new ArrayList<L2Effect>();
 			
 			_debuffs.add(debuff);
 		}

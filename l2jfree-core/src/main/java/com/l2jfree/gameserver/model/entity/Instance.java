@@ -19,12 +19,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,7 +91,7 @@ public class Instance
 	private String _name;
 	private final Set<Integer> _players = new L2FastSet<Integer>().setShared(true);
 	private final Set<L2Npc> _npcs = new L2FastSet<L2Npc>().setShared(true);
-	private final Map<Integer, L2DoorInstance> _doors = new FastMap<Integer, L2DoorInstance>().setShared(true);
+	private final Map<Integer, L2DoorInstance> _doors = new ConcurrentHashMap<Integer, L2DoorInstance>();
 	private L2DoorInstance[] _doorArray;
 	private Location _spawnLoc;
 	private boolean _allowSummon = true;

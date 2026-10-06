@@ -17,9 +17,8 @@ package com.l2jfree.gameserver.communitybbs.Manager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +43,7 @@ public class ForumsBBSManager extends BaseBBSManager
 	
 	private ForumsBBSManager()
 	{
-		_table = new FastList<Forum>();
+		_table = new ArrayList<Forum>();
 		load();
 	}
 	

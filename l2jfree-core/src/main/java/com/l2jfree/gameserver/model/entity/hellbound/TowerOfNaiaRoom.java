@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.model.entity.hellbound;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
-import javolution.util.FastList;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
@@ -45,7 +45,7 @@ public final class TowerOfNaiaRoom
 	private int[] _postOpenDoorIds = null;
 	private int[] _postCloseDoorIds = null;
 	
-	private FastList<SpawnData> _mobSpawnData = new FastList<SpawnData>();
+	private List<SpawnData> _mobSpawnData = new ArrayList<SpawnData>();
 	private SpawnData _ingeniousContraptionSpawnData = null;
 	
 	public void init(final int roomId)

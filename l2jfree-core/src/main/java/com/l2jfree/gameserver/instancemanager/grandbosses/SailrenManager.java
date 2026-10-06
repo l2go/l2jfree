@@ -14,11 +14,10 @@
  */
 package com.l2jfree.gameserver.instancemanager.grandbosses;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastList;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -56,8 +55,8 @@ public class SailrenManager extends BossLair
 	
 	// Teleport cube location.
 	private final int _sailrenCubeLocation[][] = { { 27734, -6838, -1982, 0 } };
-	protected List<L2Spawn> _sailrenCubeSpawn = new FastList<L2Spawn>();
-	protected List<L2Npc> _sailrenCube = new FastList<L2Npc>();
+	protected List<L2Spawn> _sailrenCubeSpawn = new ArrayList<L2Spawn>();
+	protected List<L2Npc> _sailrenCube = new ArrayList<L2Npc>();
 	
 	// Spawn data of monsters
 	protected L2Spawn _velociraptorSpawn; // Velociraptor
@@ -238,7 +237,7 @@ public class SailrenManager extends BossLair
 		}
 		else
 		{
-			List<L2Player> members = new FastList<L2Player>(); // list of member of teleport candidate.
+			List<L2Player> members = new ArrayList<L2Player>(); // list of member of teleport candidate.
 			for (L2Player mem : pc.getParty().getPartyMembers())
 			{
 				// teleporting it within alive and the range of recognition of the leader of the party.

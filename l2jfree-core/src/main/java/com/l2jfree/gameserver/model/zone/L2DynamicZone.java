@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.model.zone;
 
+import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastMap;
 
 import org.w3c.dom.Node;
 
@@ -102,10 +101,10 @@ public class L2DynamicZone extends L2Zone
 		
 		private boolean isActiveRegion()
 		{
-			final FastMap<L2Creature, Boolean> map = getCharactersInsideMap();
+			final Map<L2Creature, Boolean> map = getCharactersInsideMap();
 			
-			for (FastMap.Entry<L2Creature, Boolean> e = map.head(), end = map.tail(); (e = e.getNext()) != end;)
-				if (e.getKey().isInActiveRegion())
+			for (L2Creature character : map.keySet())
+				if (character.isInActiveRegion())
 					return true;
 			
 			return false;

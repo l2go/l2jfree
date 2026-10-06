@@ -14,7 +14,8 @@
  */
 package com.l2jfree.gameserver.model.items.manufacture;
 
-import javolution.util.FastList;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class ...
@@ -23,13 +24,13 @@ import javolution.util.FastList;
  */
 public class L2ManufactureList
 {
-	private FastList<L2ManufactureItem> _list;
+	private List<L2ManufactureItem> _list;
 	private boolean _confirmed;
 	private String _manufactureStoreName;
 	
 	public L2ManufactureList()
 	{
-		_list = new FastList<L2ManufactureItem>();
+		_list = new ArrayList<L2ManufactureItem>();
 		_confirmed = false;
 	}
 	
@@ -69,12 +70,12 @@ public class L2ManufactureList
 		_list.add(item);
 	}
 	
-	public FastList<L2ManufactureItem> getList()
+	public List<L2ManufactureItem> getList()
 	{
 		return _list;
 	}
 	
-	public void setList(FastList<L2ManufactureItem> list)
+	public void setList(List<L2ManufactureItem> list)
 	{
 		_list = list;
 	}

@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
-import javolution.util.FastMap;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import com.l2jfree.gameserver.instancemanager.CastleManager;
 import com.l2jfree.gameserver.instancemanager.CastleManorManager;
 import com.l2jfree.gameserver.instancemanager.CastleManorManager.CropProcure;
@@ -36,12 +37,12 @@ public class ExShowProcureCropDetail extends L2ServerPacket
 	private static final String _S__FE_22_EXSHOWPROCURECROPDETAIL = "[S] FE:22 ExShowProcureCropDetail";
 	
 	private final int _cropId;
-	private final FastMap<Integer, CropProcure> _castleCrops;
+	private final Map<Integer, CropProcure> _castleCrops;
 	
 	public ExShowProcureCropDetail(int cropId)
 	{
 		_cropId = cropId;
-		_castleCrops = new FastMap<Integer, CropProcure>();
+		_castleCrops = new LinkedHashMap<Integer, CropProcure>();
 		
 		for (Castle c : CastleManager.getInstance().getCastles().values())
 		{

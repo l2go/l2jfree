@@ -57,7 +57,7 @@ public class NewCrypt
 		}
 		
 		long chksum = 0;
-		int count = size - 4;
+		int count = offset + size - 4; // the end of the words before the checksum, in the buffer
 		long check = -1;
 		int i;
 		
@@ -87,7 +87,7 @@ public class NewCrypt
 	public static void appendChecksum(byte[] raw, final int offset, final int size)
 	{
 		long chksum = 0;
-		int count = size - 4;
+		int count = offset + size - 4; // the end of the words before the checksum, in the buffer
 		long ecx;
 		int i;
 		
@@ -143,7 +143,7 @@ public class NewCrypt
 	 */
 	public static void encXORPass(byte[] raw, final int offset, final int size, int key)
 	{
-		int stop = size - 8;
+		int stop = offset + size - 8; // where the running sum is stored, in the buffer
 		int pos = 4 + offset;
 		int edx;
 		int ecx = key; // Initial xor key

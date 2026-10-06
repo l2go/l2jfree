@@ -43,7 +43,6 @@ import com.l2jfree.gameserver.network.packets.server.ActionFailed;
 import com.l2jfree.gameserver.network.packets.server.CreatureSay;
 import com.l2jfree.gameserver.network.packets.server.MagicSkillUse;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
-import com.l2jfree.lang.L2TextBuilder;
 
 public class TvTIMain
 {
@@ -211,7 +210,7 @@ public class TvTIMain
 			}
 			
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-			L2TextBuilder replyMSG = L2TextBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = new StringBuilder("<html><body>");
 			
 			replyMSG.append("<title>Team vs Team Instanced</title>");
 			replyMSG.append("<table width=\"300\"><tr>");
@@ -259,7 +258,7 @@ public class TvTIMain
 			replyMSG.append("</tr></table>");
 			
 			replyMSG.append("</body></html>");
-			adminReply.setHtml(replyMSG.moveToString());
+			adminReply.setHtml(replyMSG.toString());
 			eventPlayer.sendPacket(adminReply);
 			
 			// Send a Server->Client ActionFailed to the L2Player in order
@@ -277,7 +276,7 @@ public class TvTIMain
 		try
 		{
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-			L2TextBuilder replyMSG = L2TextBuilder.newInstance("<html><body>");
+			StringBuilder replyMSG = new StringBuilder("<html><body>");
 			
 			replyMSG.append("<title>Team vs Team Instanced</title>");
 			replyMSG.append("<table width=\"300\"><tr>");
@@ -318,7 +317,7 @@ public class TvTIMain
 			replyMSG.append("</tr></table>");
 			
 			replyMSG.append("</body></html>");
-			adminReply.setHtml(replyMSG.moveToString());
+			adminReply.setHtml(replyMSG.toString());
 			eventPlayer.sendPacket(adminReply);
 			
 			// Send a Server->Client ActionFailed to the L2Player in order

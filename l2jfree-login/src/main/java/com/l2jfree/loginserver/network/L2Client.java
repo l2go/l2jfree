@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import io.netty.channel.Channel;
 
 import com.l2jfree.contract.SessionKey;
-import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.loginserver.crypt.LoginCrypt;
 import com.l2jfree.loginserver.manager.LoginManager;
 import com.l2jfree.loginserver.network.packets.L2ClientPacket;
@@ -308,7 +307,7 @@ public final class L2Client extends Connection<L2Client, L2ClientPacket, L2Serve
 	@Override
 	public String toString()
 	{
-		L2TextBuilder tb = L2TextBuilder.newInstance();
+		StringBuilder tb = new StringBuilder();
 		
 		tb.append("[State: ").append(getState());
 		
@@ -322,7 +321,7 @@ public final class L2Client extends Connection<L2Client, L2ClientPacket, L2Serve
 		
 		tb.append("]");
 		
-		return tb.moveToString();
+		return tb.toString();
 	}
 	
 	@Override

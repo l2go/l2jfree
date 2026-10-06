@@ -23,14 +23,13 @@ import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.script.Compilable;
 import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +48,7 @@ public class CompiledScriptCache implements Serializable
 	
 	private static final Logger _log = LoggerFactory.getLogger(CompiledScriptCache.class);
 	
-	private final Map<String, CompiledScriptHolder> _compiledScriptCache = new FastMap<String, CompiledScriptHolder>();
+	private final Map<String, CompiledScriptHolder> _compiledScriptCache = new LinkedHashMap<String, CompiledScriptHolder>();
 	private transient boolean _modified = false;
 	
 	public CompiledScript loadCompiledScript(ScriptEngine engine, File file) throws IOException, ScriptException

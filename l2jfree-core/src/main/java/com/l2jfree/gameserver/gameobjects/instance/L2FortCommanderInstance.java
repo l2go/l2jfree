@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.gameobjects.instance;
 
-import javolution.util.FastList;
 
+import java.util.List;
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -110,7 +110,7 @@ public class L2FortCommanderInstance extends L2FortSiegeGuardInstance
 		L2Spawn spawn = getSpawn();
 		if (spawn != null && canTalk())
 		{
-			FastList<SiegeSpawn> commanders =
+			List<SiegeSpawn> commanders =
 					FortSiegeManager.getInstance().getCommanderSpawnList(getFort().getFortId());
 			for (SiegeSpawn spawn2 : commanders)
 			{

@@ -14,10 +14,9 @@
  */
 package com.l2jfree.gameserver.handler.admincommands;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
-
-import javolution.text.TextBuilder;
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -511,7 +510,7 @@ public class AdminSpawn implements IAdminCommandHandler
 		{
 		}
 		
-		FastList<L2NpcTemplate> list = new FastList<L2NpcTemplate>();
+		List<L2NpcTemplate> list = new ArrayList<L2NpcTemplate>();
 		
 		for (L2NpcTemplate t : NpcTable.getInstance().getAllTemplates())
 		{
@@ -541,7 +540,7 @@ public class AdminSpawn implements IAdminCommandHandler
 		if (end - start > maxPerPage)
 			end = start + maxPerPage;
 		
-		TextBuilder replyMSG = new TextBuilder("<html><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><body>");
 		
 		replyMSG.append("<table width=260><tr>");
 		if (page == 0)
@@ -631,7 +630,7 @@ public class AdminSpawn implements IAdminCommandHandler
 	 */
 	private void showSpawns(L2Player activeChar, int npcId, int page, boolean html)
 	{
-		FastList<L2Spawn> list = new FastList<L2Spawn>();
+		List<L2Spawn> list = new ArrayList<L2Spawn>();
 		
 		for (L2Spawn spawn : SpawnTable.getInstance().getAllTemplates().values())
 			if (npcId == spawn.getNpcId())
@@ -657,7 +656,7 @@ public class AdminSpawn implements IAdminCommandHandler
 			if (end - start > maxPerPage)
 				end = start + maxPerPage;
 			
-			TextBuilder replyMSG = new TextBuilder("<html><body>");
+			StringBuilder replyMSG = new StringBuilder("<html><body>");
 			
 			replyMSG.append("<table width=260><tr>");
 			if (page == 0)

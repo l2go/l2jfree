@@ -14,9 +14,8 @@
  */
 package ai.group_template;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import com.l2jfree.gameserver.datatables.SkillTable;
 import com.l2jfree.gameserver.gameobjects.L2Attackable;
@@ -43,7 +42,7 @@ public class PrisonGuards extends L2AttackableAIScript
 	
 	private boolean _firstAttacked = false;
 	
-	private Map<L2Npc, Integer> _guards = new FastMap<L2Npc, Integer>();
+	private Map<L2Npc, Integer> _guards = new LinkedHashMap<L2Npc, Integer>();
 	
 	public PrisonGuards(int questId, String name, String descr)
 	{

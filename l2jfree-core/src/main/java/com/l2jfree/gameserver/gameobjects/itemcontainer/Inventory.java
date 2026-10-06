@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.gameobjects.itemcontainer;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.lang3.ArrayUtils;
 
 import com.l2jfree.Config;
@@ -107,7 +108,7 @@ public abstract class Inventory extends ItemContainer
 	public static final double MAX_ARMOR_WEIGHT = 12000;
 	
 	private final L2ItemInstance[] _paperdoll;
-	private final FastList<PaperdollListener> _paperdollListeners;
+	private final List<PaperdollListener> _paperdollListeners;
 	
 	// protected to be accessed from child classes only
 	protected int _totalWeight;
@@ -635,7 +636,7 @@ public abstract class Inventory extends ItemContainer
 	protected Inventory()
 	{
 		_paperdoll = new L2ItemInstance[31];
-		_paperdollListeners = new FastList<PaperdollListener>();
+		_paperdollListeners = new ArrayList<PaperdollListener>();
 		addPaperdollListener(new AmmunationListener());
 		addPaperdollListener(new StatsListener());
 		addPaperdollListener(new ItemSkillsListener());

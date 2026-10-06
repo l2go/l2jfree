@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.datatables;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ import com.l2jfree.gameserver.network.packets.server.SystemMessage;
 public final class GmListTable
 {
 	private static final Logger _log = LoggerFactory.getLogger(GmListTable.class);
-	private static final FastMap<L2Player, Boolean> _allGms = new FastMap<L2Player, Boolean>().setShared(true);
+	private static final Map<L2Player, Boolean> _allGms = new ConcurrentHashMap<L2Player, Boolean>();
 	
 	/** Shouldn't be instantiated */
 	private GmListTable()
@@ -46,7 +46,7 @@ public final class GmListTable
 	}
 	
 	/** @return Map containing all GM characters with their hiding status */
-	private static final FastMap<L2Player, Boolean> getAllGms()
+	private static final Map<L2Player, Boolean> getAllGms()
 	{
 		return _allGms;
 	}
@@ -59,7 +59,7 @@ public final class GmListTable
 	public static List<L2Player> getAllGms(boolean includeHidden)
 	{
 		List<L2Player> list = new ArrayList<L2Player>(getAllGms().size());
-		for (FastMap.Entry<L2Player, Boolean> n = getAllGms().head(), end = getAllGms().tail(); (n = n.getNext()) != end;)
+		for (Map.Entry<L2Player, Boolean> n : getAllGms().entrySet())
 		{
 			if (includeHidden || !n.getValue())
 				list.add(n.getKey());
@@ -76,7 +76,7 @@ public final class GmListTable
 	public static List<String> getAllGmNames(boolean includeHidden)
 	{
 		List<String> list = new ArrayList<String>(getAllGms().size());
-		for (FastMap.Entry<L2Player, Boolean> n = getAllGms().head(), end = getAllGms().tail(); (n = n.getNext()) != end;)
+		for (Map.Entry<L2Player, Boolean> n : getAllGms().entrySet())
 		{
 			if (!n.getValue())
 				list.add(n.getKey().getName());
@@ -109,9 +109,7 @@ public final class GmListTable
 	 */
 	public static void showGm(L2Player player)
 	{
-		FastMap.Entry<L2Player, Boolean> hide = getAllGms().getEntry(player);
-		if (hide != null)
-			hide.setValue(false);
+		getAllGms().replace(player, false);
 	}
 	
 	/**
@@ -121,9 +119,7 @@ public final class GmListTable
 	 */
 	public static void hideGm(L2Player player)
 	{
-		FastMap.Entry<L2Player, Boolean> hide = getAllGms().getEntry(player);
-		if (hide != null)
-			hide.setValue(true);
+		getAllGms().replace(player, true);
 	}
 	
 	/**

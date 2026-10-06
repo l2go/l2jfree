@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.datatables;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
-import javolution.util.FastMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class HennaTable
 	private static final String LOAD_HENNA =
 			"SELECT id, name, dye_item_template_id, dye_count, price, intelligence_bonus, strength_bonus, constitution_bonus, mental_bonus, dexterity_bonus, wit_bonus FROM henna";
 	
-	private final FastMap<Integer, L2Henna> _henna = new FastMap<Integer, L2Henna>().setShared(true);
+	private final Map<Integer, L2Henna> _henna = new ConcurrentHashMap<Integer, L2Henna>();
 	
 	public static HennaTable getInstance()
 	{

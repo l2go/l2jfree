@@ -19,7 +19,6 @@ import java.util.List;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.network.packets.server.ShowBoard;
-import com.l2jfree.lang.L2TextBuilder;
 
 public abstract class BaseBBSManager
 {
@@ -28,9 +27,9 @@ public abstract class BaseBBSManager
 	public abstract void
 			parsewrite(String ar1, String ar2, String ar3, String ar4, String ar5, L2Player activeChar);
 	
-	protected void separateAndSend(L2TextBuilder html, L2Player acha)
+	protected void separateAndSend(StringBuilder html, L2Player acha)
 	{
-		separateAndSend(html.moveToString(), acha);
+		separateAndSend(html.toString(), acha);
 	}
 	
 	protected void separateAndSend(String html, L2Player acha)

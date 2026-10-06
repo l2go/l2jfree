@@ -16,9 +16,8 @@ package com.l2jfree.gameserver.instancemanager;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,7 +181,7 @@ public final class CCHManager
 	
 	public final List<CCHSiege> getSieges()
 	{
-		FastList<CCHSiege> sieges = new FastList<CCHSiege>();
+		List<CCHSiege> sieges = new ArrayList<CCHSiege>();
 		for (ClanHall hideout : ClanHallManager.getInstance().getClanHalls().values())
 			if (hideout.getSiege() != null)
 				sieges.add(hideout.getSiege());

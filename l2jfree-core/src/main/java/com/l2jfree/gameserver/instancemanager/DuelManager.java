@@ -15,8 +15,7 @@
 package com.l2jfree.gameserver.instancemanager;
 
 import java.util.Map;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +43,7 @@ public class DuelManager
 	
 	// =========================================================
 	// Data Field
-	private final Map<Integer, Duel> _duels = new FastMap<Integer, Duel>().setShared(true);
+	private final Map<Integer, Duel> _duels = new ConcurrentHashMap<Integer, Duel>();
 	private int _currentDuelId = 0x90;
 	
 	// =========================================================

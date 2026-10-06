@@ -14,8 +14,9 @@
  */
 package custom.adventure;
 
-import javolution.util.FastMap;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import com.l2jfree.gameserver.gameobjects.L2Npc;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.Location;
@@ -27,7 +28,7 @@ public final class RaidbossInfo extends QuestJython
 	private static final String THIS = "8000_RaidbossInfo";
 	
 	// not all are managed by RaidBossSpawnManager
-	private final FastMap<String, Location> _raids;
+	private final Map<String, Location> _raids;
 	
 	public RaidbossInfo(int questId, String name, String descr)
 	{
@@ -42,7 +43,7 @@ public final class RaidbossInfo extends QuestJython
 			addStartNpc(i);
 			addTalkId(i);
 		}
-		_raids = new FastMap<String, Location>().setShared(true);
+		_raids = new ConcurrentHashMap<String, Location>();
 		// lvl20 list
 		_raids.put("25001", new Location(-54464, 146572, -2400)); // Greyclaw Kutus (lv23)
 		_raids.put("25019", new Location(7352, 169433, -3172)); // Pan Dryad (lv25)

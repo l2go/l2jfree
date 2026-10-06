@@ -17,13 +17,12 @@ package com.l2jfree.gameserver.instancemanager;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,7 +122,7 @@ public final class MapRegionManager
 	
 	private void parseDocument(Document doc) throws Exception
 	{
-		final Map<Integer, L2MapRegionRestart> restarts = new FastMap<Integer, L2MapRegionRestart>();
+		final Map<Integer, L2MapRegionRestart> restarts = new LinkedHashMap<Integer, L2MapRegionRestart>();
 		
 		final List<L2MapRegion> specialMapRegions = new ArrayList<L2MapRegion>();
 		final List<L2MapArea> mapAreas = new ArrayList<L2MapArea>();

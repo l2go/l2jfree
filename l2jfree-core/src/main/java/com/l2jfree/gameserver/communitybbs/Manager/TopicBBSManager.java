@@ -15,20 +15,18 @@
 package com.l2jfree.gameserver.communitybbs.Manager;
 
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import com.l2jfree.gameserver.communitybbs.bb.Forum;
 import com.l2jfree.gameserver.communitybbs.bb.Post;
 import com.l2jfree.gameserver.communitybbs.bb.Topic;
 import com.l2jfree.gameserver.datatables.ClanTable;
 import com.l2jfree.gameserver.gameobjects.L2Player;
-import com.l2jfree.lang.L2TextBuilder;
 
 public class TopicBBSManager extends BaseBBSManager
 {
@@ -42,8 +40,8 @@ public class TopicBBSManager extends BaseBBSManager
 	
 	private TopicBBSManager()
 	{
-		_table = new FastList<Topic>();
-		_maxId = new FastMap<Forum, Integer>();
+		_table = new ArrayList<Topic>();
+		_maxId = new LinkedHashMap<Forum, Integer>();
 	}
 	
 	public void addTopic(Topic tt)
@@ -262,7 +260,7 @@ public class TopicBBSManager extends BaseBBSManager
 	 */
 	private void showMemoNewTopics(Forum forum, L2Player activeChar)
 	{
-		final L2TextBuilder html = L2TextBuilder.newInstance();
+		final StringBuilder html = new StringBuilder();
 		html.append("<html>");
 		html.append("<body><br><br>");
 		html.append("<table border=0 width=610><tr><td width=10></td><td width=600 align=left>");
@@ -308,7 +306,7 @@ public class TopicBBSManager extends BaseBBSManager
 		html.append("</body>");
 		html.append("</html>");
 		
-		send1001(html.moveToString(), activeChar);
+		send1001(html.toString(), activeChar);
 		send1002(activeChar);
 	}
 	
@@ -340,7 +338,7 @@ public class TopicBBSManager extends BaseBBSManager
 	private void showMemoTopics(Forum forum, L2Player activeChar, int index)
 	{
 		forum.vload();
-		final L2TextBuilder html = L2TextBuilder.newInstance();
+		final StringBuilder html = new StringBuilder();
 		html.append("<html><body><br><br>");
 		html.append("<table border=0 width=610><tr><td width=10></td><td width=600 align=left>");
 		html.append("<a action=\"bypass _bbshome\">HOME</a>&nbsp;>&nbsp;<a action=\"bypass _bbsmemo\">Memo Form</a>");

@@ -19,9 +19,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Calendar;
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -153,10 +152,10 @@ public class SevenSigns
 	
 	private SevenSigns()
 	{
-		_signsPlayerData = new FastMap<Integer, StatsSet>();
-		_signsSealOwners = new FastMap<Integer, Integer>();
-		_signsDuskSealTotals = new FastMap<Integer, Integer>();
-		_signsDawnSealTotals = new FastMap<Integer, Integer>();
+		_signsPlayerData = new LinkedHashMap<Integer, StatsSet>();
+		_signsSealOwners = new LinkedHashMap<Integer, Integer>();
+		_signsDuskSealTotals = new LinkedHashMap<Integer, Integer>();
+		_signsDawnSealTotals = new LinkedHashMap<Integer, Integer>();
 		
 		try
 		{

@@ -14,9 +14,9 @@
  */
 package com.l2jfree.gameserver.datatables;
 
+import java.util.ArrayList;
 import java.util.Date;
-
-import javolution.util.FastList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class EventDroplist
 	private final static Logger _log = LoggerFactory.getLogger(EventDroplist.class);
 	
 	/** The table containing all DataDrop object */
-	private final FastList<DateDrop> _allNpcDateDrops;
+	private final List<DateDrop> _allNpcDateDrops;
 	
 	public static EventDroplist getInstance()
 	{
@@ -67,7 +67,7 @@ public class EventDroplist
 	 */
 	private EventDroplist()
 	{
-		_allNpcDateDrops = new FastList<DateDrop>();
+		_allNpcDateDrops = new ArrayList<DateDrop>();
 	}
 	
 	/**
@@ -95,9 +95,9 @@ public class EventDroplist
 	/**
 	 * Return all DateDrop of EventDroplist allNpcDateDrops within the date range.<BR><BR>
 	 */
-	public FastList<DateDrop> getAllDrops()
+	public List<DateDrop> getAllDrops()
 	{
-		FastList<DateDrop> list = new FastList<DateDrop>();
+		List<DateDrop> list = new ArrayList<DateDrop>();
 		
 		for (DateDrop drop : _allNpcDateDrops)
 		{

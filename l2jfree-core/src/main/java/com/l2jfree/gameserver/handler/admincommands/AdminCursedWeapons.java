@@ -16,8 +16,6 @@ package com.l2jfree.gameserver.handler.admincommands;
 
 import java.util.StringTokenizer;
 
-import javolution.text.TextBuilder;
-
 import com.l2jfree.gameserver.gameobjects.L2Object;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.handler.IAdminCommandHandler;
@@ -80,7 +78,7 @@ public class AdminCursedWeapons implements IAdminCommandHandler
 			}
 			else
 			{
-				TextBuilder replyMSG = new TextBuilder();
+				StringBuilder replyMSG = new StringBuilder();
 				NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 				adminReply.setFile("data/html/admin/cwinfo.htm");
 				for (CursedWeapon cw : cwm.getCursedWeapons())

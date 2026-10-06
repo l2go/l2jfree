@@ -16,12 +16,12 @@ package com.l2jfree.gameserver.datatables;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,8 +112,7 @@ public class AugmentationData
 	private final ArrayList<?>[] _redSkills = new ArrayList[10];
 	private final ArrayList<?>[] _yellowSkills = new ArrayList[10];
 	
-	private final FastMap<Integer, augmentationSkill> _allSkills = new FastMap<Integer, augmentationSkill>()
-			.setShared(true);
+	private final Map<Integer, augmentationSkill> _allSkills = new ConcurrentHashMap<Integer, augmentationSkill>();
 	
 	// =========================================================
 	// Constructor
@@ -399,7 +398,7 @@ public class AugmentationData
 										String tableName = attrs.getNamedItem("name").getNodeValue();
 										
 										StringTokenizer data = new StringTokenizer(cd.getFirstChild().getNodeValue());
-										FastList<Float> array = new FastList<Float>();
+										List<Float> array = new ArrayList<Float>();
 										while (data.hasMoreTokens())
 											array.add(Float.parseFloat(data.nextToken()));
 										
@@ -471,7 +470,7 @@ public class AugmentationData
 										String tableName = attrs.getNamedItem("name").getNodeValue();
 										
 										StringTokenizer data = new StringTokenizer(cd.getFirstChild().getNodeValue());
-										FastList<Float> array = new FastList<Float>();
+										List<Float> array = new ArrayList<Float>();
 										while (data.hasMoreTokens())
 											array.add(Float.parseFloat(data.nextToken()));
 										
@@ -769,9 +768,9 @@ public class AugmentationData
 	 * @param augmentationId
 	 * @return
 	 */
-	public FastList<AugStat> getAugStatsById(int augmentationId)
+	public List<AugStat> getAugStatsById(int augmentationId)
 	{
-		FastList<AugStat> temp = new FastList<AugStat>();
+		List<AugStat> temp = new ArrayList<AugStat>();
 		// An augmentation id contains 2 short vaues so we gotta seperate them here
 		// both values contain a number from 1-16380, the first 14560 values are stats
 		// the 14560 stats are divided into 4 blocks each holding 3640 values

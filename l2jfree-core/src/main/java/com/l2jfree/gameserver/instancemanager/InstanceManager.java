@@ -21,14 +21,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javolution.io.UTF8StreamReader;
-import javolution.util.FastMap;
-import javolution.xml.stream.XMLStreamConstants;
-import javolution.xml.stream.XMLStreamException;
-import javolution.xml.stream.XMLStreamReaderImpl;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,14 +50,14 @@ public class InstanceManager
 {
 	private final static Logger _log = LoggerFactory.getLogger(InstanceManager.class);
 	
-	private final FastMap<Integer, Instance> _instanceList = new FastMap<Integer, Instance>();
-	private final FastMap<Integer, InstanceWorld> _instanceWorlds = new FastMap<Integer, InstanceWorld>();
+	private final Map<Integer, Instance> _instanceList = new ConcurrentHashMap<Integer, Instance>();
+	private final Map<Integer, InstanceWorld> _instanceWorlds = new ConcurrentHashMap<Integer, InstanceWorld>();
 	
 	private final AtomicInteger _instanceIds = new AtomicInteger(300000);
 	
 	// InstanceId Names
 	private final LookupTable<String> _instanceIdNames = new LookupTable<String>();
-	private final Map<Integer, Map<Integer, Long>> _playerInstanceTimes = new FastMap<Integer, Map<Integer, Long>>();
+	private final Map<Integer, Map<Integer, Long>> _playerInstanceTimes = new ConcurrentHashMap<Integer, Map<Integer, Long>>();
 	
 	private static final String ADD_INSTANCE_TIME =
 			"INSERT INTO player_instance_reentry (player_id, instance_template_id, reenter_at) VALUES (?, ?, ?) "
@@ -137,7 +138,7 @@ public class InstanceManager
 	{
 		if (_playerInstanceTimes.containsKey(playerObjId))
 			return; // already restored
-		_playerInstanceTimes.put(playerObjId, new FastMap<Integer, Long>());
+		_playerInstanceTimes.put(playerObjId, new LinkedHashMap<Integer, Long>());
 		Connection con = null;
 		try
 		{
@@ -182,16 +183,17 @@ public class InstanceManager
 		try
 		{
 			in = new FileInputStream(Config.DATAPACK_ROOT + "/data/instancenames.xml");
-			XMLStreamReaderImpl xpp = new XMLStreamReaderImpl();
-			xpp.setInput(new UTF8StreamReader().setInput(in));
+			XMLInputFactory factory = XMLInputFactory.newFactory();
+			factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+			XMLStreamReader xpp = factory.createXMLStreamReader(in);
 			for (int e = xpp.getEventType(); e != XMLStreamConstants.END_DOCUMENT; e = xpp.next())
 			{
 				if (e == XMLStreamConstants.START_ELEMENT)
 				{
-					if (xpp.getLocalName().toString().equals("instance"))
+					if (xpp.getLocalName().equals("instance"))
 					{
-						Integer id = Integer.valueOf(xpp.getAttributeValue(null, "id").toString());
-						String name = xpp.getAttributeValue(null, "name").toString();
+						Integer id = Integer.valueOf(xpp.getAttributeValue(null, "id"));
+						String name = xpp.getAttributeValue(null, "name");
 						_instanceIdNames.put(id, name);
 					}
 				}
@@ -238,11 +240,9 @@ public class InstanceManager
 	
 	public InstanceWorld getPlayerWorld(L2Player player)
 	{
-		for (FastMap.Entry<Integer, InstanceWorld> entry = _instanceWorlds.head(), end = _instanceWorlds.tail(); (entry =
-				entry.getNext()) != end;)
+		for (InstanceWorld iw : _instanceWorlds.values())
 		{
 			// check if the player have a World Instance where he/she is allowed to enter
-			InstanceWorld iw = entry.getValue();
 			if (iw.allowed.contains(player.getObjectId()))
 				return iw;
 		}
@@ -251,11 +251,9 @@ public class InstanceManager
 	
 	public Instance getDynamicInstance(L2Player player)
 	{
-		for (FastMap.Entry<Integer, Instance> entry = _instanceList.head(), end = _instanceList.tail(); (entry =
-				entry.getNext()) != end;)
+		for (Instance i : _instanceList.values())
 		{
 			// check if the player is in a dynamic instance
-			Instance i = entry.getValue();
 			if (i.containsPlayer(player.getObjectId()))
 				return i;
 		}
@@ -306,7 +304,7 @@ public class InstanceManager
 		return _instanceList.get(instanceid);
 	}
 	
-	public FastMap<Integer, Instance> getInstances()
+	public Map<Integer, Instance> getInstances()
 	{
 		return _instanceList;
 	}

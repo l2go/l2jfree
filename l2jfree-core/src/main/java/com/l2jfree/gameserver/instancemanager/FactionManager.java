@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.instancemanager;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,8 +48,8 @@ public class FactionManager
 	
 	// =========================================================
 	// Data Field
-	private FastList<Faction> _factions;
-	private FastList<String> _listTitles = new FastList<String>();
+	private List<Faction> _factions;
+	private List<String> _listTitles = new ArrayList<String>();
 	
 	// =========================================================
 	// Method - Public
@@ -89,17 +90,17 @@ public class FactionManager
 		return -1;
 	}
 	
-	public final FastList<Faction> getFactions()
+	public final List<Faction> getFactions()
 	{
 		if (_factions == null)
-			_factions = new FastList<Faction>();
+			_factions = new ArrayList<Faction>();
 		return _factions;
 	}
 	
-	public final FastList<String> getFactionTitles()
+	public final List<String> getFactionTitles()
 	{
 		if (_listTitles == null)
-			_listTitles = new FastList<String>();
+			_listTitles = new ArrayList<String>();
 		return _listTitles;
 	}
 }

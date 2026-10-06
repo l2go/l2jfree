@@ -69,7 +69,6 @@ import com.l2jfree.gameserver.templates.StatsSet;
 import com.l2jfree.gameserver.util.Util;
 import com.l2jfree.lang.L2Integer;
 import com.l2jfree.lang.L2System;
-import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.util.ArrayBunch;
 import com.l2jfree.util.L2Arrays;
 import com.l2jfree.util.concurrent.ForEachExecutable;
@@ -1525,7 +1524,7 @@ public class L2Skill implements FuncOwner, IChanceSkillTrigger
 		{
 			if (_weaponDependancyMessage == null)
 			{
-				L2TextBuilder sb = L2TextBuilder.newInstance();
+				StringBuilder sb = new StringBuilder();
 				sb.append(getName());
 				sb.append(" can only be used with weapons of type ");
 				for (L2WeaponType wt : L2WeaponType.VALUES)
@@ -1540,7 +1539,7 @@ public class L2Skill implements FuncOwner, IChanceSkillTrigger
 				}
 				sb.append(".");
 				
-				_weaponDependancyMessage = sb.moveToString().intern();
+				_weaponDependancyMessage = sb.toString().intern();
 			}
 			
 			if (activeChar instanceof L2Player)

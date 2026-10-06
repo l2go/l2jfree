@@ -15,9 +15,8 @@
 package com.l2jfree.gameserver.network.packets.client;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -29,8 +28,8 @@ import com.l2jfree.gameserver.network.packets.L2ClientPacket;
 
 public abstract class AbstractEnchantPacket extends L2ClientPacket
 {
-	public static final Map<Integer, EnchantScroll> _scrolls = new FastMap<Integer, EnchantScroll>();
-	public static final Map<Integer, EnchantItem> _supports = new FastMap<Integer, EnchantItem>();
+	public static final Map<Integer, EnchantScroll> _scrolls = new LinkedHashMap<Integer, EnchantScroll>();
+	public static final Map<Integer, EnchantItem> _supports = new LinkedHashMap<Integer, EnchantItem>();
 	
 	public static class EnchantItem
 	{

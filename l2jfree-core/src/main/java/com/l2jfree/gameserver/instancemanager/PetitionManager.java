@@ -15,10 +15,11 @@
 package com.l2jfree.gameserver.instancemanager;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,6 @@ import com.l2jfree.gameserver.network.packets.L2ServerPacket;
 import com.l2jfree.gameserver.network.packets.server.CreatureSay;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
-import com.l2jfree.lang.L2TextBuilder;
 
 /**
  * Petition Manager
@@ -46,8 +46,8 @@ public final class PetitionManager
 	
 	private static int _lastUsedId;
 	
-	private final FastMap<Integer, Petition> _pendingPetitions;
-	private final FastMap<Integer, Petition> _completedPetitions;
+	private final Map<Integer, Petition> _pendingPetitions;
+	private final Map<Integer, Petition> _completedPetitions;
 	
 	private static enum PetitionState
 	{
@@ -90,7 +90,7 @@ public final class PetitionManager
 		private PetitionState _state = PetitionState.Pending;
 		private final String _content;
 		
-		private final FastList<CreatureSay> _messageLog = new FastList<CreatureSay>();
+		private final List<CreatureSay> _messageLog = new ArrayList<CreatureSay>();
 		
 		private final L2Player _petitioner;
 		private L2Player _responder;
@@ -116,7 +116,7 @@ public final class PetitionManager
 			return _messageLog.add(cs);
 		}
 		
-		protected FastList<CreatureSay> getLogMessages()
+		protected List<CreatureSay> getLogMessages()
 		{
 			return _messageLog;
 		}
@@ -237,8 +237,8 @@ public final class PetitionManager
 	private PetitionManager()
 	{
 		_log.info("PetitionManager: initialized.");
-		_pendingPetitions = new FastMap<Integer, Petition>();
-		_completedPetitions = new FastMap<Integer, Petition>();
+		_pendingPetitions = new LinkedHashMap<Integer, Petition>();
+		_completedPetitions = new LinkedHashMap<Integer, Petition>();
 	}
 	
 	public void clearPendingPetitions()
@@ -330,12 +330,12 @@ public final class PetitionManager
 		return false;
 	}
 	
-	protected FastMap<Integer, Petition> getCompletedPetitions()
+	protected Map<Integer, Petition> getCompletedPetitions()
 	{
 		return _completedPetitions;
 	}
 	
-	protected FastMap<Integer, Petition> getPendingPetitions()
+	protected Map<Integer, Petition> getPendingPetitions()
 	{
 		return _pendingPetitions;
 	}
@@ -503,8 +503,8 @@ public final class PetitionManager
 	
 	public void sendPendingPetitionList(L2Player activeChar)
 	{
-		L2TextBuilder htmlContent =
-				L2TextBuilder.newInstance("<html><body>"
+		StringBuilder htmlContent =
+				new StringBuilder("<html><body>"
 						+ "<center><font color=\"LEVEL\">Current Petitions</font><br><table width=\"300\">");
 		SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM HH:mm z");
 		
@@ -540,7 +540,7 @@ public final class PetitionManager
 						+ "width=\"40\" height=\"15\" back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\"></center></body></html>");
 		
 		NpcHtmlMessage htmlMsg = new NpcHtmlMessage(0);
-		htmlMsg.setHtml(htmlContent.moveToString());
+		htmlMsg.setHtml(htmlContent.toString());
 		activeChar.sendPacket(htmlMsg);
 	}
 	
@@ -568,7 +568,7 @@ public final class PetitionManager
 			return;
 		
 		Petition currPetition = getPendingPetitions().get(petitionId);
-		L2TextBuilder htmlContent = L2TextBuilder.newInstance();
+		StringBuilder htmlContent = new StringBuilder();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE dd MMM HH:mm z");
 		
 		htmlContent.append("<html><body><center><br><font color=\"LEVEL\">Petition #");
@@ -595,7 +595,7 @@ public final class PetitionManager
 		htmlContent.append("fore=\"L2UI_ct1.button_df\"></center></body></html>");
 		
 		NpcHtmlMessage htmlMsg = new NpcHtmlMessage(petitionId);
-		htmlMsg.setHtml(htmlContent.moveToString());
+		htmlMsg.setHtml(htmlContent.toString());
 		activeChar.sendPacket(htmlMsg);
 	}
 	

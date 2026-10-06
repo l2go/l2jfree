@@ -16,8 +16,7 @@ package com.l2jfree.gameserver.elayne;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-
-import javolution.util.FastMap;
+import java.util.Map;
 
 /**
  * This interface defines methods that are known by the ELAYNE administration tool and the L2J Game Server. This interface is the way Elayne and the
@@ -111,7 +110,7 @@ public interface IRemoteAdministration extends Remote
 	 * @return a map containing brief information of all the online players at a given moment.
 	 * @throws RemoteException
 	 */
-	public FastMap<String, IRemotePlayer> getOnlinePlayersDetails(String rmiPassword) throws RemoteException;
+	public Map<String, IRemotePlayer> getOnlinePlayersDetails(String rmiPassword) throws RemoteException;
 	
 	/**
 	 * Returns information about a player in the "live" server.

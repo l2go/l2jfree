@@ -14,125 +14,145 @@
  */
 package com.l2jfree.util;
 
+import java.util.AbstractSet;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
-
-import javolution.util.FastCollection.Record;
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * A set that keeps insertion order and whose first/last accessors return {@code null} when it is empty.
+ * <p>
+ * A shared set is backed by a concurrent set: it can be changed while other threads iterate it, but it no longer
+ * keeps insertion order, so {@link #getFirst()} and {@link #removeFirst()} return any element.
+ * 
  * @author NB4L1
  */
-@SuppressWarnings("unchecked")
-public class L2FastSet<E> extends L2FastCollection<E> implements Set<E>
+public class L2FastSet<E> extends AbstractSet<E>
 {
-	private static final Object NULL = new Object();
-	
-	private final FastMap<E, Object> _map;
+	private volatile Set<E> _set;
 	
 	public L2FastSet()
 	{
-		_map = new FastMap<E, Object>();
+		_set = new LinkedHashSet<E>();
 	}
 	
 	public L2FastSet(int capacity)
 	{
-		_map = new FastMap<E, Object>(capacity);
+		_set = LinkedHashSet.newLinkedHashSet(capacity);
 	}
 	
-	public L2FastSet(Set<? extends E> elements)
+	public L2FastSet(Collection<? extends E> elements)
 	{
-		_map = new FastMap<E, Object>(elements.size());
+		_set = new LinkedHashSet<E>(elements);
+	}
+	
+	public synchronized L2FastSet<E> setShared(boolean isShared)
+	{
+		if (isShared != isShared())
+		{
+			final Set<E> set = isShared ? ConcurrentHashMap.<E> newKeySet() : new LinkedHashSet<E>();
+			set.addAll(_set);
+			_set = set;
+		}
 		
-		addAll(elements);
-	}
-	
-	public L2FastSet<E> setShared(boolean isShared)
-	{
-		_map.setShared(isShared);
 		return this;
 	}
 	
 	public boolean isShared()
 	{
-		return _map.isShared();
+		return !(_set instanceof LinkedHashSet<?>);
 	}
 	
-	@Override
-	public Record head()
+	public final E getFirst()
 	{
-		return _map.head();
+		final Iterator<E> it = _set.iterator();
+		return it.hasNext() ? it.next() : null;
 	}
 	
-	@Override
-	public Record tail()
+	public final E getLast()
 	{
-		return _map.tail();
+		if (_set instanceof LinkedHashSet<E> ordered)
+			return ordered.isEmpty() ? null : ordered.getLast();
+		
+		E last = null;
+		for (E e : _set)
+			last = e;
+		return last;
 	}
 	
-	@Override
-	public E valueOf(Record record)
+	public final E removeFirst()
 	{
-		return ((FastMap.Entry<E, Object>)record).getKey();
+		for (Iterator<E> it = _set.iterator(); it.hasNext();)
+		{
+			final E value = it.next();
+			if (_set.remove(value))
+				return value;
+		}
+		
+		return null;
 	}
 	
-	@Override
-	public void delete(Record record)
+	public final E removeLast()
 	{
-		_map.remove(((FastMap.Entry<E, Object>)record).getKey());
+		if (_set instanceof LinkedHashSet<E> ordered)
+			return ordered.isEmpty() ? null : ordered.removeLast();
+		
+		final E value = getLast();
+		return value != null && _set.remove(value) ? value : null;
 	}
 	
-	@Override
-	public void delete(Record record, E value)
+	public boolean addAll(E[] c)
 	{
-		_map.remove(value);
+		boolean modified = false;
+		
+		for (E e : c)
+			if (add(e))
+				modified = true;
+		
+		return modified;
 	}
 	
 	@Override
 	public boolean add(E value)
 	{
-		return _map.put(value, NULL) == null;
+		return _set.add(value);
 	}
 	
 	@Override
 	public void clear()
 	{
-		_map.clear();
+		_set.clear();
 	}
 	
 	@Override
 	public boolean contains(Object o)
 	{
-		return _map.containsKey(o);
+		return o != null && _set.contains(o);
 	}
 	
 	@Override
 	public boolean isEmpty()
 	{
-		return _map.isEmpty();
+		return _set.isEmpty();
 	}
 	
 	@Override
 	public Iterator<E> iterator()
 	{
-		return _map.keySet().iterator();
+		return _set.iterator();
 	}
 	
 	@Override
 	public boolean remove(Object o)
 	{
-		return _map.remove(o) != null;
+		return o != null && _set.remove(o);
 	}
 	
 	@Override
 	public int size()
 	{
-		return _map.size();
-	}
-	
-	@Override
-	public String toString()
-	{
-		return super.toString() + "-" + _map.keySet().toString();
+		return _set.size();
 	}
 }

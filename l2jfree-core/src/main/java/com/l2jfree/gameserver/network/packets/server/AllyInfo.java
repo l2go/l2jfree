@@ -19,7 +19,6 @@ import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.clan.L2Clan;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.L2ServerPacket;
-import com.l2jfree.lang.L2TextBuilder;
 
 public final class AllyInfo extends L2ServerPacket
 {
@@ -98,7 +97,7 @@ public final class AllyInfo extends L2ServerPacket
 		//=========================
 		activeChar.sendPacket(SystemMessageId.CLAN_INFO_FOOT);
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		L2TextBuilder replyMSG = L2TextBuilder.newInstance("<html><title>Alliance Information</title><body>");
+		StringBuilder replyMSG = new StringBuilder("<html><title>Alliance Information</title><body>");
 		replyMSG.append("<center><img src=\"L2UI_CH3.herotower_deco\" width=256 height=32></center>");
 		for (L2Clan clan : ClanTable.getInstance().getClans())
 		{
@@ -113,7 +112,7 @@ public final class AllyInfo extends L2ServerPacket
 		}
 		replyMSG.append("<center><img src=\"L2UI_CH3.herotower_deco\" width=256 height=32></center>");
 		replyMSG.append("</body></html>");
-		adminReply.setHtml(replyMSG.moveToString());
+		adminReply.setHtml(replyMSG.toString());
 		activeChar.sendPacket(adminReply);
 	}
 	

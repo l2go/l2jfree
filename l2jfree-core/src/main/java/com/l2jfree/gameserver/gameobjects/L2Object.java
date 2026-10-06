@@ -27,7 +27,6 @@ import com.l2jfree.gameserver.model.world.L2WorldRegion;
 import com.l2jfree.gameserver.network.packets.server.ActionFailed;
 import com.l2jfree.lang.L2Entity;
 import com.l2jfree.lang.L2Integer;
-import com.l2jfree.lang.L2TextBuilder;
 
 /**
  * Mother class of all objects in the world wich ones is it possible to interact (PC, NPC, Item...)<BR>
@@ -518,7 +517,7 @@ public abstract class L2Object implements L2Entity<Integer>
 	@Override
 	public String toString()
 	{
-		L2TextBuilder tb = L2TextBuilder.newInstance();
+		StringBuilder tb = new StringBuilder();
 		tb.append("(");
 		tb.append(getClass().getSimpleName());
 		tb.append(") ");
@@ -526,7 +525,7 @@ public abstract class L2Object implements L2Entity<Integer>
 		tb.append(" - ");
 		tb.append(getName());
 		
-		return tb.moveToString();
+		return tb.toString();
 	}
 	
 	/**

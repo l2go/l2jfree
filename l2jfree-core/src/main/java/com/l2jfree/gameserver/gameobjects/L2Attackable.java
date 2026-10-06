@@ -14,12 +14,11 @@
  */
 package com.l2jfree.gameserver.gameobjects;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -491,7 +490,7 @@ public class L2Attackable extends L2Npc
 	protected void calculateRewards(L2Creature lastAttacker)
 	{
 		// Creates an empty list of rewards
-		FastMap<L2Creature, RewardInfo> rewards = new FastMap<L2Creature, RewardInfo>().setShared(true);
+		Map<L2Creature, RewardInfo> rewards = new LinkedHashMap<L2Creature, RewardInfo>();
 		
 		try
 		{
@@ -569,13 +568,10 @@ public class L2Attackable extends L2Npc
 				RewardInfo reward2;
 				int[] tmp;
 				
-				for (FastMap.Entry<L2Creature, RewardInfo> entry = rewards.head(), end = rewards.tail(); (entry =
-						entry.getNext()) != end;)
+				// Iterate over a snapshot: party members and their pets get removed while their party is rewarded
+				for (L2Creature rewarded : new ArrayList<L2Creature>(rewards.keySet()))
 				{
-					if (entry == null)
-						continue;
-					
-					reward = entry.getValue();
+					reward = rewards.get(rewarded);
 					if (reward == null)
 						continue;
 					
@@ -583,7 +579,7 @@ public class L2Attackable extends L2Npc
 					penalty = 0;
 					
 					// Attacker to be rewarded
-					attacker = entry.getKey();
+					attacker = rewarded;
 					
 					// Total amount of damage done
 					damage = reward._dmg;
@@ -686,7 +682,7 @@ public class L2Attackable extends L2Npc
 						partyLvl = 0;
 						
 						// Get all L2Creature that can be rewarded in the party
-						FastList<L2Playable> rewardedMembers = new FastList<L2Playable>();
+						List<L2Playable> rewardedMembers = new ArrayList<L2Playable>();
 						
 						// Go through all L2Player in the party
 						List<L2Player> groupMembers;

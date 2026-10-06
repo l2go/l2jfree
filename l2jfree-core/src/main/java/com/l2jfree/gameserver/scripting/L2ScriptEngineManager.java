@@ -33,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -45,8 +46,6 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
-
-import javolution.util.FastMap;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -76,8 +75,8 @@ public final class L2ScriptEngineManager
 		return SingletonHolder._instance;
 	}
 	
-	private final Map<String, ScriptEngine> _nameEngines = new FastMap<String, ScriptEngine>();
-	private final Map<String, ScriptEngine> _extEngines = new FastMap<String, ScriptEngine>();
+	private final Map<String, ScriptEngine> _nameEngines = new LinkedHashMap<String, ScriptEngine>();
+	private final Map<String, ScriptEngine> _extEngines = new LinkedHashMap<String, ScriptEngine>();
 	private final List<ScriptManager<?>> _scriptManagers = new LinkedList<ScriptManager<?>>();
 	
 	private final CompiledScriptCache _cache;

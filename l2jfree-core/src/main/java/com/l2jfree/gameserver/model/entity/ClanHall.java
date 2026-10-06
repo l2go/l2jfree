@@ -20,12 +20,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -269,8 +268,8 @@ public class ClanHall extends Siegeable<CCHSiege>
 		_paidUntil = paidUntil;
 		_grade = Grade;
 		_paid = paid;
-		//_doorDefault = new FastList<String>();
-		_functions = new FastMap<Integer, ClanHallFunction>();
+		//_doorDefault = new ArrayList<String>();
+		_functions = new LinkedHashMap<Integer, ClanHallFunction>();
 		if (ownerId != 0)
 		{
 			_isFree = false;
@@ -326,7 +325,7 @@ public class ClanHall extends Siegeable<CCHSiege>
 	public final List<L2DoorInstance> getDoors()
 	{
 		if (_doors == null)
-			_doors = new FastList<L2DoorInstance>();
+			_doors = new ArrayList<L2DoorInstance>();
 		return _doors;
 	}
 	

@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.datatables;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
-import javolution.util.FastMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +67,7 @@ public class PetDataTable
 	public final static int TAWNY_MANED_LION_ID = 13146;
 	public final static int STEAM_SLEDGE = 13147;
 	
-	private static FastMap<Integer, FastMap<Integer, L2PetData>> petTable;
+	private static Map<Integer, Map<Integer, L2PetData>> petTable;
 	
 	public final static int[] EMPTY_INT = { 0 };
 	
@@ -78,7 +78,7 @@ public class PetDataTable
 	
 	private PetDataTable()
 	{
-		petTable = new FastMap<Integer, FastMap<Integer, L2PetData>>();
+		petTable = new LinkedHashMap<Integer, Map<Integer, L2PetData>>();
 	}
 	
 	public void loadPetsData()
@@ -124,9 +124,9 @@ public class PetDataTable
 				petData.setPetRegenMP(rset.getInt("mp_regeneration"));
 				petData.setOwnerExpTaken(rset.getFloat("owner_exp_share"));
 				
-				// if its the first data for this petid, we initialize its level FastMap
+				// if its the first data for this petid, we initialize its level Map
 				if (!petTable.containsKey(petId))
-					petTable.put(petId, new FastMap<Integer, L2PetData>());
+					petTable.put(petId, new LinkedHashMap<Integer, L2PetData>());
 				
 				petTable.get(petId).put(petLevel, petData);
 			}
@@ -148,11 +148,11 @@ public class PetDataTable
 	
 	public void addPetData(L2PetData petData)
 	{
-		FastMap<Integer, L2PetData> h = petTable.get(petData.getPetID());
+		Map<Integer, L2PetData> h = petTable.get(petData.getPetID());
 		
 		if (h == null)
 		{
-			FastMap<Integer, L2PetData> statTable = new FastMap<Integer, L2PetData>();
+			Map<Integer, L2PetData> statTable = new LinkedHashMap<Integer, L2PetData>();
 			statTable.put(petData.getPetLevel(), petData);
 			petTable.put(petData.getPetID(), statTable);
 			return;

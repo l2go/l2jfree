@@ -15,8 +15,7 @@
 package com.l2jfree.gameserver.model.zone;
 
 import java.util.Map;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
@@ -34,7 +33,7 @@ public class L2TownZone extends L2Zone
 		TownManager.getInstance().registerTown(this);
 	}
 	
-	private final Map<Integer, Byte> _map = new FastMap<Integer, Byte>().setShared(true);
+	private final Map<Integer, Byte> _map = new ConcurrentHashMap<Integer, Byte>();
 	
 	@Override
 	protected void onEnter(L2Creature character)

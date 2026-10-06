@@ -16,8 +16,6 @@ package com.l2jfree.gameserver.handler.admincommands;
 
 import java.util.StringTokenizer;
 
-import javolution.text.TextBuilder;
-
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.handler.IAdminCommandHandler;
 import com.l2jfree.gameserver.network.packets.server.AdminForgePacket;
@@ -171,11 +169,11 @@ public class AdminPForge implements IAdminCommandHandler
 		adminReply.setFile("data/html/admin/pforge2.htm");
 		adminReply.replace("%format%", format);
 		
-		TextBuilder replyMSG = new TextBuilder();
+		StringBuilder replyMSG = new StringBuilder();
 		for (int i = 0; i < format.length(); i++)
 			replyMSG.append(format.charAt(i) + " : <edit var=\"v" + i + "\" width=100><br1>");
 		adminReply.replace("%valueditors%", replyMSG.toString());
-		replyMSG.clear();
+		replyMSG.setLength(0);
 		for (int i = 0; i < format.length(); i++)
 			replyMSG.append(" \\$v" + i);
 		adminReply.replace("%send%", replyMSG.toString());

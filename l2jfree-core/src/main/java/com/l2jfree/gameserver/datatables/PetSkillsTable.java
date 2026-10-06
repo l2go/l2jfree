@@ -17,11 +17,11 @@ package com.l2jfree.gameserver.datatables;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class PetSkillsTable
 {
 	private final static Logger _log = LoggerFactory.getLogger(PetSkillsTable.class);
 	
-	private final FastMap<Integer, Map<Integer, L2PetSkillLearn>> _skillTrees;
+	private final Map<Integer, Map<Integer, L2PetSkillLearn>> _skillTrees;
 	
 	public static PetSkillsTable getInstance()
 	{
@@ -42,7 +42,7 @@ public class PetSkillsTable
 	
 	private PetSkillsTable()
 	{
-		_skillTrees = new FastMap<Integer, Map<Integer, L2PetSkillLearn>>();
+		_skillTrees = new LinkedHashMap<Integer, Map<Integer, L2PetSkillLearn>>();
 		load();
 	}
 	
@@ -70,7 +70,7 @@ public class PetSkillsTable
 				L2PetSkillLearn skillLearn;
 				while (petlist.next())
 				{
-					map = new FastMap<Integer, L2PetSkillLearn>();
+					map = new LinkedHashMap<Integer, L2PetSkillLearn>();
 					npcId = petlist.getInt("id");
 					PreparedStatement statement2 =
 							con.prepareStatement("SELECT min_level, skill_id, skill_level FROM pet_skill WHERE npc_template_id=? ORDER BY skill_id, skill_level");
@@ -147,9 +147,9 @@ public class PetSkillsTable
 		return lvl;
 	}
 	
-	public FastList<Integer> getAvailableSkills(L2Summon cha)
+	public List<Integer> getAvailableSkills(L2Summon cha)
 	{
-		FastList<Integer> skillIds = new FastList<Integer>();
+		List<Integer> skillIds = new ArrayList<Integer>();
 		if (!_skillTrees.containsKey(cha.getNpcId()))
 			return null;
 		Collection<L2PetSkillLearn> skills = _skillTrees.get(cha.getNpcId()).values();

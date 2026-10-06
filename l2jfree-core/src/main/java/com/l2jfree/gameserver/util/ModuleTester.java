@@ -35,7 +35,6 @@ import com.l2jfree.Config;
 import com.l2jfree.L2AutoInitialization;
 import com.l2jfree.gameserver.model.Elementals;
 import com.l2jfree.gameserver.model.items.templates.L2WeaponType;
-import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.util.L2Arrays;
 
 /**
@@ -200,7 +199,7 @@ public final class ModuleTester extends L2AutoInitialization
 						array = L2Arrays.compact(array);
 					}
 					
-					L2TextBuilder sb = L2TextBuilder.newInstance();
+					StringBuilder sb = new StringBuilder();
 					
 					for (int i = 0; i < array.length; i++)
 					{
@@ -212,7 +211,7 @@ public final class ModuleTester extends L2AutoInitialization
 					if (line.endsWith(","))
 						sb.append(',');
 					
-					result.add(sb.moveToString());
+					result.add(sb.toString());
 				}
 				catch (RuntimeException e)
 				{
@@ -256,7 +255,7 @@ public final class ModuleTester extends L2AutoInitialization
 			for (int i = 0; i < list.size(); i++)
 			{
 				String line = list.get(i);
-				L2TextBuilder sb = L2TextBuilder.newInstance();
+				StringBuilder sb = new StringBuilder();
 				
 				for (int k = 0; k < line.length() && line.charAt(k) == ' '; k++)
 					sb.append(' ');
@@ -270,7 +269,7 @@ public final class ModuleTester extends L2AutoInitialization
 				
 				sb.append(line);
 				
-				list.set(i, sb.moveToString());
+				list.set(i, sb.toString());
 			}
 			
 			final ArrayList<String> result = new ArrayList<String>(list.size());
@@ -316,7 +315,7 @@ public final class ModuleTester extends L2AutoInitialization
 						final Matcher m = Pattern.compile("#ench(ant)?[0-9_]*").matcher(val);
 						m.find();
 						
-						final L2TextBuilder sb = L2TextBuilder.newInstance();
+						final StringBuilder sb = new StringBuilder();
 						
 						sb.append(val.substring(0, m.start()));
 						sb.append(m.group());
@@ -326,7 +325,7 @@ public final class ModuleTester extends L2AutoInitialization
 						else
 							sb.append(Util.capitalizeFirst(name));
 						
-						final String expected = sb.moveToString();
+						final String expected = sb.toString();
 						
 						if (!val.equals(expected))
 							map.put(val, expected);

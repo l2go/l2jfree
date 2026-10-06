@@ -16,8 +16,8 @@ package com.l2jfree.gameserver.cache;
 
 import java.sql.SQLException;
 import java.util.List;
-
-import javolution.util.FastMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,9 +39,9 @@ public class CrestCache
 		return SingletonHolder._instance;
 	}
 	
-	private final FastMap<Integer, byte[]> _cachePledge = new FastMap<Integer, byte[]>().setShared(true);
-	private final FastMap<Integer, byte[]> _cachePledgeLarge = new FastMap<Integer, byte[]>().setShared(true);
-	private final FastMap<Integer, byte[]> _cacheAlly = new FastMap<Integer, byte[]>().setShared(true);
+	private final Map<Integer, byte[]> _cachePledge = new ConcurrentHashMap<Integer, byte[]>();
+	private final Map<Integer, byte[]> _cachePledgeLarge = new ConcurrentHashMap<Integer, byte[]>();
+	private final Map<Integer, byte[]> _cacheAlly = new ConcurrentHashMap<Integer, byte[]>();
 	
 	private int _loadedFiles;
 	private long _bytesBuffLen;

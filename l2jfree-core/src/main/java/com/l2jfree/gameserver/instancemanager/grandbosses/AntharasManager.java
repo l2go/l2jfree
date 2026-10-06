@@ -14,13 +14,12 @@
  */
 package com.l2jfree.gameserver.instancemanager.grandbosses;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -63,14 +62,14 @@ public class AntharasManager extends BossLair
 	private final int _teleportCubeId = 31859;
 	private final int _teleportCubeLocation[][] = { { 177615, 114941, -7709, 0 } };
 	
-	protected List<L2Spawn> _teleportCubeSpawn = new FastList<L2Spawn>();
-	protected List<L2Npc> _teleportCube = new FastList<L2Npc>();
+	protected List<L2Spawn> _teleportCubeSpawn = new ArrayList<L2Spawn>();
+	protected List<L2Npc> _teleportCube = new ArrayList<L2Npc>();
 	
 	// Spawn data of monsters.
-	protected Map<Integer, L2Spawn> _monsterSpawn = new FastMap<Integer, L2Spawn>();
+	protected Map<Integer, L2Spawn> _monsterSpawn = new LinkedHashMap<Integer, L2Spawn>();
 	
 	// Instance of monsters.
-	protected List<L2Npc> _monsters = new FastList<L2Npc>();
+	protected List<L2Npc> _monsters = new ArrayList<L2Npc>();
 	
 	// Tasks.
 	protected ScheduledFuture<?> _cubeSpawnTask = null;

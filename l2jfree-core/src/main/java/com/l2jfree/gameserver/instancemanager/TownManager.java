@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.instancemanager;
 
-import javolution.util.FastMap;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +37,7 @@ public class TownManager
 		return SingletonHolder._instance;
 	}
 	
-	private FastMap<Integer, Town> _towns;
+	private Map<Integer, Town> _towns;
 	
 	public void registerTown(L2Zone zone)
 	{
@@ -340,10 +341,10 @@ public class TownManager
 		return null;
 	}
 	
-	public final FastMap<Integer, Town> getTowns()
+	public final Map<Integer, Town> getTowns()
 	{
 		if (_towns == null)
-			_towns = new FastMap<Integer, Town>();
+			_towns = new LinkedHashMap<Integer, Town>();
 		
 		return _towns;
 	}

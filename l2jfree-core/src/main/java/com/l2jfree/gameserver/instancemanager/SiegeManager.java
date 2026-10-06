@@ -17,11 +17,11 @@ package com.l2jfree.gameserver.instancemanager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,11 +54,11 @@ public class SiegeManager
 		return SingletonHolder._instance;
 	}
 	
-	private FastMap<Integer, FastList<SiegeSpawn>> _artefactSpawnList;
+	private Map<Integer, List<SiegeSpawn>> _artefactSpawnList;
 	
-	private FastMap<Integer, FastList<SiegeSpawn>> _controlTowerSpawnList;
-	private FastMap<Integer, SiegeSpawn> _flameTowerSpawnListE;
-	private FastMap<Integer, SiegeSpawn> _flameTowerSpawnListW;
+	private Map<Integer, List<SiegeSpawn>> _controlTowerSpawnList;
+	private Map<Integer, SiegeSpawn> _flameTowerSpawnListE;
+	private Map<Integer, SiegeSpawn> _flameTowerSpawnListW;
 	
 	private SiegeManager()
 	{
@@ -267,10 +267,10 @@ public class SiegeManager
 			L2Properties siegeSettings = new L2Properties(Config.SIEGE_CONFIGURATION_FILE).setLog(false);
 			
 			// Siege spawns settings
-			_controlTowerSpawnList = new FastMap<Integer, FastList<SiegeSpawn>>();
-			_artefactSpawnList = new FastMap<Integer, FastList<SiegeSpawn>>();
-			_flameTowerSpawnListE = new FastMap<Integer, SiegeSpawn>();
-			_flameTowerSpawnListW = new FastMap<Integer, SiegeSpawn>();
+			_controlTowerSpawnList = new LinkedHashMap<Integer, List<SiegeSpawn>>();
+			_artefactSpawnList = new LinkedHashMap<Integer, List<SiegeSpawn>>();
+			_flameTowerSpawnListE = new LinkedHashMap<Integer, SiegeSpawn>();
+			_flameTowerSpawnListW = new LinkedHashMap<Integer, SiegeSpawn>();
 			
 			for (Castle castle : CastleManager.getInstance().getCastles().values())
 			{
@@ -309,7 +309,7 @@ public class SiegeManager
 					_log.error("Error while loading flame control tower 2 for " + castle.getName() + " castle.", e);
 				}
 				
-				FastList<SiegeSpawn> _controlTowersSpawns = new FastList<SiegeSpawn>();
+				List<SiegeSpawn> _controlTowersSpawns = new ArrayList<SiegeSpawn>();
 				
 				for (int i = 1; i < 0xFF; i++)
 				{
@@ -336,7 +336,7 @@ public class SiegeManager
 					}
 				}
 				
-				FastList<SiegeSpawn> _artefactSpawns = new FastList<SiegeSpawn>();
+				List<SiegeSpawn> _artefactSpawns = new ArrayList<SiegeSpawn>();
 				
 				for (int i = 1; i < 0xFF; i++)
 				{
@@ -395,14 +395,14 @@ public class SiegeManager
 		loadTowerArtefacts();
 	}
 	
-	public final FastList<SiegeSpawn> getArtefactSpawnList(int _castleId)
+	public final List<SiegeSpawn> getArtefactSpawnList(int _castleId)
 	{
 		if (_artefactSpawnList.containsKey(_castleId))
 			return _artefactSpawnList.get(_castleId);
 		return null;
 	}
 	
-	public final FastList<SiegeSpawn> getControlTowerSpawnList(int _castleId)
+	public final List<SiegeSpawn> getControlTowerSpawnList(int _castleId)
 	{
 		if (_controlTowerSpawnList.containsKey(_castleId))
 			return _controlTowerSpawnList.get(_castleId);
@@ -446,7 +446,7 @@ public class SiegeManager
 	
 	public final List<Siege> getSieges()
 	{
-		FastList<Siege> sieges = new FastList<Siege>();
+		List<Siege> sieges = new ArrayList<Siege>();
 		for (Castle castle : CastleManager.getInstance().getCastles().values())
 			sieges.add(castle.getSiege());
 		return sieges;

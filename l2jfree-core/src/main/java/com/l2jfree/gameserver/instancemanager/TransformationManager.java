@@ -15,9 +15,8 @@
 package com.l2jfree.gameserver.instancemanager;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +41,7 @@ public class TransformationManager
 	
 	private TransformationManager()
 	{
-		_transformations = new FastMap<Integer, L2Transformation>();
+		_transformations = new LinkedHashMap<Integer, L2Transformation>();
 	}
 	
 	public void report()

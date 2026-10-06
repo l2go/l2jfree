@@ -19,8 +19,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
-
-import javolution.util.FastList;
+import java.util.ArrayDeque;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +40,6 @@ import com.l2jfree.gameserver.network.packets.L2ServerPacket;
 import com.l2jfree.gameserver.network.packets.server.LeaveWorld;
 import com.l2jfree.gameserver.network.packets.server.ServerClose;
 import com.l2jfree.gameserver.threadmanager.FIFORunnableQueue;
-import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.network.NetworkServer;
 import com.l2jfree.tools.security.BlowFishKeygen;
 import com.l2jfree.tools.security.GameCrypt;
@@ -336,7 +334,7 @@ public final class L2Client extends com.l2jfree.network.Connection<L2Client, L2C
 	@Override
 	public String toString()
 	{
-		L2TextBuilder tb = L2TextBuilder.newInstance();
+		StringBuilder tb = new StringBuilder();
 		
 		tb.append("[State: ").append(getState());
 		
@@ -354,7 +352,7 @@ public final class L2Client extends com.l2jfree.network.Connection<L2Client, L2C
 		
 		tb.append("]");
 		
-		return tb.moveToString();
+		return tb.toString();
 	}
 	
 	public boolean isProtocolOk()
@@ -407,7 +405,7 @@ public final class L2Client extends com.l2jfree.network.Connection<L2Client, L2C
 		return _packetQueue;
 	}
 	
-	private final class ServerPacketQueue extends FastList<L2ServerPacket> implements Runnable
+	private final class ServerPacketQueue extends ArrayDeque<L2ServerPacket> implements Runnable
 	{
 		private static final long serialVersionUID = 6715576112277597425L;
 		

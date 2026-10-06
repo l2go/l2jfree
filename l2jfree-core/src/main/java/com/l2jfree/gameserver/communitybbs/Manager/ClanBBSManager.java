@@ -20,7 +20,6 @@ import com.l2jfree.gameserver.datatables.ClanTable;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.clan.L2Clan;
 import com.l2jfree.gameserver.network.SystemMessageId;
-import com.l2jfree.lang.L2TextBuilder;
 
 public class ClanBBSManager extends BaseBBSManager
 {
@@ -121,7 +120,7 @@ public class ClanBBSManager extends BaseBBSManager
 				{
 					if (activeChar.isClanLeader())
 					{
-						final L2TextBuilder html = L2TextBuilder.newInstance();
+						final StringBuilder html = new StringBuilder();
 						html.append("<html>");
 						html.append("<body><br><br>");
 						html.append("<table border=0 width=610><tr><td width=10></td><td width=600 align=left>");
@@ -163,12 +162,12 @@ public class ClanBBSManager extends BaseBBSManager
 						html.append("</body>");
 						html.append("</html>");
 						
-						send1001(html.moveToString(), activeChar);
+						send1001(html.toString(), activeChar);
 						send1002(activeChar, activeChar.getClan().getNoticeForBBS(), " ", "0");
 					}
 					else
 					{
-						final L2TextBuilder html = L2TextBuilder.newInstance();
+						final StringBuilder html = new StringBuilder();
 						html.append("<html>");
 						html.append("<body><br><br>");
 						html.append("<table border=0 width=610><tr><td width=10></td><td width=600 align=left>");
@@ -199,7 +198,7 @@ public class ClanBBSManager extends BaseBBSManager
 						html.append("</body>");
 						html.append("</html>");
 						
-						send1001(html.moveToString(), activeChar);
+						send1001(html.toString(), activeChar);
 						send1002(activeChar);
 					}
 				}
@@ -221,7 +220,7 @@ public class ClanBBSManager extends BaseBBSManager
 			index = 1;
 		}
 		//header
-		final L2TextBuilder html = L2TextBuilder.newInstance();
+		final StringBuilder html = new StringBuilder();
 		html.append("<html><body><br><br><center>");
 		html.append("<br1><br1><table border=0 cellspacing=0 cellpadding=0>");
 		html.append("<tr><td FIXWIDTH=15>&nbsp;</td>");
@@ -359,7 +358,7 @@ public class ClanBBSManager extends BaseBBSManager
 			}
 			else
 			{
-				final L2TextBuilder html = L2TextBuilder.newInstance();
+				final StringBuilder html = new StringBuilder();
 				html.append("<html><body><center><br><br>");
 				html.append("<br1><br1><table border=0 cellspacing=0 cellpadding=0>");
 				html.append("<tr><td FIXWIDTH=15>&nbsp;</td>");

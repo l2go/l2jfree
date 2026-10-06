@@ -18,8 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javolution.util.FastList;
-
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.ItemTable;
 import com.l2jfree.gameserver.gameobjects.L2Object;
@@ -236,7 +234,7 @@ public class PlayerInventory extends Inventory
 	 */
 	public List<L2ItemInstance> getAvailableItems(boolean allowAdena, boolean allowNonTradeable)
 	{
-		FastList<L2ItemInstance> list = new FastList<L2ItemInstance>();
+		List<L2ItemInstance> list = new ArrayList<L2ItemInstance>();
 		for (L2ItemInstance item : _items)
 			if (item != null && item.isAvailable(getOwner(), allowAdena, allowNonTradeable))
 				list.add(item);
@@ -715,7 +713,7 @@ public class PlayerInventory extends Inventory
 		return validateCapacity(slots);
 	}
 	
-	public boolean validateCapacity(FastList<L2ItemInstance> items)
+	public boolean validateCapacity(List<L2ItemInstance> items)
 	{
 		int slots = 0;
 		

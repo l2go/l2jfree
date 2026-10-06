@@ -14,16 +14,16 @@
  */
 package com.l2jfree.lang;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-import javolution.util.FastMap;
 
 /**
  * @author NB4L1
  */
 public final class L2Integer
 {
-	private static final Map<Integer, Integer> MAP = new FastMap<Integer, Integer>();
+	private static final Map<Integer, Integer> MAP = new LinkedHashMap<Integer, Integer>();
 	
 	private static final int MIN = -1000;
 	private static final int MAX = 100000;

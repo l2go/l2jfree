@@ -19,8 +19,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,8 +37,8 @@ public final class CharNameTable
 		return SingletonHolder._instance;
 	}
 	
-	private final Map<Integer, CharacterInfo> _mapByObjectId = new FastMap<Integer, CharacterInfo>().setShared(true);
-	private final Map<String, CharacterInfo> _mapByName = new FastMap<String, CharacterInfo>().setShared(true);
+	private final Map<Integer, CharacterInfo> _mapByObjectId = new ConcurrentHashMap<Integer, CharacterInfo>();
+	private final Map<String, CharacterInfo> _mapByName = new ConcurrentHashMap<String, CharacterInfo>();
 	
 	private CharNameTable()
 	{

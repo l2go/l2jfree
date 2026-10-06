@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.model.world.spawn;
 
-import javolution.util.FastList;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ public final class MobGroup
 	private final int _groupId;
 	private final int _maxMobCount;
 	
-	private FastList<L2ControllableMobInstance> _mobs;
+	private List<L2ControllableMobInstance> _mobs;
 	
 	public MobGroup(int groupId, L2NpcTemplate npcTemplate, int maxMobCount)
 	{
@@ -64,10 +65,10 @@ public final class MobGroup
 		return _maxMobCount;
 	}
 	
-	public FastList<L2ControllableMobInstance> getMobs()
+	public List<L2ControllableMobInstance> getMobs()
 	{
 		if (_mobs == null)
-			_mobs = new FastList<L2ControllableMobInstance>();
+			_mobs = new ArrayList<L2ControllableMobInstance>();
 		
 		return _mobs;
 	}
@@ -331,7 +332,7 @@ public final class MobGroup
 	
 	protected void removeDead()
 	{
-		FastList<L2ControllableMobInstance> deadMobs = new FastList<L2ControllableMobInstance>();
+		List<L2ControllableMobInstance> deadMobs = new ArrayList<L2ControllableMobInstance>();
 		
 		for (L2ControllableMobInstance mobInst : getMobs())
 			if (mobInst != null && mobInst.isDead())

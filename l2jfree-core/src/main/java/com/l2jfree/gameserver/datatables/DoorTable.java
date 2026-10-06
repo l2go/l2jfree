@@ -17,10 +17,9 @@ package com.l2jfree.gameserver.datatables;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
-
-import javolution.util.FastMap;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -47,7 +46,7 @@ public final class DoorTable
 		return SingletonHolder._instance;
 	}
 	
-	private final Map<Integer, L2DoorInstance> _doors = new FastMap<Integer, L2DoorInstance>();
+	private final Map<Integer, L2DoorInstance> _doors = new LinkedHashMap<Integer, L2DoorInstance>();
 	
 	private DoorTable()
 	{

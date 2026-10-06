@@ -21,8 +21,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -52,8 +51,8 @@ public class BanManager
 	
 	private static final Logger _log = LoggerFactory.getLogger(BanManager.class);
 	/** Banned ips */
-	private final FastMap<SubNet, BanInfo> _bannedIps = new FastMap<SubNet, BanInfo>().setShared(true);
-	private final FastMap<SubNet, BanInfo> _restrictedIps = new FastMap<SubNet, BanInfo>().setShared(true);
+	private final Map<SubNet, BanInfo> _bannedIps = new ConcurrentHashMap<SubNet, BanInfo>();
+	private final Map<SubNet, BanInfo> _restrictedIps = new ConcurrentHashMap<SubNet, BanInfo>();
 	
 	public static String BAN_LIST = "config/banned_ip.cfg";
 	private static final String ENCODING = "UTF-8";

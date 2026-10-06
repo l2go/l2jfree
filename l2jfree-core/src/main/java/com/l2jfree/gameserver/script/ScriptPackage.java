@@ -15,12 +15,11 @@
 package com.l2jfree.gameserver.script;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +43,7 @@ public class ScriptPackage
 	
 	public ScriptPackage(ZipFile pack)
 	{
-		_scriptFiles = new FastList<ScriptDocument>();
+		_scriptFiles = new ArrayList<ScriptDocument>();
 		_name = pack.getName();
 		addFiles(pack);
 	}

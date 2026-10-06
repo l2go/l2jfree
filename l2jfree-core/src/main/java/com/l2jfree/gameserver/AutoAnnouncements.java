@@ -17,10 +17,9 @@ package com.l2jfree.gameserver;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
-
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,7 @@ public final class AutoAnnouncements
 		return SingletonHolder._instance;
 	}
 	
-	private final List<AutoAnnouncer> _announcers = new FastList<AutoAnnouncer>();
+	private final List<AutoAnnouncer> _announcers = new ArrayList<AutoAnnouncer>();
 	
 	private AutoAnnouncements()
 	{

@@ -14,10 +14,10 @@
  */
 package com.l2jfree.gameserver.model;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-
-import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,7 +182,7 @@ public class TradeList
 	
 	private final L2Player _owner;
 	private L2Player _partner;
-	private final FastList<TradeItem> _items;
+	private final List<TradeItem> _items;
 	private String _title;
 	private boolean _packaged;
 	
@@ -229,7 +229,7 @@ public class TradeList
 
 	public TradeList(L2Player owner)
 	{
-		_items = new FastList<TradeItem>();
+		_items = new ArrayList<TradeItem>();
 		_owner = owner;
 	}
 	

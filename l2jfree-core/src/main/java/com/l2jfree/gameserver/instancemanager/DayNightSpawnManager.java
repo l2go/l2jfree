@@ -14,8 +14,9 @@
  */
 package com.l2jfree.gameserver.instancemanager;
 
-import javolution.util.FastMap;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,15 +47,15 @@ public class DayNightSpawnManager
 		return SingletonHolder.INSTANCE;
 	}
 	
-	private final FastMap<L2Spawn, L2Npc> _dayCreatures;
-	private final FastMap<L2Spawn, L2Npc> _nightCreatures;
-	private final FastMap<L2Spawn, L2Boss> _bosses;
+	private final Map<L2Spawn, L2Npc> _dayCreatures;
+	private final Map<L2Spawn, L2Npc> _nightCreatures;
+	private final Map<L2Spawn, L2Boss> _bosses;
 	
 	private DayNightSpawnManager()
 	{
-		_dayCreatures = new FastMap<L2Spawn, L2Npc>();
-		_nightCreatures = new FastMap<L2Spawn, L2Npc>();
-		_bosses = new FastMap<L2Spawn, L2Boss>();
+		_dayCreatures = new LinkedHashMap<L2Spawn, L2Npc>();
+		_nightCreatures = new LinkedHashMap<L2Spawn, L2Npc>();
+		_bosses = new LinkedHashMap<L2Spawn, L2Boss>();
 		
 		_log.info("DayNightSpawnManager: Day/Night handler initialized");
 	}
@@ -102,7 +103,7 @@ public class DayNightSpawnManager
 	 * Arg 3 : String for log info for unspawned L2Npc
 	 * Arg 4 : String for log info for spawned L2Npc
 	 */
-	private void spawnCreatures(FastMap<L2Spawn, L2Npc> UnSpawnCreatures, FastMap<L2Spawn, L2Npc> SpawnCreatures,
+	private void spawnCreatures(Map<L2Spawn, L2Npc> UnSpawnCreatures, Map<L2Spawn, L2Npc> SpawnCreatures,
 			String UnspawnLogInfo, String SpawnLogInfo)
 	{
 		try

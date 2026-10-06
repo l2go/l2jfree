@@ -14,9 +14,8 @@
  */
 package ai.group_template;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javolution.util.FastMap;
 
 import com.l2jfree.gameserver.datatables.NpcTable;
 import com.l2jfree.gameserver.gameobjects.L2Attackable;
@@ -45,7 +44,7 @@ public class FeedableBeasts extends L2AttackableAIScript
 	private static final int SKILL_CRYSTAL_SPICE = 2189;
 	private static final int[] TAMED_BEASTS = { 16013, 16014, 16015, 16016, 16017, 16018 };
 	
-	private static final Map<Integer, Integer> FOODSKILL = new FastMap<Integer, Integer>();
+	private static final Map<Integer, Integer> FOODSKILL = new LinkedHashMap<Integer, Integer>();
 	static
 	{
 		FOODSKILL.put(GOLDEN_SPICE, SKILL_GOLDEN_SPICE);
@@ -59,7 +58,7 @@ public class FeedableBeasts extends L2AttackableAIScript
 			21490, 21491, 21492, 21493, 21494, 21495, 21496, 21497, 21498, 21499, 21500, 21501, 21502, 21503, 21504,
 			21505, 21506, 21507, 21824, 21825, 21826, 21827, 21828, 21829, 16013, 16014, 16015, 16016, 16017, 16018 };
 	
-	private static final Map<Integer, Integer> MAD_COW_POLYMORPH = new FastMap<Integer, Integer>();
+	private static final Map<Integer, Integer> MAD_COW_POLYMORPH = new LinkedHashMap<Integer, Integer>();
 	static
 	{
 		MAD_COW_POLYMORPH.put(21824, 21468);
@@ -89,8 +88,8 @@ public class FeedableBeasts extends L2AttackableAIScript
 			"If you do not have to leave this place, then I can help you.", "What can I help you with?",
 			"I am not here only for food!", "Yam, yam, yam, yam, yam!" };
 	
-	private static Map<Integer, Integer> _FeedInfo = new FastMap<Integer, Integer>();
-	private static Map<Integer, GrowthCapableMob> _GrowthCapableMobs = new FastMap<Integer, GrowthCapableMob>();
+	private static Map<Integer, Integer> _FeedInfo = new LinkedHashMap<Integer, Integer>();
+	private static Map<Integer, GrowthCapableMob> _GrowthCapableMobs = new LinkedHashMap<Integer, GrowthCapableMob>();
 	
 	// all mobs that grow by eating
 	private class GrowthCapableMob
@@ -98,7 +97,7 @@ public class FeedableBeasts extends L2AttackableAIScript
 		private final int _growthLevel;
 		private final int _chance;
 		
-		private final Map<Integer, int[][]> _spiceToMob = new FastMap<Integer, int[][]>();
+		private final Map<Integer, int[][]> _spiceToMob = new LinkedHashMap<Integer, int[][]>();
 		
 		public GrowthCapableMob(int growthLevel, int chance)
 		{

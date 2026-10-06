@@ -32,7 +32,6 @@ import com.l2jfree.gameserver.network.packets.server.SellList;
 import com.l2jfree.gameserver.network.packets.server.SetupGauge;
 import com.l2jfree.gameserver.network.packets.server.ShopPreviewList;
 import com.l2jfree.gameserver.network.packets.server.StatusUpdate;
-import com.l2jfree.lang.L2TextBuilder;
 
 /**
  * This class ...
@@ -214,7 +213,7 @@ public class L2MerchantInstance extends L2NpcInstance implements L2Merchant
 		if (!Config.LIST_PET_RENT_NPC.contains(getTemplate().getNpcId()))
 			return;
 		
-		L2TextBuilder html1 = L2TextBuilder.newInstance("<html><body>Pet Manager:<br>");
+		StringBuilder html1 = new StringBuilder("<html><body>Pet Manager:<br>");
 		html1.append("You can rent a wyvern or strider for adena.<br>My prices:<br1>");
 		html1.append("<table border=0><tr><td>Ride</td></tr>");
 		html1.append("<tr><td>Wyvern</td><td>Strider</td></tr>");
@@ -225,7 +224,7 @@ public class L2MerchantInstance extends L2NpcInstance implements L2Merchant
 		html1.append("</table>");
 		html1.append("</body></html>");
 		
-		insertObjectIdAndShowChatWindow(player, html1.moveToString());
+		insertObjectIdAndShowChatWindow(player, html1.toString());
 	}
 	
 	public void tryRentPet(L2Player player, int val)
@@ -284,7 +283,7 @@ public class L2MerchantInstance extends L2NpcInstance implements L2Merchant
 			}
 			
 			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-			L2TextBuilder html1 = L2TextBuilder.newInstance("<html><body><table border=0>");
+			StringBuilder html1 = new StringBuilder("<html><body><table border=0>");
 			html1.append("<tr><td>Current Target:</td></tr>");
 			html1.append("<tr><td><br></td></tr>");
 			
@@ -331,7 +330,7 @@ public class L2MerchantInstance extends L2NpcInstance implements L2Merchant
 			
 			html1.append("</body></html>");
 			
-			html.setHtml(html1.moveToString());
+			html.setHtml(html1.toString());
 			player.sendPacket(html);
 		}
 		player.sendPacket(ActionFailed.STATIC_PACKET);

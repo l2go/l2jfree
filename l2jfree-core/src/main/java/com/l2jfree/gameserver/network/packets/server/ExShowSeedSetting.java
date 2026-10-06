@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.network.packets.server;
 
-import javolution.util.FastList;
 
+import java.util.List;
 import com.l2jfree.gameserver.instancemanager.CastleManager;
 import com.l2jfree.gameserver.instancemanager.CastleManorManager;
 import com.l2jfree.gameserver.instancemanager.CastleManorManager.SeedProduction;
@@ -46,7 +46,7 @@ public class ExShowSeedSetting extends L2ServerPacket
 	{
 		_manorId = manorId;
 		Castle c = CastleManager.getInstance().getCastleById(_manorId);
-		FastList<Integer> seeds = L2Manor.getInstance().getSeedsForCastle(_manorId);
+		List<Integer> seeds = L2Manor.getInstance().getSeedsForCastle(_manorId);
 		_count = seeds.size();
 		_seedData = new long[_count * 12];
 		int i = 0;

@@ -18,8 +18,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.net.InetAddress;
 import java.util.Map;
-
-import javolution.util.FastMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -29,7 +28,6 @@ import com.l2jfree.Config;
 import com.l2jfree.gameserver.CoreInfo;
 import com.l2jfree.gameserver.network.packets.L2ClientPacket;
 import com.l2jfree.gameserver.network.packets.L2ServerPacket;
-import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.network.FloodManager.ErrorMode;
 import com.l2jfree.network.PacketHandler;
 import com.l2jfree.network.NetworkConfig;
@@ -78,7 +76,7 @@ public final class L2ClientSelectorThread extends NetworkServer<L2Client, L2Clie
 		if (!Config.PACKET_HANDLER_DEBUG)
 			return;
 		
-		L2TextBuilder sb = L2TextBuilder.newInstance();
+		StringBuilder sb = new StringBuilder();
 		sb.append("Unknown Packet: ");
 		
 		for (int i = 0; i < opcodes.length; i++)
@@ -89,7 +87,7 @@ public final class L2ClientSelectorThread extends NetworkServer<L2Client, L2Clie
 			sb.append("0x").append(Integer.toHexString(opcodes[i]));
 		}
 		sb.append(", Client: ").append(client);
-		_log.info(sb.moveToString());
+		_log.info(sb.toString());
 		
 		byte[] array = new byte[buf.remaining()];
 		buf.get(array);
@@ -113,7 +111,7 @@ public final class L2ClientSelectorThread extends NetworkServer<L2Client, L2Clie
 	
 	// ==============================================
 	
-	private final Map<String, Integer> _legalConnections = new FastMap<String, Integer>().setShared(true);
+	private final Map<String, Integer> _legalConnections = new ConcurrentHashMap<String, Integer>();
 	
 	@Override
 	protected String getVersionInfo()

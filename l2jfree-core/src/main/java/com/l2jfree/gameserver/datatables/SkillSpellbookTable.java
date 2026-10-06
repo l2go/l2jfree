@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.datatables;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
-import javolution.util.FastMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ public class SkillSpellbookTable
 {
 	private final static Logger _log = LoggerFactory.getLogger(SkillTreeTable.class);
 	
-	private final FastMap<Integer, Integer> _skillSpellbooks;
+	private final Map<Integer, Integer> _skillSpellbooks;
 	
 	public static SkillSpellbookTable getInstance()
 	{
@@ -40,7 +40,7 @@ public class SkillSpellbookTable
 	
 	private SkillSpellbookTable()
 	{
-		_skillSpellbooks = new FastMap<Integer, Integer>().setShared(true);
+		_skillSpellbooks = new ConcurrentHashMap<Integer, Integer>();
 		
 		if (!Config.ALT_SP_BOOK_NEEDED)
 			return;

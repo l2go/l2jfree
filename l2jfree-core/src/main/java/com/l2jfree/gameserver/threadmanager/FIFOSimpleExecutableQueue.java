@@ -14,16 +14,16 @@
  */
 package com.l2jfree.gameserver.threadmanager;
 
+import java.util.ArrayList;
 import java.util.Collection;
-
-import javolution.util.FastList;
+import java.util.List;
 
 /**
  * @author NB4L1
  */
 public abstract class FIFOSimpleExecutableQueue<T> extends FIFOExecutableQueue
 {
-	private final FastList<T> _queue = new FastList<T>();
+	private final List<T> _queue = new ArrayList<T>();
 	
 	public final void execute(T t)
 	{

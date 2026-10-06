@@ -14,9 +14,8 @@
  */
 package com.l2jfree.gameserver.model.skills.learn;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javolution.util.FastTable;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 
@@ -31,7 +30,7 @@ public final class L2EnchantSkillLearn
 	private final int _baseLvl;
 	
 	@SuppressWarnings("unchecked")
-	private List<EnchantSkillDetail>[] _enchantDetails = new FastTable[0];
+	private List<EnchantSkillDetail>[] _enchantDetails = new List[0];
 	
 	public L2EnchantSkillLearn(int id, int baseLvl)
 	{
@@ -67,10 +66,10 @@ public final class L2EnchantSkillLearn
 		
 		if (enchantType >= _enchantDetails.length)
 		{
-			List<EnchantSkillDetail>[] newArray = new FastTable[enchantType + 1];
+			List<EnchantSkillDetail>[] newArray = new List[enchantType + 1];
 			System.arraycopy(_enchantDetails, 0, newArray, 0, _enchantDetails.length);
 			_enchantDetails = newArray;
-			_enchantDetails[enchantType] = new FastTable<EnchantSkillDetail>();
+			_enchantDetails[enchantType] = new ArrayList<EnchantSkillDetail>();
 		}
 		int index = L2EnchantSkillLearn.getEnchantIndex(esd.getLevel());
 		_enchantDetails[enchantType].add(index, esd);

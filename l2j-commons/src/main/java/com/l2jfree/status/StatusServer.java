@@ -18,12 +18,12 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +45,7 @@ public abstract class StatusServer extends Thread
 	
 	private static final class FloodFilter implements Filter
 	{
-		private final Map<String, Long> _connectionTimes = new FastMap<String, Long>();
+		private final Map<String, Long> _connectionTimes = new LinkedHashMap<String, Long>();
 		
 		@Override
 		public boolean accept(String host)
@@ -79,7 +79,7 @@ public abstract class StatusServer extends Thread
 	protected static final Logger _log = LoggerFactory.getLogger(StatusServer.class);
 	
 	private final ServerSocket _socket;
-	private final List<Filter> _filters = new FastList<Filter>();
+	private final List<Filter> _filters = new ArrayList<Filter>();
 	private final Set<StatusThread> _threads = new L2FastSet<StatusThread>().setShared(true);
 	
 	protected StatusServer() throws IOException

@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2AutoInitialization;
 import com.l2jfree.config.L2Properties;
-import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.tools.random.Rnd;
 
 public class Status extends Thread
@@ -99,7 +98,7 @@ public class Status extends Thread
 	
 	private String generateRandomPassword(int length)
 	{
-		L2TextBuilder password = L2TextBuilder.newInstance();
+		StringBuilder password = new StringBuilder();
 		String lowerChar = "qwertyuiopasdfghjklzxcvbnm";
 		String upperChar = "QWERTYUIOPASDFGHJKLZXCVBNM";
 		String digits = "1234567890";
@@ -119,6 +118,6 @@ public class Status extends Thread
 					break;
 			}
 		}
-		return password.moveToString();
+		return password.toString();
 	}
 }

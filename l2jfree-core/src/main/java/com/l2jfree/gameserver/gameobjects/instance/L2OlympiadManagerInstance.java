@@ -15,9 +15,8 @@
 package com.l2jfree.gameserver.gameobjects.instance;
 
 import java.util.HashMap;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
+import java.util.List;
+import java.util.Map;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.datatables.MultisellTable;
@@ -226,7 +225,7 @@ public class L2OlympiadManagerInstance extends L2Npc
 			switch (val)
 			{
 				case 1:
-					FastMap<Integer, String> matches = Olympiad.getInstance().getMatchList();
+					Map<Integer, String> matches = Olympiad.getInstance().getMatchList();
 					reply.setFile(Olympiad.OLYMPIAD_HTML_PATH + "olympiad_observe1.htm");
 					
 					for (int i = 0; i < Olympiad.getStadiumCount(); i++)
@@ -244,7 +243,7 @@ public class L2OlympiadManagerInstance extends L2Npc
 					int classId = Integer.parseInt(command.substring(11));
 					if ((classId >= 88 && classId <= 118) || (classId >= 131 && classId <= 134) || classId == 136)
 					{
-						FastList<String> names = Olympiad.getInstance().getClassLeaderBoard(classId);
+						List<String> names = Olympiad.getInstance().getClassLeaderBoard(classId);
 						reply.setFile(Olympiad.OLYMPIAD_HTML_PATH + "olympiad_ranking.htm");
 						
 						int index = 1;

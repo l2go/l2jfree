@@ -17,8 +17,8 @@ package com.l2jfree.gameserver.datatables;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
-import javolution.util.FastMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class TeleportLocationTable
 {
 	private final static Logger _log = LoggerFactory.getLogger(TeleportLocationTable.class);
 	
-	private FastMap<Integer, L2TeleportLocation> _teleports;
+	private Map<Integer, L2TeleportLocation> _teleports;
 	
 	public static TeleportLocationTable getInstance()
 	{
@@ -50,7 +50,7 @@ public class TeleportLocationTable
 	
 	public void reloadAll()
 	{
-		_teleports = new FastMap<Integer, L2TeleportLocation>();
+		_teleports = new LinkedHashMap<Integer, L2TeleportLocation>();
 		
 		Connection con = null;
 		try

@@ -14,8 +14,9 @@
  */
 package quests.converted;
 
-import javolution.util.FastMap;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang3.ArrayUtils;
 
 import com.l2jfree.gameserver.datatables.SkillTable;
@@ -33,7 +34,6 @@ import com.l2jfree.gameserver.network.packets.server.MagicSkillLaunched;
 import com.l2jfree.gameserver.network.packets.server.MagicSkillUse;
 import com.l2jfree.gameserver.network.packets.server.NpcSay;
 import com.l2jfree.gameserver.network.packets.server.SocialAction;
-import com.l2jfree.lang.L2TextBuilder;
 import com.l2jfree.tools.random.Rnd;
 
 /**
@@ -93,7 +93,7 @@ public final class ProofOfClanAlliance extends QuestJython
 			new Location(102186, 103022, -3541), };
 	private static final int NEEDED_WINS = Math.min(4, CHEST_POS.length);
 	
-	private final FastMap<Integer, QuestClan> _questers;
+	private final Map<Integer, QuestClan> _questers;
 	private volatile QuestClan _minigame;
 	
 	private ProofOfClanAlliance(int questId, String name, String descr)
@@ -104,7 +104,7 @@ public final class ProofOfClanAlliance extends QuestJython
 						// can be reused - verified by NC customer support
 						/*HERB_OF_HARIT, HERB_OF_VANOR, HERB_OF_OEL_MAHUM,*/BLOOD_OF_EVA, SYMBOL_OF_LOYALTY,
 						ANTIDOTE_RECIPE_LIST, VOUCHER_OF_FAITH, POTION_OF_RECOVERY };
-		_questers = new FastMap<Integer, QuestClan>().setShared(true);
+		_questers = new ConcurrentHashMap<Integer, QuestClan>();
 		_minigame = null;
 		addStartNpc(SIR_KRISTOF_RODEMAI);
 		addStartNpc(STATUE_OF_OFFERING);
@@ -499,14 +499,14 @@ public final class ProofOfClanAlliance extends QuestJython
 	
 	private static final String buildReply(L2Npc npc, int answer)
 	{
-		L2TextBuilder tb = L2TextBuilder.newInstance();
+		StringBuilder tb = new StringBuilder();
 		tb.append(npc.getNpcId());
 		tb.append('-');
 		if (answer < 10)
 			tb.append('0');
 		tb.append(answer);
 		tb.append(".htm");
-		return tb.moveToString();
+		return tb.toString();
 	}
 	
 	public static void main(String[] args)
@@ -609,7 +609,7 @@ public final class ProofOfClanAlliance extends QuestJython
 		@Override
 		public String toString()
 		{
-			L2TextBuilder tb = L2TextBuilder.newInstance();
+			StringBuilder tb = new StringBuilder();
 			tb.append("Questing clan ");
 			tb.append(getClan().getName());
 			tb.append(", leader ");
@@ -628,7 +628,7 @@ public final class ProofOfClanAlliance extends QuestJython
 					tb.append("OFF");
 				tb.append(')');
 			}
-			return tb.moveToString();
+			return tb.toString();
 		}
 	}
 	

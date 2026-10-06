@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.gameobjects.ai;
 
-import javolution.util.FastMap;
-import javolution.util.FastMap.Entry;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.l2jfree.gameserver.gameobjects.L2Attackable;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
@@ -187,17 +187,13 @@ public class L2DoorAI extends L2CreatureAI
 	
 	private final class GuardNotificationQueue extends FIFOExecutableQueue
 	{
-		private final FastMap<L2Creature, Integer> _map = new FastMap<L2Creature, Integer>();
+		private final LinkedHashMap<L2Creature, Integer> _map = new LinkedHashMap<L2Creature, Integer>();
 		
 		private void add(L2Creature attacker)
 		{
 			synchronized (_map)
 			{
-				Entry<L2Creature, Integer> entry = _map.getEntry(attacker);
-				if (entry != null)
-					entry.setValue(entry.getValue() + 15);
-				else
-					_map.put(attacker, 15);
+				_map.merge(attacker, 15, Integer::sum);
 			}
 			execute();
 		}
@@ -219,12 +215,10 @@ public class L2DoorAI extends L2CreatureAI
 			
 			synchronized (_map)
 			{
-				Entry<L2Creature, Integer> first = _map.head().getNext();
+				Map.Entry<L2Creature, Integer> first = _map.pollFirstEntry();
 				
 				attacker = first.getKey();
 				aggro = first.getValue();
-				
-				_map.remove(attacker);
 			}
 			
 			getActor().getKnownList().updateKnownObjects();
