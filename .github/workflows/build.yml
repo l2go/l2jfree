@@ -70,7 +70,11 @@ jobs:
           java-version: "25"
           cache: maven
 
-      # Unit tests run in this job. Tests tagged integration need MySQL and run
+      # The release bundle script is tested here, before it is ever used for a release.
+      - name: Test the release bundle script
+        run: bash deploy/release/test-bundle.sh
+
+      # Unit tests run in this job. Tests tagged integration need PostgreSQL and run
       # in the integration job. Surefire excludes that tag unless -Dgroups is set.
       # Record the Maven build JVM so the baseline does not depend on Surefire.
       - name: Build, test, and package with Java 25 while recording JFR

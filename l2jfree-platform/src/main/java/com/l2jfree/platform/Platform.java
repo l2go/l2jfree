@@ -22,6 +22,8 @@ import com.l2jfree.contract.WorldPort;
 import com.l2jfree.gameserver.GameServer;
 import com.l2jfree.loginserver.LoginConfig;
 import com.l2jfree.loginserver.LoginModule;
+import com.l2jfree.status.HealthServer;
+import com.l2jfree.status.Readiness;
 
 /**
  * Starts the login module and the world module in one process (ADR-0003).
@@ -46,9 +48,15 @@ public final class Platform extends L2AutoInitialization
 	
 	private static void start() throws Exception
 	{
+		final Readiness readiness = Readiness.ofThisProcess("l2jfree");
+		HealthServer.startIfConfigured(readiness);
+		
 		final LoginModule login = LoginModule.prepare();
 		final WorldPort world = GameServer.start(login);
 		login.start(world);
+		
+		// both ports are open: the health endpoint now answers ready
+		readiness.markReady();
 		
 		LoggerFactory.getLogger(Platform.class).info("Platform ready: login {}:{}, world {}:{}",
 				LoginConfig.LOGIN_SERVER_HOSTNAME, LoginConfig.LOGIN_SERVER_PORT, Config.GAMESERVER_HOSTNAME,

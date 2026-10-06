@@ -73,6 +73,8 @@ services:
       L2JFREE_WORLD_DB_PASSWORD_FILE: /var/lib/l2jfree/secrets/world_password
       L2JFREE_EXTERNAL_HOST: ${L2JFREE_EXTERNAL_HOST:-127.0.0.1}
       L2JFREE_JAVA_OPTS: ${L2JFREE_JAVA_OPTS:--Xms1g -Xmx3g}
+      # The readiness endpoint, reachable only from inside the container: 200 once both ports accept players.
+      L2JFREE_HEALTH_PORT: "8080"
     mem_limit: 4g
     ports:
       - "${L2JFREE_BIND:-0.0.0.0}:2106:2106"
@@ -88,7 +90,7 @@ services:
       - /tmp:uid=10001,gid=10001,mode=1777
       - /run/l2jfree:uid=10001,gid=10001,mode=0700
     healthcheck:
-      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/2106 && exec 4<>/dev/tcp/127.0.0.1/7777"]
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health/ready HTTP/1.0\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '"]
       interval: 10s
       timeout: 3s
       retries: 30
