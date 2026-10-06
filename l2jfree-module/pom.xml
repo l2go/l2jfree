@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.l2jfree</groupId>
 	<artifactId>l2jfree-module</artifactId>
-	<version>2.5.0</version>
+	<version>3.0.0</version>
 	<name>${project.artifactId}-${project.version}</name>
 	<packaging>pom</packaging>
 	<properties>
@@ -134,6 +134,40 @@
 		<defaultGoal>install</defaultGoal>
 		<finalName>${project.artifactId}-${project.version}</finalName>
 		<plugins>
+			<plugin>
+				<!-- The build refuses what the decisions forbid: an old Maven or JDK, the retired MySQL and Liquibase libraries
+					(ADR-0004), and a dependency declared twice with different versions. -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.5.0</version>
+				<executions>
+					<execution>
+						<id>enforce-rules</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireMavenVersion>
+									<version>[3.9,)</version>
+								</requireMavenVersion>
+								<requireJavaVersion>
+									<version>[25,)</version>
+								</requireJavaVersion>
+								<banDuplicatePomDependencyVersions />
+								<bannedDependencies>
+									<excludes>
+										<exclude>com.mysql:*</exclude>
+										<exclude>mysql:*</exclude>
+										<exclude>org.liquibase:*</exclude>
+									</excludes>
+								</bannedDependencies>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -276,6 +310,7 @@
 		<module>../l2jfree-network</module>
 		<module>../l2jfree-scripting-engines</module>
 		<module>../l2jfree-contract</module>
+		<module>../l2jfree-test-support</module>
 		<module>../l2jfree-login</module>
 		<module>../l2jfree-core</module>
 		<module>../l2jfree-datapack</module>

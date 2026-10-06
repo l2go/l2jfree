@@ -16,7 +16,7 @@ The stack starts three services:
 - `db`: PostgreSQL 18 with one role per module and the schemas each role owns ([ADR-0009](../docs/adr/0009-database-roles-schemas-and-migration.md)). The role `l2jfree_login` owns `login`; the role `l2jfree_world` owns `world`, `catalog`, and `report`.
 - `server`: one process with the login module and the world module ([ADR-0003](../docs/adr/0003-one-process-two-modules.md)). Each module migrates its schema when the process starts, the world loads its data and the catalog, and the login port opens last.
 
-`--wait` returns when the services are healthy. The world needs minutes to load on the first start, so the first `up` can take five minutes or more; the health check of `server` allows up to 300 seconds of start-up and then 30 further tries ten seconds apart. The server is healthy when both ports accept a TCP connection.
+`--wait` returns when the services are healthy. The world needs minutes to load on the first start, so the first `up` can take five minutes or more; the health check of `server` allows up to 300 seconds of start-up and then 30 further tries ten seconds apart. The server is healthy when its readiness endpoint answers 200, which it does once the world is loaded and both ports accept players. The endpoint listens only inside the container (`L2JFREE_HEALTH_PORT`, default off, set to `8080` by the compose file).
 
 | Port | Module | Notes |
 |---|---|---|
@@ -54,6 +54,7 @@ The entry point of the image only validates these variables and starts the proce
 | `L2JFREE_BIND` | no | Listen address of both ports, default `0.0.0.0`. Compose does not pass it; it uses the variable for the published ports |
 | `L2JFREE_EXTERNAL_HOST` | no | Address the world announces when no subnet matches, default the value of `ExternalHostname` in `server.properties` |
 | `L2JFREE_JAVA_OPTS` | no | JVM options, default `-Xms1g -Xmx3g` |
+| `L2JFREE_HEALTH_PORT` | no | Port of the readiness endpoint (`/health/live`, `/health/ready`), default off. `L2JFREE_HEALTH_HOST` sets its address, default `127.0.0.1` |
 
 A secret is never an environment value: a variable that ends in `_FILE` names a file inside the container, and the `secrets` volume holds the files.
 

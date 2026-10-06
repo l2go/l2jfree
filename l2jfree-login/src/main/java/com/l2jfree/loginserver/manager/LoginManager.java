@@ -167,6 +167,19 @@ public class LoginManager
 	}
 	
 	/**
+	 * For tests: a manager that works on the given accounts service and has no RSA and Blowfish keys, so the admission
+	 * rules can be tested without the key generation and without the database registry.
+	 */
+	LoginManager(AccountsServices service)
+	{
+		_hackProtection = new FastMap<InetAddress, FailedLoginAttempt>();
+		_keyPairs = new ScrambledKeyPair[0];
+		_service = service;
+		_connections = new FastList<L2Client>();
+		_blowfishKeys = new byte[0][];
+	}
+	
+	/**
 	 * This is mostly to force the initialization of the Crypto Implementation, avoiding it being done on runtime when its first needed.<BR>
 	 * In short it avoids the worst-case execution time on runtime by doing it on loading.
 	 * @param key Any private RSA Key just for testing purposes.

@@ -14,21 +14,13 @@
  */
 package com.l2jfree.gameserver;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.l2jfree.Config;
 import com.l2jfree.gameserver.cache.HtmCache;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.world.L2World;
@@ -38,9 +30,8 @@ import com.l2jfree.gameserver.network.packets.L2ServerPacket;
 import com.l2jfree.gameserver.network.packets.server.CreatureSay;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.persistence.AnnouncementStore;
 import com.l2jfree.gameserver.script.DateRange;
-import com.l2jfree.gameserver.util.RuntimeData;
-import com.l2jfree.lang.L2TextBuilder;
 
 /**
  * This class ...
@@ -67,18 +58,7 @@ public class Announcements
 	public void loadAnnouncements()
 	{
 		_announcements.clear();
-		// an edit made in the game is kept in the state directory and wins over the list shipped with the datapack
-		File file = RuntimeData.file("announcements.txt");
-		if (!file.exists())
-			file = new File(Config.DATAPACK_ROOT, "data/announcements.txt");
-		if (file.exists())
-		{
-			readFromDisk(file);
-		}
-		else
-		{
-			_log.info("data/announcements.txt doesn't exist");
-		}
+		_announcements.addAll(AnnouncementStore.load());
 	}
 	
 	public void showAnnouncements(L2Player activeChar)
@@ -123,7 +103,7 @@ public class Announcements
 		String content = HtmCache.getInstance().getHtmForce("data/html/admin/announce.htm");
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 		adminReply.setHtml(content);
-		L2TextBuilder replyMSG = L2TextBuilder.newInstance();
+		StringBuilder replyMSG = new StringBuilder();
 		replyMSG.append("<br>");
 		for (int i = 0; i < _announcements.size(); i++)
 		{
@@ -133,91 +113,25 @@ public class Announcements
 			replyMSG.append(i);
 			replyMSG.append("\" width=60 height=15 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\"></td></tr></table>");
 		}
-		adminReply.replace("%announces%", replyMSG.moveToString());
+		adminReply.replace("%announces%", replyMSG.toString());
 		activeChar.sendPacket(adminReply);
 	}
 	
 	public void addAnnouncement(String text)
 	{
 		_announcements.add(text);
-		saveToDisk();
+		saveToDatabase();
 	}
 	
 	public void delAnnouncement(int line)
 	{
 		_announcements.remove(line);
-		saveToDisk();
+		saveToDatabase();
 	}
 	
-	private void readFromDisk(File file)
+	private void saveToDatabase()
 	{
-		BufferedReader lnr = null;
-		try
-		{
-			int i = 0;
-			String line = null;
-			lnr = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
-			while ((line = lnr.readLine()) != null)
-			{
-				StringTokenizer st = new StringTokenizer(line, "\n\r");
-				if (st.hasMoreTokens())
-				{
-					String announcement = st.nextToken();
-					_announcements.add(announcement);
-					
-					i++;
-				}
-			}
-			if (_log.isDebugEnabled())
-				_log.info("Announcements: Loaded " + i + " Announcements.");
-		}
-		catch (IOException e1)
-		{
-			_log.error("Error reading announcements", e1);
-		}
-		finally
-		{
-			try
-			{
-				if (lnr != null)
-					lnr.close();
-			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-			}
-		}
-	}
-	
-	private void saveToDisk()
-	{
-		File file = RuntimeData.file("announcements.txt");
-		FileWriter save = null;
-		
-		try
-		{
-			save = new FileWriter(file);
-			for (int i = 0; i < _announcements.size(); i++)
-			{
-				save.write(_announcements.get(i));
-				save.write("\r\n");
-			}
-		}
-		catch (IOException e)
-		{
-			_log.warn("saving the announcements file has failed: ", e);
-		}
-		finally
-		{
-			try
-			{
-				if (save != null)
-					save.close();
-			}
-			catch (Exception e)
-			{
-			}
-		}
+		AnnouncementStore.replaceAll(_announcements);
 	}
 	
 	public void announceToAll(String text)

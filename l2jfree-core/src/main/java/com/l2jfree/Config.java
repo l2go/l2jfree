@@ -103,6 +103,7 @@ public final class Config
 	public static String OPTIONAL_NETWORKS;
 	public static boolean PACKET_HANDLER_DEBUG;
 	public static int SERVER_ID; // Number the client's server list shows for this world
+	public static long IP_UPDATE_TIME; // How often the host names of the world are resolved again, in ms; 0 resolves them once
 	public static Pattern CNAME_PATTERN; // Character name template
 	public static Pattern PET_NAME_PATTERN; // Pet name template
 	public static Pattern CLAN_ALLY_NAME_PATTERN; // Clan and ally name template
@@ -148,6 +149,7 @@ public final class Config
 			L2Properties serverSettings = new L2Properties(CONFIGURATION_FILE);
 			
 			SERVER_ID = Integer.parseInt(serverSettings.getProperty("ServerId", "1"));
+			IP_UPDATE_TIME = Long.parseLong(serverSettings.getProperty("IpUpdateTime", "0")) * 60 * 1000;
 			PORT_GAME = Integer.parseInt(serverSettings.getProperty("GameserverPort", "7777"));
 			try
 			{

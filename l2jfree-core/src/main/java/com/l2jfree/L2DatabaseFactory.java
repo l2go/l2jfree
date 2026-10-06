@@ -14,6 +14,8 @@
  */
 package com.l2jfree;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -23,6 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.l2jfree.gameserver.persistence.WorldTransaction;
+import com.l2jfree.gameserver.persistence.WorldLock;
+import com.l2jfree.gameserver.persistence.WorldSchemas;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
@@ -67,6 +71,9 @@ public final class L2DatabaseFactory
 	}
 	
 	private final HikariDataSource _source;
+	private final HikariConfig _poolConfig;
+	/** Held for the life of the server. */
+	private WorldLock _worldLock;
 	
 	private L2DatabaseFactory()
 	{
@@ -75,6 +82,7 @@ public final class L2DatabaseFactory
 	
 	L2DatabaseFactory(HikariConfig poolConfig)
 	{
+		_poolConfig = poolConfig;
 		HikariDataSource source = null;
 		try
 		{
@@ -113,23 +121,38 @@ public final class L2DatabaseFactory
 			_log.warn("at least " + Config.DATABASE_MAX_CONNECTIONS + " db connections are required.");
 		}
 		
+		return poolConfig(Config.DATABASE_DRIVER, Config.DATABASE_URL, Config.DATABASE_LOGIN, Config.DATABASE_PASSWORD,
+				Config.DATABASE_MAX_CONNECTIONS, Config.DATABASE_MIN_IDLE_CONNECTIONS);
+	}
+	
+	/** The pool settings for a PostgreSQL database, see {@link #poolConfig(String, String, String, String, int, int)}. */
+	static HikariConfig poolConfig(String url, String user, String password, int maxConnections, int minIdle)
+	{
+		return poolConfig("org.postgresql.Driver", url, user, password, maxConnections, minIdle);
+	}
+	
+	/**
+	 * A PostgreSQL pool whose sessions see the world schema and the catalog ({@code search_path}) and send strings
+	 * untyped, so that the server infers the column type, as the code binds some numbers and moments as text. The
+	 * settings are arguments, so a test builds a pool without touching the static configuration.
+	 */
+	static HikariConfig poolConfig(String driver, String url, String user, String password, int maxConnections,
+			int minIdle)
+	{
 		HikariConfig poolConfig = new HikariConfig();
 		poolConfig.setPoolName("l2jfree-gameserver");
-		poolConfig.setDriverClassName(Config.DATABASE_DRIVER);
-		poolConfig.setJdbcUrl(Config.DATABASE_URL);
-		poolConfig.setUsername(Config.DATABASE_LOGIN);
-		poolConfig.setPassword(Config.DATABASE_PASSWORD);
+		poolConfig.setDriverClassName(driver);
+		poolConfig.setJdbcUrl(url);
+		poolConfig.setUsername(user);
+		poolConfig.setPassword(password);
 		poolConfig.setAutoCommit(true);
-		poolConfig.setMaximumPoolSize(Config.DATABASE_MAX_CONNECTIONS);
-		int idleConnections = Config.DATABASE_MIN_IDLE_CONNECTIONS;
-		if (idleConnections < 0)
-			idleConnections = 0;
-		if (idleConnections > Config.DATABASE_MAX_CONNECTIONS)
-			idleConnections = Config.DATABASE_MAX_CONNECTIONS;
-		poolConfig.setMinimumIdle(idleConnections);
+		poolConfig.setMaximumPoolSize(maxConnections);
+		poolConfig.setMinimumIdle(Math.max(0, Math.min(minIdle, maxConnections)));
 		poolConfig.setConnectionTimeout(30_000);
 		poolConfig.setValidationTimeout(5_000);
 		poolConfig.addDataSourceProperty("stringtype", "unspecified");
+		// batches of inserts (the catalog, the item save) go to the server as one statement
+		poolConfig.addDataSourceProperty("reWriteBatchedInserts", "true");
 		poolConfig.addDataSourceProperty("currentSchema", "world,catalog,public");
 		poolConfig.addDataSourceProperty("ApplicationName", "l2jfree-world");
 		poolConfig.setInitializationFailTimeout(30_000);
@@ -138,7 +161,39 @@ public final class L2DatabaseFactory
 	
 	public void shutdown() throws Exception
 	{
+		// the pool closes first: the lock lives on its own connection and ends the claim on the database last
 		_source.close();
+		
+		synchronized (this)
+		{
+			if (_worldLock != null)
+			{
+				_worldLock.close();
+				_worldLock = null;
+			}
+		}
+	}
+	
+	/**
+	 * Marks the database as used by this server ({@link WorldLock}); {@link #prepareSchemas} does it first. The lock
+	 * lasts until {@link #shutdown} or until the process ends.
+	 */
+	public synchronized void lockWorld()
+	{
+		if (_worldLock == null)
+			_worldLock = WorldLock.acquire(_poolConfig.getJdbcUrl(), _poolConfig.getUsername(), _poolConfig.getPassword());
+	}
+	
+	/**
+	 * Takes the world lock, applies the pending migrations of the world schema, and makes the catalog equal to the
+	 * files in {@code catalogDirectory}. Runs before anything reads the database, so a second server never migrates
+	 * or reloads under the first one, and the world never starts on an old schema or a catalog that does not match the
+	 * image.
+	 */
+	public void prepareSchemas(Path catalogDirectory) throws SQLException, IOException
+	{
+		lockWorld();
+		WorldSchemas.prepare(_source, catalogDirectory);
 	}
 	
 	/** The pool, for the work that does not go through a connection: migrations and the catalog load. */

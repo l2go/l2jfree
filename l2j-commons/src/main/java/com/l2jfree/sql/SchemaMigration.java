@@ -49,10 +49,17 @@ public final class SchemaMigration
 				.createSchemas(false)
 				.locations(location)
 				.validateOnMigrate(true)
+				// a mispackaged or misnamed migration must stop the start, not run on an empty schema
+				.failOnMissingLocations(true)
+				.validateMigrationNaming(true)
+				.cleanDisabled(true)
 				.load();
 		
 		MigrateResult result = flyway.migrate();
-		_log.info("Schema " + schema + " is at version " + result.targetSchemaVersion + " ("
+		String version = result.targetSchemaVersion;
+		if (version == null && flyway.info().current() != null)
+			version = String.valueOf(flyway.info().current().getVersion());
+		_log.info("Schema " + schema + " is at version " + (version == null ? "none" : version) + " ("
 				+ result.migrationsExecuted + " migration(s) applied).");
 		return result.migrationsExecuted;
 	}

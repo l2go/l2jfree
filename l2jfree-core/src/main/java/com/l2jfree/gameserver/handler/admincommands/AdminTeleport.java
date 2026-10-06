@@ -14,19 +14,11 @@
  */
 package com.l2jfree.gameserver.handler.admincommands;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.LineNumberReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
-
-import javolution.text.TextBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +42,8 @@ import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.model.world.spawn.L2Spawn;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
-import com.l2jfree.gameserver.util.RuntimeData;
+import com.l2jfree.gameserver.persistence.AdminBookmarkStore;
+import com.l2jfree.gameserver.persistence.AdminBookmarkStore.Bookmark;
 
 /**
  * This class handles following admin commands:
@@ -292,104 +285,28 @@ public class AdminTeleport implements IAdminCommandHandler
 	
 	private void delbookmark(String Name)
 	{
-		File file = RuntimeData.file("bookmark.txt");
-		LineNumberReader lnr = null;
-		String bookmarks = "";
-		
-		try
-		{
-			String line = null;
-			lnr = new LineNumberReader(new FileReader(file));
-			while ((line = lnr.readLine()) != null)
-			{
-				StringTokenizer st = new StringTokenizer(line, ";");
-				String nm = st.nextToken();
-				if (!nm.equals(Name))
-					bookmarks += line + "\n";
-			}
-			
-			FileWriter save = new FileWriter(file);
-			save.write(bookmarks);
-			save.close();
-		}
-		catch (FileNotFoundException e)
-		{
-		}
-		catch (IOException e1)
-		{
-			e1.printStackTrace();
-		}
-		finally
-		{
-			try
-			{
-				if (lnr != null)
-					lnr.close();
-			}
-			catch (Exception e2)
-			{
-			}
-		}
+		AdminBookmarkStore.delete(Name);
 	}
 	
 	// L2J_JP ADD
 	private void bookmark(L2Player activeChar, String Name)
 	{
-		File file = RuntimeData.file("bookmark.txt");
-		LineNumberReader lnr = null;
-		String bookmarks = "";
-		String table = "";
-		try
+		if (Name != null && !AdminBookmarkStore.save(new Bookmark(Name, activeChar.getX(), activeChar.getY(), activeChar.getZ())))
+			activeChar.sendMessage("The bookmark was not saved.");
+		
+		StringBuilder table = new StringBuilder();
+		for (Bookmark bookmark : AdminBookmarkStore.load())
 		{
-			String line = null;
-			lnr = new LineNumberReader(new FileReader(file));
-			while ((line = lnr.readLine()) != null)
-			{
-				bookmarks += line + "\n";
-				StringTokenizer st = new StringTokenizer(line, ";");
-				String nm = st.nextToken();
-				table +=
-						("<a action=\"bypass -h admin_move_to " + st.nextToken() + " " + st.nextToken() + " "
-								+ st.nextToken() + "\">" + nm + "</a>&nbsp;");
-				table +=
-						("<a action=\"bypass -h admin_delbookmark " + nm + "\"><font color=\"FF0000\">[X]</font></a><br>");
-			}
-			if (Name == null)
-			{
-				NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-				adminReply.setFile("data/html/admin/tele/bookmarks.htm");
-				adminReply.replace("%bookmarks%", table);
-				activeChar.sendPacket(adminReply);
-			}
-			else
-			{
-				FileWriter save = new FileWriter(file);
-				bookmarks += Name + ";" + activeChar.getX() + ";" + activeChar.getY() + ";" + activeChar.getZ() + "\n";
-				save.write(bookmarks);
-				save.close();
-				bookmark(activeChar, null);
-			}
+			table.append("<a action=\"bypass -h admin_move_to ").append(bookmark.x()).append(' ')
+					.append(bookmark.y()).append(' ').append(bookmark.z()).append("\">").append(bookmark.name())
+					.append("</a>&nbsp;");
+			table.append("<a action=\"bypass -h admin_delbookmark ").append(bookmark.name())
+					.append("\"><font color=\"FF0000\">[X]</font></a><br>");
 		}
-		catch (FileNotFoundException e)
-		{
-			activeChar.sendMessage("bookmark.txt not found");
-		}
-		catch (IOException e1)
-		{
-			e1.printStackTrace();
-		}
-		finally
-		{
-			try
-			{
-				if (lnr != null)
-					lnr.close();
-			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-			}
-		}
+		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
+		adminReply.setFile("data/html/admin/tele/bookmarks.htm");
+		adminReply.replace("%bookmarks%", table.toString());
+		activeChar.sendPacket(adminReply);
 	}
 	
 	private void teleportTo(L2Player activeChar, String Cords)
@@ -435,7 +352,7 @@ public class AdminTeleport implements IAdminCommandHandler
 		}
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
 		
-		TextBuilder replyMSG = new TextBuilder("<html><title>Teleport Character</title>");
+		StringBuilder replyMSG = new StringBuilder("<html><title>Teleport Character</title>");
 		replyMSG.append("<body>");
 		replyMSG.append("The character you will teleport is " + player.getName() + ".");
 		replyMSG.append("<br>");
@@ -600,12 +517,17 @@ public class AdminTeleport implements IAdminCommandHandler
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			// one statement, so the three coordinates change together
-			PreparedStatement statement = con.prepareStatement("UPDATE player SET x = ?, y = ?, z = ? WHERE name = ?");
+			PreparedStatement statement = con.prepareStatement("UPDATE player SET x = ? WHERE name = ?");
 			statement.setInt(1, activeChar.getX());
-			statement.setInt(2, activeChar.getY());
-			statement.setInt(3, activeChar.getZ());
-			statement.setString(4, name);
+			statement.setString(2, name);
+			statement.execute();
+			statement = con.prepareStatement("UPDATE player SET y = ? WHERE name = ?");
+			statement.setInt(1, activeChar.getY());
+			statement.setString(2, name);
+			statement.execute();
+			statement = con.prepareStatement("UPDATE player SET z = ? WHERE name = ?");
+			statement.setInt(1, activeChar.getZ());
+			statement.setString(2, name);
 			statement.execute();
 			int count = statement.getUpdateCount();
 			statement.close();

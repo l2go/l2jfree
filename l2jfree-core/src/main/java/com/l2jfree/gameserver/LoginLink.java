@@ -14,15 +14,10 @@
  */
 package com.l2jfree.gameserver;
 
-import java.util.Map;
-
-import javolution.util.FastMap;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
-import com.l2jfree.contract.AdmissionResult;
 import com.l2jfree.contract.LoginPort;
 import com.l2jfree.contract.ServerStatus;
 import com.l2jfree.contract.ServerStatusAttributes;
@@ -31,7 +26,6 @@ import com.l2jfree.contract.WorldPort;
 import com.l2jfree.contract.WorldStatus;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.world.L2World;
-import com.l2jfree.gameserver.network.AuthLoginGuard;
 import com.l2jfree.gameserver.network.Disconnection;
 import com.l2jfree.gameserver.network.L2Client;
 import com.l2jfree.gameserver.network.L2Client.GameClientState;
@@ -61,22 +55,47 @@ public final class LoginLink implements WorldPort
 		return SingletonHolder.INSTANCE;
 	}
 
-	private static final class WaitingClient
+	/** What the world does with its clients when the login module decides. */
+	private static final class GameClients implements PlaySessions.Clients<L2Client>
 	{
-		public final L2Client gameClient;
-		public final SessionKey session;
-
-		public WaitingClient(L2Client client, SessionKey key)
+		@Override
+		public void claim(L2Client client, String account)
 		{
-			gameClient = client;
-			session = key;
+			client.setAccountName(account);
+		}
+
+		@Override
+		public void admit(final L2Client client, SessionKey key, String hostAddress)
+		{
+			client.setState(GameClientState.AUTHED);
+			client.setSessionId(key);
+			client.setHostAddress(hostAddress);
+
+			// executing the sql query on the thread pool
+			client.getPacketQueue().execute(new Runnable() {
+				@Override
+				public void run()
+				{
+					client.sendPacket(new CharSelectionInfo(client));
+				}
+			});
+		}
+
+		@Override
+		public void refuse(L2Client client)
+		{
+			client.sendPacket(new LoginFail(LoginFail.SYSTEM_ERROR_LOGIN_LATER));
+			client.closeNow();
+		}
+
+		@Override
+		public void close(L2Client client)
+		{
+			client.closeNow();
 		}
 	}
 
-	private final Map<String, WaitingClient> _waitingClients = new FastMap<String, WaitingClient>().setShared(true);
-	private final Map<String, L2Client> _accountsInGameServer = new FastMap<String, L2Client>().setShared(true);
-	private final Object _accountLock = new Object();
-
+	private volatile PlaySessions<L2Client> _sessions;
 	private volatile LoginPort _login;
 	private volatile WorldAddress _address;
 	private volatile ServerStatus _status = ServerStatus.STATUS_AUTO;
@@ -101,9 +120,11 @@ public final class LoginLink implements WorldPort
 				throw new IllegalStateException("The world is already connected to a login module");
 
 			_address = new WorldAddress(WorldAddress.netConfig(Config.EXTERNAL_HOSTNAME, Config.INTERNAL_HOSTNAME,
-					Config.SUBNETWORKS));
+					Config.SUBNETWORKS),
+					Config.IP_UPDATE_TIME);
 			_status = Config.SERVER_GMONLY ? ServerStatus.STATUS_GM_ONLY : ServerStatus.STATUS_AUTO;
 			_login = login;
+			_sessions = new PlaySessions<L2Client>(login, new GameClients());
 		}
 
 		_log.info("Connected to the login module, world status is {}", _status);
@@ -118,6 +139,15 @@ public final class LoginLink implements WorldPort
 		return login;
 	}
 
+	private PlaySessions<L2Client> sessions()
+	{
+		PlaySessions<L2Client> sessions = _sessions;
+		if (sessions == null)
+			throw new IllegalStateException("The world is not connected to a login module");
+
+		return sessions;
+	}
+
 	// ---------------------------------------------------------------------------------------------
 	// calls from the world to the login module
 	// ---------------------------------------------------------------------------------------------
@@ -130,102 +160,12 @@ public final class LoginLink implements WorldPort
 	 */
 	public boolean addWaitingClientAndSendRequest(String acc, L2Client client, SessionKey key)
 	{
-		final LoginPort login = login();
-
-		synchronized (_accountLock)
-		{
-			if (!AuthLoginGuard.canClaim(_waitingClients.containsKey(acc), _accountsInGameServer.containsKey(acc)))
-				return false;
-
-			client.setAccountName(acc);
-			_waitingClients.put(acc, new WaitingClient(client, key));
-		}
-
-		AdmissionResult result;
-		try
-		{
-			result = login.admit(acc, key);
-		}
-		catch (RuntimeException e)
-		{
-			_log.warn("The login module failed to answer the admission of " + acc, e);
-			result = AdmissionResult.refused();
-		}
-
-		boolean claimed = false;
-		L2Client previous = null;
-		synchronized (_accountLock)
-		{
-			WaitingClient waiting = _waitingClients.get(acc);
-			if (waiting != null && waiting.gameClient == client)
-			{
-				_waitingClients.remove(acc);
-				claimed = true;
-
-				if (result.admitted())
-					previous = _accountsInGameServer.put(acc, client);
-			}
-		}
-
-		if (!claimed)
-		{
-			// the client went away while the login module decided: the admission must not outlive it
-			if (result.admitted())
-				leave(login, acc);
-
-			return true;
-		}
-
-		if (result.admitted())
-		{
-			client.setState(GameClientState.AUTHED);
-			client.setSessionId(key);
-			client.setHostAddress(result.clientHost());
-
-			// executing the sql query on the thread pool
-			final L2Client target = client;
-			client.getPacketQueue().execute(new Runnable() {
-				@Override
-				public void run()
-				{
-					target.sendPacket(new CharSelectionInfo(target));
-				}
-			});
-
-			if (previous != null && previous != client)
-				previous.closeNow();
-		}
-		else
-		{
-			_log.warn("session key is not correct. closing connection");
-			client.sendPacket(new LoginFail(LoginFail.SYSTEM_ERROR_LOGIN_LATER));
-			client.closeNow();
-		}
-
-		return true;
+		return sessions().authenticate(acc, client, key);
 	}
 
 	public void sendLogout(String account, L2Client client)
 	{
-		if (account == null || account.isEmpty())
-			return;
-
-		boolean notifyLogin = true;
-		synchronized (_accountLock)
-		{
-			WaitingClient waiting = _waitingClients.get(account);
-			if (waiting != null && waiting.gameClient == client)
-				_waitingClients.remove(account);
-
-			L2Client current = _accountsInGameServer.get(account);
-			if (current == client)
-				_accountsInGameServer.remove(account);
-			else if (current != null || (waiting != null && waiting.gameClient != client))
-				notifyLogin = false;
-		}
-
-		if (notifyLogin)
-			leave(login(), account);
+		sessions().logout(account, client);
 	}
 
 	public void sendAccessLevel(String account, int level)
@@ -241,18 +181,6 @@ public final class LoginLink implements WorldPort
 		}
 	}
 
-	private static void leave(LoginPort login, String account)
-	{
-		try
-		{
-			login.leave(account);
-		}
-		catch (RuntimeException e)
-		{
-			_log.warn("The login module failed to close the session of " + account, e);
-		}
-	}
-
 	// ---------------------------------------------------------------------------------------------
 	// WorldPort: calls from the login module to the world
 	// ---------------------------------------------------------------------------------------------
@@ -260,7 +188,7 @@ public final class LoginLink implements WorldPort
 	@Override
 	public WorldStatus status()
 	{
-		return new WorldStatus(Config.SERVER_ID, _status, Config.PORT_GAME, _accountsInGameServer.size(),
+		return new WorldStatus(Config.SERVER_ID, _status, Config.PORT_GAME, sessions().inWorldCount(),
 				Config.MAXIMUM_ONLINE_USERS, Config.SERVER_AGE_LIM, Config.SERVER_PVP, Config.SERVER_LIST_CLOCK,
 				Config.SERVER_LIST_BRACKET, Config.SERVER_LIST_TESTSERVER, Config.SERVER_BIT_3, Config.SERVER_BIT_1);
 	}
@@ -278,15 +206,7 @@ public final class LoginLink implements WorldPort
 	@Override
 	public void kick(String account)
 	{
-		L2Client client = _accountsInGameServer.get(account);
-
-		if (client != null)
-			client.closeNow();
-
-		WaitingClient wc = _waitingClients.get(account);
-
-		if (wc != null)
-			wc.gameClient.closeNow();
+		sessions().kick(account);
 
 		L2Player.disconnectIfOnline(account);
 	}

@@ -16,8 +16,7 @@ package com.l2jfree.sql;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-
-import javolution.util.FastList;
+import java.util.ArrayDeque;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +28,7 @@ public abstract class SQLQueryQueue implements Runnable
 {
 	private static final Logger _log = LoggerFactory.getLogger(SQLQueryQueue.class);
 	
-	private final FastList<SQLQuery> _queue = new FastList<SQLQuery>();
+	private final ArrayDeque<SQLQuery> _queue = new ArrayDeque<SQLQuery>();
 	
 	public SQLQueryQueue()
 	{
@@ -56,10 +55,7 @@ public abstract class SQLQueryQueue implements Runnable
 	{
 		synchronized (_queue)
 		{
-			if (_queue.isEmpty())
-				return null;
-			
-			return _queue.removeFirst();
+			return _queue.poll();
 		}
 	}
 	

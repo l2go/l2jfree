@@ -26,23 +26,32 @@ public final class LoginDataSource implements AutoCloseable
 		this(createPoolConfig());
 	}
 
+	/** The pool settings of the running server, read from the configuration. */
 	static HikariConfig createPoolConfig()
+	{
+		return poolConfig(LoginConfig.DATABASE_DRIVER, LoginConfig.DATABASE_URL, LoginConfig.DATABASE_LOGIN,
+				LoginConfig.DATABASE_PASSWORD, LoginConfig.DATABASE_MAX_CONNECTIONS,
+				LoginConfig.DATABASE_MIN_IDLE_CONNECTIONS);
+	}
+
+	/**
+	 * A PostgreSQL pool whose sessions see the login schema and public (for the citext operators) and send strings
+	 * untyped, so that the server infers the column type (citext, inet). The settings are arguments, so a test builds
+	 * a pool without touching the static configuration.
+	 */
+	static HikariConfig poolConfig(String driver, String url, String user, String password, int maxConnections,
+			int minIdle)
 	{
 		HikariConfig pool = new HikariConfig();
 		pool.setPoolName("l2jfree-loginserver");
-		pool.setDriverClassName(LoginConfig.DATABASE_DRIVER);
-		pool.setJdbcUrl(LoginConfig.DATABASE_URL);
-		pool.setUsername(LoginConfig.DATABASE_LOGIN);
-		pool.setPassword(LoginConfig.DATABASE_PASSWORD);
+		pool.setDriverClassName(driver);
+		pool.setJdbcUrl(url);
+		pool.setUsername(user);
+		pool.setPassword(password);
 		pool.setAutoCommit(true);
-		int maximumPoolSize = Math.max(1, LoginConfig.DATABASE_MAX_CONNECTIONS);
-		int idleConnections = LoginConfig.DATABASE_MIN_IDLE_CONNECTIONS;
-		if (idleConnections < 0)
-			idleConnections = 0;
-		if (idleConnections > maximumPoolSize)
-			idleConnections = maximumPoolSize;
+		int maximumPoolSize = Math.max(1, maxConnections);
 		pool.setMaximumPoolSize(maximumPoolSize);
-		pool.setMinimumIdle(idleConnections);
+		pool.setMinimumIdle(Math.max(0, Math.min(minIdle, maximumPoolSize)));
 		pool.setConnectionTimeout(30_000);
 		pool.setValidationTimeout(5_000);
 		// Text parameters are sent untyped, so the server types them from the column: a login name is

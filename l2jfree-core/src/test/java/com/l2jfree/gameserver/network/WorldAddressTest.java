@@ -87,4 +87,52 @@ class WorldAddressTest
 
 		assertThat(WorldAddress.netConfig("198.51.100.1", "192.168.1.5", subnets)).isEqualTo(subnets);
 	}
+
+	@Test
+	@DisplayName("with an update interval the host names are resolved again when it has passed")
+	void namesAreResolvedAgainAfterTheInterval()
+	{
+		java.util.Map<String, String> dns = new java.util.HashMap<String, String>();
+		dns.put("world.example", "203.0.113.7");
+		long[] now = { 1_000 };
+		WorldAddress address = new WorldAddress("world.example,0.0.0.0/0", dns::get, 60_000, () -> now[0]);
+		assertThat(address.addressFor("198.51.100.9")).isEqualTo("203.0.113.7");
+
+		dns.put("world.example", "203.0.113.8");
+		now[0] += 59_000;
+		assertThat(address.addressFor("198.51.100.9")).isEqualTo("203.0.113.7"); // not due yet
+
+		now[0] += 2_000;
+		assertThat(address.addressFor("198.51.100.9")).isEqualTo("203.0.113.8"); // due
+	}
+
+	@Test
+	@DisplayName("without an update interval the names are resolved once")
+	void namesAreResolvedOnceWithoutAnInterval()
+	{
+		java.util.Map<String, String> dns = new java.util.HashMap<String, String>();
+		dns.put("world.example", "203.0.113.7");
+		long[] now = { 1_000 };
+		WorldAddress address = new WorldAddress("world.example,0.0.0.0/0", dns::get, 0, () -> now[0]);
+
+		dns.put("world.example", "203.0.113.8");
+		now[0] += 10_000_000;
+
+		assertThat(address.addressFor("198.51.100.9")).isEqualTo("203.0.113.7");
+	}
+
+	@Test
+	@DisplayName("a name that stops resolving keeps the last address")
+	void aNameThatStopsResolvingKeepsTheLastAddress()
+	{
+		java.util.Map<String, String> dns = new java.util.HashMap<String, String>();
+		dns.put("world.example", "203.0.113.7");
+		long[] now = { 1_000 };
+		WorldAddress address = new WorldAddress("world.example,0.0.0.0/0", dns::get, 1_000, () -> now[0]);
+
+		dns.remove("world.example");
+		now[0] += 5_000;
+
+		assertThat(address.addressFor("198.51.100.9")).isEqualTo("203.0.113.7");
+	}
 }

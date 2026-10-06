@@ -11,55 +11,49 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.l2jfree.loginserver.beans.Accounts;
 import com.l2jfree.loginserver.dao.AccountsDAO;
 import com.l2jfree.loginserver.dao.JdbcTransactions;
 import com.l2jfree.loginserver.dao.LoginObjectNotFoundException;
+import com.l2jfree.sql.Sql;
 
 /**
- * JDBC persistence for the <code>login.account</code> table.
+ * JDBC persistence for login.account.
  * <p>
- * The bean keeps the shape the login code has always used. The table stores the same facts in
- * PostgreSQL types, so this class converts at the boundary:
- * <ul>
- * <li>the last activity is epoch milliseconds in the bean and <code>timestamptz</code> in the table;</li>
- * <li>the last address is text in the bean and <code>inet</code> in the table, and an empty text is stored as NULL;</li>
- * <li>the last world is 0 in the bean when there is none, and NULL in the table;</li>
- * <li>the birth year, month, and day are three numbers in the bean and one <code>date</code> in the table, and an
- * impossible date is stored as 1900-01-01.</li>
- * </ul>
- * The connection sends text parameters untyped (<code>stringtype=unspecified</code>), so a login name is compared
- * as <code>citext</code>, without regard to case.
+ * The bean keeps the old in-memory shape, and this class converts at the boundary: the last activity is epoch
+ * milliseconds in the bean and a {@code timestamptz} in the table, last server id {@code 0} is {@code NULL}, and the
+ * three birth date parts are one {@code date}.
  */
 public final class AccountsDAOJdbc implements AccountsDAO
 {
-	private static final LocalDate DEFAULT_BIRTHDAY = LocalDate.of(1900, 1, 1);
-	
-	private static final String SELECT = "SELECT name, password_hash, access_level, last_active_at, "
-			+ "host(last_ip) AS last_ip, last_world_id, birthday_on FROM account";
-	
+	private static final String SELECT_COLUMNS = "SELECT name, password_hash, last_active_at, access_level, "
+			+ "last_world_id, birthday_on, host(last_ip) AS last_ip FROM account";
+
+	/** The birth date the old schema stored when a part was not given. */
+	private static final int DEFAULT_BIRTH_YEAR = 1900;
+	private static final int DEFAULT_BIRTH_MONTH = 1;
+	private static final int DEFAULT_BIRTH_DAY = 1;
+
 	private final JdbcTransactions transactions;
-	
+
 	public AccountsDAOJdbc(JdbcTransactions transactions)
 	{
 		this.transactions = transactions;
 	}
-	
+
 	@Override
 	public List<Accounts> getAllAccounts()
 	{
 		return transactions.withConnection(connection -> {
 			List<Accounts> accounts = new ArrayList<Accounts>();
-			try (PreparedStatement statement = connection.prepareStatement(SELECT);
+			try (PreparedStatement statement = connection.prepareStatement(SELECT_COLUMNS);
 					ResultSet result = statement.executeQuery())
 			{
 				while (result.next())
@@ -70,24 +64,22 @@ public final class AccountsDAOJdbc implements AccountsDAO
 			return accounts;
 		});
 	}
-	
+
 	@Override
 	public String createAccount(Object object)
 	{
 		Accounts account = requireAccount(object);
 		return transactions.withConnection(connection -> {
-			Map<String, Object> columns = columnsOf(account);
-			String sql = "INSERT INTO account (" + String.join(", ", columns.keySet()) + ") VALUES ("
-					+ placeholders(columns.size()) + ")";
-			try (PreparedStatement statement = connection.prepareStatement(sql))
+			List<Column> columns = givenColumns(account);
+			try (PreparedStatement statement = connection.prepareStatement(insert(columns)))
 			{
-				bind(statement, columns);
+				bind(statement, account, columns);
 				statement.executeUpdate();
 				return account.getLogin();
 			}
 		});
 	}
-	
+
 	@Override
 	public void createOrUpdate(Object object)
 	{
@@ -97,7 +89,7 @@ public final class AccountsDAOJdbc implements AccountsDAO
 			return null;
 		});
 	}
-	
+
 	@Override
 	public void createOrUpdateAll(Collection<?> entities)
 	{
@@ -109,24 +101,24 @@ public final class AccountsDAOJdbc implements AccountsDAO
 			return null;
 		});
 	}
-	
+
 	@Override
 	public void update(Object object)
 	{
 		Accounts account = requireAccount(object);
 		transactions.withConnection(connection -> {
-			String sql = "UPDATE account SET password_hash=?, access_level=?, last_active_at=?, last_ip=?, "
-					+ "last_world_id=?, birthday_on=? WHERE name=?";
-			try (PreparedStatement statement = connection.prepareStatement(sql))
+			List<Column> columns = new ArrayList<Column>(List.of(Column.values()));
+			columns.remove(Column.NAME);
+			List<String> assignments = new ArrayList<String>();
+			for (Column column : columns)
 			{
-				int index = 1;
-				statement.setString(index++, account.getPassword());
-				statement.setInt(index++, account.getAccessLevel() == null ? 0 : account.getAccessLevel().intValue());
-				statement.setTimestamp(index++, toTimestamp(account.getLastactive()));
-				statement.setString(index++, emptyToNull(account.getLastIp()));
-				statement.setObject(index++, zeroToNull(account.getLastServerId()));
-				statement.setObject(index++, toBirthday(account));
-				statement.setString(index, account.getLogin());
+				assignments.add(column.sqlName + " = " + column.placeholder);
+			}
+			columns.add(Column.NAME);
+			try (PreparedStatement statement = connection.prepareStatement("UPDATE account SET "
+					+ String.join(", ", assignments) + " WHERE name = ?"))
+			{
+				bind(statement, account, columns);
 				if (statement.executeUpdate() == 0)
 				{
 					throw new LoginObjectNotFoundException("Account", account.getLogin());
@@ -135,18 +127,18 @@ public final class AccountsDAOJdbc implements AccountsDAO
 			return null;
 		});
 	}
-	
+
 	@Override
 	public void removeAccount(Object object)
 	{
 		removeAccountById(requireAccount(object).getLogin());
 	}
-	
+
 	@Override
 	public Accounts getAccountById(String id)
 	{
 		return transactions.withConnection(connection -> {
-			try (PreparedStatement statement = connection.prepareStatement(SELECT + " WHERE name=?"))
+			try (PreparedStatement statement = connection.prepareStatement(SELECT_COLUMNS + " WHERE name = ?"))
 			{
 				statement.setString(1, id);
 				try (ResultSet result = statement.executeQuery())
@@ -160,12 +152,12 @@ public final class AccountsDAOJdbc implements AccountsDAO
 			}
 		});
 	}
-	
+
 	@Override
 	public void removeAccountById(String login)
 	{
 		transactions.withConnection(connection -> {
-			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM account WHERE name=?"))
+			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM account WHERE name = ?"))
 			{
 				statement.setString(1, login);
 				if (statement.executeUpdate() == 0)
@@ -176,12 +168,12 @@ public final class AccountsDAOJdbc implements AccountsDAO
 			return null;
 		});
 	}
-	
+
 	@Override
 	public void removeAll(Collection<?> entities)
 	{
 		transactions.inTransaction(connection -> {
-			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM account WHERE name=?"))
+			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM account WHERE name = ?"))
 			{
 				for (Object entity : entities)
 				{
@@ -193,145 +185,123 @@ public final class AccountsDAOJdbc implements AccountsDAO
 			return null;
 		});
 	}
-	
+
 	@Override
 	public boolean updateAccessLevel(String login, int accessLevel)
 	{
 		return transactions.withConnection(connection -> {
-			try (PreparedStatement statement = connection.prepareStatement("UPDATE account SET access_level=? WHERE name=?"))
+			try (PreparedStatement statement = connection.prepareStatement(
+					"UPDATE account SET access_level = ? WHERE name = ?"))
 			{
 				statement.setInt(1, accessLevel);
 				statement.setString(2, login);
+				// PostgreSQL counts matched rows, so an unchanged level still reports the account.
 				return statement.executeUpdate() > 0;
 			}
 		});
 	}
-	
+
+	/** Inserts the account, or updates the columns the bean gives; columns it leaves null keep their value. */
 	private static void upsert(Connection connection, Accounts account) throws SQLException
 	{
-		Map<String, Object> columns = columnsOf(account);
-		StringBuilder sql = new StringBuilder("INSERT INTO account (");
-		sql.append(String.join(", ", columns.keySet())).append(") VALUES (").append(placeholders(columns.size()))
-				.append(") ON CONFLICT (name) DO UPDATE SET ");
+		List<Column> columns = givenColumns(account);
 		List<String> updates = new ArrayList<String>();
-		for (String column : columns.keySet())
+		for (Column column : columns)
 		{
-			if (!column.equals("name"))
+			if (column != Column.NAME)
 			{
-				updates.add(column + " = EXCLUDED." + column);
+				updates.add(column.sqlName + " = EXCLUDED." + column.sqlName);
 			}
 		}
-		if (updates.isEmpty())
+		String sql = insert(columns) + " ON CONFLICT (name) DO "
+				+ (updates.isEmpty() ? "NOTHING" : "UPDATE SET " + String.join(", ", updates));
+		try (PreparedStatement statement = connection.prepareStatement(sql))
 		{
-			updates.add("name = EXCLUDED.name");
-		}
-		sql.append(String.join(", ", updates));
-		try (PreparedStatement statement = connection.prepareStatement(sql.toString()))
-		{
-			bind(statement, columns);
+			bind(statement, account, columns);
 			statement.executeUpdate();
 		}
 	}
-	
-	/** The columns to write, in order. A column whose value the bean does not carry is left to its default. */
-	private static Map<String, Object> columnsOf(Accounts account)
+
+	private static String insert(List<Column> columns)
 	{
-		Map<String, Object> columns = new LinkedHashMap<String, Object>();
-		columns.put("name", account.getLogin());
-		put(columns, "password_hash", account.getPassword());
-		put(columns, "access_level", account.getAccessLevel());
-		put(columns, "last_active_at", toTimestamp(account.getLastactive()));
-		put(columns, "last_ip", emptyToNull(account.getLastIp()));
-		put(columns, "last_world_id", zeroToNull(account.getLastServerId()));
-		if (account.getBirthYear() != null && account.getBirthMonth() != null && account.getBirthDay() != null)
+		List<String> names = new ArrayList<String>();
+		List<String> placeholders = new ArrayList<String>();
+		for (Column column : columns)
 		{
-			columns.put("birthday_on", toBirthday(account));
+			names.add(column.sqlName);
+			placeholders.add(column.placeholder);
+		}
+		return "INSERT INTO account (" + String.join(", ", names) + ") VALUES (" + String.join(", ", placeholders)
+				+ ")";
+	}
+
+	/** The name and every column the bean gives, so that the table defaults apply to the others. */
+	private static List<Column> givenColumns(Accounts account)
+	{
+		List<Column> columns = new ArrayList<Column>();
+		for (Column column : Column.values())
+		{
+			if (column == Column.NAME || column.isGiven(account))
+			{
+				columns.add(column);
+			}
 		}
 		return columns;
 	}
-	
-	private static void put(Map<String, Object> columns, String name, Object value)
-	{
-		if (value != null)
-		{
-			columns.put(name, value);
-		}
-	}
-	
-	private static void bind(PreparedStatement statement, Map<String, Object> columns) throws SQLException
+
+	private static void bind(PreparedStatement statement, Accounts account, List<Column> columns) throws SQLException
 	{
 		int index = 1;
-		for (Object value : columns.values())
+		for (Column column : columns)
 		{
-			if (value instanceof String)
-			{
-				statement.setString(index++, (String)value);
-			}
-			else if (value instanceof Timestamp)
-			{
-				statement.setTimestamp(index++, (Timestamp)value);
-			}
-			else
-			{
-				statement.setObject(index++, value);
-			}
+			column.bind(statement, index++, account);
 		}
 	}
-	
+
 	private static Accounts readAccount(ResultSet result) throws SQLException
 	{
 		Accounts account = new Accounts();
 		account.setLogin(result.getString("name"));
 		account.setPassword(result.getString("password_hash"));
+		long lastActive = Sql.getMoment(result, "last_active_at");
+		account.setLastactive(lastActive == 0 ? null : BigDecimal.valueOf(lastActive));
 		account.setAccessLevel(Integer.valueOf(result.getInt("access_level")));
-		Timestamp lastActive = result.getTimestamp("last_active_at");
-		account.setLastactive(lastActive == null ? null : BigDecimal.valueOf(lastActive.getTime()));
-		account.setLastIp(result.getString("last_ip"));
 		account.setLastServerId(Integer.valueOf(result.getInt("last_world_id")));
 		LocalDate birthday = result.getObject("birthday_on", LocalDate.class);
-		if (birthday == null)
-		{
-			birthday = DEFAULT_BIRTHDAY;
-		}
 		account.setBirthYear(Integer.valueOf(birthday.getYear()));
 		account.setBirthMonth(Integer.valueOf(birthday.getMonthValue()));
 		account.setBirthDay(Integer.valueOf(birthday.getDayOfMonth()));
+		account.setLastIp(result.getString("last_ip"));
 		return account;
 	}
-	
-	private static Timestamp toTimestamp(BigDecimal epochMillis)
+
+	/** The birth date of the bean; a date that does not exist (February 30) is the default date, as before. */
+	private static LocalDate birthday(Accounts account)
 	{
-		return epochMillis == null ? null : new Timestamp(epochMillis.longValue());
-	}
-	
-	private static String emptyToNull(String value)
-	{
-		return value == null || value.isEmpty() ? null : value;
-	}
-	
-	private static Integer zeroToNull(Integer value)
-	{
-		return value == null || value.intValue() == 0 ? null : value;
-	}
-	
-	/** The birth date from the three numbers; an impossible or missing date becomes 1900-01-01. */
-	private static LocalDate toBirthday(Accounts account)
-	{
-		if (account.getBirthYear() == null || account.getBirthMonth() == null || account.getBirthDay() == null)
-		{
-			return DEFAULT_BIRTHDAY;
-		}
 		try
 		{
-			return LocalDate.of(account.getBirthYear().intValue(), account.getBirthMonth().intValue(),
-					account.getBirthDay().intValue());
+			return LocalDate.of(orDefault(account.getBirthYear(), DEFAULT_BIRTH_YEAR),
+					orDefault(account.getBirthMonth(), DEFAULT_BIRTH_MONTH),
+					orDefault(account.getBirthDay(), DEFAULT_BIRTH_DAY));
 		}
 		catch (DateTimeException e)
 		{
-			return DEFAULT_BIRTHDAY;
+			return LocalDate.of(DEFAULT_BIRTH_YEAR, DEFAULT_BIRTH_MONTH, DEFAULT_BIRTH_DAY);
 		}
 	}
-	
+
+	private static int orDefault(Integer value, int defaultValue)
+	{
+		return value == null ? defaultValue : value.intValue();
+	}
+
+	/** An address as inet takes it: without the IPv6 zone that {@code InetAddress.getHostAddress()} may append. */
+	private static String inet(String address)
+	{
+		int zone = address.indexOf('%');
+		return zone < 0 ? address : address.substring(0, zone);
+	}
+
 	private static Accounts requireAccount(Object object)
 	{
 		if (!(object instanceof Accounts))
@@ -345,18 +315,140 @@ public final class AccountsDAOJdbc implements AccountsDAO
 		}
 		return account;
 	}
-	
-	private static String placeholders(int count)
+
+	/** The columns of login.account, how each is bound from the bean, and when the bean gives a value for it. */
+	private enum Column
 	{
-		StringBuilder placeholders = new StringBuilder();
-		for (int i = 0; i < count; i++)
+		NAME("name", "?")
 		{
-			if (i > 0)
+			@Override
+			boolean isGiven(Accounts account)
 			{
-				placeholders.append(", ");
+				return true;
 			}
-			placeholders.append('?');
+
+			@Override
+			void bind(PreparedStatement statement, int index, Accounts account) throws SQLException
+			{
+				statement.setString(index, account.getLogin());
+			}
+		},
+		PASSWORD_HASH("password_hash", "?")
+		{
+			@Override
+			boolean isGiven(Accounts account)
+			{
+				return account.getPassword() != null;
+			}
+
+			@Override
+			void bind(PreparedStatement statement, int index, Accounts account) throws SQLException
+			{
+				statement.setString(index, account.getPassword());
+			}
+		},
+		LAST_ACTIVE_AT("last_active_at", "?")
+		{
+			@Override
+			boolean isGiven(Accounts account)
+			{
+				return account.getLastactive() != null;
+			}
+
+			@Override
+			void bind(PreparedStatement statement, int index, Accounts account) throws SQLException
+			{
+				BigDecimal lastActive = account.getLastactive();
+				Sql.setMoment(statement, index, lastActive == null ? 0 : lastActive.longValue());
+			}
+		},
+		ACCESS_LEVEL("access_level", "?")
+		{
+			@Override
+			boolean isGiven(Accounts account)
+			{
+				return account.getAccessLevel() != null;
+			}
+
+			@Override
+			void bind(PreparedStatement statement, int index, Accounts account) throws SQLException
+			{
+				statement.setInt(index, orDefault(account.getAccessLevel(), 0));
+			}
+		},
+		LAST_WORLD_ID("last_world_id", "?")
+		{
+			@Override
+			boolean isGiven(Accounts account)
+			{
+				return account.getLastServerId() != null;
+			}
+
+			@Override
+			void bind(PreparedStatement statement, int index, Accounts account) throws SQLException
+			{
+				int lastServerId = orDefault(account.getLastServerId(), 0);
+				if (lastServerId == 0)
+				{
+					statement.setNull(index, Types.SMALLINT);
+				}
+				else
+				{
+					statement.setInt(index, lastServerId);
+				}
+			}
+		},
+		BIRTHDAY_ON("birthday_on", "?")
+		{
+			@Override
+			boolean isGiven(Accounts account)
+			{
+				// a partial date is ignored: it would overwrite the stored month and day with the default
+				return account.getBirthYear() != null && account.getBirthMonth() != null
+						&& account.getBirthDay() != null;
+			}
+
+			@Override
+			void bind(PreparedStatement statement, int index, Accounts account) throws SQLException
+			{
+				statement.setObject(index, birthday(account));
+			}
+		},
+		LAST_IP("last_ip", "CAST(? AS inet)")
+		{
+			@Override
+			boolean isGiven(Accounts account)
+			{
+				// an empty address is "not given": it cannot be cast to inet
+				return account.getLastIp() != null && !account.getLastIp().isBlank();
+			}
+
+			@Override
+			void bind(PreparedStatement statement, int index, Accounts account) throws SQLException
+			{
+				String lastIp = account.getLastIp();
+				if (lastIp == null)
+				{
+					statement.setNull(index, Types.VARCHAR);
+				}
+				else
+				{
+					statement.setString(index, inet(lastIp));
+				}
+			}
+		};
+
+		final String sqlName;
+		final String placeholder;
+
+		Column(String sqlName, String placeholder)
+		{
+			this.sqlName = sqlName;
+			this.placeholder = placeholder;
 		}
-		return placeholders.toString();
+
+		abstract boolean isGiven(Accounts account);
+
+		abstract void bind(PreparedStatement statement, int index, Accounts account) throws SQLException;
 	}
 }
