@@ -17,9 +17,6 @@ package com.l2jfree.loginserver.network;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.net.InetAddress;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -36,6 +33,7 @@ import com.l2jfree.network.NetworkConfig;
 import com.l2jfree.network.NetworkServer;
 import com.l2jfree.tools.util.HexUtil;
 import com.l2jfree.util.concurrent.ExecuteWrapper;
+import com.l2jfree.util.concurrent.VirtualTaskExecutor;
 
 public final class L2ClientSelectorThread extends
 		NetworkServer<L2Client, L2ClientPacket, L2ServerPacket>
@@ -99,8 +97,8 @@ public final class L2ClientSelectorThread extends
 		return client;
 	}
 	
-	private final ThreadPoolExecutor _generalPacketsThreadPool = new ThreadPoolExecutor(1, Integer.MAX_VALUE, 60L,
-			TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
+	/** Login packets wait on the database, so each runs on its own virtual thread. */
+	private final VirtualTaskExecutor _generalPacketsThreadPool = new VirtualTaskExecutor("login-packet");
 	
 	@Override
 	protected void executePacket(L2ClientPacket packet)

@@ -20,7 +20,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +32,7 @@ import com.l2jfree.util.concurrent.L2RejectedExecutionHandler;
 import com.l2jfree.util.concurrent.RunnableStatsManager;
 import com.l2jfree.util.concurrent.RunnableStatsManager.SortBy;
 import com.l2jfree.util.concurrent.ScheduledFutureWrapper;
+import com.l2jfree.util.concurrent.VirtualTaskExecutor;
 
 /**
  * @author -Wooden-, NB4L1
@@ -52,7 +52,8 @@ public final class ThreadPoolManager
 	
 	private final ScheduledThreadPoolExecutor _scheduledPool;
 	private final ThreadPoolExecutor _instantPool;
-	private final ThreadPoolExecutor _longRunningPool;
+	/** Blocking work (admin commands, cleanups): one virtual thread per task. World tasks stay on the pools above. */
+	private final VirtualTaskExecutor _longRunningPool;
 	
 	private ThreadPoolManager()
 	{
@@ -68,10 +69,7 @@ public final class ThreadPoolManager
 		_instantPool.setRejectedExecutionHandler(new L2RejectedExecutionHandler());
 		_instantPool.prestartAllCoreThreads();
 		
-		_longRunningPool =
-				new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
-		_longRunningPool.setRejectedExecutionHandler(new L2RejectedExecutionHandler());
-		_longRunningPool.prestartAllCoreThreads();
+		_longRunningPool = new VirtualTaskExecutor("long-running");
 		
 		scheduleAtFixedRate(new Runnable() {
 			@Override
@@ -82,8 +80,7 @@ public final class ThreadPoolManager
 		}, 60000, 60000);
 		
 		_log.info("ThreadPoolManager: Initialized with " + _scheduledPool.getPoolSize() + " scheduler, "
-				+ _instantPool.getPoolSize() + " instant, " + _longRunningPool.getPoolSize()
-				+ " long running thread(s).");
+				+ _instantPool.getPoolSize() + " instant thread(s); long running tasks on virtual threads.");
 	}
 	
 	private final long validate(long delay)
@@ -222,16 +219,11 @@ public final class ThreadPoolManager
 		list.add("\tgetQueuedTaskCount: .. " + _instantPool.getQueue().size());
 		list.add("\tgetTaskCount: ........ " + _instantPool.getTaskCount());
 		list.add("");
-		list.add("Long running pool:");
+		list.add("Long running tasks (virtual threads):");
 		list.add("=================================================");
 		list.add("\tgetActiveCount: ...... " + _longRunningPool.getActiveCount());
-		list.add("\tgetCorePoolSize: ..... " + _longRunningPool.getCorePoolSize());
-		list.add("\tgetPoolSize: ......... " + _longRunningPool.getPoolSize());
-		list.add("\tgetLargestPoolSize: .. " + _longRunningPool.getLargestPoolSize());
-		list.add("\tgetMaximumPoolSize: .. " + _longRunningPool.getMaximumPoolSize());
+		list.add("\tgetLargestActive: .... " + _longRunningPool.getLargestActiveCount());
 		list.add("\tgetCompletedTaskCount: " + _longRunningPool.getCompletedTaskCount());
-		list.add("\tgetQueuedTaskCount: .. " + _longRunningPool.getQueue().size());
-		list.add("\tgetTaskCount: ........ " + _longRunningPool.getTaskCount());
 		list.add("");
 		
 		return list;
@@ -270,7 +262,7 @@ public final class ThreadPoolManager
 		System.out.println("ThreadPoolManager: Shutting down.");
 		System.out.println("\t... executing " + getTaskCount(_scheduledPool) + " scheduled tasks.");
 		System.out.println("\t... executing " + getTaskCount(_instantPool) + " instant tasks.");
-		System.out.println("\t... executing " + getTaskCount(_longRunningPool) + " long running tasks.");
+		System.out.println("\t... executing " + _longRunningPool.getActiveCount() + " long running tasks.");
 		
 		_scheduledPool.shutdown();
 		_instantPool.shutdown();
@@ -294,7 +286,7 @@ public final class ThreadPoolManager
 		System.out.println("\t... success: " + success + " in " + (System.currentTimeMillis() - begin) + " msec.");
 		System.out.println("\t... " + getTaskCount(_scheduledPool) + " scheduled tasks left.");
 		System.out.println("\t... " + getTaskCount(_instantPool) + " instant tasks left.");
-		System.out.println("\t... " + getTaskCount(_longRunningPool) + " long running tasks left.");
+		System.out.println("\t... " + _longRunningPool.getActiveCount() + " long running tasks left.");
 		
 		if (TimeUnit.HOURS.toMillis(12) < (System.currentTimeMillis() - GameServer.getStartedTime().getTimeInMillis()))
 			RunnableStatsManager.dumpClassStats(SortBy.TOTAL);
@@ -304,7 +296,6 @@ public final class ThreadPoolManager
 	{
 		_scheduledPool.purge();
 		_instantPool.purge();
-		_longRunningPool.purge();
 	}
 	
 	@SuppressWarnings("synthetic-access")
