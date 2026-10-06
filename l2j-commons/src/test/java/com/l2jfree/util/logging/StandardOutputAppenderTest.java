@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.util.LogbackMDCAdapter;
 
 class StandardOutputAppenderTest
 {
@@ -35,6 +36,7 @@ class StandardOutputAppenderTest
 		ByteArrayOutputStream standard = new ByteArrayOutputStream();
 		ByteArrayOutputStream replaced = new ByteArrayOutputStream();
 		LoggerContext context = new LoggerContext();
+		context.setMDCAdapter(new LogbackMDCAdapter());
 		StandardOutputAppender appender = new StandardOutputAppender();
 		try
 		{
@@ -55,8 +57,7 @@ class StandardOutputAppenderTest
 			logger.addAppender(appender);
 			logger.info("Platform ready");
 			
-			assertThat(standard.toString(StandardCharsets.UTF_8)).as("started %s, status %s", appender.isStarted(),
-					context.getStatusManager().getCopyOfStatusList()).isEqualTo("INFO Platform ready\n");
+			assertThat(standard.toString(StandardCharsets.UTF_8)).isEqualTo("INFO Platform ready\n");
 			assertThat(replaced.size()).isZero();
 		}
 		finally
