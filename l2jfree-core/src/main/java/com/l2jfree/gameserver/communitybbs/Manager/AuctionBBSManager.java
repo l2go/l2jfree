@@ -29,20 +29,6 @@ public class AuctionBBSManager extends BaseBBSManager
 		return SingletonHolder._instance;
 	}
 	
-	/**
-	 * Kept for the admin command that launched the auction task: there is nothing to process any more.
-	 */
-	public void processAuctions()
-	{
-	}
-	
-	/**
-	 * Kept for the admin command that launched the auction task: there is nothing to remove any more.
-	 */
-	public void removeOldAuctions()
-	{
-	}
-	
 	@Override
 	public void parsecmd(String command, L2Player activeChar)
 	{

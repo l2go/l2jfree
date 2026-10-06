@@ -15,6 +15,12 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request replaces the run in progress. Runs of main are never cancelled, so the published
+# `edge` image always belongs to a finished pipeline.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 
 jobs:
   # Compiles every datapack Python script with the pinned Jython runtime. This checks
@@ -209,7 +215,8 @@ jobs:
   # main also publishes the image, signed and attested. Images stay private
   # until the release and sha-* tags are kept for 30 days (ADR-0007).
   image:
-    needs: build
+    # The image is published from main, so it waits for every check of the code, not for the build alone.
+    needs: [build, integration, jython-syntax]
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:

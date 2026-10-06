@@ -50,7 +50,7 @@ public final class Init extends L2ServerPacket
 	}
 	
 	/**
-	 * @see com.l2jfree.mmocore.network.SendablePacket#write()
+	 * @see com.l2jfree.network.SendablePacket#write()
 	 */
 	@Override
 	protected void write(L2Client client)

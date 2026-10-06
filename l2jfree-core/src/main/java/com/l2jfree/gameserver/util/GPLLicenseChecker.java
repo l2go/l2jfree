@@ -171,7 +171,7 @@ public final class GPLLicenseChecker extends L2AutoInitialization
 	}
 	
 	private static final String[] WHOLE_PROJECT_PACKAGE_NAMES = { "package com.l2jfree",
-			"package com.l2jfree.mmocore.network", "package ai", "package cron", "package custom", "package instances",
+			"package com.l2jfree.network", "package ai", "package cron", "package custom", "package instances",
 			"package quests", "package teleports", "package transformations", "package village_master" };
 	
 	private static boolean startsWithPackageName(String line)

@@ -15,8 +15,6 @@
 package com.l2jfree.gameserver.network;
 
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SocketChannel;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,6 +24,8 @@ import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.netty.channel.Channel;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
@@ -42,8 +42,8 @@ import com.l2jfree.gameserver.network.packets.server.LeaveWorld;
 import com.l2jfree.gameserver.network.packets.server.ServerClose;
 import com.l2jfree.gameserver.threadmanager.FIFORunnableQueue;
 import com.l2jfree.lang.L2TextBuilder;
-import com.l2jfree.mmocore.network.MMOConnection;
-import com.l2jfree.mmocore.network.SelectorThread;
+import com.l2jfree.network.Connection;
+import com.l2jfree.network.NetworkServer;
 import com.l2jfree.tools.security.BlowFishKeygen;
 import com.l2jfree.tools.security.GameCrypt;
 import com.l2jfree.util.concurrent.RunnableStatsManager;
@@ -53,7 +53,7 @@ import com.l2jfree.util.concurrent.RunnableStatsManager;
  * 
  * @author KenM
  */
-public final class L2Client extends MMOConnection<L2Client, L2ClientPacket, L2ServerPacket>
+public final class L2Client extends Connection<L2Client, L2ClientPacket, L2ServerPacket>
 {
 	private static final Logger _log = LoggerFactory.getLogger(L2Client.class);
 	
@@ -78,10 +78,9 @@ public final class L2Client extends MMOConnection<L2Client, L2ClientPacket, L2Se
 	private String _hostAddress;
 	private boolean _protocol;
 	
-	public L2Client(SelectorThread<L2Client, L2ClientPacket, L2ServerPacket> selectorThread,
-			SocketChannel socketChannel) throws ClosedChannelException
+	public L2Client(NetworkServer<L2Client, L2ClientPacket, L2ServerPacket> networkServer, Channel channel)
 	{
-		super(selectorThread, socketChannel);
+		super(networkServer, channel);
 	}
 	
 	private GameCrypt getCrypt()

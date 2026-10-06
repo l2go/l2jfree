@@ -37,6 +37,7 @@ import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.ItemList;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.util.RuntimeData;
 import com.l2jfree.gameserver.util.Util;
 
 /**
@@ -255,7 +256,7 @@ public class ArenaManager
 		LineNumberReader lnr = null;
 		String lineId = "";
 		ArenaRank rank = null;
-		File file = new File(Config.DATAPACK_ROOT, "data/arena.dat");
+		File file = RuntimeData.file("arena.dat");
 		
 		try
 		{
@@ -318,7 +319,7 @@ public class ArenaManager
 			pattern += object + " : " + ar.kills + "-" + ar.death + " : " + ar.name + "\n";
 		}
 		
-		File file = new File(Config.DATAPACK_ROOT, "data/arena.dat");
+		File file = RuntimeData.file("arena.dat");
 		try
 		{
 			FileWriter fw = new FileWriter(file);

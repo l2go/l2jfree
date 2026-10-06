@@ -16,28 +16,29 @@ package com.l2jfree.loginserver.network;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SocketChannel;
+import java.net.InetAddress;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 
+import io.netty.channel.Channel;
+
 import com.l2jfree.loginserver.manager.BanManager;
 import com.l2jfree.loginserver.manager.LoginManager;
 import com.l2jfree.loginserver.network.packets.L2ClientPacket;
 import com.l2jfree.loginserver.network.packets.L2ServerPacket;
 import com.l2jfree.loginserver.network.packets.server.Init;
-import com.l2jfree.mmocore.network.FloodManager.ErrorMode;
-import com.l2jfree.mmocore.network.IPacketHandler;
-import com.l2jfree.mmocore.network.SelectorConfig;
-import com.l2jfree.mmocore.network.SelectorThread;
+import com.l2jfree.network.FloodManager.ErrorMode;
+import com.l2jfree.network.PacketHandler;
+import com.l2jfree.network.NetworkConfig;
+import com.l2jfree.network.NetworkServer;
 import com.l2jfree.tools.util.HexUtil;
 import com.l2jfree.util.concurrent.ExecuteWrapper;
 
 public final class L2ClientSelectorThread extends
-		SelectorThread<L2Client, L2ClientPacket, L2ServerPacket>
+		NetworkServer<L2Client, L2ClientPacket, L2ServerPacket>
 {
 	private static final class SingletonHolder
 	{
@@ -45,7 +46,7 @@ public final class L2ClientSelectorThread extends
 		
 		static
 		{
-			final SelectorConfig sc = new SelectorConfig();
+			final NetworkConfig sc = new NetworkConfig();
 			
 			try
 			{
@@ -63,8 +64,8 @@ public final class L2ClientSelectorThread extends
 		return SingletonHolder.INSTANCE;
 	}
 	
-	private L2ClientSelectorThread(SelectorConfig sc,
-			IPacketHandler<L2Client, L2ClientPacket, L2ServerPacket> packetHandler) throws IOException
+	private L2ClientSelectorThread(NetworkConfig sc,
+			PacketHandler<L2Client, L2ClientPacket, L2ServerPacket> packetHandler) throws IOException
 	{
 		super(sc, packetHandler);
 	}
@@ -90,9 +91,9 @@ public final class L2ClientSelectorThread extends
 	// ==============================================
 	
 	@Override
-	protected L2Client createClient(SocketChannel socketChannel) throws ClosedChannelException
+	protected L2Client createClient(Channel channel)
 	{
-		L2Client client = new L2Client(this, socketChannel);
+		L2Client client = new L2Client(this, channel);
 		client.sendPacket(new Init(client));
 		LoginManager.getInstance().addConnection(client);
 		return client;
@@ -110,13 +111,13 @@ public final class L2ClientSelectorThread extends
 	// ==============================================
 	
 	@Override
-	public boolean acceptConnectionFrom(SocketChannel sc)
+	protected boolean acceptConnectionFrom(InetAddress address)
 	{
-		if (!super.acceptConnectionFrom(sc))
+		if (!super.acceptConnectionFrom(address))
 			return false;
 		
 		// Ignore permabanned IPs
-		if (BanManager.getInstance().isRestrictedAddress(sc.socket().getInetAddress()))
+		if (BanManager.getInstance().isRestrictedAddress(address))
 			return false;
 		
 		return true;

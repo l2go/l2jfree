@@ -82,9 +82,24 @@ public final class WorldTransaction
 				_log.error(what + " failed and was rolled back.", e);
 				return false;
 			}
+			catch (Error e)
+			{
+				// Switching auto-commit on would commit what the work did so far, so the rollback comes first.
+				connection.rollback();
+				_log.error(what + " failed with an error and was rolled back.", e);
+				throw e;
+			}
 			finally
 			{
-				connection.setAutoCommit(true);
+				try
+				{
+					connection.setAutoCommit(true);
+				}
+				catch (SQLException e)
+				{
+					// The transaction is over, committed or rolled back: a failure here must not change the outcome.
+					_log.warn(what + ": could not switch auto-commit back on.", e);
+				}
 			}
 		}
 		catch (SQLException e)

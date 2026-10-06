@@ -25,7 +25,7 @@ import com.l2jfree.loginserver.network.packets.client.RequestAuthLogin;
 import com.l2jfree.loginserver.network.packets.client.RequestServerList;
 import com.l2jfree.loginserver.network.packets.client.RequestServerLogin;
 import com.l2jfree.loginserver.network.packets.client.RequestSubmitCardNo;
-import com.l2jfree.mmocore.network.IPacketHandler;
+import com.l2jfree.network.PacketHandler;
 
 /**
  * Handler for packets received by Login Server
@@ -33,7 +33,7 @@ import com.l2jfree.mmocore.network.IPacketHandler;
  * @author KenM
  */
 public final class L2ClientPacketHandler implements
-		IPacketHandler<L2Client, L2ClientPacket, L2ServerPacket>
+		PacketHandler<L2Client, L2ClientPacket, L2ServerPacket>
 {
 	@Override
 	public L2ClientPacket handlePacket(ByteBuffer buf, L2Client client, final int opcode)

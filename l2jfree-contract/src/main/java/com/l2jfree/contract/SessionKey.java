@@ -40,4 +40,13 @@ public record SessionKey(int loginOk1, int loginOk2, int playOk1, int playOk2)
 		
 		return !licenceShown || (loginOk1 == other.loginOk1 && loginOk2 == other.loginOk2);
 	}
+	
+	/**
+	 * @return a text that does not contain the key: the key opens a play session, so it must not reach a log
+	 */
+	@Override
+	public String toString()
+	{
+		return "SessionKey[redacted]";
+	}
 }

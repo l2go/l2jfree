@@ -322,7 +322,7 @@ import com.l2jfree.gameserver.util.Util;
 import com.l2jfree.lang.L2Math;
 import com.l2jfree.lang.L2System;
 import com.l2jfree.lang.Replaceable;
-import com.l2jfree.mmocore.network.InvalidPacketException;
+import com.l2jfree.network.InvalidPacketException;
 import com.l2jfree.sql.SQLQuery;
 import com.l2jfree.tools.geometry.Point3D;
 import com.l2jfree.tools.random.Rnd;
@@ -7019,16 +7019,15 @@ public final class L2Player extends L2Playable
 		// if (isInsideRadius(getClientX(), getClientY(), 1000, true))
 		//	getPosition().setXYZ(getClientX(), getClientY(), getClientZ());
 		
-		storePet();
-		
-		// The rows of the player and what belongs to the player are saved together or not at all.
+		// The player, the pet, the effects, and the items are saved together or not at all.
 		WorldTransaction.run("Saving player " + getName(), () -> {
+			storePet();
 			storePlayerData();
 			getEffects().storeEffects(storeActiveEffects);
+			
+			if (Config.UPDATE_ITEMS_ON_CHAR_STORE || items)
+				getInventory().updateDatabase();
 		});
-		
-		if (Config.UPDATE_ITEMS_ON_CHAR_STORE || items)
-			getInventory().updateDatabase();
 	}
 	
 	/**

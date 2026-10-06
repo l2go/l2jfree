@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.l2jfree.loginserver.network.L2Client;
-import com.l2jfree.mmocore.network.SendablePacket;
+import com.l2jfree.network.SendablePacket;
 
 /**
  * @author KenM

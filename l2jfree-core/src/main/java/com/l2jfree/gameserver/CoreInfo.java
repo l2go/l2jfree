@@ -16,7 +16,7 @@ package com.l2jfree.gameserver;
 
 import com.l2jfree.L2AutoInitialization;
 import com.l2jfree.gameserver.gameobjects.L2Player;
-import com.l2jfree.mmocore.network.SelectorThread;
+import com.l2jfree.network.NetworkServer;
 import com.l2jfree.versionning.Version;
 
 /**
@@ -30,7 +30,7 @@ public final class CoreInfo
 	
 	private static final CoreVersion coreVersion = new CoreVersion(GameServer.class);
 	private static final CoreVersion commonsVersion = new CoreVersion(L2AutoInitialization.class);
-	private static final CoreVersion mmocoreVersion = new CoreVersion(SelectorThread.class);
+	private static final CoreVersion networkVersion = new CoreVersion(NetworkServer.class);
 	
 	public static void showStartupInfo()
 	{
@@ -66,7 +66,7 @@ public final class CoreInfo
 	{
 		return new String[] { "l2jfree-core :    " + coreVersion.fullVersionInfo,
 				"l2j-commons  :    " + commonsVersion.fullVersionInfo,
-				"l2j-mmocore  :    " + mmocoreVersion.fullVersionInfo };
+				"l2jfree-network:  " + networkVersion.fullVersionInfo };
 	}
 	
 	private static final class CoreVersion extends Version

@@ -26,7 +26,7 @@ import com.l2jfree.gameserver.gameobjects.itemcontainer.PlayerInventory;
 import com.l2jfree.gameserver.model.Elementals;
 import com.l2jfree.gameserver.network.L2Client;
 import com.l2jfree.lang.L2Math;
-import com.l2jfree.mmocore.network.SendablePacket;
+import com.l2jfree.network.SendablePacket;
 
 /**
  * @author KenM

@@ -72,7 +72,10 @@ public final class CatalogLoader
 		return true;
 	}
 	
-	/** The SHA-256 over the names and the contents of the CSV files of the directory, in name order. */
+	/**
+	 * The SHA-256 over the names and the contents of the CSV files of the directory, in name order, and over the
+	 * definitions of the tables, so a change of either one loads the catalog again.
+	 */
 	public static String revisionOf(Path directory) throws IOException
 	{
 		MessageDigest digest;
@@ -90,6 +93,11 @@ public final class CatalogLoader
 			digest.update(file.getFileName().toString().getBytes(StandardCharsets.UTF_8));
 			digest.update((byte)0);
 			digest.update(Files.readAllBytes(file));
+			digest.update((byte)0);
+		}
+		for (String definition : DEFINITIONS)
+		{
+			digest.update(resource(definition).getBytes(StandardCharsets.UTF_8));
 			digest.update((byte)0);
 		}
 		return HexFormat.of().formatHex(digest.digest());
@@ -139,7 +147,7 @@ public final class CatalogLoader
 			connection.commit();
 			_log.info("Catalog revision " + revision + " loaded: " + rows + " rows.");
 		}
-		catch (SQLException | IOException | RuntimeException e)
+		catch (SQLException | IOException | RuntimeException | Error e)
 		{
 			connection.rollback();
 			throw e;
@@ -192,7 +200,17 @@ public final class CatalogLoader
 	{
 		var copy = connection.unwrap(PGConnection.class).getCopyAPI();
 		long rows = 0;
-		for (String table : loadOrder(connection))
+		List<String> order = loadOrder(connection);
+		
+		// a file without a table is a typo or a stale file: loading without it would lose its rows silently
+		for (Path file : csvFiles(directory))
+		{
+			String name = file.getFileName().toString();
+			if (!order.contains(name.substring(0, name.length() - ".csv".length())))
+				throw new IllegalStateException("The catalog file " + name + " has no table in the catalog schema");
+		}
+		
+		for (String table : order)
 		{
 			Path file = directory.resolve(table + ".csv");
 			if (!Files.exists(file))
