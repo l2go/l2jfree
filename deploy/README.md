@@ -142,3 +142,13 @@ Every pull request builds the image from the verified platform distribution (`l2
 - Players on other machines need a reachable host address: set `L2JFREE_EXTERNAL_HOST`. The default `subnets.properties` treats clients from private networks (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, and `127.0.0.1`) as internal and sends them `InternalHostname`, which defaults to `127.0.0.1`. On Docker Desktop and Colima every client looks like the Docker gateway, which is in a private range. For a client on your LAN, set `InternalHostname` to the LAN address of the host in an operator `server.properties`.
 - The datapack and the catalog are read-only in the image. A feature that writes into the datapack tree, such as a saved leaderboard file, cannot write there.
 - `io_uring` is blocked by Docker's default security profile, so the network core uses epoll by default.
+
+## The smoke client
+
+`l2jfree-smoke` is a Lineage II client written with the JDK only. The pipeline runs it against the started stack, before and after a restart of the server: it logs in, takes the one world of the server list, creates a character, enters the world, logs out, and logs in again with the same account. It exits with 1 and names the step when one fails.
+
+```sh
+java -jar l2jfree-smoke.jar --host 127.0.0.1
+```
+
+The options are `--login-port`, `--world-port`, `--protocol-revision`, `--timeout-seconds`, and `--account` with `--password` for an existing account. The jar is part of the `l2jfree-dist` artifact of the pipeline.
