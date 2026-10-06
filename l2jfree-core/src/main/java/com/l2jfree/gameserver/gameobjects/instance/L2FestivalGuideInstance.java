@@ -309,8 +309,7 @@ public final class L2FestivalGuideInstance extends L2Npc
 					break;
 				case 4: // Current High Scores
 					StringBuilder strBuffer =
-							StringBuilder
-									.newInstance("<html><body>Festival Guide:<br>These are the top scores of the week, for the ");
+							new StringBuilder("<html><body>Festival Guide:<br>These are the top scores of the week, for the ");
 					
 					final StatsSet dawnData =
 							SevenSignsFestival.getInstance().getHighestScoreData(SevenSigns.CABAL_DAWN, _festivalType);

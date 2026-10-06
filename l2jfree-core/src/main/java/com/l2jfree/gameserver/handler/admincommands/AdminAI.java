@@ -54,8 +54,7 @@ public class AdminAI implements IAdminCommandHandler
 			
 			NpcHtmlMessage html = new NpcHtmlMessage(target.getObjectId());
 			StringBuilder html1 =
-					StringBuilder
-							.newInstance("<html><body><center><font color=\"LEVEL\">AI Information</font></center><br><br>");
+					new StringBuilder("<html><body><center><font color=\"LEVEL\">AI Information</font></center><br><br>");
 			
 			html1.append("<font color=\"LEVEL\">Intention</font>");
 			html1.append("<table border=\"0\" width=\"100%\">");
