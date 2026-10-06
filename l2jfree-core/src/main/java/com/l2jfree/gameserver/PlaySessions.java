@@ -134,34 +134,30 @@ public final class PlaySessions<C>
 		return true;
 	}
 	
-	/** The client disconnected; the login hears of it unless another client plays the account. */
+	/**
+	 * The client disconnected. The login hears of it only when this client was in the world: a client that was refused,
+	 * that never got in, or that logged out before, changes nothing for the login. A client that waits for the
+	 * admission is logged out by the admitting thread.
+	 */
 	public void logout(String account, C client)
 	{
 		if (account == null || account.isEmpty())
 			return;
 		
-		boolean notifyLogin = true;
+		boolean wasInWorld = false;
 		synchronized (_accountLock)
 		{
-			final C waiting = _waitingClients.get(account);
-			if (waiting == client)
-			{
-				// the admitting thread logs it out once the login answered
+			if (_waitingClients.get(account) == client)
 				_waitingClients.remove(account);
-				notifyLogin = false;
-			}
 			
-			final C current = _accountsInWorld.get(account);
-			if (current == client)
+			if (_accountsInWorld.get(account) == client)
 			{
 				_accountsInWorld.remove(account);
-				notifyLogin = true;
+				wasInWorld = true;
 			}
-			else if (current != null || (waiting != null && waiting != client))
-				notifyLogin = false;
 		}
 		
-		if (notifyLogin)
+		if (wasInWorld)
 			leave(account);
 	}
 	
