@@ -297,8 +297,8 @@ public class AdminSortMultisellItems implements IAdminCommandHandler
 	private void makeMulti(L2Player actor)
 	{
 		String[] SQL_ITEM_SELECTS =
-				{ "SELECT item_id,price FROM etcitem", "SELECT item_id,price FROM armor",
-						"SELECT item_id,price FROM weapon" };
+				{ "SELECT id, price FROM etc_item_template", "SELECT id, price FROM armor_template",
+						"SELECT id, price FROM weapon_template" };
 		
 		Connection con = null;
 		try
@@ -326,11 +326,10 @@ public class AdminSortMultisellItems implements IAdminCommandHandler
 						break;
 					}
 					
-					Integer i = rset.getInt("item_id");
+					Integer i = rset.getInt("id");
 					int itemId = i;
 					
-					Integer p = rset.getInt("price");
-					int price = p;
+					int price = (int)rset.getLong("price");
 					
 					price = getGMShopPrice(itemId, price);
 					
@@ -342,15 +341,15 @@ public class AdminSortMultisellItems implements IAdminCommandHandler
 					{
 						addEtc(itemId, 0);
 					}
-					else if (selectQuery.endsWith("armor"))
+					else if (selectQuery.endsWith("armor_template"))
 					{
 						addArmor(itemId, price);
 					}
-					else if (selectQuery.endsWith("weapon"))
+					else if (selectQuery.endsWith("weapon_template"))
 					{
 						addWeapon(itemId, price);
 					}
-					else if (selectQuery.endsWith("etcitem"))
+					else if (selectQuery.endsWith("etc_item_template"))
 					{
 						addMisc(itemId, price);
 					}
@@ -392,7 +391,9 @@ public class AdminSortMultisellItems implements IAdminCommandHandler
 		Connection con = null;
 		PreparedStatement statement = null;
 		
-		String SELECT_LIST[] = { "SELECT item_id,price FROM custom_merchant_buylists" };
+		// A good without a price has the reference price of the item, so it is no GM price
+		String SELECT_LIST[] =
+				{ "SELECT item_template_id, price FROM custom_merchant_buylist WHERE price IS NOT NULL" };
 		
 		for (String QUERY : SELECT_LIST)
 		{
@@ -403,11 +404,11 @@ public class AdminSortMultisellItems implements IAdminCommandHandler
 				ResultSet rset = statement.executeQuery();
 				while (rset.next())
 				{
-					Integer i = rset.getInt("item_id");
-					Integer p = rset.getInt("price");
+					Integer i = rset.getInt("item_template_id");
+					long p = rset.getLong("price");
 					if (itemId == i && p > priceGm)
 					{
-						priceGm = p;
+						priceGm = (int)p;
 					}
 				}
 				rset.close();

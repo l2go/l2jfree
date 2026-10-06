@@ -21,11 +21,8 @@ import static com.l2jfree.L2AutoInitialization.registerConfig;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
-import java.io.OutputStream;
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -45,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import com.l2jfree.L2AutoInitialization.ConfigFileLoader;
 import com.l2jfree.L2AutoInitialization.ConfigLoader;
 import com.l2jfree.L2AutoInitialization.ConfigPropertiesLoader;
+import com.l2jfree.config.Deployment;
 import com.l2jfree.config.L2Properties;
 import com.l2jfree.gameserver.datatables.SkillTable;
 import com.l2jfree.gameserver.model.Location;
@@ -99,16 +97,12 @@ public final class Config
 	// *******************************************************************************************
 	public static final String CONFIGURATION_FILE = "./config/server.properties";
 	// *******************************************************************************************
-	public static int GAME_SERVER_LOGIN_PORT;
-	public static String GAME_SERVER_LOGIN_HOST;
 	public static String INTERNAL_HOSTNAME;
 	public static String INTERNAL_NETWORKS;
 	public static String EXTERNAL_HOSTNAME;
 	public static String OPTIONAL_NETWORKS;
 	public static boolean PACKET_HANDLER_DEBUG;
-	public static int REQUEST_ID; // ID for request to the server
-	public static boolean RESERVE_HOST_ON_LOGIN = false;
-	public static boolean ACCEPT_ALTERNATE_ID; // Accept alternate ID for server ?
+	public static int SERVER_ID; // Number the client's server list shows for this world
 	public static Pattern CNAME_PATTERN; // Character name template
 	public static Pattern PET_NAME_PATTERN; // Pet name template
 	public static Pattern CLAN_ALLY_NAME_PATTERN; // Clan and ally name template
@@ -120,6 +114,7 @@ public final class Config
 	public static String DATABASE_URL; // Path to access to database
 	public static String DATABASE_LOGIN; // Database login
 	public static String DATABASE_PASSWORD; // Database password
+	public static String CATALOG_DIRECTORY; // Directory of the catalog CSV files, loaded into the catalog schema at start
 	public static int DATABASE_MAX_CONNECTIONS; // Maximum number of connections to the
 	// database
 	public static int DATABASE_MIN_IDLE_CONNECTIONS; // Idle connections kept open, never above the maximum
@@ -152,10 +147,7 @@ public final class Config
 		{
 			L2Properties serverSettings = new L2Properties(CONFIGURATION_FILE);
 			
-			GAME_SERVER_LOGIN_HOST = serverSettings.getProperty("LoginHost", "127.0.0.1");
-			GAME_SERVER_LOGIN_PORT = Integer.parseInt(serverSettings.getProperty("LoginPort", "9013"));
-			REQUEST_ID = Integer.parseInt(serverSettings.getProperty("RequestServerID", "0"));
-			ACCEPT_ALTERNATE_ID = Boolean.parseBoolean(serverSettings.getProperty("AcceptAlternateID", "True"));
+			SERVER_ID = Integer.parseInt(serverSettings.getProperty("ServerId", "1"));
 			PORT_GAME = Integer.parseInt(serverSettings.getProperty("GameserverPort", "7777"));
 			try
 			{
@@ -201,7 +193,7 @@ public final class Config
 				TITLE_PATTERN = Pattern.compile("[A-Za-z0-9 \\\\[\\\\]\\(\\)\\<\\>\\|\\!]{3,16}");
 			}
 			MAX_CHARACTERS_NUMBER_PER_ACCOUNT = Integer.parseInt(serverSettings.getProperty("CharMaxNumber", "0"));
-			GAMESERVER_HOSTNAME = serverSettings.getProperty("GameserverHostname");
+			GAMESERVER_HOSTNAME = Deployment.value("BIND", serverSettings.getProperty("GameserverHostname"));
 			DATAPACK_ROOT = new File(serverSettings.getProperty("DatapackRoot", ".")).getCanonicalFile();
 			MIN_PROTOCOL_REVISION = Integer.parseInt(serverSettings.getProperty("MinProtocolRevision", "694"));
 			MAX_PROTOCOL_REVISION = Integer.parseInt(serverSettings.getProperty("MaxProtocolRevision", "709"));
@@ -211,14 +203,15 @@ public final class Config
 			}
 			INTERNAL_HOSTNAME = serverSettings.getProperty("InternalHostname", "127.0.0.1");
 			INTERNAL_NETWORKS = serverSettings.getProperty("InternalNetworks", "");
-			EXTERNAL_HOSTNAME = serverSettings.getProperty("ExternalHostname", "127.0.0.1");
+			EXTERNAL_HOSTNAME = Deployment.value("EXTERNAL_HOST", serverSettings.getProperty("ExternalHostname", "127.0.0.1"));
 			OPTIONAL_NETWORKS = serverSettings.getProperty("OptionalNetworks", "");
 			PACKET_HANDLER_DEBUG = Boolean.parseBoolean(serverSettings.getProperty("PacketHandlerDebug", "false"));
 			MAXIMUM_ONLINE_USERS = Integer.parseInt(serverSettings.getProperty("MaximumOnlineUsers", "100"));
-			DATABASE_DRIVER = serverSettings.getProperty("Driver", "com.mysql.cj.jdbc.Driver");
-			DATABASE_URL = serverSettings.getProperty("URL", "jdbc:mysql://localhost/l2jfree_gs");
-			DATABASE_LOGIN = serverSettings.getProperty("Login", "root");
-			DATABASE_PASSWORD = serverSettings.getProperty("Password", "");
+			DATABASE_DRIVER = serverSettings.getProperty("Driver", "org.postgresql.Driver");
+			DATABASE_URL = Deployment.value("DB_URL", serverSettings.getProperty("URL", "jdbc:postgresql://localhost/l2jfree"));
+			DATABASE_LOGIN = Deployment.value("WORLD_DB_USER", serverSettings.getProperty("Login", "l2jfree_world"));
+			DATABASE_PASSWORD = Deployment.secret("WORLD_DB_PASSWORD", serverSettings.getProperty("Password", ""));
+			CATALOG_DIRECTORY = serverSettings.getProperty("CatalogDirectory", "catalog");
 			DATABASE_MAX_CONNECTIONS = Integer.parseInt(serverSettings.getProperty("MaximumDbConnections", "10"));
 			DATABASE_MIN_IDLE_CONNECTIONS = Integer.parseInt(serverSettings.getProperty("MinimumDbIdleConnections", "10"));
 			
@@ -957,11 +950,9 @@ public final class Config
 	// *******************************************************************************************
 	public static enum IdFactoryType
 	{
-		Compaction,
 		BitSet,
 		Stack,
-		Increment,
-		Rebuild
+		Increment
 	}
 	
 	public static IdFactoryType IDFACTORY_TYPE; // ID Factory type
@@ -1330,7 +1321,6 @@ public final class Config
 	public static boolean ALT_MASTERWORK_CONFIG;
 	public static boolean ALLOW_MASTERWORK;
 	public static boolean ALLOW_CRITICAL_CRAFT;
-	public static boolean MAIL_STORE_DELETED_LETTERS;
 	public static boolean BAN_CLIENT_EMULATORS;
 	
 	public static boolean SERVER_LIST_CLOCK; // Displays a clock next to the server name ?
@@ -1363,15 +1353,6 @@ public final class Config
 	public static int RETARGET_BLOCKING_PERIOD;
 	
 	// *******************************************************************************************
-	public static boolean DATABASE_BACKUP_MAKE_BACKUP_ON_STARTUP;
-	public static boolean DATABASE_BACKUP_MAKE_BACKUP_ON_SHUTDOWN;
-	public static String DATABASE_BACKUP_DATABASE_NAME;
-	public static String DATABASE_BACKUP_SAVE_PATH;
-	public static boolean DATABASE_BACKUP_COMPRESSION;
-	public static String DATABASE_BACKUP_MYSQLDUMP_PATH;
-	
-	public static boolean OPTIMIZE_DATABASE;
-	
 	public static String HTML_CACHE_FILE;
 	
 	public static boolean BAN_DUPLICATE_ITEM_OWNER;
@@ -1482,8 +1463,6 @@ public final class Config
 			COMMUNITY_TYPE = Integer.parseInt(optionsSettings.getProperty("CommunityType", "1"));
 			BBS_SHOW_PLAYERLIST = Boolean.parseBoolean(optionsSettings.getProperty("BBSShowPlayerList", "false"));
 			BBS_DEFAULT = optionsSettings.getProperty("BBSDefault", "_bbshome");
-			MAIL_STORE_DELETED_LETTERS =
-					Boolean.parseBoolean(optionsSettings.getProperty("MailStoreDeletedLetters", "False"));
 			SHOW_LEVEL_COMMUNITYBOARD =
 					Boolean.parseBoolean(optionsSettings.getProperty("ShowLevelOnCommunityBoard", "False"));
 			SHOW_STATUS_COMMUNITYBOARD =
@@ -1622,20 +1601,6 @@ public final class Config
 			MERCENARY_SAVING_DELAY = Integer.parseInt(optionsSettings.getProperty("MercenaryPosUpdateDelay", "90000"));
 			
 			RETARGET_BLOCKING_PERIOD = Integer.parseInt(optionsSettings.getProperty("CannotRetargetFor", "400"));
-			
-			// *******************************************************************************************
-			// Database Backup Settings
-			DATABASE_BACKUP_MAKE_BACKUP_ON_STARTUP =
-					Boolean.parseBoolean(optionsSettings.getProperty("DatabaseBackupMakeBackupOnStartup", "False"));
-			DATABASE_BACKUP_MAKE_BACKUP_ON_SHUTDOWN =
-					Boolean.parseBoolean(optionsSettings.getProperty("DatabaseBackupMakeBackupOnShutdown", "False"));
-			DATABASE_BACKUP_DATABASE_NAME = optionsSettings.getProperty("DatabaseBackupDatabaseName", "l2jfree_gs");
-			DATABASE_BACKUP_SAVE_PATH = optionsSettings.getProperty("DatabaseBackupSavePath", "/backup/database/");
-			DATABASE_BACKUP_COMPRESSION =
-					Boolean.parseBoolean(optionsSettings.getProperty("DatabaseBackupCompression", "True"));
-			DATABASE_BACKUP_MYSQLDUMP_PATH = optionsSettings.getProperty("DatabaseBackupMysqldumpPath", ".");
-			
-			OPTIMIZE_DATABASE = Boolean.parseBoolean(optionsSettings.getProperty("OptimizeDatabaseTables", "True"));
 			
 			HTML_CACHE_FILE = optionsSettings.getProperty("HtmlCacheFile", "./cache/html.cache");
 			
@@ -2577,34 +2542,20 @@ public final class Config
 		}
 	}
 	
-	// *******************************************************************************************
-	public static final String HEXID_FILE = "./config/hexid.txt";
-	// *******************************************************************************************
-	public static byte[] HEX_ID; // Hexadecimal ID of the game server
-	/** Server ID used with the HexID */
-	public static int SERVER_ID;
-	
-	// *******************************************************************************************
-	public static void loadHexId()
-	{
-		_log.info("loading " + HEXID_FILE);
-		try
-		{
-			L2Properties Settings = new L2Properties(HEXID_FILE);
-			
-			SERVER_ID = Integer.parseInt(Settings.getProperty("ServerID"));
-			HEX_ID = new BigInteger(Settings.getProperty("HexID"), 16).toByteArray();
-		}
-		catch (Exception e)
-		{
-			_log.warn("Could not load HexID file (" + HEXID_FILE + "). Hopefully login will give us one.");
-		}
-	}
-	
 	//  *******************************************************************************************
 	public static final String SUBNETS_FILE = "./config/subnets.properties";
 	//  *******************************************************************************************
 	public static String SUBNETWORKS;
+	
+	/**
+	 * Resolves a configuration file that is not a properties file against the directories of ADR-0011. A file of the
+	 * operator directory replaces the default file as a whole, because these files are lists without keys to merge.
+	 * Without the two system properties the path is used as given, so a checkout starts unchanged.
+	 */
+	private static File resolveConfigFile(String path)
+	{
+		return L2Properties.resolveFile(path);
+	}
 	
 	//  *******************************************************************************************
 	public static void loadSubnets()
@@ -2618,7 +2569,7 @@ public final class Config
 			String line = null;
 			SUBNETWORKS = "";
 			
-			lnr = new LineNumberReader(new InputStreamReader(new FileInputStream(new File(SUBNETS_FILE))));
+			lnr = new LineNumberReader(new InputStreamReader(new FileInputStream(resolveConfigFile(SUBNETS_FILE))));
 			
 			while ((line = lnr.readLine()) != null)
 			{
@@ -3552,7 +3503,7 @@ public final class Config
 		@Override
 		protected String getFileName()
 		{
-			return SAY_FILTER_FILE;
+			return resolveConfigFile(SAY_FILTER_FILE).getPath();
 		}
 		
 		@Override
@@ -3980,7 +3931,6 @@ public final class Config
 	{
 		Util.printSection("Configuration");
 		loadConfiguration();
-		loadHexId();
 		loadSubnets();
 		loadTelnetConfig();
 		loadIdFactoryConfig();
@@ -4715,45 +4665,6 @@ public final class Config
 	// it has no instancies
 	protected Config()
 	{
-	}
-	
-	/**
-	 * Save hexadecimal ID of the server in the properties file.
-	 *
-	 * @param string (String) : hexadecimal ID of the server to store
-	 * @see HEXID_FILE
-	 * @see saveHexid(String string, String fileName)
-	 * @link LoginServerThread
-	 */
-	public static void saveHexid(int serverId, String string)
-	{
-		Config.saveHexid(serverId, string, HEXID_FILE);
-	}
-	
-	/**
-	 * Save hexadecimal ID of the server in the properties file.
-	 *
-	 * @param hexId (String) : hexadecimal ID of the server to store
-	 * @param fileName (String) : name of the properties file
-	 */
-	public static void saveHexid(int serverId, String hexId, String fileName)
-	{
-		try
-		{
-			L2Properties hexSetting = new L2Properties();
-			File file = new File(fileName);
-			// Create a new empty file only if it doesn't exist
-			file.createNewFile();
-			OutputStream os = new FileOutputStream(file);
-			hexSetting.setProperty("ServerID", String.valueOf(serverId));
-			hexSetting.setProperty("HexID", hexId);
-			hexSetting.store(os, "the hexID to auth into login");
-			os.close();
-		}
-		catch (Exception e)
-		{
-			_log.warn("Failed to save hex id to " + fileName + " File.");
-		}
 	}
 	
 	/**

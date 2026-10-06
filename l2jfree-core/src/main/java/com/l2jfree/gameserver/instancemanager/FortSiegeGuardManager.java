@@ -103,7 +103,7 @@ public class FortSiegeGuardManager
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM fort_siege_guards Where fortId = ? ");
+			PreparedStatement statement = con.prepareStatement("SELECT id, fort_id, npc_template_id, x, y, z, heading, respawn_delay_s FROM fort_siege_guard WHERE fort_id = ? ORDER BY id");
 			statement.setInt(1, getFort().getFortId());
 			ResultSet rs = statement.executeQuery();
 			
@@ -113,8 +113,8 @@ public class FortSiegeGuardManager
 			_siegeGuardsSpawns = new FastList<L2Spawn>();
 			while (rs.next())
 			{
-				int fortId = rs.getInt("fortId");
-				template1 = NpcTable.getInstance().getTemplate(rs.getInt("npcId"));
+				int fortId = rs.getInt("fort_id");
+				template1 = NpcTable.getInstance().getTemplate(rs.getInt("npc_template_id"));
 				if (template1 != null)
 				{
 					spawn1 = new L2Spawn(template1);
@@ -124,14 +124,14 @@ public class FortSiegeGuardManager
 					spawn1.setLocy(rs.getInt("y"));
 					spawn1.setLocz(rs.getInt("z"));
 					spawn1.setHeading(rs.getInt("heading"));
-					spawn1.setRespawnDelay(rs.getInt("respawnDelay"));
+					spawn1.setRespawnDelay(rs.getInt("respawn_delay_s"));
 					spawn1.setLocation(0);
 					
 					_siegeGuardsSpawns.add(spawn1);
 				}
 				else
 				{
-					_log.warn("Missing npc data in npc table for id: " + rs.getInt("npcId"));
+					_log.warn("Missing npc data in npc table for id: " + rs.getInt("npc_template_id"));
 				}
 				_siegeGuards.put(fortId, _siegeGuardsSpawns);
 			}

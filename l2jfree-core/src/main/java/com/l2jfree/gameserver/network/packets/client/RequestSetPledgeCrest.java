@@ -14,17 +14,13 @@
  */
 package com.l2jfree.gameserver.network.packets.client;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.cache.CrestCache;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.idfactory.IdFactory;
 import com.l2jfree.gameserver.model.clan.L2Clan;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.L2ClientPacket;
+import com.l2jfree.gameserver.persistence.clan.ClanRepository;
 
 /**
  * This class ...
@@ -83,7 +79,17 @@ public class RequestSetPledgeCrest extends L2ClientPacket
 		
 		if (_length == 0 || _data.length == 0)
 		{
-			crestCache.removePledgeCrest(clan.getCrestId());
+			int oldId = clan.getCrestId();
+			try
+			{
+				ClanRepository.getInstance().updateClanCrest(clan.getClanId(), 0);
+			}
+			catch (Exception e)
+			{
+				_log.warn("could not clear the crest id:", e);
+			}
+			crestCache.removePledgeCrest(oldId);
+			clan.setCrestId(0);
 			clan.setHasCrest(false);
 			sendPacket(SystemMessageId.CLAN_CREST_HAS_BEEN_DELETED);
 			
@@ -101,28 +107,18 @@ public class RequestSetPledgeCrest extends L2ClientPacket
 				return;
 			}
 			
-			if (clan.hasCrest())
-				crestCache.removeOldPledgeCrest(clan.getCrestId());
-			
-			Connection con = null;
 			try
 			{
-				con = L2DatabaseFactory.getInstance().getConnection(con);
-				PreparedStatement statement =
-						con.prepareStatement("UPDATE clan_data SET crest_id = ? WHERE clan_id = ?");
-				statement.setInt(1, newId);
-				statement.setInt(2, clan.getClanId());
-				statement.executeUpdate();
-				statement.close();
+				ClanRepository.getInstance().updateClanCrest(clan.getClanId(), newId);
 			}
-			catch (SQLException e)
+			catch (Exception e)
 			{
 				_log.warn("could not update the crest id:", e);
 			}
-			finally
-			{
-				L2DatabaseFactory.close(con);
-			}
+			
+			// The clan points at the new crest now, so the old image can go
+			if (clan.hasCrest())
+				crestCache.removePledgeCrest(clan.getCrestId());
 			
 			clan.setCrestId(newId);
 			clan.setHasCrest(true);

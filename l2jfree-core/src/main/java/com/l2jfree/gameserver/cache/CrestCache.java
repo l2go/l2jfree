@@ -14,27 +14,20 @@
  */
 package com.l2jfree.gameserver.cache;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 
 import javolution.util.FastMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.l2jfree.Config;
-import com.l2jfree.L2DatabaseFactory;
-import com.l2jfree.gameserver.datatables.ClanTable;
-import com.l2jfree.gameserver.idfactory.IdFactory;
-import com.l2jfree.gameserver.model.clan.L2Clan;
+import com.l2jfree.gameserver.persistence.clan.ClanRepository;
+import com.l2jfree.gameserver.persistence.clan.ClanRepository.CrestRecord;
 
 /**
+ * The crest images of clans and alliances. They are stored in the database (table crest) and kept in memory.
+ * 
  * @author Layane
  */
 public class CrestCache
@@ -55,23 +48,11 @@ public class CrestCache
 	
 	private CrestCache()
 	{
-		new File("data/crests").mkdirs();
-		
-		convertOldPedgeFiles();
 		reload();
 	}
 	
 	public synchronized void reload()
 	{
-		FileFilter filter = new BmpFilter();
-		
-		File dir = new File(Config.DATAPACK_ROOT, "data/crests/");
-		
-		File[] files = dir.listFiles(filter);
-		if (files == null)
-			files = new File[0];
-		byte[] content;
-		
 		_loadedFiles = 0;
 		_bytesBuffLen = 0;
 		
@@ -79,116 +60,36 @@ public class CrestCache
 		_cachePledgeLarge.clear();
 		_cacheAlly.clear();
 		
-		for (File file : files)
+		try
 		{
-			RandomAccessFile f = null;
-			try
+			List<CrestRecord> crests = ClanRepository.getInstance().loadCrests();
+			for (CrestRecord crest : crests)
 			{
-				f = new RandomAccessFile(file, "r");
-				content = new byte[(int)f.length()];
-				f.readFully(content);
-				
-				if (file.getName().startsWith("Crest_Large_"))
-				{
-					_cachePledgeLarge.put(Integer.valueOf(file.getName().substring(12, file.getName().length() - 4)),
-							content);
-				}
-				else if (file.getName().startsWith("Crest_"))
-				{
-					_cachePledge
-							.put(Integer.valueOf(file.getName().substring(6, file.getName().length() - 4)), content);
-				}
-				else if (file.getName().startsWith("AllyCrest_"))
-				{
-					_cacheAlly.put(Integer.valueOf(file.getName().substring(10, file.getName().length() - 4)), content);
-				}
+				if (ClanRepository.KIND_CLAN_LARGE.equals(crest.kind()))
+					_cachePledgeLarge.put(crest.id(), crest.image());
+				else if (ClanRepository.KIND_CLAN.equals(crest.kind()))
+					_cachePledge.put(crest.id(), crest.image());
+				else if (ClanRepository.KIND_ALLIANCE.equals(crest.kind()))
+					_cacheAlly.put(crest.id(), crest.image());
+				else
+					continue;
 				_loadedFiles++;
-				_bytesBuffLen += content.length;
+				_bytesBuffLen += crest.image().length;
 			}
-			catch (Exception e)
-			{
-				_log.warn("Problem with loading crest bmp file: " + file, e);
-			}
-			finally
-			{
-				try
-				{
-					if (f != null)
-						f.close();
-				}
-				catch (Exception e)
-				{
-					e.printStackTrace();
-				}
-			}
+		}
+		catch (SQLException e)
+		{
+			_log.warn("Problem with loading the crests from the database", e);
 		}
 		
 		_log.info(String.valueOf(this));
-	}
-	
-	public void convertOldPedgeFiles()
-	{
-		File dir = new File(Config.DATAPACK_ROOT, "data/crests/");
-		
-		File[] files = dir.listFiles(new OldPledgeFilter());
-		
-		if (files == null)
-			files = new File[0];
-		
-		for (File file : files)
-		{
-			int clanId = Integer.parseInt(file.getName().substring(7, file.getName().length() - 4));
-			
-			_log.info("Found old crest file \"" + file.getName() + "\" for clanId " + clanId);
-			
-			int newId = IdFactory.getInstance().getNextId();
-			
-			L2Clan clan = ClanTable.getInstance().getClan(clanId);
-			
-			if (clan != null)
-			{
-				removeOldPledgeCrest(clan.getCrestId());
-				
-				file.renameTo(new File(Config.DATAPACK_ROOT, "data/crests/Crest_" + newId + ".bmp"));
-				_log.info("Renamed Clan crest to new format: Crest_" + newId + ".bmp");
-				
-				Connection con = null;
-				
-				try
-				{
-					con = L2DatabaseFactory.getInstance().getConnection(con);
-					PreparedStatement statement =
-							con.prepareStatement("UPDATE clan_data SET crest_id = ? WHERE clan_id = ?");
-					statement.setInt(1, newId);
-					statement.setInt(2, clan.getClanId());
-					statement.executeUpdate();
-					statement.close();
-				}
-				catch (SQLException e)
-				{
-					_log.warn("Could not update the crest id:", e);
-				}
-				finally
-				{
-					L2DatabaseFactory.close(con);
-				}
-				
-				clan.setCrestId(newId);
-				clan.setHasCrest(true);
-			}
-			else
-			{
-				_log.info("Clan Id: " + clanId + " does not exist in table.. deleting.");
-				file.delete();
-			}
-		}
 	}
 	
 	@Override
 	public String toString()
 	{
 		return "Cache[Crest]: " + String.format("%.3f", (float)_bytesBuffLen / 1048576) + " megabytes on "
-				+ _loadedFiles + " file(s) loaded.";
+				+ _loadedFiles + " crest(s) loaded.";
 	}
 	
 	public int getLoadedFiles()
@@ -213,11 +114,10 @@ public class CrestCache
 	
 	public void removePledgeCrest(int id)
 	{
-		File crestFile = new File(Config.DATAPACK_ROOT, "data/crests/Crest_" + id + ".bmp");
 		_cachePledge.remove(id);
 		try
 		{
-			crestFile.delete();
+			ClanRepository.getInstance().deleteCrest(id, ClanRepository.KIND_CLAN);
 		}
 		catch (Exception e)
 		{
@@ -227,39 +127,25 @@ public class CrestCache
 	
 	public boolean removePledgeCrestLarge(int id)
 	{
-		File crestFile = new File(Config.DATAPACK_ROOT, "data/crests/Crest_Large_" + id + ".bmp");
+		boolean deleted;
 		try
 		{
-			crestFile.delete();
+			deleted = ClanRepository.getInstance().deleteCrest(id, ClanRepository.KIND_CLAN_LARGE);
 		}
 		catch (Exception e)
 		{
 			_log.warn("", e);
 			return false;
 		}
-		return _cachePledgeLarge.remove(id) != null;
-	}
-	
-	public void removeOldPledgeCrest(int id)
-	{
-		File crestFile = new File(Config.DATAPACK_ROOT, "data/crests/Pledge_" + id + ".bmp");
-		try
-		{
-			crestFile.delete();
-		}
-		catch (Exception e)
-		{
-			_log.warn("", e);
-		}
+		return (_cachePledgeLarge.remove(id) != null) || deleted;
 	}
 	
 	public void removeAllyCrest(int id)
 	{
-		File crestFile = new File(Config.DATAPACK_ROOT, "data/crests/AllyCrest_" + id + ".bmp");
 		_cacheAlly.remove(id);
 		try
 		{
-			crestFile.delete();
+			ClanRepository.getInstance().deleteCrest(id, ClanRepository.KIND_ALLIANCE);
 		}
 		catch (Exception e)
 		{
@@ -269,73 +155,46 @@ public class CrestCache
 	
 	public boolean savePledgeCrest(int newId, byte[] data)
 	{
-		File crestFile = new File(Config.DATAPACK_ROOT, "data/crests/Crest_" + newId + ".bmp");
 		try
 		{
-			FileOutputStream out = new FileOutputStream(crestFile);
-			out.write(data);
-			out.close();
+			ClanRepository.getInstance().saveCrest(newId, ClanRepository.KIND_CLAN, data);
 			_cachePledge.put(newId, data);
 			return true;
 		}
-		catch (IOException e)
+		catch (SQLException e)
 		{
-			_log.info("Error saving pledge crest" + crestFile + ":", e);
+			_log.info("Error saving pledge crest " + newId + ":", e);
 			return false;
 		}
 	}
 	
 	public boolean savePledgeCrestLarge(int newId, byte[] data)
 	{
-		File crestFile = new File(Config.DATAPACK_ROOT, "data/crests/Crest_Large_" + newId + ".bmp");
 		try
 		{
-			FileOutputStream out = new FileOutputStream(crestFile);
-			out.write(data);
-			out.close();
+			ClanRepository.getInstance().saveCrest(newId, ClanRepository.KIND_CLAN_LARGE, data);
 			_cachePledgeLarge.put(newId, data);
 			return true;
 		}
-		catch (IOException e)
+		catch (SQLException e)
 		{
-			_log.info("Error saving Large pledge crest" + crestFile + ":", e);
+			_log.info("Error saving Large pledge crest " + newId + ":", e);
 			return false;
 		}
 	}
 	
 	public boolean saveAllyCrest(int newId, byte[] data)
 	{
-		File crestFile = new File(Config.DATAPACK_ROOT, "data/crests/AllyCrest_" + newId + ".bmp");
 		try
 		{
-			FileOutputStream out = new FileOutputStream(crestFile);
-			out.write(data);
-			out.close();
+			ClanRepository.getInstance().saveCrest(newId, ClanRepository.KIND_ALLIANCE, data);
 			_cacheAlly.put(newId, data);
 			return true;
 		}
-		catch (IOException e)
+		catch (SQLException e)
 		{
-			_log.info("Error saving ally crest" + crestFile + ":", e);
+			_log.info("Error saving ally crest " + newId + ":", e);
 			return false;
-		}
-	}
-	
-	class BmpFilter implements FileFilter
-	{
-		@Override
-		public boolean accept(File file)
-		{
-			return (file.getName().endsWith(".bmp"));
-		}
-	}
-	
-	class OldPledgeFilter implements FileFilter
-	{
-		@Override
-		public boolean accept(File file)
-		{
-			return (file.getName().startsWith("Pledge_"));
 		}
 	}
 	

@@ -1,3 +1,0 @@
-ALTER TABLE `custom_etcitem` ADD `time` int(4) NOT NULL DEFAULT '-1'  AFTER `duration`, CHANGE `duration` `duration` int(3) NOT NULL DEFAULT '-1';
-ALTER TABLE `custom_armor`  ADD `time` int(4) NOT NULL DEFAULT '-1'  AFTER `duration`, CHANGE `duration` `duration` int(3) NOT NULL DEFAULT '-1';
-ALTER TABLE `custom_weapon`  ADD `time` int(4) NOT NULL DEFAULT '-1'  AFTER `duration`, CHANGE `duration` `duration` int(3) NOT NULL DEFAULT '-1';

@@ -17,12 +17,27 @@ package com.l2jfree.gameserver.network.packets.client;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
 /** Writes every durable part of one multisell exchange on one JDBC connection. */
 final class MultiSellPersistence
 {
+	private static final String DELETE_ITEM = "DELETE FROM item WHERE id=? AND owner_player_id=? AND count=?";
+	private static final String UPDATE_ITEM_COUNT = "UPDATE item SET count=? WHERE id=? AND owner_player_id=? AND count=?";
+	private static final String INSERT_ITEM =
+			"INSERT INTO item (owner_player_id, id, item_template_id, count, enchant_level, location, location_slot, mana_left, expire_at) "
+					+ "VALUES (?,?,?,?,?,'INVENTORY',0,?,?)";
+	private static final String INSERT_ATTRIBUTES =
+			"INSERT INTO item_attribute (item_id, augmentation_attributes, augmentation_skill_id, augmentation_skill_level, element_type, element_value) "
+					+ "VALUES (?,?,?,?,?,?)";
+	private static final String UPDATE_FAME = "UPDATE player SET fame=? WHERE id=?";
+	private static final String UPDATE_CLAN_REPUTATION =
+			"UPDATE clan SET reputation_score=? WHERE id=? AND reputation_score=?";
+	private static final String UPDATE_CASTLE_TREASURY = "UPDATE castle SET treasury=? WHERE id=? AND treasury=?";
+
 	interface Change
 	{
 		void write(Connection connection) throws SQLException;
@@ -47,14 +62,8 @@ final class MultiSellPersistence
 			@Override
 			public void write(Connection connection) throws SQLException
 			{
-				if (after == 0)
-				{
-					deleteByItemId(connection, "item_attributes", "itemId", objectId);
-					deleteByItemId(connection, "pets", "item_obj_id", objectId);
-				}
-				String sql = after == 0
-						? "DELETE FROM items WHERE object_id=? AND owner_id=? AND count=?"
-						: "UPDATE items SET count=? WHERE object_id=? AND owner_id=? AND count=?";
+				// The attributes and the pet of a deleted item go with its row
+				String sql = after == 0 ? DELETE_ITEM : UPDATE_ITEM_COUNT;
 				try (PreparedStatement statement = connection.prepareStatement(sql))
 				{
 					int offset = 0;
@@ -86,9 +95,7 @@ final class MultiSellPersistence
 			@Override
 			public void write(Connection connection) throws SQLException
 			{
-				try (PreparedStatement statement = connection.prepareStatement(
-						"INSERT INTO items (owner_id,object_id,item_id,count,enchant_level,loc,loc_data,mana_left,time) "
-								+ "VALUES (?,?,?,?,?,'INVENTORY',0,?,?)"))
+				try (PreparedStatement statement = connection.prepareStatement(INSERT_ITEM))
 				{
 					statement.setInt(1, ownerId);
 					statement.setInt(2, objectId);
@@ -96,7 +103,11 @@ final class MultiSellPersistence
 					statement.setLong(4, count);
 					statement.setInt(5, enchantment);
 					statement.setInt(6, mana);
-					statement.setLong(7, time);
+					// A time of 0 or -1 means that the item has no time limit
+					if (time > 0)
+						statement.setTimestamp(7, new Timestamp(time));
+					else
+						statement.setNull(7, Types.TIMESTAMP_WITH_TIMEZONE);
 					statement.executeUpdate();
 				}
 			}
@@ -111,16 +122,15 @@ final class MultiSellPersistence
 			@Override
 			public void write(Connection connection) throws SQLException
 			{
-				try (PreparedStatement statement = connection.prepareStatement(
-						"INSERT INTO item_attributes (itemId,augAttributes,augSkillId,augSkillLevel,elemType,elemValue) "
-								+ "VALUES (?,?,?,?,?,?)"))
+				try (PreparedStatement statement = connection.prepareStatement(INSERT_ATTRIBUTES))
 				{
+					// -1 means that the item has no such attribute, which the table stores as NULL
 					statement.setInt(1, objectId);
-					statement.setInt(2, augmentation);
-					statement.setInt(3, skillId);
-					statement.setInt(4, skillLevel);
-					statement.setByte(5, element);
-					statement.setInt(6, elementValue);
+					setUnlessNone(statement, 2, augmentation);
+					setUnlessNone(statement, 3, skillId);
+					setUnlessNone(statement, 4, skillLevel);
+					setUnlessNone(statement, 5, element);
+					setUnlessNone(statement, 6, elementValue);
 					statement.executeUpdate();
 				}
 			}
@@ -137,8 +147,7 @@ final class MultiSellPersistence
 			public void write(Connection connection) throws SQLException
 			{
 				// Fame is normally persisted by periodic character stores, so its row can lag memory.
-				try (PreparedStatement statement = connection.prepareStatement(
-						"UPDATE characters SET fame=? WHERE charId=?"))
+				try (PreparedStatement statement = connection.prepareStatement(UPDATE_FAME))
 				{
 					statement.setInt(1, after);
 					statement.setInt(2, playerId);
@@ -151,16 +160,16 @@ final class MultiSellPersistence
 
 	void adjustClanReputation(final int clanId, final int before, final int after)
 	{
-		adjustBalance("clan_data", "reputation_score", "clan_id", clanId, before, after);
+		adjustBalance(UPDATE_CLAN_REPUTATION, "clan", clanId, before, after);
 	}
 
 	void adjustCastleTreasury(final int castleId, final long before, final long after)
 	{
-		adjustBalance("castle", "treasury", "id", castleId, before, after);
+		adjustBalance(UPDATE_CASTLE_TREASURY, "castle", castleId, before, after);
 	}
 
-	private void adjustBalance(final String table, final String column, final String keyColumn,
-			final int key, final long before, final long after)
+	private void adjustBalance(final String sql, final String table, final int key, final long before,
+			final long after)
 	{
 		if (before == after)
 			return;
@@ -169,8 +178,7 @@ final class MultiSellPersistence
 			@Override
 			public void write(Connection connection) throws SQLException
 			{
-				try (PreparedStatement statement = connection.prepareStatement("UPDATE " + table + " SET " + column
-						+ "=? WHERE " + keyColumn + "=? AND " + column + "=?"))
+				try (PreparedStatement statement = connection.prepareStatement(sql))
 				{
 					statement.setLong(1, after);
 					statement.setInt(2, key);
@@ -208,14 +216,11 @@ final class MultiSellPersistence
 		}
 	}
 
-	private static void deleteByItemId(Connection connection, String table, String column, int objectId)
-			throws SQLException
+	private static void setUnlessNone(PreparedStatement statement, int index, int value) throws SQLException
 	{
-		try (PreparedStatement statement = connection.prepareStatement(
-				"DELETE FROM " + table + " WHERE " + column + "=?"))
-		{
-			statement.setInt(1, objectId);
-			statement.executeUpdate();
-		}
+		if (value == -1)
+			statement.setNull(index, Types.INTEGER);
+		else
+			statement.setInt(index, value);
 	}
 }

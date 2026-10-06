@@ -54,13 +54,13 @@ public final class RecordTable
 			con = L2DatabaseFactory.getInstance().getConnection();
 			
 			PreparedStatement statement =
-					con.prepareStatement("SELECT maxplayer, date FROM record ORDER BY maxplayer DESC LIMIT 1");
+					con.prepareStatement("SELECT player_count, recorded_on FROM online_record ORDER BY player_count DESC LIMIT 1");
 			ResultSet rset = statement.executeQuery();
 			
 			if (rset.next())
 			{
-				_record = rset.getInt("maxplayer");
-				_date = rset.getString("date");
+				_record = rset.getInt("player_count");
+				_date = rset.getString("recorded_on");
 			}
 			
 			rset.close();
@@ -88,7 +88,7 @@ public final class RecordTable
 				con = L2DatabaseFactory.getInstance().getConnection();
 				
 				PreparedStatement statement =
-						con.prepareStatement("INSERT INTO record (maxplayer, date) VALUES (?, NOW())");
+						con.prepareStatement("INSERT INTO online_record (player_count, recorded_on) VALUES (?, CURRENT_DATE)");
 				statement.setInt(1, onlinePlayerCount);
 				statement.execute();
 				statement.close();

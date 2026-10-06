@@ -14,17 +14,8 @@
  */
 package com.l2jfree.gameserver.model.entity.faction;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-
 import javolution.util.FastList;
 import javolution.util.FastMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.l2jfree.L2DatabaseFactory;
 
 /**
  * @author evill33t
@@ -32,8 +23,6 @@ import com.l2jfree.L2DatabaseFactory;
  */
 public class Faction
 {
-	private static final Logger _log = LoggerFactory.getLogger(Faction.class);
-	
 	private int _Id = 0;
 	private String _name = null;
 	private float _points = 0;
@@ -43,98 +32,23 @@ public class Faction
 	private final FastList<Integer> _list_npcs = new FastList<Integer>();
 	private final FastMap<Integer, String> _list_title = new FastMap<Integer, String>();
 	
+	/**
+	 * The faction system has no schema in Platform 3.0 (the tables factions, faction_members, faction_quests, and
+	 * character_faction_quests are gone), so a faction only knows its id and nothing is stored.
+	 */
 	public Faction(int factionId)
 	{
 		_Id = factionId;
-		String _classlist = "";
-		String _npclist = "";
-		String _titlelist = "";
-		int _tside = 0;
-		
-		Connection con = null;
-		try
-		{
-			PreparedStatement statement;
-			ResultSet rs;
-			
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			
-			statement = con.prepareStatement("Select * from factions where id = ?");
-			statement.setInt(1, getId());
-			rs = statement.executeQuery();
-			
-			while (rs.next())
-			{
-				_name = rs.getString("name");
-				_joinprice = rs.getInt("price");
-				_classlist = rs.getString("allowed_classes");
-				_titlelist = rs.getString("titlelist");
-				_npclist = rs.getString("npcs");
-				_points = rs.getFloat("points");
-				_tside = rs.getInt("side");
-			}
-			statement.close();
-			
-			if (_tside <= 2)
-				_side = _tside;
-			
-			if (_classlist.length() > 0)
-				for (String id : _classlist.split(","))
-					_list_classes.add(Integer.parseInt(id));
-			
-			if (_npclist.length() > 0)
-				for (String id : _npclist.split(","))
-					_list_npcs.add(Integer.parseInt(id));
-			
-			if (_titlelist.length() > 0)
-				for (String id : _titlelist.split(";"))
-					_list_title.put(Integer.valueOf(id.split(",")[0]), id.split(",")[1]);
-		}
-		catch (Exception e)
-		{
-			_log.warn("Exception: Faction load: " + e.getMessage(), e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
-	}
-	
-	private void updateDB()
-	{
-		Connection con = null;
-		try
-		{
-			PreparedStatement statement;
-			
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			
-			statement = con.prepareStatement("update factions set points = ? where id = ?");
-			statement.setFloat(1, _points);
-			statement.setInt(2, _Id);
-			statement.execute();
-			statement.close();
-		}
-		catch (Exception e)
-		{
-			_log.warn("Exception: Faction.load(): " + e.getMessage(), e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
 	}
 	
 	public void addPoints(int points)
 	{
 		_points += points;
-		updateDB();
 	}
 	
 	public void clearPoints()
 	{
 		_points = 0;
-		updateDB();
 	}
 	
 	public final int getId()

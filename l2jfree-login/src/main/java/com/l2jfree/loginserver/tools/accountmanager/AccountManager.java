@@ -22,12 +22,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import com.l2jfree.Config;
+import com.l2jfree.loginserver.LoginConfig;
 import com.l2jfree.L2AutoInitialization;
 import com.l2jfree.L2Registry;
 import com.l2jfree.loginserver.beans.Accounts;
 import com.l2jfree.loginserver.services.AccountsServices;
-import com.l2jfree.loginserver.services.GameserversServices;
 import com.l2jfree.loginserver.services.exception.AccountModificationException;
 
 /**
@@ -39,14 +38,12 @@ public final class AccountManager extends L2AutoInitialization
 	private static final String[] CMD = { "register", "change", "setlevel", "cancel", "list", "quit" };
 	private static final String SPACE = " ";
 	private final AccountsServices accountService;
-	private final GameserversServices gameService;
 	
 	private AccountManager()
 	{
-		Config.load();
+		LoginConfig.load();
 		L2Registry.loadRegistry();
 		accountService = L2Registry.getAccountsServices();
-		gameService = L2Registry.getGameserversServicesXml();
 	}
 	
 	private final int[] parseBirth(String s)
@@ -191,7 +188,7 @@ public final class AccountManager extends L2AutoInitialization
 				if (a.getLastactive() != null)
 					_log.info(a.getLogin() + " (lvl " + a.getAccessLevel() + ") last active "
 							+ sdf.format(new Date(a.getLastactive().longValue())) + " from IP " + a.getLastIp()
-							+ " in server " + getGameserverName(a.getLastServerId()));
+							+ " in world " + a.getLastServerId());
 				else
 					_log.info(a.getLogin() + " (lvl " + a.getAccessLevel() + ")");
 			_log.info("Total accounts: " + list.size() + ".");
@@ -200,14 +197,6 @@ public final class AccountManager extends L2AutoInitialization
 			System.exit(0);
 		else
 			_log.warn("Invalid command. Try again.");
-	}
-	
-	private final String getGameserverName(int id)
-	{
-		if (id > 0)
-			return gameService.getGameserverName(id);
-		else
-			return null;
 	}
 	
 	/**
@@ -221,10 +210,10 @@ public final class AccountManager extends L2AutoInitialization
 		_log.info("| L2JFree Account Manager |");
 		_log.info("\\=========================/");
 		_log.info("Available commands:");
-		_log.info(CMD[0] + " [account name] [password] [access level] {-b Year/Month/Day} {-gs last gameserver id}");
+		_log.info(CMD[0] + " [account name] [password] [access level] {-b Year/Month/Day} {-gs last world id}");
 		_log.info("EXAMPLE: " + CMD[0] + " me mypass 200 -b 99/2/22 -gs 1");
 		_log.info(CMD[1]
-				+ " [account name] {-p new password} {-a new access level} {-b new birth date} {-gs last gameserver id}");
+				+ " [account name] {-p new password} {-a new access level} {-b new birth date} {-gs last world id}");
 		_log.info(CMD[2] + " [account name] [new level]");
 		_log.info(CMD[3] + " [account name]");
 		_log.info(CMD[4] + " - list all registered accounts");

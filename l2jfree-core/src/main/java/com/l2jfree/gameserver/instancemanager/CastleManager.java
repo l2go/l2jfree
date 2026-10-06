@@ -224,7 +224,7 @@ public class CastleManager implements InstanceListManager
 			{
 				con = L2DatabaseFactory.getInstance().getConnection();
 				PreparedStatement statement =
-						con.prepareStatement("DELETE FROM items WHERE owner_id = ? and item_id = ?");
+						con.prepareStatement("DELETE FROM item WHERE owner_player_id = ? AND item_template_id = ?");
 				statement.setInt(1, member.getObjectId());
 				statement.setInt(2, circletId);
 				statement.execute();

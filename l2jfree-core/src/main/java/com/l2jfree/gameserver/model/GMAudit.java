@@ -16,19 +16,16 @@ package com.l2jfree.gameserver.model;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.sql.SQLException;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Object;
 import com.l2jfree.gameserver.gameobjects.L2Player;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 
 public class GMAudit
 {
-	private static final Logger _log = LoggerFactory.getLogger(GMAudit.class);
-	
 	public static void auditGMAction(L2Player gm, String type, String action, String param)
 	{
 		if (Config.GM_AUDIT)
@@ -48,29 +45,40 @@ public class GMAudit
 	{
 		if (Config.GM_AUDIT)
 		{
-			Connection con = null;
-			try
-			{
-				con = L2DatabaseFactory.getInstance().getConnection(con);
-				PreparedStatement statement =
-						con.prepareStatement("INSERT INTO gm_audit(gm_name, target, type, action, param, date) VALUES(?,?,?,?,?,now())");
-				
-				statement.setString(1, gm_name);
-				statement.setString(2, target);
-				statement.setString(3, type);
-				statement.setString(4, action);
-				statement.setString(5, param);
-				
-				statement.executeUpdate();
-			}
-			catch (Exception e)
-			{
-				_log.error("", e);
-			}
-			finally
-			{
-				L2DatabaseFactory.close(con);
-			}
+			// Losing the last audit rows in a crash is accepted: the transaction does not wait for the disk
+			WorldTransaction.run("GM audit of " + gm_name, () -> {
+				Connection con = null;
+				try
+				{
+					con = L2DatabaseFactory.getInstance().getConnection(con);
+					
+					// Same as SET LOCAL synchronous_commit = off (the setting ends with the transaction)
+					PreparedStatement setting =
+							con.prepareStatement("SELECT set_config('synchronous_commit', 'off', true)");
+					setting.execute();
+					setting.close();
+					
+					PreparedStatement statement =
+							con.prepareStatement("INSERT INTO gm_audit (gm_name, target, action_type, action, parameters) VALUES (?,?,?,?,?)");
+					
+					statement.setString(1, gm_name == null ? "" : gm_name);
+					statement.setString(2, target == null ? "null" : target);
+					statement.setString(3, type == null ? "" : type);
+					statement.setString(4, action == null ? "" : action);
+					statement.setString(5, param == null ? "" : param);
+					
+					statement.executeUpdate();
+					statement.close();
+				}
+				catch (SQLException e)
+				{
+					throw new IllegalStateException("Could not store the GM audit row", e);
+				}
+				finally
+				{
+					L2DatabaseFactory.close(con);
+				}
+			});
 		}
 	}
 }

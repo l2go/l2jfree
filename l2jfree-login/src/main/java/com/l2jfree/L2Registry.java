@@ -38,14 +38,10 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import com.l2jfree.loginserver.dao.AccountsDAO;
-import com.l2jfree.loginserver.dao.GameserversDAO;
 import com.l2jfree.loginserver.dao.JdbcTransactions;
 import com.l2jfree.loginserver.dao.impl.AccountsDAOJdbc;
-import com.l2jfree.loginserver.dao.impl.GameserversDAOJdbc;
-import com.l2jfree.loginserver.dao.impl.GameserversDAOXml;
 import com.l2jfree.loginserver.db.LoginDataSource;
 import com.l2jfree.loginserver.services.AccountsServices;
-import com.l2jfree.loginserver.services.GameserversServices;
 import com.l2jfree.sql.SchemaMigration;
 
 /**
@@ -63,8 +59,6 @@ public class L2Registry
 {
 	private static LoginDataSource __loginDataSource;
 	private static AccountsServices __accountsServices;
-	private static GameserversServices __gameserversServices;
-	private static GameserversServices __gameserversServicesXml;
 	
 	/**
 	 * Initialize the login data source and its service graph once.
@@ -89,18 +83,11 @@ public class L2Registry
 			}
 			JdbcTransactions transactions = new JdbcTransactions(loginDataSource.getDataSource());
 			AccountsDAO accountsDAO = new AccountsDAOJdbc(transactions);
-			GameserversDAO gameserversDAO = new GameserversDAOJdbc(transactions);
 			AccountsServices accountsServices = new AccountsServices();
 			accountsServices.setAccountsDAO(accountsDAO);
-			GameserversServices gameserversServices = new GameserversServices();
-			gameserversServices.setGameserversDAO(gameserversDAO);
-			GameserversServices gameserversServicesXml = new GameserversServices();
-			gameserversServicesXml.setGameserversDAO(new GameserversDAOXml());
 
 			__loginDataSource = loginDataSource;
 			__accountsServices = accountsServices;
-			__gameserversServices = gameserversServices;
-			__gameserversServicesXml = gameserversServicesXml;
 			Runtime.getRuntime().addShutdownHook(new Thread(loginDataSource::close, "login-database-pool-shutdown"));
 		}
 		catch (RuntimeException e)
@@ -113,18 +100,6 @@ public class L2Registry
 	{
 		ensureInitialized();
 		return __accountsServices;
-	}
-
-	public static GameserversServices getGameserversServices()
-	{
-		ensureInitialized();
-		return __gameserversServices;
-	}
-
-	public static GameserversServices getGameserversServicesXml()
-	{
-		ensureInitialized();
-		return __gameserversServicesXml;
 	}
 
 	public static DataSource getDataSource()

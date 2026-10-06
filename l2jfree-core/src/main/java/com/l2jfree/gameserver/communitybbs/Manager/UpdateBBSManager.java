@@ -52,15 +52,15 @@ public class UpdateBBSManager extends BaseBBSManager
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM changelog order by id desc");
+			PreparedStatement statement = con.prepareStatement("SELECT id, published_on, introduction, body, author FROM changelog_entry ORDER BY id DESC");
 			ResultSet result = statement.executeQuery();
 			while (result.next())
 			{
 				UpdateItem it = new UpdateItem();
-				it.id = result.getInt("id");
-				it.udate = result.getString("udate");
+				it.id = (int) result.getLong("id");
+				it.udate = result.getString("published_on");
 				it.introduction = result.getString("introduction");
-				it.text = result.getString("text");
+				it.text = result.getString("body");
 				it.author = result.getString("author");
 				_items.add(it);
 			}

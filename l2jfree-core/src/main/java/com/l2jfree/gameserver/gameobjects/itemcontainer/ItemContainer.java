@@ -14,27 +14,24 @@
  */
 package com.l2jfree.gameserver.gameobjects.itemcontainer;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-
 import javolution.util.FastList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.datatables.ItemTable;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Object;
 import com.l2jfree.gameserver.gameobjects.L2Player;
+import com.l2jfree.gameserver.gameobjects.instance.L2PetInstance;
 import com.l2jfree.gameserver.instancemanager.GameTimeManager;
 import com.l2jfree.gameserver.model.GMAudit;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
 import com.l2jfree.gameserver.model.items.L2ItemInstance.ItemLocation;
 import com.l2jfree.gameserver.model.items.templates.L2Item;
 import com.l2jfree.gameserver.model.world.L2World;
+import com.l2jfree.gameserver.persistence.item.ItemRepository;
 
 /**
  * @author Advi
@@ -625,20 +622,13 @@ public abstract class ItemContainer
 	 */
 	public void restore()
 	{
-		Connection con = null;
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement =
-					con.prepareStatement("SELECT object_id, item_id, count, enchant_level, loc, loc_data, custom_type1, custom_type2, mana_left, time FROM items WHERE owner_id=? AND loc=?");
-			statement.setInt(1, getOwnerId());
-			statement.setString(2, getBaseLocation().name());
-			ResultSet inv = statement.executeQuery();
-			
 			L2ItemInstance item;
-			while (inv.next())
+			for (ItemRepository.ItemRow row : ItemRepository.getInstance().loadItems(null, getStoredOwnerKey(),
+					getBaseLocation().name(), getBaseLocation().name()))
 			{
-				item = L2ItemInstance.restoreFromDb(getOwnerId(), inv);
+				item = L2ItemInstance.restoreFromDb(getOwnerId(), row);
 				if (item == null)
 					continue;
 				
@@ -652,20 +642,26 @@ public abstract class ItemContainer
 					addItem(item);
 			}
 			
-			inv.close();
-			statement.close();
 			refreshWeight();
 		}
 		catch (Exception e)
 		{
 			_log.warn("could not restore container:", e);
 		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
 	}
-	
+
+	/**
+	 * @return the key of the owner as the item table stores it: the owner id, or for the inventory of a pet the control
+	 *         item of the pet (the owner id of a pet inventory is the owner of the pet)
+	 */
+	protected int getStoredOwnerKey()
+	{
+		if (getOwner() instanceof L2PetInstance)
+			return ((L2PetInstance)getOwner()).getControlItemId();
+
+		return getOwnerId();
+	}
+
 	/**
 	 * @param slots
 	 */

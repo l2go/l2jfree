@@ -42,7 +42,6 @@ import com.l2jfree.gameserver.network.L2ClientSelectorThread;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
 import com.l2jfree.gameserver.taskmanager.SQLQueue;
-import com.l2jfree.gameserver.util.DatabaseBackupManager;
 import com.l2jfree.gameserver.util.OfflineTradeManager;
 
 /**
@@ -114,7 +113,7 @@ public final class Shutdown extends Thread
 			try
 			{
 				if (_counter <= 60)
-					LoginServerThread.getInstance().setServerStatusDown();
+					LoginLink.getInstance().setServerStatusDown();
 			}
 			catch (Exception e)
 			{
@@ -249,15 +248,6 @@ public final class Shutdown extends Thread
 		
 		try
 		{
-			LoginServerThread.getInstance().interrupt();
-		}
-		catch (Throwable t)
-		{
-			t.printStackTrace();
-		}
-		
-		try
-		{
 			L2ClientSelectorThread.getInstance().shutdown();
 		}
 		catch (Throwable t)
@@ -283,8 +273,6 @@ public final class Shutdown extends Thread
 			t.printStackTrace();
 		}
 		
-		if (Config.DATABASE_BACKUP_MAKE_BACKUP_ON_SHUTDOWN)
-			DatabaseBackupManager.makeBackup();
 		
 		if (_mode == ShutdownMode.RESTART)
 			Runtime.getRuntime().halt(2);

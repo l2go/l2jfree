@@ -18,8 +18,6 @@ import static com.l2jfree.gameserver.gameobjects.itemcontainer.PlayerInventory.A
 import static com.l2jfree.gameserver.gameobjects.itemcontainer.PlayerInventory.MAX_ADENA;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
@@ -28,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.datatables.ItemTable;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
@@ -64,6 +61,7 @@ import com.l2jfree.gameserver.network.packets.server.InventoryUpdate;
 import com.l2jfree.gameserver.network.packets.server.SpawnItem;
 import com.l2jfree.gameserver.network.packets.server.StatusUpdate;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.persistence.item.ItemRepository;
 import com.l2jfree.gameserver.taskmanager.SQLQueue;
 import com.l2jfree.sql.SQLQuery;
 import com.l2jfree.util.L2Arrays;
@@ -881,64 +879,28 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	public void removeAugmentation()
 	{
 		_augmentation = null;
-		
-		Connection con = null;
-		try
-		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			
-			PreparedStatement statement = null;
-			if (_elementals != null)
-			{
-				// Item still has elemental enchant, only update the DB
-				statement =
-						con.prepareStatement("UPDATE item_attributes SET augAttributes = -1, augSkillId = -1, augSkillLevel = -1 WHERE itemId = ?");
-			}
-			else
-			{
-				// Remove the entry since the item also has no elemental enchant
-				statement = con.prepareStatement("DELETE FROM item_attributes WHERE itemId = ?");
-			}
-			
-			statement.setInt(1, getObjectId());
-			statement.executeUpdate();
-			statement.close();
-		}
-		catch (Exception e)
-		{
-			_log.error("Could not remove augmentation for item: " + getObjectId() + " from DB:", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+
+		// An item that is left without any attribute loses its row, otherwise the row keeps what is left
+		saveAttributes(null, "remove augmentation");
 	}
-	
+
 	public void restoreAttributes()
 	{
-		Connection con = null;
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement =
-					con.prepareStatement("SELECT augAttributes,augSkillId,augSkillLevel,elemType,elemValue FROM item_attributes WHERE itemId=?");
-			statement.setInt(1, getObjectId());
-			ResultSet rs = statement.executeQuery();
-			rs = statement.executeQuery();
-			if (rs.next())
+			ItemRepository.ItemAttributes attributes = ItemRepository.getInstance().loadAttributes(null, getObjectId());
+			if (attributes != null)
 			{
-				int aug_attributes = rs.getInt(1);
-				int aug_skillId = rs.getInt(2);
-				int aug_skillLevel = rs.getInt(3);
-				byte elem_type = rs.getByte(4);
-				int elem_value = rs.getInt(5);
-				if (elem_type != -1 && elem_value != -1)
-					_elementals = new Elementals(elem_type, elem_value);
-				if (aug_attributes != -1 && aug_skillId != -1 && aug_skillLevel != -1)
-					_augmentation = new L2Augmentation(aug_attributes, aug_skillId, aug_skillLevel);
+				if (attributes.elementType() != null && attributes.elementValue() != null)
+					_elementals = new Elementals(attributes.elementType().byteValue(), attributes.elementValue());
+				if (attributes.augmentationAttributes() != null)
+				{
+					// An augmentation without a skill has no skill columns
+					int skillId = attributes.augmentationSkillId() == null ? 0 : attributes.augmentationSkillId();
+					int skillLevel = attributes.augmentationSkillLevel() == null ? 0 : attributes.augmentationSkillLevel();
+					_augmentation = new L2Augmentation(attributes.augmentationAttributes(), skillId, skillLevel);
+				}
 			}
-			rs.close();
-			statement.close();
 		}
 		catch (Exception e)
 		{
@@ -946,60 +908,58 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 					"Could not restore augmentation and elemental data for item " + getObjectId() + " from DB: "
 							+ e.getMessage(), e);
 		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
 	}
-	
+
 	public void updateItemAttributes()
 	{
-		Connection con = null;
+		saveAttributes(null, "update attributes");
+	}
+
+	/**
+	 * Writes the augmentation and the elemental attribute of the item as they are in memory.
+	 *
+	 * @param con a connection to use, or null
+	 * @param what for the log
+	 */
+	private void saveAttributes(Connection con, String what)
+	{
+		// A new item is not in the database yet (the attributes belong to its row); its insert writes them
+		if (!_existsInDb)
+			return;
+
+		Integer augmentationAttributes = null;
+		Integer augmentationSkillId = null;
+		Integer augmentationSkillLevel = null;
+		if (_augmentation != null)
+		{
+			augmentationAttributes = _augmentation.getAttributes();
+			if (_augmentation.getSkill() != null)
+			{
+				augmentationSkillId = _augmentation.getSkill().getId();
+				augmentationSkillLevel = _augmentation.getSkill().getLevel();
+			}
+		}
+
+		Integer elementType = null;
+		Integer elementValue = null;
+		// An element that is not set (-1) is no elemental attribute
+		if (_elementals != null && _elementals.getElement() >= 0)
+		{
+			elementType = (int)_elementals.getElement();
+			elementValue = _elementals.getValue();
+		}
+
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("REPLACE INTO item_attributes VALUES(?,?,?,?,?,?)");
-			statement.setInt(1, getObjectId());
-			if (_augmentation == null)
-			{
-				statement.setInt(2, -1);
-				statement.setInt(3, -1);
-				statement.setInt(4, -1);
-			}
-			else
-			{
-				statement.setInt(2, _augmentation.getAttributes());
-				if (_augmentation.getSkill() == null)
-				{
-					statement.setInt(3, 0);
-					statement.setInt(4, 0);
-				}
-				else
-				{
-					statement.setInt(3, _augmentation.getSkill().getId());
-					statement.setInt(4, _augmentation.getSkill().getLevel());
-				}
-			}
-			if (_elementals == null)
-			{
-				statement.setByte(5, (byte)-1);
-				statement.setInt(6, -1);
-			}
-			else
-			{
-				statement.setByte(5, _elementals.getElement());
-				statement.setInt(6, _elementals.getValue());
-			}
-			statement.executeUpdate();
-			statement.close();
+			ItemRepository.getInstance().saveAttributes(
+					con,
+					getObjectId(),
+					new ItemRepository.ItemAttributes(augmentationAttributes, augmentationSkillId,
+							augmentationSkillLevel, elementType, elementValue));
 		}
 		catch (Exception e)
 		{
-			_log.error("Could not remove elemental enchant for item: " + getObjectId() + " from DB:", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
+			_log.error("Could not " + what + " for item: " + getObjectId() + " in DB:", e);
 		}
 	}
 	
@@ -1062,37 +1022,9 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	public void clearElementAttr()
 	{
 		_elementals = null;
-		
-		Connection con = null;
-		try
-		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			
-			PreparedStatement statement = null;
-			if (_augmentation != null)
-			{
-				// Item still has augmentation, only update the DB
-				statement =
-						con.prepareStatement("UPDATE item_attributes SET elemType = -1, elemValue = -1 WHERE itemId = ?");
-			}
-			else
-			{
-				// Remove the entry since the item also has no augmentation
-				statement = con.prepareStatement("DELETE FROM item_attributes WHERE itemId = ?");
-			}
-			
-			statement.setInt(1, getObjectId());
-			statement.executeUpdate();
-			statement.close();
-		}
-		catch (Exception e)
-		{
-			_log.error("Could not remove elemental enchant for item: " + getObjectId() + " from DB:", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+
+		// An item that is left without any attribute loses its row, otherwise the row keeps what is left
+		saveAttributes(null, "remove elemental enchant");
 	}
 	
 	/**
@@ -1362,10 +1294,10 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	 * 
 	 * @param ownerId :
 	 *            int designating the objectID of the item
-	 * @param rs
+	 * @param row the stored item
 	 * @return L2ItemInstance
 	 */
-	public static L2ItemInstance restoreFromDb(int ownerId, ResultSet rs)
+	public static L2ItemInstance restoreFromDb(int ownerId, ItemRepository.ItemRow row)
 	{
 		L2ItemInstance inst = null;
 		int objectId, item_id, loc_data, enchant_level, custom_type1, custom_type2, manaLeft;
@@ -1373,16 +1305,16 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		ItemLocation loc;
 		try
 		{
-			objectId = rs.getInt(1);
-			item_id = rs.getInt("item_id");
-			count = rs.getLong("count");
-			loc = ItemLocation.valueOf(rs.getString("loc"));
-			loc_data = rs.getInt("loc_data");
-			enchant_level = rs.getInt("enchant_level");
-			custom_type1 = rs.getInt("custom_type1");
-			custom_type2 = rs.getInt("custom_type2");
-			manaLeft = rs.getInt("mana_left");
-			time = rs.getLong("time");
+			objectId = row.id();
+			item_id = row.itemTemplateId();
+			count = row.count();
+			loc = ItemLocation.valueOf(row.location());
+			loc_data = row.locationSlot();
+			enchant_level = row.enchantLevel();
+			custom_type1 = row.customType1();
+			custom_type2 = row.customType2();
+			manaLeft = row.manaLeft();
+			time = row.expireAtMillis();
 		}
 		catch (Exception e)
 		{
@@ -1501,28 +1433,37 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		
 		try
 		{
-			PreparedStatement statement =
-					con.prepareStatement("UPDATE items SET owner_id=?,count=?,loc=?,loc_data=?,enchant_level=?,custom_type1=?,custom_type2=?,mana_left=?,time=? "
-							+ "WHERE object_id = ?");
-			statement.setInt(1, _ownerId);
-			statement.setLong(2, getCount());
-			statement.setString(3, _loc.name());
-			statement.setInt(4, _locData);
-			statement.setInt(5, getEnchantLevel());
-			statement.setInt(6, getCustomType1());
-			statement.setInt(7, getCustomType2());
-			statement.setInt(8, getMana());
-			statement.setLong(9, getTime());
-			statement.setInt(10, getObjectId());
-			statement.executeUpdate();
+			ItemRepository.getInstance().updateItem(con, toRow(), getStoredOwnerKey());
 			_existsInDb = true;
 			_storedInDb = true;
-			statement.close();
 		}
 		catch (Exception e)
 		{
 			_log.error("Could not update item " + getObjectId(), e);
 		}
+	}
+
+	/** The item as the database stores it. */
+	private ItemRepository.ItemRow toRow()
+	{
+		return new ItemRepository.ItemRow(getObjectId(), getItemId(), getCount(), getEnchantLevel(), _loc.name(),
+				_locData, _type1, _type2, getMana(), getTime());
+	}
+
+	/**
+	 * @return the id the owner column of the item row holds: the owner id, or for an item that a pet carries the control
+	 *         item of the pet (the owner id of such an item is the owner of the pet)
+	 */
+	private int getStoredOwnerKey()
+	{
+		if (_loc == ItemLocation.PET || _loc == ItemLocation.PET_EQUIP)
+		{
+			L2Player owner = L2World.getInstance().getPlayer(_ownerId);
+			if (owner == null || owner.getPet() == null)
+				throw new IllegalStateException("the pet that carries item " + getObjectId() + " is not summoned");
+			return owner.getPet().getControlItemId();
+		}
+		return _ownerId;
 	}
 	
 	/**
@@ -1532,32 +1473,18 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	{
 		try
 		{
-			PreparedStatement statement =
-					con.prepareStatement("INSERT INTO items (owner_id,item_id,count,loc,loc_data,enchant_level,object_id,custom_type1,custom_type2,mana_left,time) "
-							+ "VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-			statement.setInt(1, _ownerId);
-			statement.setInt(2, getItemId());
-			statement.setLong(3, getCount());
-			statement.setString(4, _loc.name());
-			statement.setInt(5, _locData);
-			statement.setInt(6, getEnchantLevel());
-			statement.setInt(7, getObjectId());
-			statement.setInt(8, _type1);
-			statement.setInt(9, _type2);
-			statement.setInt(10, getMana());
-			statement.setLong(11, getTime());
-			statement.executeUpdate();
+			ItemRepository.getInstance().insertItem(con, toRow(), getStoredOwnerKey());
 			_existsInDb = true;
 			_storedInDb = true;
-			statement.close();
 		}
 		catch (Exception e)
 		{
 			_log.error("Could not insert item " + getObjectId(), e);
 		}
-		
-		if (_elementals != null)
-			updateItemAttributes();
+
+		// The attributes belong to the row of the item, so they can only be written now
+		if (_existsInDb && (_elementals != null || _augmentation != null))
+			saveAttributes(con, "store attributes");
 	}
 	
 	/**
@@ -1569,17 +1496,10 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		
 		try
 		{
-			PreparedStatement statement = con.prepareStatement("DELETE FROM items WHERE object_id=?");
-			statement.setInt(1, getObjectId());
-			statement.executeUpdate();
+			// The attributes of the item go with its row
+			ItemRepository.getInstance().deleteItem(con, getObjectId());
 			_existsInDb = false;
 			_storedInDb = false;
-			statement.close();
-			
-			statement = con.prepareStatement("DELETE FROM item_attributes WHERE itemId = ?");
-			statement.setInt(1, getObjectId());
-			statement.executeUpdate();
-			statement.close();
 		}
 		catch (Exception e)
 		{

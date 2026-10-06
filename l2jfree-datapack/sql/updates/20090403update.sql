@@ -1,2 +1,0 @@
-ALTER TABLE `etcitem` DROP `oldname`, DROP `oldtype`, ADD COLUMN `skill` varchar(70) DEFAULT '', ADD COLUMN `html` varchar(5) DEFAULT 'false';
-ALTER TABLE `custom_etcitem` DROP `oldname`, DROP `oldtype`, ADD COLUMN `skill` varchar(70) DEFAULT '', ADD COLUMN `html` varchar(5) DEFAULT 'false';

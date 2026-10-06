@@ -17,11 +17,11 @@ package com.l2jfree.gameserver.handler.admincommands;
 import java.util.StringTokenizer;
 
 import com.l2jfree.Config;
-import com.l2jfree.gameserver.LoginServerThread;
+import com.l2jfree.gameserver.LoginLink;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.handler.IAdminCommandHandler;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
-import com.l2jfree.network.ServerStatusAttributes;
+import com.l2jfree.contract.ServerStatusAttributes;
 
 /**
  * This class handles admin commands that manage the loginserver
@@ -64,7 +64,7 @@ public class AdminLogin implements IAdminCommandHandler
 				showMenu(GM);
 				return false;
 			}
-			LoginServerThread.getInstance().setMaxPlayers(connCount);
+			LoginLink.getInstance().setMaxPlayers(connCount);
 		}
 		else if (command.startsWith(LOGIN_COMMANDS[2]))
 		{
@@ -80,7 +80,7 @@ public class AdminLogin implements IAdminCommandHandler
 				showMenu(GM);
 				return false;
 			}
-			LoginServerThread.getInstance().setServerStatus(newStatus);
+			LoginLink.getInstance().setServerStatus(newStatus);
 		}
 		else if (command.startsWith(LOGIN_COMMANDS[3]))
 		{
@@ -98,7 +98,7 @@ public class AdminLogin implements IAdminCommandHandler
 				showMenu(GM);
 				return false;
 			}
-			LoginServerThread.getInstance().changeAttribute(attrib, value);
+			LoginLink.getInstance().changeAttribute(attrib, value);
 		}
 		else if (command.startsWith(LOGIN_COMMANDS[4]))
 		{
@@ -114,7 +114,7 @@ public class AdminLogin implements IAdminCommandHandler
 				showMenu(GM);
 				return false;
 			}
-			LoginServerThread.getInstance().changeAttribute(ServerStatusAttributes.SERVER_AGE_LIMITATION, age);
+			LoginLink.getInstance().changeAttribute(ServerStatusAttributes.SERVER_AGE_LIMITATION, age);
 		}
 		else
 			return false;
@@ -127,7 +127,7 @@ public class AdminLogin implements IAdminCommandHandler
 	{
 		NpcHtmlMessage html = new NpcHtmlMessage(1);
 		html.setFile(HTML_ROOT + "LoginMenu.html");
-		switch (LoginServerThread.getInstance().getServerStatus())
+		switch (LoginLink.getInstance().getServerStatus())
 		{
 			case STATUS_DOWN:
 				html.replace("%statusCol%", "EE0000");
@@ -152,7 +152,7 @@ public class AdminLogin implements IAdminCommandHandler
 		html.replace("%b4%", Config.SERVER_LIST_TESTSERVER ? DISABLE : ENABLE);
 		html.replace("%statusBr%", Config.SERVER_LIST_BRACKET ? ON : OFF);
 		html.replace("%br%", Config.SERVER_LIST_BRACKET ? DISABLE : ENABLE);
-		html.replace("%maxConn%", String.valueOf(LoginServerThread.getInstance().getMaxPlayer()));
+		html.replace("%maxConn%", String.valueOf(LoginLink.getInstance().getMaxPlayer()));
 		GM.sendPacket(html);
 		html = null;
 	}

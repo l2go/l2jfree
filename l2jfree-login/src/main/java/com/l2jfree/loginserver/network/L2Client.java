@@ -25,8 +25,8 @@ import java.util.GregorianCalendar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.l2jfree.contract.SessionKey;
 import com.l2jfree.lang.L2TextBuilder;
-import com.l2jfree.loginserver.beans.SessionKey;
 import com.l2jfree.loginserver.crypt.LoginCrypt;
 import com.l2jfree.loginserver.manager.LoginManager;
 import com.l2jfree.loginserver.network.packets.L2ClientPacket;
@@ -238,6 +238,14 @@ public final class L2Client extends MMOConnection<L2Client, L2ClientPacket, L2Se
 	public SessionKey getSessionKey()
 	{
 		return _sessionKey;
+	}
+	
+	/**
+	 * @return true when the pair is the login-ok pair of the session key of this client
+	 */
+	public boolean hasLoginPair(int loginOk1, int loginOk2)
+	{
+		return _sessionKey != null && _sessionKey.loginOk1() == loginOk1 && _sessionKey.loginOk2() == loginOk2;
 	}
 	
 	public void closeLogin(int reason)

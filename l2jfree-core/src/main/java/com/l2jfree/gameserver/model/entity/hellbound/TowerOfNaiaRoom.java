@@ -60,25 +60,25 @@ public final class TowerOfNaiaRoom
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM hb_naia_doorlist WHERE room_id=?");
+			PreparedStatement statement = con.prepareStatement("SELECT door_id, door_action FROM naia_room_door WHERE room_number = ?");
 			statement.setInt(1, roomId);
 			ResultSet rset = statement.executeQuery();
 			while (rset.next())
 			{
 				int doorId = rset.getInt("door_id");
-				byte action = rset.getByte("action_order");
+				String action = rset.getString("door_action");
 				switch (action)
 				{
-					case 0:
+					case "PRE_OPEN":
 						_preOpenDoorIds = ArrayUtils.add(_preOpenDoorIds, doorId);
 						break;
-					case 1:
+					case "PRE_CLOSE":
 						_preCloseDoorIds = ArrayUtils.add(_preOpenDoorIds, doorId);
 						break;
-					case 2:
+					case "POST_OPEN":
 						_postOpenDoorIds = ArrayUtils.add(_preOpenDoorIds, doorId);
 						break;
-					case 3:
+					case "POST_CLOSE":
 						_postCloseDoorIds = ArrayUtils.add(_preOpenDoorIds, doorId);
 						break;
 				}
@@ -104,20 +104,23 @@ public final class TowerOfNaiaRoom
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM hb_naia_spawnlist WHERE room_id=?");
+			PreparedStatement statement = con.prepareStatement("SELECT npc_template_id, x, y, z, heading, respawn_delay_s FROM naia_room_spawn WHERE room_number = ?");
 			statement.setInt(1, roomId);
 			ResultSet rset = statement.executeQuery();
 			while (rset.next())
 			{
-				int npcId = rset.getInt("npc_id");
+				int npcId = rset.getInt("npc_template_id");
 				L2NpcTemplate npcTemplate = NpcTable.getInstance().getTemplate(npcId);
 				if (npcTemplate != null)
 				{
-					int x = rset.getInt("locx");
-					int y = rset.getInt("locy");
-					int z = rset.getInt("locz");
+					int x = rset.getInt("x");
+					int y = rset.getInt("y");
+					int z = rset.getInt("z");
 					int heading = rset.getInt("heading");
-					int respawnDelay = rset.getInt("respawn_delay");
+					// NULL means the NPC does not respawn, which SpawnData takes as a negative delay
+					int respawnDelay = rset.getInt("respawn_delay_s");
+					if (rset.wasNull())
+						respawnDelay = -1;
 					SpawnData spawnData = new SpawnData(npcId, x, y, z, heading, respawnDelay);
 					if (npcId == TowerOfNaiaManager.ROOM_CONTROLLER_ID)
 						_ingeniousContraptionSpawnData = spawnData;

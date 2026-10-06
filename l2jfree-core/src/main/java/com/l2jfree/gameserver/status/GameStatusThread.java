@@ -35,7 +35,7 @@ import com.l2jfree.L2AutoInitialization;
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.config.L2Properties;
 import com.l2jfree.gameserver.Announcements;
-import com.l2jfree.gameserver.LoginServerThread;
+import com.l2jfree.gameserver.LoginLink;
 import com.l2jfree.gameserver.Shutdown;
 import com.l2jfree.gameserver.Shutdown.ShutdownMode;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -217,7 +217,7 @@ public final class GameStatusThread extends Thread
 			{
 				con = L2DatabaseFactory.getInstance().getConnection();
 				PreparedStatement stmt =
-						con.prepareStatement("SELECT COUNT(*) FROM characters WHERE char_name = ? AND accesslevel >= 100");
+						con.prepareStatement("SELECT COUNT(*) FROM player WHERE name = ? AND access_level >= 100");
 				stmt.setString(1, _gm);
 				ResultSet rs = stmt.executeQuery();
 				if (!rs.next())
@@ -334,7 +334,7 @@ public final class GameStatusThread extends Thread
 				}
 				else if (_usrCommand.equals("status"))
 				{
-					int max = LoginServerThread.getInstance().getMaxPlayer();
+					int max = LoginLink.getInstance().getMaxPlayer();
 					
 					int playerCount = L2World.getInstance().getAllPlayersCount();
 					int objectCount = L2World.getInstance().getAllVisibleObjectsCount();
@@ -1175,11 +1175,11 @@ public final class GameStatusThread extends Thread
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			PreparedStatement statement =
-					con.prepareStatement("UPDATE characters SET x=?, y=?, z=?, in_jail=?, jail_timer=? WHERE char_name=?");
+					con.prepareStatement("UPDATE player SET x = ?, y = ?, z = ?, is_in_jail = ?, jail_remaining_ms = ? WHERE name = ?");
 			statement.setInt(1, L2JailZone.JAIL_LOCATION.getX());
 			statement.setInt(2, L2JailZone.JAIL_LOCATION.getY());
 			statement.setInt(3, L2JailZone.JAIL_LOCATION.getZ());
-			statement.setInt(4, 1);
+			statement.setBoolean(4, true);
 			statement.setLong(5, delay * 60000L);
 			statement.setString(6, name);
 			
@@ -1212,11 +1212,11 @@ public final class GameStatusThread extends Thread
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			PreparedStatement statement =
-					con.prepareStatement("UPDATE characters SET x=?, y=?, z=?, in_jail=?, jail_timer=? WHERE char_name=?");
+					con.prepareStatement("UPDATE player SET x = ?, y = ?, z = ?, is_in_jail = ?, jail_remaining_ms = ? WHERE name = ?");
 			statement.setInt(1, 17836);
 			statement.setInt(2, 170178);
 			statement.setInt(3, -3507);
-			statement.setInt(4, 0);
+			statement.setBoolean(4, false);
 			statement.setLong(5, 0);
 			statement.setString(6, name);
 			
@@ -1260,7 +1260,7 @@ public final class GameStatusThread extends Thread
 			int enchantLevel) throws SQLException
 	{
 		PreparedStatement statement =
-				con.prepareStatement("INSERT INTO items (owner_id, object_id, item_id, count, enchant_level, loc, loc_data) VALUES (?,?,?,?,?,?,?)");
+				con.prepareStatement("INSERT INTO item (owner_player_id, id, item_template_id, count, enchant_level, location, location_slot) VALUES (?, ?, ?, ?, ?, ?, ?)");
 		statement.setInt(1, charId);
 		statement.setInt(2, objectId);
 		statement.setInt(3, currency);

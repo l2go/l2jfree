@@ -21,6 +21,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -47,7 +48,7 @@ public final class TaskManager extends HandlerRegistry<String, TaskHandler>
 	
 	final class ExecutedTask implements Runnable
 	{
-		private final int _id;
+		private final long _id;
 		private final TaskHandler _task;
 		private final TaskTypes _type;
 		private final String[] _params;
@@ -57,16 +58,18 @@ public final class TaskManager extends HandlerRegistry<String, TaskHandler>
 		
 		private ExecutedTask(ResultSet rset) throws SQLException
 		{
-			_id = rset.getInt("id");
-			_task = get(rset.getString("task"));
+			_id = rset.getLong("id");
+			_task = get(rset.getString("task_name"));
 			
 			if (_task == null)
-				throw new NullPointerException("Handler not found for '" + rset.getString("task") + "' task!");
+				throw new NullPointerException("Handler not found for '" + rset.getString("task_name") + "' task!");
 			
-			_type = TaskTypes.valueOf(rset.getString("type").toUpperCase());
-			_params = new String[] { rset.getString("param1"), rset.getString("param2"), rset.getString("param3") };
+			_type = TaskTypes.valueOf(rset.getString("schedule_type").toUpperCase());
+			_params = new String[] { rset.getString("parameter1"), rset.getString("parameter2"), rset.getString("parameter3") };
 			
-			_lastActivation = rset.getLong("last_activation");
+			// NULL means the task never ran
+			Timestamp lastRun = rset.getTimestamp("last_run_at");
+			_lastActivation = lastRun == null ? 0L : lastRun.getTime();
 			
 			try
 			{
@@ -147,9 +150,10 @@ public final class TaskManager extends HandlerRegistry<String, TaskHandler>
 			{
 				con = L2DatabaseFactory.getInstance().getConnection();
 				PreparedStatement statement =
-						con.prepareStatement("UPDATE global_tasks SET last_activation=? WHERE id=?");
-				statement.setLong(1, _lastActivation = System.currentTimeMillis());
-				statement.setInt(2, _id);
+						con.prepareStatement("UPDATE global_task SET last_run_at = ? WHERE id = ?");
+				_lastActivation = System.currentTimeMillis();
+				statement.setTimestamp(1, new Timestamp(_lastActivation));
+				statement.setLong(2, _id);
 				statement.executeUpdate();
 				statement.close();
 			}
@@ -223,7 +227,7 @@ public final class TaskManager extends HandlerRegistry<String, TaskHandler>
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
 			
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM global_tasks");
+			PreparedStatement statement = con.prepareStatement("SELECT id, task_name, schedule_type, last_run_at, parameter1, parameter2, parameter3 FROM global_task");
 			ResultSet rset = statement.executeQuery();
 			
 			while (rset.next())
@@ -268,7 +272,7 @@ public final class TaskManager extends HandlerRegistry<String, TaskHandler>
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
 			
-			PreparedStatement statement = con.prepareStatement("SELECT id FROM global_tasks WHERE task=?");
+			PreparedStatement statement = con.prepareStatement("SELECT id FROM global_task WHERE task_name = ?");
 			statement.setString(1, task);
 			ResultSet rset = statement.executeQuery();
 			
@@ -305,10 +309,10 @@ public final class TaskManager extends HandlerRegistry<String, TaskHandler>
 			con = L2DatabaseFactory.getInstance().getConnection();
 			
 			PreparedStatement statement =
-					con.prepareStatement("INSERT INTO global_tasks (task,type,last_activation,param1,param2,param3) VALUES(?,?,?,?,?,?)");
+					con.prepareStatement("INSERT INTO global_task (task_name, schedule_type, last_run_at, parameter1, parameter2, parameter3) VALUES (?, ?, ?, ?, ?, ?)");
 			statement.setString(1, task);
 			statement.setString(2, type.toString());
-			statement.setLong(3, lastActivation);
+			statement.setTimestamp(3, lastActivation == 0 ? null : new Timestamp(lastActivation));
 			statement.setString(4, param1);
 			statement.setString(5, param2);
 			statement.setString(6, param3);

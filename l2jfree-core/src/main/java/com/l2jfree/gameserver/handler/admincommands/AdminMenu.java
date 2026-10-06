@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
-import com.l2jfree.gameserver.LoginServerThread;
+import com.l2jfree.gameserver.LoginLink;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Object;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -285,7 +285,7 @@ public class AdminMenu implements IAdminCommandHandler
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			String stmt = "SELECT account_name FROM characters WHERE char_name = ?";
+			String stmt = "SELECT account_name FROM player WHERE name = ?";
 			PreparedStatement statement = con.prepareStatement(stmt);
 			statement.setString(1, player);
 			ResultSet result = statement.executeQuery();
@@ -294,7 +294,7 @@ public class AdminMenu implements IAdminCommandHandler
 				String acc_name = result.getString(1);
 				if (acc_name.length() > 0)
 				{
-					LoginServerThread.getInstance().sendAccessLevel(acc_name, banLevel);
+					LoginLink.getInstance().sendAccessLevel(acc_name, banLevel);
 					activeChar.sendMessage("Account Access Level for " + player + " set to " + banLevel + ".");
 				}
 				else

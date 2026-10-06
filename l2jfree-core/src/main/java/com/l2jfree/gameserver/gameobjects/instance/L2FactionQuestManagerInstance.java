@@ -82,6 +82,10 @@ public class L2FactionQuestManagerInstance extends L2NpcInstance
 		// Standard msg
 		int factionId = getTemplate().getNpcFaction();
 		Faction faction = FactionManager.getInstance().getFactions(factionId);
+		if (faction == null)
+		{
+			return; // the faction system has no stored data in Platform 3.0
+		}
 		int factionPrice = faction.getPrice();
 		String filename = "data/html/npcdefault.htm";
 		String factionName = getTemplate().getNpcFactionName();

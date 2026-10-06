@@ -37,9 +37,13 @@ public final class BlockListManager
 {
 	private static final Logger _log = LoggerFactory.getLogger(BlockListManager.class);
 	
-	private static final String SELECT_QUERY = "SELECT charId, name FROM character_blocks";
-	private static final String INSERT_QUERY = "INSERT INTO character_blocks (charId, name) VALUES (?,?)";
-	private static final String DELETE_QUERY = "DELETE FROM character_blocks WHERE charId=? AND name=?";
+	// The blocks are kept in memory by name; the table stores the blocked player's id
+	private static final String SELECT_QUERY =
+			"SELECT b.player_id, p.name FROM player_block b JOIN player p ON p.id = b.blocked_player_id";
+	private static final String INSERT_QUERY =
+			"INSERT INTO player_block (player_id, blocked_player_id) VALUES (?,?) ON CONFLICT DO NOTHING";
+	private static final String DELETE_QUERY =
+			"DELETE FROM player_block WHERE player_id=? AND blocked_player_id = (SELECT id FROM player WHERE name=?)";
 	
 	public static BlockListManager getInstance()
 	{
@@ -60,7 +64,7 @@ public final class BlockListManager
 			
 			while (rset.next())
 			{
-				Integer objectId = L2Integer.valueOf(rset.getInt("charId"));
+				Integer objectId = L2Integer.valueOf(rset.getInt("player_id"));
 				String name = rset.getString("name");
 				
 				getBlockList(objectId).add(name);
@@ -105,7 +109,7 @@ public final class BlockListManager
 			
 			PreparedStatement statement = con.prepareStatement(INSERT_QUERY);
 			statement.setInt(1, listOwner.getObjectId());
-			statement.setString(2, blocked.getName());
+			statement.setInt(2, blocked.getObjectId());
 			
 			statement.execute();
 			

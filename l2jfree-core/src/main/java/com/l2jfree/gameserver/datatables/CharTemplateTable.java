@@ -75,9 +75,21 @@ public class CharTemplateTable
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT * FROM class_list, char_templates, lvlupgain"
-							+ " WHERE class_list.id = char_templates.classId"
-							+ " AND class_list.id = lvlupgain.classId" + " ORDER BY class_list.id");
+					con.prepareStatement("SELECT pc.id, pc.race_id, pt.class_name,"
+							+ " pt.base_strength, pt.base_constitution, pt.base_dexterity, pt.base_intelligence,"
+							+ " pt.base_wit, pt.base_mental,"
+							+ " lg.base_hp_max, lg.hp_per_level, lg.hp_per_level_increment,"
+							+ " lg.base_mp_max, lg.base_cp_max, lg.cp_per_level, lg.cp_per_level_increment,"
+							+ " lg.mp_per_level, lg.mp_per_level_increment,"
+							+ " pt.base_physical_attack, pt.base_physical_defense, pt.base_magic_attack,"
+							+ " pt.base_magic_defense, lg.class_base_level, pt.base_attack_speed,"
+							+ " pt.base_casting_speed, pt.base_critical_rate, pt.base_run_speed,"
+							+ " pt.male_collision_radius, pt.male_collision_height,"
+							+ " pt.female_collision_radius, pt.female_collision_height"
+							+ " FROM player_class pc"
+							+ " JOIN player_template pt ON pt.player_class_id = pc.id"
+							+ " JOIN level_up_gain lg ON lg.player_class_id = pc.id"
+							+ " ORDER BY pc.id");
 			ResultSet rset = statement.executeQuery();
 			
 			int size = 0;
@@ -85,34 +97,34 @@ public class CharTemplateTable
 			{
 				StatsSet set = new StatsSet();
 				set.set("classId", rset.getInt("id"));
-				set.set("className", rset.getString("className"));
-				set.set("raceId", rset.getInt("raceId"));
-				set.set("baseSTR", rset.getInt("STR"));
-				set.set("baseCON", rset.getInt("CON"));
-				set.set("baseDEX", rset.getInt("DEX"));
-				set.set("baseINT", rset.getInt("_INT"));
-				set.set("baseWIT", rset.getInt("WIT"));
-				set.set("baseMEN", rset.getInt("MEN"));
-				set.set("baseHpMax", rset.getFloat("defaultHpBase"));
-				set.set("lvlHpAdd", rset.getFloat("defaultHpAdd"));
-				set.set("lvlHpMod", rset.getFloat("defaultHpMod"));
-				set.set("baseMpMax", rset.getFloat("defaultMpBase"));
-				set.set("baseCpMax", rset.getFloat("defaultCpBase"));
-				set.set("lvlCpAdd", rset.getFloat("defaultCpAdd"));
-				set.set("lvlCpMod", rset.getFloat("defaultCpMod"));
-				set.set("lvlMpAdd", rset.getFloat("defaultMpAdd"));
-				set.set("lvlMpMod", rset.getFloat("defaultMpMod"));
+				set.set("className", rset.getString("class_name"));
+				set.set("raceId", rset.getInt("race_id"));
+				set.set("baseSTR", rset.getInt("base_strength"));
+				set.set("baseCON", rset.getInt("base_constitution"));
+				set.set("baseDEX", rset.getInt("base_dexterity"));
+				set.set("baseINT", rset.getInt("base_intelligence"));
+				set.set("baseWIT", rset.getInt("base_wit"));
+				set.set("baseMEN", rset.getInt("base_mental"));
+				set.set("baseHpMax", rset.getFloat("base_hp_max"));
+				set.set("lvlHpAdd", rset.getFloat("hp_per_level"));
+				set.set("lvlHpMod", rset.getFloat("hp_per_level_increment"));
+				set.set("baseMpMax", rset.getFloat("base_mp_max"));
+				set.set("baseCpMax", rset.getFloat("base_cp_max"));
+				set.set("lvlCpAdd", rset.getFloat("cp_per_level"));
+				set.set("lvlCpMod", rset.getFloat("cp_per_level_increment"));
+				set.set("lvlMpAdd", rset.getFloat("mp_per_level"));
+				set.set("lvlMpMod", rset.getFloat("mp_per_level_increment"));
 				set.set("baseHpReg", 1.5);
 				set.set("baseMpReg", 0.9);
-				set.set("basePAtk", rset.getInt("p_atk"));
-				set.set("basePDef", /*classId.isMage()? 77 : 129*/rset.getInt("p_def"));
-				set.set("baseMAtk", rset.getInt("m_atk"));
-				set.set("baseMDef", rset.getInt("char_templates.m_def"));
-				set.set("classBaseLevel", rset.getInt("class_lvl"));
-				set.set("basePAtkSpd", rset.getInt("p_spd"));
-				set.set("baseMAtkSpd", /*classId.isMage()? 166 : 333*/rset.getInt("char_templates.m_spd"));
-				set.set("baseCritRate", rset.getInt("char_templates.critical") / 10);
-				set.set("baseRunSpd", rset.getInt("move_spd") * Config.RATE_RUN_SPEED);
+				set.set("basePAtk", rset.getInt("base_physical_attack"));
+				set.set("basePDef", /*classId.isMage()? 77 : 129*/rset.getInt("base_physical_defense"));
+				set.set("baseMAtk", rset.getInt("base_magic_attack"));
+				set.set("baseMDef", rset.getInt("base_magic_defense"));
+				set.set("classBaseLevel", rset.getInt("class_base_level"));
+				set.set("basePAtkSpd", rset.getInt("base_attack_speed"));
+				set.set("baseMAtkSpd", /*classId.isMage()? 166 : 333*/rset.getInt("base_casting_speed"));
+				set.set("baseCritRate", rset.getInt("base_critical_rate") / 10);
+				set.set("baseRunSpd", rset.getInt("base_run_speed") * Config.RATE_RUN_SPEED);
 				set.set("baseWalkSpd", 0);
 				set.set("baseShldDef", 0);
 				set.set("baseShldRate", 0);
@@ -126,11 +138,11 @@ public class CharTemplateTable
 				
 				L2PlayerTemplate ct;
 				
-				set.set("collision_radius", rset.getDouble("m_col_r"));
-				set.set("collision_height", rset.getDouble("m_col_h"));
+				set.set("collision_radius", rset.getDouble("male_collision_radius"));
+				set.set("collision_height", rset.getDouble("male_collision_height"));
 				// Add-on for females
-				set.set("fcollision_radius", rset.getDouble("f_col_r"));
-				set.set("fcollision_height", rset.getDouble("f_col_h"));
+				set.set("fcollision_radius", rset.getDouble("female_collision_radius"));
+				set.set("fcollision_height", rset.getDouble("female_collision_height"));
 				ct = new L2PlayerTemplate(set);
 				
 				_templates[ct.getClassId().getId()] = ct;
@@ -151,17 +163,19 @@ public class CharTemplateTable
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT classId, itemId, amount, equipped FROM char_creation_items");
+					con.prepareStatement("SELECT player_class_id, item_template_id, amount, is_equipped FROM starting_item");
 			ResultSet rset = statement.executeQuery();
 			
 			int classId, itemId, amount;
 			boolean equipped;
 			while (rset.next())
 			{
-				classId = rset.getInt("classId");
-				itemId = rset.getInt("itemId");
+				classId = rset.getInt("player_class_id");
+				if (rset.wasNull())
+					classId = -1; // NULL: every class
+				itemId = rset.getInt("item_template_id");
 				amount = rset.getInt("amount");
-				equipped = rset.getString("equipped").equals("true");
+				equipped = rset.getBoolean("is_equipped");
 				
 				if (ItemTable.getInstance().getTemplate(itemId) != null)
 				{

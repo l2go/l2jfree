@@ -1,8 +1,9 @@
 name: build
 
 # The pipeline of Platform 3.0. Microsoft OpenJDK 25 builds and tests the code.
-# The image job builds the Linux image from the verified distributions, starts it
-# with Docker Compose, probes the login port, and publishes the image from main
+# The image job builds the Linux image from the verified platform distribution,
+# starts it with Docker Compose, probes the login and world ports, and publishes
+# the image from main
 # (ADR-0002, ADR-0007). The release job arrives with the release package.
 
 on:
@@ -92,67 +93,49 @@ jobs:
       - name: Generate aggregate CycloneDX SBOM
         run: ./mvnw -B -ntp org.cyclonedx:cyclonedx-maven-plugin:2.9.2:makeAggregateBom
 
-      - name: Verify release distributions exclude the removed ORM stack
+      - name: Verify the platform distribution
         shell: bash
         run: |
-          mapfile -t archives < <(find l2jfree-login/target l2jfree-core/target l2jfree-datapack/target -maxdepth 1 -name '*-dist.zip' -print)
-          if [[ ${#archives[@]} -ne 3 ]]; then
-            echo "Expected three release distributions, found ${#archives[@]}"
+          mapfile -t archives < <(find l2jfree-platform/target -maxdepth 1 -name 'l2jfree-platform-*-dist.zip' -print)
+          if [[ ${#archives[@]} -ne 1 ]]; then
+            echo "Expected one platform distribution, found ${#archives[@]}"
             exit 1
           fi
-          for archive in "${archives[@]}"; do
-            if unzip -Z1 "$archive" | grep -Eiq '(^|/)libs/[^/]*(spring|hibernate|cglib|ehcache|c3p0|mchange-commons|ecj|irclib)[^/]*\.jar$'; then
-              echo "Release distribution contains a removed persistence, compiler, or IRC library: $archive"
+          archive="${archives[0]}"
+          entries="$(unzip -Z1 "$archive")"
+          if grep -Eiq '(^|/)libs/[^/]*(spring|hibernate|cglib|ehcache|c3p0|mchange-commons|ecj|irclib)[^/]*\.jar$' <<< "$entries"; then
+            echo "The platform distribution contains a removed persistence, compiler, or IRC library: $archive"
+            exit 1
+          fi
+          if grep -Evq '^l2jfree/' <<< "$entries"; then
+            echo "Every entry of the platform distribution must be under l2jfree/: $archive"
+            exit 1
+          fi
+          require_entry() {
+            if ! grep -Eq "$1" <<< "$entries"; then
+              echo "The platform distribution is missing an entry that matches $1: $archive"
               exit 1
             fi
-
-            entries="$(unzip -Z1 "$archive")"
-            require_entry() {
-              if ! grep -Fxq "$2" <<< "$entries"; then
-                echo "Release distribution is missing $2: $1"
-                exit 1
-              fi
-            }
-            verify_logging_runtime() {
-              local prefix="$1/libs/"
-              for artifact in slf4j-api jul-to-slf4j logback-classic logback-core; do
-                local count
-                count="$(grep -Ec "^${prefix}${artifact}-[^/]+\.jar$" <<< "$entries" || true)"
-                if [[ "$count" -ne 1 ]]; then
-                  echo "Expected exactly one ${artifact} runtime jar in $archive, found $count"
-                  exit 1
-                fi
-              done
-              if grep -Eiq "^${prefix}(slf4j-jdk14|commons-logging|jcl-over-slf4j)-[^/]+\.jar$" <<< "$entries"; then
-                echo "Release distribution contains a conflicting logging runtime jar: $archive"
-                exit 1
-              fi
-            }
-            case "$(basename "$archive")" in
-              l2jfree-login-*-dist.zip)
-                require_entry "$archive" loginserver/loginserver_launcher.bat
-                require_entry "$archive" loginserver/config/loginserver.properties
-                require_entry "$archive" loginserver/config/logback.xml
-                require_entry "$archive" loginserver/agents/opentelemetry-javaagent.jar
-                verify_logging_runtime loginserver
-                ;;
-              l2jfree-core-*-dist.zip)
-                require_entry "$archive" gameserver/gameserver_launcher.bat
-                require_entry "$archive" gameserver/config/server.properties
-                require_entry "$archive" gameserver/config/logback.xml
-                require_entry "$archive" gameserver/agents/opentelemetry-javaagent.jar
-                verify_logging_runtime gameserver
-                ;;
-              l2jfree-datapack-*-dist.zip)
-                require_entry "$archive" gameserver/data/scripts.cfg
-                require_entry "$archive" gameserver/sql/characters.sql
-                ;;
-              *)
-                echo "Unexpected release distribution name: $archive"
-                exit 1
-                ;;
-            esac
+          }
+          require_entry '^l2jfree/l2jfree-platform(-[^/]+)?\.jar$'
+          require_entry '^l2jfree/config/server\.properties$'
+          require_entry '^l2jfree/config/loginserver\.properties$'
+          require_entry '^l2jfree/config/telnet\.properties$'
+          require_entry '^l2jfree/config/logback\.xml$'
+          require_entry '^l2jfree/agents/opentelemetry-javaagent\.jar$'
+          require_entry '^l2jfree/data/scripts\.cfg$'
+          require_entry '^l2jfree/catalog/npc_template\.csv$'
+          for artifact in slf4j-api jul-to-slf4j logback-classic logback-core; do
+            count="$(grep -Ec "^l2jfree/libs/${artifact}-[^/]+\.jar$" <<< "$entries" || true)"
+            if [[ "$count" -ne 1 ]]; then
+              echo "Expected exactly one ${artifact} runtime jar in $archive, found $count"
+              exit 1
+            fi
           done
+          if grep -Eiq '^l2jfree/libs/(slf4j-jdk14|commons-logging|jcl-over-slf4j)-[^/]+\.jar$' <<< "$entries"; then
+            echo "The platform distribution contains a conflicting logging runtime jar: $archive"
+            exit 1
+          fi
           test -s target/bom.json
 
       - name: Scan dependency SBOM for known vulnerabilities
@@ -171,8 +154,7 @@ jobs:
         run: |
           version="$(./mvnw -q -N org.apache.maven.plugins:maven-help-plugin:3.5.1:evaluate -Dexpression=project.version -DforceStdout)"
           mkdir -p dist
-          cp "l2jfree-login/target/l2jfree-login-${version}-dist.zip" dist/
-          cp "l2jfree-core/target/l2jfree-core-${version}-dist.zip" dist/
+          cp "l2jfree-platform/target/l2jfree-platform-${version}-dist.zip" dist/
           cp target/bom.json "dist/l2jfree-${version}-sbom.json"
           cp target/vulnerability-report.json "dist/l2jfree-${version}-vulnerability-report.json"
 
@@ -198,7 +180,7 @@ jobs:
           java-version: "25"
           cache: maven
 
-      - name: Run MySQL integration tests
+      - name: Run the PostgreSQL integration tests
         run: |
           ./mvnw -B -ntp \
             -Dgroups=integration \
@@ -211,14 +193,25 @@ jobs:
           test "${expected}" -gt 0
           test "${reports}" -ge "${expected}"
 
-  # Builds the Platform 3.0 image from the verified LoginServer distribution,
-  # starts the stack with Docker Compose, and probes the login port. A push to
+      - name: Upload what the database checks wrote
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: l2jfree-database-checks
+          if-no-files-found: ignore
+          path: |
+            l2jfree-core/target/statement-check.txt
+            l2jfree-core/target/database-docs/*
+
+  # Builds the Platform 3.0 image from the verified platform distribution,
+  # starts the stack with Docker Compose, and probes the login and world ports.
+  # The world loads for minutes, so the waits are long. A push to
   # main also publishes the image, signed and attested. Images stay private
   # until the release and sha-* tags are kept for 30 days (ADR-0007).
   image:
     needs: build
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     permissions:
       contents: read
       packages: write
@@ -239,8 +232,9 @@ jobs:
 
       - name: Stage the image context
         run: |
-          unzip -q dist/l2jfree-login-*-dist.zip -d deploy/image
-          test -f deploy/image/loginserver/config/loginserver.properties
+          unzip -q dist/l2jfree-platform-*-dist.zip -d deploy/image
+          test -f deploy/image/l2jfree/config/server.properties
+          test -d deploy/image/l2jfree/libs
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -260,24 +254,33 @@ jobs:
       - name: Start the stack with Docker Compose
         env:
           L2JFREE_IMAGE: l2jfree:ci
-        run: docker compose -f deploy/compose.yaml up -d --wait --wait-timeout 240
+        run: docker compose -f deploy/compose.yaml up -d --wait --wait-timeout 600
 
-      - name: Probe the login port
-        run: python3 deploy/probe/login_init.py --host 127.0.0.1 --port 2106 --timeout 60
+      - name: Probe the login and world ports
+        run: |
+          python3 deploy/probe/login_init.py --host 127.0.0.1 --port 2106 --timeout 60
+          python3 deploy/probe/login_init.py --host 127.0.0.1 --port 7777 --timeout 60 --connect-only
 
-      - name: Restart the login service and probe again
+      - name: Restart the server and probe again
         env:
           L2JFREE_IMAGE: l2jfree:ci
         run: |
-          docker compose -f deploy/compose.yaml restart login
-          docker compose -f deploy/compose.yaml up -d --wait --wait-timeout 120
+          docker compose -f deploy/compose.yaml restart server
+          docker compose -f deploy/compose.yaml up -d --wait --wait-timeout 600
           python3 deploy/probe/login_init.py --host 127.0.0.1 --port 2106 --timeout 60
+          python3 deploy/probe/login_init.py --host 127.0.0.1 --port 7777 --timeout 60 --connect-only
 
       - name: Show the service logs after a failure
         if: failure()
         env:
           L2JFREE_IMAGE: l2jfree:ci
-        run: docker compose -f deploy/compose.yaml logs --no-color --tail 200 || true
+        run: |
+          echo "::group::server, last 200 lines"
+          docker compose -f deploy/compose.yaml logs --no-color --tail 200 server || true
+          echo "::endgroup::"
+          echo "::group::db and secrets, last 50 lines"
+          docker compose -f deploy/compose.yaml logs --no-color --tail 50 db secrets || true
+          echo "::endgroup::"
 
       - name: Stop the stack
         if: always()

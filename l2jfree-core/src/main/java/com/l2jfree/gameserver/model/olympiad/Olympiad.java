@@ -21,6 +21,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -47,6 +48,7 @@ import com.l2jfree.gameserver.model.zone.L2Zone;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.NpcHtmlMessage;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 import com.l2jfree.gameserver.templates.StatsSet;
 
 /**
@@ -64,57 +66,55 @@ public final class Olympiad
 	
 	private static final String OLYMPIAD_DATA_FILE = "config/olympiad.properties";
 	public static final String OLYMPIAD_HTML_PATH = "data/html/olympiad/";
-	private static final String OLYMPIAD_LOAD_DATA = "SELECT current_cycle, period, olympiad_end, validation_end, "
-			+ "next_weekly_change FROM olympiad_data WHERE id = 0";
-	private static final String OLYMPIAD_SAVE_DATA = "INSERT INTO olympiad_data (id, current_cycle, "
-			+ "period, olympiad_end, validation_end, next_weekly_change) VALUES (0,?,?,?,?,?) "
-			+ "ON DUPLICATE KEY UPDATE current_cycle=?, period=?, olympiad_end=?, "
-			+ "validation_end=?, next_weekly_change=?";
+	private static final String OLYMPIAD_LOAD_DATA = "SELECT current_cycle, period, competition_end_at, validation_end_at, "
+			+ "next_weekly_change_at FROM olympiad_state WHERE id = 0";
+	private static final String OLYMPIAD_SAVE_DATA = "INSERT INTO olympiad_state (id, current_cycle, "
+			+ "period, competition_end_at, validation_end_at, next_weekly_change_at) VALUES (0,?,?,?,?,?) "
+			+ "ON CONFLICT (id) DO UPDATE SET current_cycle = EXCLUDED.current_cycle, period = EXCLUDED.period, "
+			+ "competition_end_at = EXCLUDED.competition_end_at, validation_end_at = EXCLUDED.validation_end_at, "
+			+ "next_weekly_change_at = EXCLUDED.next_weekly_change_at";
 	private static final String OLYMPIAD_LOAD_NOBLES =
-			"SELECT olympiad_nobles.charId, olympiad_nobles.class_id, "
-					+ "characters.char_name, olympiad_nobles.olympiad_points, olympiad_nobles.competitions_done, "
-					+ "olympiad_nobles.competitions_won, olympiad_nobles.competitions_lost, olympiad_nobles.competitions_drawn "
-					+ "FROM olympiad_nobles, characters WHERE characters.charId = olympiad_nobles.charId";
-	private static final String OLYMPIAD_SAVE_NOBLES = "INSERT INTO olympiad_nobles "
-			+ "(`charId`,`class_id`,`olympiad_points`,`competitions_done`,`competitions_won`,`competitions_lost`,"
-			+ "`competitions_drawn`) VALUES (?,?,?,?,?,?,?)";
+			"SELECT olympiad_noble.player_id, olympiad_noble.class_id, "
+					+ "player.name, olympiad_noble.olympiad_points, olympiad_noble.competitions_done, "
+					+ "olympiad_noble.competitions_won, olympiad_noble.competitions_lost, olympiad_noble.competitions_drawn "
+					+ "FROM olympiad_noble JOIN player ON player.id = olympiad_noble.player_id";
+	private static final String OLYMPIAD_SAVE_NOBLES = "INSERT INTO olympiad_noble "
+			+ "(player_id, class_id, olympiad_points, competitions_done, competitions_won, competitions_lost, "
+			+ "competitions_drawn) VALUES (?,?,?,?,?,?,?)";
 	private static final String OLYMPIAD_UPDATE_NOBLES =
-			"UPDATE olympiad_nobles SET "
-					+ "olympiad_points = ?, competitions_done = ?, competitions_won = ?, competitions_lost = ?, competitions_drawn = ? WHERE charId = ?";
-	private static final String OLYMPIAD_GET_HEROS = "SELECT olympiad_nobles.charId, characters.char_name "
-			+ "FROM olympiad_nobles, characters WHERE characters.charId = olympiad_nobles.charId "
-			+ "AND olympiad_nobles.class_id = ? AND olympiad_nobles.competitions_done >= 9 "
-			+ "ORDER BY olympiad_nobles.olympiad_points DESC, olympiad_nobles.competitions_done DESC";
-	private static final String GET_ALL_CLASSIFIED_NOBLESS = "SELECT charId from olympiad_nobles_eom "
+			"UPDATE olympiad_noble SET "
+					+ "olympiad_points = ?, competitions_done = ?, competitions_won = ?, competitions_lost = ?, competitions_drawn = ? WHERE player_id = ?";
+	private static final String OLYMPIAD_GET_HEROS = "SELECT olympiad_noble.player_id, player.name "
+			+ "FROM olympiad_noble JOIN player ON player.id = olympiad_noble.player_id "
+			+ "WHERE olympiad_noble.class_id = ? AND olympiad_noble.competitions_done >= 9 "
+			+ "ORDER BY olympiad_noble.olympiad_points DESC, olympiad_noble.competitions_done DESC";
+	private static final String GET_ALL_CLASSIFIED_NOBLESS = "SELECT player_id FROM olympiad_noble_month_end "
 			+ "WHERE competitions_done >= 9 ORDER BY olympiad_points DESC, competitions_done DESC";
-	private static final String GET_EACH_CLASS_LEADER;
-	private static final String GET_EACH_CLASS_LEADER_CURRENT;
-	private static final String GET_EACH_CLASS_LEADER_SOULHOUND;
-	private static final String GET_EACH_CLASS_LEADER_SOULHOUND_CURRENT;
+	private static final String GET_EACH_CLASS_LEADER = "SELECT player.name FROM olympiad_noble_month_end "
+			+ "JOIN player ON player.id = olympiad_noble_month_end.player_id "
+			+ "WHERE olympiad_noble_month_end.class_id = ? AND olympiad_noble_month_end.competitions_done >= 9 "
+			+ "ORDER BY olympiad_noble_month_end.olympiad_points DESC, olympiad_noble_month_end.competitions_done DESC LIMIT 10";
+	private static final String GET_EACH_CLASS_LEADER_CURRENT = "SELECT player.name FROM olympiad_noble "
+			+ "JOIN player ON player.id = olympiad_noble.player_id "
+			+ "WHERE olympiad_noble.class_id = ? AND olympiad_noble.competitions_done >= 9 "
+			+ "ORDER BY olympiad_noble.olympiad_points DESC, olympiad_noble.competitions_done DESC LIMIT 10";
+	private static final String GET_EACH_CLASS_LEADER_SOULHOUND = "SELECT player.name FROM olympiad_noble_month_end "
+			+ "JOIN player ON player.id = olympiad_noble_month_end.player_id "
+			+ "WHERE (olympiad_noble_month_end.class_id = 132 OR olympiad_noble_month_end.class_id = 133) "
+			+ "AND olympiad_noble_month_end.competitions_done >= 9 "
+			+ "ORDER BY olympiad_noble_month_end.olympiad_points DESC, olympiad_noble_month_end.competitions_done DESC LIMIT 10";
+	private static final String GET_EACH_CLASS_LEADER_SOULHOUND_CURRENT = "SELECT player.name FROM olympiad_noble "
+			+ "JOIN player ON player.id = olympiad_noble.player_id "
+			+ "WHERE (olympiad_noble.class_id = 132 OR olympiad_noble.class_id = 133) "
+			+ "AND olympiad_noble.competitions_done >= 9 "
+			+ "ORDER BY olympiad_noble.olympiad_points DESC, olympiad_noble.competitions_done DESC LIMIT 10";
 	
-	static
-	{
-		final String defaultBase =
-				"SELECT characters.char_name FROM %nobles_table%, characters "
-						+ "WHERE characters.charId = %nobles_table%.charId AND %classId_check% "
-						+ "AND %nobles_table%.competitions_done >= 9 "
-						+ "ORDER BY %nobles_table%.olympiad_points DESC, %nobles_table%.competitions_done DESC LIMIT 10";
-		
-		final String normalBase = defaultBase.replace("%classId_check%", "%nobles_table%.class_id = ?");
-		final String soulhoundBase =
-				defaultBase.replace("%classId_check%",
-						"(%nobles_table%.class_id = 132 OR %nobles_table%.class_id = 133)");
-		
-		GET_EACH_CLASS_LEADER = normalBase.replaceAll("%nobles_table%", "olympiad_nobles_eom");
-		GET_EACH_CLASS_LEADER_CURRENT = normalBase.replaceAll("%nobles_table%", "olympiad_nobles");
-		
-		GET_EACH_CLASS_LEADER_SOULHOUND = soulhoundBase.replaceAll("%nobles_table%", "olympiad_nobles_eom");
-		GET_EACH_CLASS_LEADER_SOULHOUND_CURRENT = soulhoundBase.replaceAll("%nobles_table%", "olympiad_nobles");
-	}
-	
-	private static final String OLYMPIAD_DELETE_ALL = "TRUNCATE olympiad_nobles";
-	private static final String OLYMPIAD_MONTH_CLEAR = "TRUNCATE olympiad_nobles_eom";
-	private static final String OLYMPIAD_MONTH_CREATE = "INSERT INTO olympiad_nobles_eom SELECT * FROM olympiad_nobles";
+	private static final String OLYMPIAD_DELETE_ALL = "DELETE FROM olympiad_noble";
+	private static final String OLYMPIAD_MONTH_CLEAR = "DELETE FROM olympiad_noble_month_end";
+	private static final String OLYMPIAD_MONTH_CREATE = "INSERT INTO olympiad_noble_month_end "
+			+ "(player_id, class_id, olympiad_points, competitions_done, competitions_won, competitions_lost, competitions_drawn) "
+			+ "SELECT player_id, class_id, olympiad_points, competitions_done, competitions_won, competitions_lost, competitions_drawn "
+			+ "FROM olympiad_noble";
 	
 	private static final int[] HERO_IDS = { 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104,
 			105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 131, 132, 133, 134 };
@@ -177,6 +177,18 @@ public final class Olympiad
 			init();
 	}
 	
+	/** @return the moment for the column, or null when the epoch milliseconds are 0 ("not set") */
+	private static Timestamp toMoment(long millis)
+	{
+		return millis == 0 ? null : new Timestamp(millis);
+	}
+	
+	/** @return the epoch milliseconds of the moment, or 0 when it is NULL ("not set") */
+	private static long fromMoment(Timestamp moment)
+	{
+		return moment == null ? 0 : moment.getTime();
+	}
+	
 	public static Integer getStadiumCount()
 	{
 		return OlympiadManager.STADIUMS.length;
@@ -198,9 +210,9 @@ public final class Olympiad
 			{
 				_currentCycle = rset.getInt("current_cycle");
 				_period = rset.getInt("period");
-				_olympiadEnd = rset.getLong("olympiad_end");
-				_validationEnd = rset.getLong("validation_end");
-				_nextWeeklyChange = rset.getLong("next_weekly_change");
+				_olympiadEnd = fromMoment(rset.getTimestamp("competition_end_at"));
+				_validationEnd = fromMoment(rset.getTimestamp("validation_end_at"));
+				_nextWeeklyChange = fromMoment(rset.getTimestamp("next_weekly_change_at"));
 				loaded = true;
 			}
 			rset.close();
@@ -274,9 +286,9 @@ public final class Olympiad
 			while (rset.next())
 			{
 				StatsSet statData = new StatsSet();
-				int charId = rset.getInt(CHAR_ID);
-				statData.set(CLASS_ID, rset.getInt(CLASS_ID));
-				statData.set(CHAR_NAME, rset.getString(CHAR_NAME));
+				int charId = rset.getInt("player_id");
+				statData.set(CLASS_ID, rset.getInt("class_id"));
+				statData.set(CHAR_NAME, rset.getString("name"));
 				statData.set(POINTS, rset.getInt(POINTS));
 				statData.set(COMP_DONE, rset.getInt(COMP_DONE));
 				statData.set(COMP_WON, rset.getInt(COMP_WON));
@@ -342,7 +354,7 @@ public final class Olympiad
 			int place = 1;
 			while (rset.next())
 			{
-				tmpPlace.put(rset.getInt(CHAR_ID), place++);
+				tmpPlace.put(rset.getInt("player_id"), place++);
 			}
 			
 			rset.close();
@@ -418,14 +430,17 @@ public final class Olympiad
 			if (_scheduledWeeklyTask != null)
 				_scheduledWeeklyTask.cancel(true);
 			
-			saveNobleData();
-			
-			_period = 1;
-			sortHerosToBe();
-			Hero.getInstance().computeNewHeroes(_heroesToBe);
-			
-			saveOlympiadStatus();
-			updateMonthlyData();
+			// The noble data, the heroes, the period, and the monthly snapshot change together.
+			WorldTransaction.run("Olympiad period change", () -> {
+				saveNobleData();
+				
+				_period = 1;
+				sortHerosToBe();
+				Hero.getInstance().computeNewHeroes(_heroesToBe);
+				
+				saveOlympiadStatus();
+				updateMonthlyData();
+			});
 			
 			Calendar validationEnd = Calendar.getInstance();
 			_validationEnd = validationEnd.getTimeInMillis() + VALIDATION_PERIOD;
@@ -1125,8 +1140,14 @@ public final class Olympiad
 	 */
 	public void saveOlympiadStatus()
 	{
-		saveNobleData();
-		
+		WorldTransaction.run("Olympiad status save", () -> {
+			saveNobleData();
+			saveStatusData();
+		});
+	}
+	
+	private void saveStatusData()
+	{
 		Connection con = null;
 		try
 		{
@@ -1135,14 +1156,9 @@ public final class Olympiad
 			
 			statement.setInt(1, _currentCycle);
 			statement.setInt(2, _period);
-			statement.setLong(3, _olympiadEnd);
-			statement.setLong(4, _validationEnd);
-			statement.setLong(5, _nextWeeklyChange);
-			statement.setInt(6, _currentCycle);
-			statement.setInt(7, _period);
-			statement.setLong(8, _olympiadEnd);
-			statement.setLong(9, _validationEnd);
-			statement.setLong(10, _nextWeeklyChange);
+			statement.setTimestamp(3, toMoment(_olympiadEnd));
+			statement.setTimestamp(4, toMoment(_validationEnd));
+			statement.setTimestamp(5, toMoment(_nextWeeklyChange));
 			statement.execute();
 			statement.close();
 		}
@@ -1188,6 +1204,11 @@ public final class Olympiad
 	}
 	
 	protected void updateMonthlyData()
+	{
+		WorldTransaction.run("Olympiad monthly snapshot", this::saveMonthlyData);
+	}
+	
+	private void saveMonthlyData()
 	{
 		Connection con = null;
 		try
@@ -1257,13 +1278,13 @@ public final class Olympiad
 				{
 					hero = new StatsSet();
 					hero.set(CLASS_ID, finalElement);
-					hero.set(CHAR_ID, rset.getInt(CHAR_ID));
-					hero.set(CHAR_NAME, rset.getString(CHAR_NAME));
+					hero.set(CHAR_ID, rset.getInt("player_id"));
+					hero.set(CHAR_NAME, rset.getString("name"));
 					
 					if (finalElement == 132 || finalElement == 133) // Male & Female Soulhounds rank as one hero class
 					{
 						hero = _nobles.get(hero.getInteger(CHAR_ID));
-						hero.set(CHAR_ID, rset.getInt(CHAR_ID));
+						hero.set(CHAR_ID, rset.getInt("player_id"));
 						soulHounds.add(hero);
 					}
 					else
@@ -1369,7 +1390,7 @@ public final class Olympiad
 			
 			while (rset.next())
 			{
-				names.add(rset.getString(CHAR_NAME));
+				names.add(rset.getString("name"));
 			}
 			
 			statement.close();
@@ -1474,7 +1495,7 @@ public final class Olympiad
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
 			PreparedStatement statement;
-			statement = con.prepareStatement("SELECT olympiad_points FROM olympiad_nobles_eom WHERE charId = ?");
+			statement = con.prepareStatement("SELECT olympiad_points FROM olympiad_noble_month_end WHERE player_id = ?");
 			statement.setInt(1, objId);
 			ResultSet rs = statement.executeQuery();
 			if (rs.next())

@@ -22,15 +22,18 @@ BenomSpeak = [ "You should have finished me when you had the chance!!!", "I will
 
 WalkTimes = [ 18000,17000,4500,16000,22000,14000,10500,14000,9500,12500,20500,14500,17000,20000,22000,11000,11000,20000,8000,5500,20000,18000,25000,28000,25000,25000,25000,25000,10000,24000,7000,12000,20000 ]
 
+# The state column of grand_boss_state holds the name; the script works with the position in this list.
+BossStates = [ "NOTSPAWN", "ALIVE", "DEAD", "INTERVAL" ]
+
 def checkState() :
   checkState = False
   con = L2DatabaseFactory.getInstance().getConnection(None)
-  offline = con.prepareStatement("SELECT state FROM grandboss_intervallist WHERE bossId = 29054")
+  offline = con.prepareStatement("SELECT state FROM grand_boss_state WHERE npc_template_id = 29054")
   rs = offline.executeQuery()
   if rs :
     rs.next()
     try :
-      checkState = rs.getInt("state")
+      checkState = BossStates.index(rs.getString("state"))
       con.close()
     except :
       checkState = 1
@@ -42,8 +45,8 @@ def checkState() :
 
 def updateState(state) :
   con = L2DatabaseFactory.getInstance().getConnection(None)
-  offline = con.prepareStatement("UPDATE grandboss_intervallist SET state = ? WHERE bossId = 29054")
-  offline.setInt(1, state)
+  offline = con.prepareStatement("INSERT INTO grand_boss_state (npc_template_id, state) VALUES (29054, ?) ON CONFLICT (npc_template_id) DO UPDATE SET state = EXCLUDED.state")
+  offline.setString(1, BossStates[state])
   try :
     offline.executeUpdate()
     offline.close()

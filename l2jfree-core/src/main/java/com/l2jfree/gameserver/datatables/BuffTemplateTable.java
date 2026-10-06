@@ -61,7 +61,7 @@ public class BuffTemplateTable
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM buff_templates ORDER BY id, skill_order");
+			PreparedStatement statement = con.prepareStatement("SELECT t.id, t.name, s.skill_id, s.skill_level, s.position, s.is_force_cast, s.min_player_level, s.max_player_level, s.race_mask, s.class_kind, s.required_faction, s.price_adena, s.price_faction_points FROM buff_template t JOIN buff_template_skill s ON s.buff_template_id = t.id ORDER BY t.id, s.position");
 			ResultSet rset = statement.executeQuery();
 			
 			while (rset.next())
@@ -73,15 +73,15 @@ public class BuffTemplateTable
 				buff.set("name", rset.getString("name"));
 				buff.set("skillId", rset.getInt("skill_id"));
 				buff.set("skillLevel", rset.getInt("skill_level"));
-				buff.set("skillOrder", rset.getInt("skill_order"));
-				buff.set("forceCast", rset.getInt("skill_force"));
-				buff.set("minLevel", rset.getInt("char_min_level"));
-				buff.set("maxLevel", rset.getInt("char_max_level"));
-				buff.set("race", rset.getInt("char_race"));
-				buff.set("class", rset.getInt("char_class"));
-				buff.set("faction", rset.getInt("char_faction"));
+				buff.set("skillOrder", rset.getInt("position"));
+				buff.set("forceCast", rset.getBoolean("is_force_cast") ? 1 : 0);
+				buff.set("minLevel", rset.getInt("min_player_level"));
+				buff.set("maxLevel", rset.getInt("max_player_level"));
+				buff.set("race", rset.getInt("race_mask"));
+				buff.set("class", rset.getInt("class_kind"));
+				buff.set("faction", rset.getInt("required_faction"));
 				buff.set("adena", rset.getInt("price_adena"));
-				buff.set("points", rset.getInt("price_points"));
+				buff.set("points", rset.getInt("price_faction_points"));
 				
 				// Add this buff template to the buff template list
 				L2BuffTemplate template = new L2BuffTemplate(buff);

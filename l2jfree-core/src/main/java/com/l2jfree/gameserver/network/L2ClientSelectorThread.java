@@ -26,7 +26,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.CoreInfo;
-import com.l2jfree.gameserver.LoginServerThread;
 import com.l2jfree.gameserver.network.packets.L2ClientPacket;
 import com.l2jfree.gameserver.network.packets.L2ServerPacket;
 import com.l2jfree.lang.L2TextBuilder;
@@ -128,7 +127,7 @@ public final class L2ClientSelectorThread extends SelectorThread<L2Client, L2Cli
 		if (!super.acceptConnectionFrom(sc))
 			return false;
 		
-		if (!Config.CONNECTION_FILTERING || !LoginServerThread.getInstance().supportsNewLoginProtocol())
+		if (!Config.CONNECTION_FILTERING)
 			return true;
 		
 		final String ip = sc.socket().getInetAddress().getHostAddress();

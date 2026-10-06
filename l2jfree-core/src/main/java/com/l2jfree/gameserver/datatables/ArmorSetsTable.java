@@ -48,25 +48,25 @@ public final class ArmorSetsTable
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT chest, legs, head, gloves, feet, skill, shield, shield_skill_id, enchant6skill, mw_legs, mw_head, mw_gloves, mw_feet, mw_shield FROM armorsets");
+					con.prepareStatement("SELECT chest_armor_template_id, legs_armor_template_id, head_armor_template_id, gloves_armor_template_id, feet_armor_template_id, set_skills, shield_weapon_template_id, shield_skill_id, enchant6_skill_id, masterwork_legs_armor_template_id, masterwork_head_armor_template_id, masterwork_gloves_armor_template_id, masterwork_feet_armor_template_id, masterwork_shield_weapon_template_id FROM armor_set");
 			ResultSet rset = statement.executeQuery();
 			
 			while (rset.next())
 			{
-				int chest = rset.getInt("chest");
-				int legs = rset.getInt("legs");
-				int head = rset.getInt("head");
-				int gloves = rset.getInt("gloves");
-				int feet = rset.getInt("feet");
-				String[] skills = rset.getString("skill").split(";");
-				int shield = rset.getInt("shield");
+				int chest = rset.getInt("chest_armor_template_id");
+				int legs = rset.getInt("legs_armor_template_id");
+				int head = rset.getInt("head_armor_template_id");
+				int gloves = rset.getInt("gloves_armor_template_id");
+				int feet = rset.getInt("feet_armor_template_id");
+				String[] skills = rset.getString("set_skills").split(";");
+				int shield = rset.getInt("shield_weapon_template_id");
 				int shield_skill_id = rset.getInt("shield_skill_id");
-				int enchant6skill = rset.getInt("enchant6skill");
-				int mwork_legs = rset.getInt("mw_legs");
-				int mwork_head = rset.getInt("mw_head");
-				int mwork_gloves = rset.getInt("mw_gloves");
-				int mwork_feet = rset.getInt("mw_feet");
-				int mwork_shield = rset.getInt("mw_shield");
+				int enchant6skill = rset.getInt("enchant6_skill_id");
+				int mwork_legs = rset.getInt("masterwork_legs_armor_template_id");
+				int mwork_head = rset.getInt("masterwork_head_armor_template_id");
+				int mwork_gloves = rset.getInt("masterwork_gloves_armor_template_id");
+				int mwork_feet = rset.getInt("masterwork_feet_armor_template_id");
+				int mwork_shield = rset.getInt("masterwork_shield_weapon_template_id");
 				_armorSets.put(chest, new L2ArmorSet(chest, legs, head, gloves, feet, skills, shield, shield_skill_id,
 						enchant6skill, mwork_legs, mwork_head, mwork_gloves, mwork_feet, mwork_shield));
 			}

@@ -136,31 +136,44 @@ public class AutoSpawnManager
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			// Restore spawn group data, then the location data.
-			statement = con.prepareStatement("SELECT * FROM random_spawn ORDER BY groupId ASC");
+			statement = con.prepareStatement("SELECT id, npc_template_id, npc_count, initial_delay_ms, respawn_delay_ms, despawn_delay_ms, broadcasts_spawn, uses_random_location FROM random_spawn ORDER BY id");
 			rs = statement.executeQuery();
 			
 			while (rs.next())
 			{
 				// Register random spawn group, set various options on the created spawn instance.
-				AutoSpawnInstance spawnInst =
-						registerSpawn(rs.getInt("npcId"), rs.getInt("initialDelay"), rs.getInt("respawnDelay"),
-								rs.getInt("despawnDelay"));
+				// A NULL delay means the default, which registerSpawn takes as a negative value
+				int initialDelay = rs.getInt("initial_delay_ms");
+				if (rs.wasNull())
+					initialDelay = -1;
+				int respawnDelay = rs.getInt("respawn_delay_ms");
+				if (rs.wasNull())
+					respawnDelay = -1;
+				int despawnDelay = rs.getInt("despawn_delay_ms");
+				if (rs.wasNull())
+					despawnDelay = -1;
 				
-				spawnInst.setSpawnCount(rs.getInt("count"));
-				spawnInst.setBroadcast(rs.getBoolean("broadcastSpawn"));
-				spawnInst.setRandomSpawn(rs.getBoolean("randomSpawn"));
+				AutoSpawnInstance spawnInst =
+						registerSpawn(rs.getInt("npc_template_id"), initialDelay, respawnDelay, despawnDelay);
+				
+				spawnInst.setSpawnCount(rs.getInt("npc_count"));
+				spawnInst.setBroadcast(rs.getBoolean("broadcasts_spawn"));
+				spawnInst.setRandomSpawn(rs.getBoolean("uses_random_location"));
 				numLoaded++;
 				
 				// Restore the spawn locations for this spawn group/instance.
-				statement2 = con.prepareStatement("SELECT * FROM random_spawn_loc WHERE groupId=?");
-				statement2.setInt(1, rs.getInt("groupId"));
+				statement2 = con.prepareStatement("SELECT x, y, z, heading FROM random_spawn_location WHERE random_spawn_id = ?");
+				statement2.setInt(1, rs.getInt("id"));
 				rs2 = statement2.executeQuery();
 				
 				while (rs2.next())
 				{
 					// Add each location to the spawn group/instance.
-					spawnInst
-							.addSpawnLocation(rs2.getInt("x"), rs2.getInt("y"), rs2.getInt("z"), rs2.getInt("heading"));
+					// A NULL heading means a random heading, which the spawn takes as -1
+					int heading = rs2.getInt("heading");
+					if (rs2.wasNull())
+						heading = -1;
+					spawnInst.addSpawnLocation(rs2.getInt("x"), rs2.getInt("y"), rs2.getInt("z"), heading);
 				}
 				
 				statement2.close();

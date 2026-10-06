@@ -1,1 +1,0 @@
-DELETE FROM `character_skills` WHERE `skill_id` IN (426,427);

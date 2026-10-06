@@ -17,6 +17,8 @@ package com.l2jfree.gameserver.model.entity;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.sql.Types;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,18 +58,20 @@ public class Couple
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			statement = con.prepareStatement("Select * from couples where id = ?");
+			statement = con.prepareStatement("SELECT player1_id, player2_id, is_married, engaged_at, married_at FROM couple WHERE id = ?");
 			statement.setInt(1, _id);
 			rs = statement.executeQuery();
 			
 			while (rs.next())
 			{
-				_player1Id = rs.getInt("player1Id");
-				_player2Id = rs.getInt("player2Id");
-				_maried = rs.getBoolean("maried");
+				_player1Id = rs.getInt("player1_id");
+				_player2Id = rs.getInt("player2_id");
+				_maried = rs.getBoolean("is_married");
 				
-				_affiancedDate = rs.getLong("affiancedDate");
-				_weddingDate = rs.getLong("weddingDate");
+				_affiancedDate = rs.getTimestamp("engaged_at").getTime();
+				// NULL while only engaged: the wedding date is then the engagement date, as it was in memory before
+				Timestamp marriedAt = rs.getTimestamp("married_at");
+				_weddingDate = marriedAt == null ? _affiancedDate : marriedAt.getTime();
 			}
 			statement.close();
 		}
@@ -99,13 +103,13 @@ public class Couple
 			PreparedStatement statement;
 			_id = IdFactory.getInstance().getNextId();
 			statement =
-					con.prepareStatement("INSERT INTO couples (id, player1Id, player2Id, maried, affiancedDate, weddingDate) VALUES (?, ?, ?, ?, ?, ?)");
+					con.prepareStatement("INSERT INTO couple (id, player1_id, player2_id, is_married, engaged_at, married_at) VALUES (?, ?, ?, ?, ?, ?)");
 			statement.setInt(1, _id);
 			statement.setInt(2, _player1Id);
 			statement.setInt(3, _player2Id);
 			statement.setBoolean(4, false);
-			statement.setLong(5, _affiancedDate);
-			statement.setLong(6, _weddingDate);
+			statement.setTimestamp(5, new Timestamp(_affiancedDate));
+			statement.setNull(6, Types.TIMESTAMP_WITH_TIMEZONE); // NULL while only engaged
 			statement.execute();
 			statement.close();
 		}
@@ -127,10 +131,10 @@ public class Couple
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
 			
-			statement = con.prepareStatement("UPDATE couples set maried = ?, weddingDate = ? where id = ?");
+			statement = con.prepareStatement("UPDATE couple SET is_married = ?, married_at = ? WHERE id = ?");
 			statement.setBoolean(1, true);
 			_weddingDate = System.currentTimeMillis();
-			statement.setLong(2, _weddingDate);
+			statement.setTimestamp(2, new Timestamp(_weddingDate));
 			statement.setInt(3, _id);
 			statement.execute();
 			statement.close();
@@ -154,7 +158,7 @@ public class Couple
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
 			
-			statement = con.prepareStatement("DELETE FROM couples WHERE id=?");
+			statement = con.prepareStatement("DELETE FROM couple WHERE id=?");
 			statement.setInt(1, _id);
 			statement.execute();
 			statement.close();

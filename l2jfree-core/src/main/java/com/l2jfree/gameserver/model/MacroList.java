@@ -14,9 +14,6 @@
  */
 package com.l2jfree.gameserver.model;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -27,10 +24,11 @@ import javolution.util.FastMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.L2Macro.L2MacroCmd;
 import com.l2jfree.gameserver.network.packets.server.SendMacroList;
+import com.l2jfree.gameserver.persistence.player.PlayerRepository;
+import com.l2jfree.gameserver.persistence.player.PlayerRepository.MacroRow;
 
 /**
  * This class ...
@@ -124,19 +122,8 @@ public class MacroList
 	
 	private void registerMacroInDb(L2Macro macro)
 	{
-		Connection con = null;
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			
-			PreparedStatement statement =
-					con.prepareStatement("INSERT INTO character_macroses (charId,id,icon,name,descr,acronym,commands) values(?,?,?,?,?,?,?)");
-			statement.setInt(1, _owner.getObjectId());
-			statement.setInt(2, macro.id);
-			statement.setInt(3, macro.icon);
-			statement.setString(4, macro.name);
-			statement.setString(5, macro.descr);
-			statement.setString(6, macro.acronym);
 			TextBuilder sb = new TextBuilder();
 			for (L2MacroCmd cmd : macro.commands)
 			{
@@ -147,17 +134,14 @@ public class MacroList
 					sb.append(',').append(cmd.cmd);
 				sb.append(';');
 			}
-			statement.setString(7, sb.length() > 255 ? sb.toString().substring(0, 254) : sb.toString());
-			statement.execute();
-			statement.close();
+			String commands = sb.length() > 255 ? sb.toString().substring(0, 254) : sb.toString();
+
+			PlayerRepository.getInstance().saveMacro(_owner.getObjectId(),
+					new MacroRow(macro.id, macro.icon, macro.name, macro.descr, macro.acronym, commands));
 		}
 		catch (Exception e)
 		{
 			_log.warn("could not store macro:", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
 		}
 	}
 	
@@ -166,48 +150,30 @@ public class MacroList
 	 */
 	private void deleteMacroFromDb(L2Macro macro)
 	{
-		Connection con = null;
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			
-			PreparedStatement statement =
-					con.prepareStatement("DELETE FROM character_macroses WHERE charId=? AND id=?");
-			statement.setInt(1, _owner.getObjectId());
-			statement.setInt(2, macro.id);
-			statement.execute();
-			statement.close();
+			PlayerRepository.getInstance().deleteMacro(_owner.getObjectId(), macro.id);
 		}
 		catch (Exception e)
 		{
 			_log.warn("could not delete macro:", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
 		}
 	}
 	
 	public void restore()
 	{
 		_macroses.clear();
-		Connection con = null;
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement =
-					con.prepareStatement("SELECT id, icon, name, descr, acronym, commands FROM character_macroses WHERE charId=?");
-			statement.setInt(1, _owner.getObjectId());
-			ResultSet rset = statement.executeQuery();
-			while (rset.next())
+			for (MacroRow row : PlayerRepository.getInstance().loadMacros(_owner.getObjectId()))
 			{
-				int id = rset.getInt("id");
-				int icon = rset.getInt("icon");
-				String name = rset.getString("name");
-				String descr = rset.getString("descr");
-				String acronym = rset.getString("acronym");
+				int id = row.number();
+				int icon = row.icon();
+				String name = row.name();
+				String descr = row.description();
+				String acronym = row.acronym();
 				List<L2MacroCmd> commands = new FastList<L2MacroCmd>();
-				StringTokenizer st1 = new StringTokenizer(rset.getString("commands"), ";");
+				StringTokenizer st1 = new StringTokenizer(row.commands(), ";");
 				while (st1.hasMoreTokens())
 				{
 					StringTokenizer st = new StringTokenizer(st1.nextToken(), ",");
@@ -227,16 +193,10 @@ public class MacroList
 						new L2Macro(id, icon, name, descr, acronym, commands.toArray(new L2MacroCmd[commands.size()]));
 				_macroses.put(m.id, m);
 			}
-			rset.close();
-			statement.close();
 		}
 		catch (Exception e)
 		{
 			_log.warn("could not store shortcuts:", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
 		}
 	}
 }

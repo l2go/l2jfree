@@ -15,8 +15,8 @@
 package com.l2jfree.gameserver.network.packets.client;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
+import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.regex.Pattern;
 
@@ -253,10 +253,10 @@ public class NewCharacter extends L2ClientPacket
 		{
 			Calendar now = Calendar.getInstance();
 			con = L2DatabaseFactory.getInstance().getConnection();
-			PreparedStatement ps = con.prepareStatement("INSERT INTO character_birthdays VALUES (?,?,?)");
+			PreparedStatement ps = con.prepareStatement("INSERT INTO player_birthday (player_id, gift_claimed_year, created_on) VALUES (?,?,?)");
 			ps.setInt(1, player.getObjectId());
 			ps.setInt(2, now.get(Calendar.YEAR));
-			ps.setDate(3, new Date(now.getTimeInMillis()));
+			ps.setObject(3, LocalDate.now());
 			ps.executeUpdate();
 			ps.close();
 		}

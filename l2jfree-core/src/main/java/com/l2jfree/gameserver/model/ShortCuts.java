@@ -14,9 +14,6 @@
  */
 package com.l2jfree.gameserver.model;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.Map;
 
 import javolution.util.FastMap;
@@ -24,12 +21,13 @@ import javolution.util.FastMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
 import com.l2jfree.gameserver.model.items.templates.L2EtcItemType;
 import com.l2jfree.gameserver.network.packets.server.ExAutoSoulShot;
 import com.l2jfree.gameserver.network.packets.server.ShortCutInit;
+import com.l2jfree.gameserver.persistence.player.PlayerRepository;
+import com.l2jfree.gameserver.persistence.player.PlayerRepository.ShortcutRow;
 
 public final class ShortCuts
 {
@@ -52,30 +50,15 @@ public final class ShortCuts
 	{
 		_shortCuts.put(shortcut.getSlot() + 12 * shortcut.getPage(), shortcut);
 		
-		Connection con = null;
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			
-			PreparedStatement statement =
-					con.prepareStatement("REPLACE INTO character_shortcuts (charId,slot,page,type,shortcut_id,level,class_index) values(?,?,?,?,?,?,?)");
-			statement.setInt(1, _owner.getObjectId());
-			statement.setInt(2, shortcut.getSlot());
-			statement.setInt(3, shortcut.getPage());
-			statement.setInt(4, shortcut.getType());
-			statement.setInt(5, shortcut.getId());
-			statement.setInt(6, shortcut.getLevel());
-			statement.setInt(7, _owner.getClassIndex());
-			statement.execute();
-			statement.close();
+			PlayerRepository.getInstance().saveShortcut(_owner.getObjectId(), _owner.getClassIndex(),
+					new ShortcutRow(shortcut.getSlot(), shortcut.getPage(), shortcut.getType(), shortcut.getId(),
+							shortcut.getLevel()));
 		}
 		catch (Exception e)
 		{
 			_log.warn("", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
 		}
 	}
 	
@@ -85,29 +68,16 @@ public final class ShortCuts
 		if (old == null)
 			return;
 		
-		Connection con = null;
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			
-			PreparedStatement statement =
-					con.prepareStatement("DELETE FROM character_shortcuts WHERE charId=? AND slot=? AND page=? AND class_index=?");
-			statement.setInt(1, _owner.getObjectId());
-			statement.setInt(2, old.getSlot());
-			statement.setInt(3, old.getPage());
-			statement.setInt(4, _owner.getClassIndex());
-			statement.execute();
-			statement.close();
+			PlayerRepository.getInstance().deleteShortcut(_owner.getObjectId(), _owner.getClassIndex(), old.getPage(),
+					old.getSlot());
 		}
 		catch (Exception e)
 		{
 			_log.warn("", e);
 		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
-		
+
 		if (old.getType() == L2ShortCut.TYPE_ITEM)
 		{
 			L2ItemInstance item = _owner.getInventory().getItemByObjectId(old.getId());
@@ -134,38 +104,18 @@ public final class ShortCuts
 	{
 		_shortCuts.clear();
 		
-		Connection con = null;
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement =
-					con.prepareStatement("SELECT slot, page, type, shortcut_id, level FROM character_shortcuts WHERE charId=? AND class_index=?");
-			statement.setInt(1, _owner.getObjectId());
-			statement.setInt(2, _owner.getClassIndex());
-			
-			ResultSet rset = statement.executeQuery();
-			
-			while (rset.next())
+			for (ShortcutRow row : PlayerRepository.getInstance().loadShortcuts(_owner.getObjectId(),
+					_owner.getClassIndex()))
 			{
-				int slot = rset.getInt("slot");
-				int page = rset.getInt("page");
-				int type = rset.getInt("type");
-				int id = rset.getInt("shortcut_id");
-				int level = rset.getInt("level");
-				
-				_shortCuts.put(slot + page * 12, new L2ShortCut(slot, page, type, id, level, 1));
+				_shortCuts.put(row.slot() + row.page() * 12, new L2ShortCut(row.slot(), row.page(), row.type(),
+						row.targetId(), row.level(), 1));
 			}
-			
-			rset.close();
-			statement.close();
 		}
 		catch (Exception e)
 		{
 			_log.warn("", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
 		}
 		
 		for (L2ShortCut sc : _shortCuts.values())

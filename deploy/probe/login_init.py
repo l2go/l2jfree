@@ -6,6 +6,10 @@ two-byte little-endian length that counts itself, followed by the packet body.
 The probe connects, reads that packet, and checks that the length is plausible
 and that the whole body arrives. It retries until the timeout, so it can run
 right after the stack starts.
+
+With --connect-only the probe only checks that the port accepts a TCP
+connection. The world port needs this: the world waits for the client to speak
+first.
 """
 
 import argparse
@@ -38,24 +42,34 @@ def probe(host, port, timeout):
         return length
 
 
+def connect(host, port, timeout):
+    with socket.create_connection((host, port), timeout=timeout):
+        return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=2106)
     parser.add_argument("--timeout", type=float, default=60.0, help="seconds to keep trying")
+    parser.add_argument("--connect-only", action="store_true", help="only check that the port accepts a connection")
     args = parser.parse_args()
 
     deadline = time.monotonic() + args.timeout
     last_error = None
     while time.monotonic() < deadline:
         try:
+            if args.connect_only:
+                connect(args.host, args.port, 5.0)
+                print(f"port probe: {args.host}:{args.port} accepts connections")
+                return 0
             length = probe(args.host, args.port, 5.0)
             print(f"login probe: first packet of {length} bytes from {args.host}:{args.port}")
             return 0
         except (OSError, ValueError) as error:
             last_error = error
             time.sleep(2)
-    print(f"login probe failed after {args.timeout:.0f}s: {last_error}", file=sys.stderr)
+    print(f"probe of port {args.port} failed after {args.timeout:.0f}s: {last_error}", file=sys.stderr)
     return 1
 
 

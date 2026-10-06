@@ -23,8 +23,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.RSAKeyGenParameterSpec;
-import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.Cipher;
 
@@ -34,12 +35,15 @@ import javolution.util.FastMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.l2jfree.Config;
 import com.l2jfree.L2Registry;
+import com.l2jfree.contract.AdmissionResult;
+import com.l2jfree.contract.SessionKey;
+import com.l2jfree.contract.WorldPort;
+import com.l2jfree.contract.WorldStatus;
+import com.l2jfree.loginserver.LoginConfig;
+import com.l2jfree.loginserver.LoginModule;
 import com.l2jfree.loginserver.beans.Accounts;
 import com.l2jfree.loginserver.beans.FailedLoginAttempt;
-import com.l2jfree.loginserver.beans.GameServerInfo;
-import com.l2jfree.loginserver.beans.SessionKey;
 import com.l2jfree.loginserver.network.L2Client;
 import com.l2jfree.loginserver.services.AccountsServices;
 import com.l2jfree.loginserver.services.exception.AccountBannedException;
@@ -49,9 +53,6 @@ import com.l2jfree.loginserver.services.exception.HackingException;
 import com.l2jfree.loginserver.services.exception.IPRestrictedException;
 import com.l2jfree.loginserver.services.exception.MaintenanceException;
 import com.l2jfree.loginserver.services.exception.MaturityException;
-import com.l2jfree.loginserver.status.Status;
-import com.l2jfree.loginserver.thread.GameServerThread;
-import com.l2jfree.network.ServerStatus;
 import com.l2jfree.tools.codec.Base64;
 import com.l2jfree.tools.math.ScrambledKeyPair;
 import com.l2jfree.tools.random.Rnd;
@@ -84,6 +85,9 @@ public class LoginManager
 	
 	/** Authed Clients on LoginServer*/
 	protected Map<String, L2Client> _loginServerClients = new FastMap<String, L2Client>().setShared(true);
+	
+	/** Accounts that are in the world. Changed only under the lock of {@link #_loginServerClients}. */
+	private final Set<String> _accountsInWorld = ConcurrentHashMap.newKeySet();
 	
 	/** Keep trace of login attempt for an inetadress*/
 	private Map<InetAddress, FailedLoginAttempt> _hackProtection;
@@ -235,67 +239,44 @@ public class LoginManager
 		return key;
 	}
 	
-	public GameServerInfo getAccountOnGameServer(String account)
+	/**
+	 * Admits an account to the world: checks the key the client presented, publishes the account as in the world
+	 * and drops its login-server session, all under the lock that guards the login-server map.
+	 *
+	 * @return the admission, or a refusal when the key does not match or the account is already in the world
+	 */
+	public AdmissionResult beginPlaySession(String account, SessionKey presented)
 	{
-		Collection<GameServerInfo> serverList = GameServerManager.getInstance().getRegisteredGameServers().values();
-		for (GameServerInfo gsi : serverList)
+		synchronized (_loginServerClients)
 		{
-			GameServerThread gst = gsi.getGameServerThread();
-			if (gst != null && gst.hasAccountOnGameServer(account))
-			{
-				return gsi;
-			}
+			SessionKey stored = getKeyForAccount(account);
+			if (stored == null || !stored.matches(presented, LoginConfig.SHOW_LICENCE))
+				return AdmissionResult.refused();
+			
+			if (!PlaySessionAdmission.reserveGameServer(isAccountInWorld(account)))
+				return AdmissionResult.refused();
+			
+			String host = getHostForAccount(account);
+			_accountsInWorld.add(account);
+			_loginServerClients.remove(account);
+			return AdmissionResult.admitted(host);
 		}
-		return null;
 	}
 	
 	/**
-	 * Publishes {@code account} on {@code gameServerAccounts} and drops the login-server session.
-	 * Callers must not send {@code PlayerAuthResponse} until this returns.
-	 *
-	 * @return {@code false} when the account is already on a game server
+	 * The account left the world, so it may log in again.
 	 */
-	public boolean beginPlaySession(String account, java.util.Set<String> gameServerAccounts)
+	public void endPlaySession(String account)
 	{
 		synchronized (_loginServerClients)
 		{
-			if (!PlaySessionAdmission.reserveGameServer(isAccountInAnyGameServer(account)))
-				return false;
-			
-			gameServerAccounts.add(account);
-			_loginServerClients.remove(account);
-			return true;
+			_accountsInWorld.remove(account);
 		}
 	}
 	
-	public void confirmPlaySession(String account, java.util.Set<String> gameServerAccounts)
+	public boolean isAccountInWorld(String account)
 	{
-		synchronized (_loginServerClients)
-		{
-			gameServerAccounts.add(account);
-		}
-	}
-	
-	public void endPlaySession(String account, java.util.Set<String> gameServerAccounts)
-	{
-		synchronized (_loginServerClients)
-		{
-			gameServerAccounts.remove(account);
-		}
-	}
-	
-	public boolean isAccountInAnyGameServer(String account)
-	{
-		Collection<GameServerInfo> serverList = GameServerManager.getInstance().getRegisteredGameServers().values();
-		for (GameServerInfo gsi : serverList)
-		{
-			GameServerThread gst = gsi.getGameServerThread();
-			if (gst != null && gst.hasAccountOnGameServer(account))
-			{
-				return true;
-			}
-		}
-		return false;
+		return _accountsInWorld.contains(account);
 	}
 	
 	/**
@@ -318,10 +299,10 @@ public class LoginManager
 			// check auth
 			if (loginValid(account, password, client))
 			{
-				// The game-server check and the login-server map share one lock with beginPlaySession.
+				// The world check and the login-server map share one lock with beginPlaySession.
 				synchronized (_loginServerClients)
 				{
-					boolean onGameServer = isAccountInAnyGameServer(account);
+					boolean onGameServer = isAccountInWorld(account);
 					boolean onLoginServer = _loginServerClients.containsKey(account);
 					if (!PlaySessionAdmission.mayAuthenticate(onGameServer, onLoginServer))
 					{
@@ -385,55 +366,39 @@ public class LoginManager
 	}
 	
 	/**
-	 * Login is possible if number of player < max player for this GS
-	 * and the status of the GS != STATUS_GM_ONLY
-	 * All those conditions are not applied if the player is a GM
-	 * @return
+	 * Login is possible if the world is online, the number of players < max players of the world
+	 * and the status of the world != STATUS_GM_ONLY, see {@link WorldAccess}.
+	 * The player-count and GM-only conditions are not applied if the player is a GM
+	 * @return false when the world is full and the player is not a GM
+	 * @throws MaintenanceException when there is no world, or it is down
 	 */
-	public boolean isLoginPossible(int age, int access, int serverId) throws MaintenanceException, MaturityException
+	public boolean isLoginPossible(int age, int access) throws MaintenanceException, MaturityException
 	{
-		GameServerInfo gsi = GameServerManager.getInstance().getRegisteredGameServerById(serverId);
-		if (gsi != null && gsi.isAuthed())
-		{
-			if (gsi.getStatus() == ServerStatus.STATUS_GM_ONLY && access < Config.GM_MIN)
-				throw MaintenanceException.MAINTENANCE;
-			//Some accounts, like GM ones, can always connect
-			if (age < gsi.getAgeLimitation())
-				throw new MaturityException(age, gsi.getAgeLimitation());
-			return (gsi.getCurrentPlayerCount() < gsi.getMaxPlayers() || access >= Config.GM_MIN);
-		}
-		else
+		WorldPort world = LoginModule.currentWorld();
+		if (world == null)
 			throw MaintenanceException.MAINTENANCE;
+		
+		WorldStatus status = world.status();
+		WorldAccess.check(status, age, access, LoginConfig.GM_MIN);
+		return WorldAccess.hasPlaceFor(status, access, LoginConfig.GM_MIN);
 	}
 	
 	/**
-	 * 
-	 * @param ServerID
-	 * @return online player count for a server
+	 * @return online player count of the world, 0 when there is no world
 	 */
-	public int getOnlinePlayerCount(int serverId)
+	public int getOnlinePlayerCount()
 	{
-		GameServerInfo gsi = GameServerManager.getInstance().getRegisteredGameServerById(serverId);
-		if (gsi != null && gsi.isAuthed())
-		{
-			return gsi.getCurrentPlayerCount();
-		}
-		return 0;
+		WorldPort world = LoginModule.currentWorld();
+		return world == null ? 0 : world.status().onlinePlayers();
 	}
 	
-	/***
-	 * 
-	 * @param ServerID
-	 * @return max allowed online player for a server
+	/**
+	 * @return max allowed online players of the world, 0 when there is no world
 	 */
-	public int getMaxAllowedOnlinePlayers(int id)
+	public int getMaxAllowedOnlinePlayers()
 	{
-		GameServerInfo gsi = GameServerManager.getInstance().getRegisteredGameServerById(id);
-		if (gsi != null)
-		{
-			return gsi.getMaxPlayers();
-		}
-		return 0;
+		WorldPort world = LoginModule.currentWorld();
+		return world == null ? 0 : world.status().maxPlayers();
 	}
 	
 	/**
@@ -480,7 +445,7 @@ public class LoginManager
 	public boolean isGM(Accounts acc)
 	{
 		if (acc != null)
-			return acc.getAccessLevel() >= Config.GM_MIN;
+			return acc.getAccessLevel() >= LoginConfig.GM_MIN;
 		else
 			return false;
 	}
@@ -652,11 +617,11 @@ public class LoginManager
 				failedCount = failedAttempt.getCount();
 			}
 			
-			if (failedCount >= Config.LOGIN_TRY_BEFORE_BAN)
+			if (failedCount >= LoginConfig.LOGIN_TRY_BEFORE_BAN)
 			{
-				_log.info("Temporary auto-ban for " + address.getHostAddress() + " (" + Config.LOGIN_BLOCK_AFTER_BAN
+				_log.info("Temporary auto-ban for " + address.getHostAddress() + " (" + LoginConfig.LOGIN_BLOCK_AFTER_BAN
 						+ " seconds, " + failedCount + " login tries)");
-				BanManager.getInstance().addBanForAddress(address, Config.LOGIN_BLOCK_AFTER_BAN * 1000);
+				BanManager.getInstance().addBanForAddress(address, LoginConfig.LOGIN_BLOCK_AFTER_BAN * 1000);
 			}
 		}
 	}
@@ -693,7 +658,7 @@ public class LoginManager
 			throws AccountModificationException
 	{
 		Accounts acc;
-		if (Config.AUTO_CREATE_ACCOUNTS)
+		if (LoginConfig.AUTO_CREATE_ACCOUNTS)
 		{
 			if ((user.length() >= 2) && (user.length() <= 14))
 			{
@@ -704,7 +669,6 @@ public class LoginManager
 				
 				_logLogin.info("Account created: " + user);
 				_log.info("An account was newly created: " + user);
-				Status.tryBroadcast("Account created for player " + user);
 				
 				return true;
 				

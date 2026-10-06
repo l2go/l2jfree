@@ -49,11 +49,11 @@ public final class RaidPointsManager
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM character_raid_points");
+			PreparedStatement statement = con.prepareStatement("SELECT player_id, boss_npc_template_id, points FROM player_raid_score");
 			ResultSet rset = statement.executeQuery();
 			
 			while (rset.next())
-				getList(rset.getInt("charId")).put(rset.getInt("boss_id"), rset.getInt("points"));
+				getList(rset.getInt("player_id")).put(rset.getInt("boss_npc_template_id"), rset.getInt("points"));
 			
 			rset.close();
 			statement.close();
@@ -92,7 +92,8 @@ public final class RaidPointsManager
 			con = L2DatabaseFactory.getInstance().getConnection();
 			PreparedStatement statement;
 			statement =
-					con.prepareStatement("REPLACE INTO character_raid_points (`charId`,`boss_id`,`points`) VALUES (?,?,?)");
+					con.prepareStatement("INSERT INTO player_raid_score (player_id, boss_npc_template_id, points) VALUES (?,?,?)"
+								+ " ON CONFLICT (player_id, boss_npc_template_id) DO UPDATE SET points = EXCLUDED.points");
 			statement.setInt(1, player.getObjectId());
 			statement.setInt(2, bossId);
 			statement.setInt(3, points);
@@ -136,7 +137,7 @@ public final class RaidPointsManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
 			PreparedStatement statement;
-			statement = con.prepareStatement("DELETE from character_raid_points WHERE charId > 0");
+			statement = con.prepareStatement("DELETE FROM player_raid_score");
 			statement.executeUpdate();
 			statement.close();
 			_list.clear();

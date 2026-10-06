@@ -17,6 +17,8 @@ package com.l2jfree.gameserver.datatables;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 
 import javolution.util.FastList;
 import javolution.util.FastMap;
@@ -28,6 +30,7 @@ import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.model.L2TradeList;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 
 /**
  *  This class manages buylists from database
@@ -38,10 +41,41 @@ public class TradeListTable
 {
 	private final static Logger _log = LoggerFactory.getLogger(TradeListTable.class);
 	
+	private static final String SELECT_SHOPS = "SELECT id, npc_template_id FROM merchant_shop";
+	private static final String SELECT_CUSTOM_SHOPS = "SELECT id, npc_template_id FROM custom_merchant_shop";
+	
+	/** The goods of one shop, with the stock the shop has left (no row in merchant_stock means the full count). */
+	private static final String SELECT_GOODS =
+			"SELECT b.item_template_id, b.price, b.stock_count, b.restock_interval_s, s.current_count"
+					+ " FROM merchant_buylist b LEFT JOIN merchant_stock s ON s.shop_id = b.merchant_shop_id"
+					+ " AND s.item_template_id = b.item_template_id WHERE b.merchant_shop_id = ? ORDER BY b.position";
+	private static final String SELECT_CUSTOM_GOODS =
+			"SELECT b.item_template_id, b.price, b.stock_count, b.restock_interval_s, s.current_count"
+					+ " FROM custom_merchant_buylist b LEFT JOIN merchant_stock s ON s.shop_id = b.merchant_shop_id"
+					+ " AND s.item_template_id = b.item_template_id WHERE b.merchant_shop_id = ? ORDER BY b.position";
+	
+	/** The restock intervals in use and the moment each one restocks next (NULL when it was never saved). */
+	private static final String SELECT_RESTOCKS =
+			"SELECT DISTINCT b.restock_interval_s, r.next_restock_at FROM merchant_buylist b"
+					+ " LEFT JOIN merchant_restock r ON r.restock_interval_s = b.restock_interval_s"
+					+ " WHERE b.restock_interval_s IS NOT NULL ORDER BY b.restock_interval_s";
+	private static final String SELECT_CUSTOM_RESTOCKS =
+			"SELECT DISTINCT b.restock_interval_s, r.next_restock_at FROM custom_merchant_buylist b"
+					+ " LEFT JOIN merchant_restock r ON r.restock_interval_s = b.restock_interval_s"
+					+ " WHERE b.restock_interval_s IS NOT NULL ORDER BY b.restock_interval_s";
+	
+	private static final String SAVE_RESTOCK =
+			"INSERT INTO merchant_restock (restock_interval_s, next_restock_at) VALUES (?, ?)"
+					+ " ON CONFLICT (restock_interval_s) DO UPDATE SET next_restock_at = EXCLUDED.next_restock_at";
+	private static final String SAVE_STOCK =
+			"INSERT INTO merchant_stock (shop_id, item_template_id, current_count) VALUES (?, ?, ?)"
+					+ " ON CONFLICT (shop_id, item_template_id) DO UPDATE SET current_count = EXCLUDED.current_count";
+	private static final String DELETE_STOCK = "DELETE FROM merchant_stock WHERE shop_id = ? AND item_template_id = ?";
+	
 	private int _nextListId;
 	private final FastMap<Integer, L2TradeList> _lists = new FastMap<Integer, L2TradeList>();
 	
-	/** Task launching the function for restore count of Item (Clan Hall) */
+	/** Task launching the function for restore count of Item (Clan Hall); the timer is the restock interval in seconds */
 	public class RestoreCount implements Runnable
 	{
 		private final int timer;
@@ -56,7 +90,7 @@ public class TradeListTable
 		{
 			restoreCount(timer);
 			dataTimerSave(timer);
-			ThreadPoolManager.getInstance().scheduleGeneral(new RestoreCount(timer), (long)timer * 60 * 60 * 1000);
+			ThreadPoolManager.getInstance().scheduleGeneral(new RestoreCount(timer), (long)timer * 1000);
 		}
 	}
 	
@@ -80,40 +114,49 @@ public class TradeListTable
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement1 =
-					con.prepareStatement("SELECT * FROM " + (custom ? "custom_merchant_shopids" : "merchant_shopids"));
+			PreparedStatement statement1 = con.prepareStatement(custom ? SELECT_CUSTOM_SHOPS : SELECT_SHOPS);
 			ResultSet rset1 = statement1.executeQuery();
 			while (rset1.next())
 			{
-				PreparedStatement statement =
-						con.prepareStatement("SELECT * FROM "
-								+ (custom ? "custom_merchant_buylists" : "merchant_buylists")
-								+ " WHERE shop_id=? ORDER BY " + L2DatabaseFactory.getInstance().safetyString("order")
-								+ " ASC");
-				statement.setInt(1, rset1.getInt("shop_id"));
+				PreparedStatement statement = con.prepareStatement(custom ? SELECT_CUSTOM_GOODS : SELECT_GOODS);
+				statement.setInt(1, rset1.getInt("id"));
 				ResultSet rset = statement.executeQuery();
 				
-				L2TradeList buylist = new L2TradeList(rset1.getInt("shop_id"));
+				L2TradeList buylist = new L2TradeList(rset1.getInt("id"));
 				
-				buylist.setNpcId(rset1.getString("npc_id"));
+				// A shop without an NPC is a GM shop
+				int npcTemplateId = rset1.getInt("npc_template_id");
+				boolean gmShop = rset1.wasNull();
+				buylist.setNpcId(gmShop ? "gm" : String.valueOf(npcTemplateId));
 				buylist.setCustom(custom);
 				int _itemId = 0;
 				int _itemCount = 0;
 				int _price = 0;
 				
-				if (!buylist.isGm() && NpcTable.getInstance().getTemplate(rset1.getInt("npc_id")) == null)
-					_log.warn("TradeListTable: Merchant id " + rset1.getString("npc_id") + " with"
-							+ (custom ? " custom " : " ") + "buylist " + buylist.getListId() + " not exist.");
+				if (!buylist.isGm() && NpcTable.getInstance().getTemplate(npcTemplateId) == null)
+					_log.warn("TradeListTable: Merchant id " + npcTemplateId + " with" + (custom ? " custom " : " ")
+							+ "buylist " + buylist.getListId() + " not exist.");
 				
 				try
 				{
 					while (rset.next())
 					{
-						_itemId = rset.getInt("item_id");
-						_price = rset.getInt("price");
-						int count = rset.getInt("count");
-						int currentCount = rset.getInt("currentCount");
-						int restoreTime = rset.getInt("time");
+						_itemId = rset.getInt("item_template_id");
+						// No price means the reference price of the item
+						long price = rset.getLong("price");
+						_price = rset.wasNull() ? -1 : (int)price;
+						// No stock limit means unlimited
+						int count = rset.getInt("stock_count");
+						if (rset.wasNull())
+							count = -1;
+						// No stock row means that nothing was sold since the last restock
+						int currentCount = rset.getInt("current_count");
+						if (rset.wasNull())
+							currentCount = -1;
+						// No restock interval means that the stock is never restocked; the interval is kept in seconds
+						int restoreTime = rset.getInt("restock_interval_s");
+						if (rset.wasNull())
+							restoreTime = 0;
 						
 						L2ItemInstance buyItem = ItemTable.getInstance().createDummyItem(_itemId);
 						if (buyItem == null)
@@ -169,15 +212,14 @@ public class TradeListTable
 				int time = 0;
 				long savetimer = 0;
 				long currentMillis = System.currentTimeMillis();
-				PreparedStatement statement2 =
-						con.prepareStatement("SELECT DISTINCT time, savetimer FROM "
-								+ (custom ? "merchant_buylists" : "merchant_buylists")
-								+ " WHERE time <> 0 ORDER BY time");
+				PreparedStatement statement2 = con.prepareStatement(custom ? SELECT_CUSTOM_RESTOCKS : SELECT_RESTOCKS);
 				ResultSet rset2 = statement2.executeQuery();
 				while (rset2.next())
 				{
-					time = rset2.getInt("time");
-					savetimer = rset2.getLong("savetimer");
+					time = rset2.getInt("restock_interval_s");
+					// An interval that was never saved restocks at once
+					Timestamp nextRestock = rset2.getTimestamp("next_restock_at");
+					savetimer = nextRestock == null ? 0 : nextRestock.getTime();
 					if (savetimer - currentMillis > 0)
 						ThreadPoolManager.getInstance().scheduleGeneral(new RestoreCount(time),
 								savetimer - System.currentTimeMillis());
@@ -251,15 +293,14 @@ public class TradeListTable
 	
 	protected void dataTimerSave(int time)
 	{
-		long timerSave = System.currentTimeMillis() + (long)time * 60 * 60 * 1000;
+		long timerSave = System.currentTimeMillis() + (long)time * 1000;
 		Connection con = null;
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement =
-					con.prepareStatement("UPDATE merchant_buylists SET savetimer =? WHERE time =?");
-			statement.setLong(1, timerSave);
-			statement.setInt(2, time);
+			PreparedStatement statement = con.prepareStatement(SAVE_RESTOCK);
+			statement.setLong(1, time);
+			statement.setTimestamp(2, new Timestamp(timerSave));
 			statement.executeUpdate();
 			statement.close();
 		}
@@ -275,46 +316,58 @@ public class TradeListTable
 	
 	public void dataCountStore()
 	{
-		Connection con = null;
-		PreparedStatement statement;
-		
-		int listId;
 		if (_lists == null)
 			return;
 		
-		try
-		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			
-			for (L2TradeList list : _lists.values())
+		// The stock of all shops is stored together
+		WorldTransaction.run("Storing the stock of the merchants", () -> {
+			Connection con = null;
+			try
 			{
-				if (list == null)
-					continue;
-				listId = list.getListId();
+				con = L2DatabaseFactory.getInstance().getConnection(con);
 				
-				for (L2ItemInstance Item : list.getItems())
+				for (L2TradeList list : _lists.values())
 				{
-					if (Item.getCount() < Item.getInitCount()) //needed?
+					if (list == null)
+						continue;
+					int listId = list.getListId();
+					
+					for (L2ItemInstance Item : list.getItems())
 					{
-						statement =
-								con.prepareStatement("UPDATE merchant_buylists SET currentCount=? WHERE item_id=? AND shop_id=?");
-						statement.setLong(1, Item.getCount());
-						statement.setInt(2, Item.getItemId());
-						statement.setInt(3, listId);
-						statement.executeUpdate();
-						statement.close();
+						// Only the limited goods have a stock
+						if (!Item.getCountDecrease())
+							continue;
+						
+						if (Item.getCount() < Item.getInitCount())
+						{
+							// A row exists only while the stock is below the initial count
+							PreparedStatement statement = con.prepareStatement(SAVE_STOCK);
+							statement.setInt(1, listId);
+							statement.setInt(2, Item.getItemId());
+							statement.setInt(3, (int)Item.getCount());
+							statement.executeUpdate();
+							statement.close();
+						}
+						else
+						{
+							PreparedStatement statement = con.prepareStatement(DELETE_STOCK);
+							statement.setInt(1, listId);
+							statement.setInt(2, Item.getItemId());
+							statement.executeUpdate();
+							statement.close();
+						}
 					}
 				}
 			}
-		}
-		catch (Exception e)
-		{
-			_log.error("TradeController: Could not store Count Item");
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+			catch (SQLException e)
+			{
+				throw new IllegalStateException("TradeController: Could not store Count Item", e);
+			}
+			finally
+			{
+				L2DatabaseFactory.close(con);
+			}
+		});
 	}
 	
 	@SuppressWarnings("synthetic-access")

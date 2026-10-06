@@ -38,10 +38,11 @@ public final class FriendListManager
 	private static final Logger _log = LoggerFactory.getLogger(FriendListManager.class);
 	
 	private static final String SELECT_QUERY =
-			"SELECT charId1, charId2 FROM character_friends WHERE charId1=? or charId2=?";
-	private static final String INSERT_QUERY = "INSERT INTO character_friends (charId1, charId2) VALUES (?,?)";
-	private static final String DELETE_QUERY =
-			"DELETE FROM character_friends WHERE (charId1=? AND charId2=?) OR (charId1=? AND charId2=?)";
+			"SELECT player_id, friend_player_id FROM player_friendship WHERE player_id=? OR friend_player_id=?";
+	// A friendship is stored once, the lower player id first
+	private static final String INSERT_QUERY =
+			"INSERT INTO player_friendship (player_id, friend_player_id) VALUES (?,?) ON CONFLICT DO NOTHING";
+	private static final String DELETE_QUERY = "DELETE FROM player_friendship WHERE player_id=? AND friend_player_id=?";
 	
 	public static FriendListManager getInstance()
 	{
@@ -76,8 +77,8 @@ public final class FriendListManager
 				
 				while (rset.next())
 				{
-					Integer objId1 = L2Integer.valueOf(rset.getInt("charId1"));
-					Integer objId2 = L2Integer.valueOf(rset.getInt("charId2"));
+					Integer objId1 = L2Integer.valueOf(rset.getInt("player_id"));
+					Integer objId2 = L2Integer.valueOf(rset.getInt("friend_player_id"));
 					
 					Set<Integer> set1 = _friends.get(objId1);
 					if (set1 != null)
@@ -155,10 +156,8 @@ public final class FriendListManager
 			con = L2DatabaseFactory.getInstance().getConnection();
 			
 			PreparedStatement statement = con.prepareStatement(DELETE_QUERY);
-			statement.setInt(1, objId1);
-			statement.setInt(2, objId2);
-			statement.setInt(3, objId2);
-			statement.setInt(4, objId1);
+			statement.setInt(1, Math.min(objId1, objId2));
+			statement.setInt(2, Math.max(objId1, objId2));
 			
 			statement.execute();
 			

@@ -82,11 +82,6 @@ public class AdminCache implements IAdminCommandHandler
 			CrestCache.getInstance().reload();
 			activeChar.sendMessage(CrestCache.getInstance().toString());
 		}
-		else if (command.startsWith("admin_cache_crest_fix"))
-		{
-			CrestCache.getInstance().convertOldPedgeFiles();
-			activeChar.sendMessage("Cache[Crest]: crests fixed");
-		}
 		
 		return true;
 	}

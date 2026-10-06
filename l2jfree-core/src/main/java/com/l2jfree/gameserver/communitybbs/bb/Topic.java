@@ -16,6 +16,8 @@ package com.l2jfree.gameserver.communitybbs.bb;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.Timestamp;
+import java.sql.Types;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,15 +83,17 @@ public class Topic
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("INSERT INTO topic (topic_id,topic_forum_id,topic_name,topic_date,topic_ownername,topic_ownerid,topic_type,topic_reply) values (?,?,?,?,?,?,?,?)");
+					con.prepareStatement("INSERT INTO forum_topic (topic_number, forum_id, name, created_at, author_name, author_player_id, kind) VALUES (?,?,?,?,?,?,?)");
 			statement.setInt(1, _id);
 			statement.setInt(2, _forumId);
 			statement.setString(3, _topicName);
-			statement.setLong(4, _date);
+			statement.setTimestamp(4, new Timestamp(_date));
 			statement.setString(5, _ownerName);
-			statement.setInt(6, _ownerId);
+			if (_ownerId != 0)
+				statement.setInt(6, _ownerId);
+			else
+				statement.setNull(6, Types.INTEGER);
 			statement.setInt(7, _type);
-			statement.setInt(8, _cReply);
 			statement.execute();
 			statement.close();
 			
@@ -150,7 +154,7 @@ public class Topic
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("DELETE FROM topic WHERE topic_id=? AND topic_forum_id=?");
+					con.prepareStatement("DELETE FROM forum_topic WHERE topic_number = ? AND forum_id = ?");
 			statement.setInt(1, getID());
 			statement.setInt(2, f.getID());
 			statement.execute();

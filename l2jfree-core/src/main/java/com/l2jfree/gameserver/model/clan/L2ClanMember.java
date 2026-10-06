@@ -14,17 +14,13 @@
  */
 package com.l2jfree.gameserver.model.clan;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.instancemanager.SiegeManager;
 import com.l2jfree.gameserver.model.skills.L2Skill;
+import com.l2jfree.gameserver.persistence.clan.ClanRepository;
 
 public class L2ClanMember
 {
@@ -227,24 +223,13 @@ public class L2ClanMember
 	
 	public void updateSubPledgeType()
 	{
-		Connection con = null;
-		
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("UPDATE characters SET subpledge=? WHERE charId=?");
-			statement.setLong(1, _subPledgeType);
-			statement.setInt(2, getObjectId());
-			statement.execute();
-			statement.close();
+			ClanRepository.getInstance().updateMemberPledgeType(getObjectId(), _subPledgeType);
 		}
 		catch (Exception e)
 		{
 			_log.warn("could not set char subpledge:", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
 		}
 	}
 	
@@ -277,24 +262,13 @@ public class L2ClanMember
 	 */
 	public void updatePledgeRank()
 	{
-		Connection con = null;
-		
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("UPDATE characters SET pledge_rank=? WHERE charId=?");
-			statement.setLong(1, _pledgeRank);
-			statement.setInt(2, getObjectId());
-			statement.execute();
-			statement.close();
+			ClanRepository.getInstance().updateMemberPledgeRank(getObjectId(), _pledgeRank);
 		}
 		catch (Exception e)
 		{
 			_log.warn("could not set char pledge_rank:", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
 		}
 	}
 	
@@ -660,26 +634,13 @@ public class L2ClanMember
 	
 	public void saveApprenticeAndSponsor(int apprentice, int sponsor)
 	{
-		Connection con = null;
-		
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement =
-					con.prepareStatement("UPDATE characters SET apprentice=?,sponsor=? WHERE charId=?");
-			statement.setInt(1, apprentice);
-			statement.setInt(2, sponsor);
-			statement.setInt(3, getObjectId());
-			statement.execute();
-			statement.close();
+			ClanRepository.getInstance().updateMemberSponsors(getObjectId(), apprentice, sponsor);
 		}
-		catch (SQLException e)
+		catch (Exception e)
 		{
 			_log.warn("could not set apprentice/sponsor:", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
 		}
 	}
 }

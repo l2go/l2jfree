@@ -43,6 +43,10 @@ public final class HellboundManager
 {
 	private static final Logger _log = LoggerFactory.getLogger(HellboundManager.class);
 	
+	private static final String SAVE_VARIABLE =
+			"INSERT INTO hellbound_variable (name, value) VALUES (?, ?) ON CONFLICT (name) DO UPDATE SET value = EXCLUDED.value";
+	private static final String LOAD_VARIABLE = "SELECT value FROM hellbound_variable WHERE name = ?";
+	
 	private static final int POINTS_TO_OPEN_WARPGATE = 100000;
 	
 	private static final int LEVEL_1 = 0;
@@ -550,9 +554,9 @@ public final class HellboundManager
 			{
 				con = L2DatabaseFactory.getInstance().getConnection();
 				
-				PreparedStatement statement = con.prepareStatement("REPLACE INTO hellbounds VALUES (?,?)");
+				PreparedStatement statement = con.prepareStatement(SAVE_VARIABLE);
 				statement.setString(1, "trust_points");
-				statement.setInt(2, _trustPoints);
+				statement.setString(2, Integer.toString(_trustPoints));
 				statement.execute();
 				statement.close();
 			}
@@ -570,9 +574,9 @@ public final class HellboundManager
 			{
 				con = L2DatabaseFactory.getInstance().getConnection();
 				
-				PreparedStatement statement = con.prepareStatement("REPLACE INTO hellbounds VALUES (?,?)");
+				PreparedStatement statement = con.prepareStatement(SAVE_VARIABLE);
 				statement.setString(1, "warpgates_energy");
-				statement.setInt(2, _warpgateEnergy);
+				statement.setString(2, Integer.toString(_warpgateEnergy));
 				statement.execute();
 				statement.close();
 			}
@@ -595,7 +599,7 @@ public final class HellboundManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
 			
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM hellbounds WHERE variable=?");
+			PreparedStatement statement = con.prepareStatement(LOAD_VARIABLE);
 			statement.setString(1, "trust_points");
 			ResultSet rset = statement.executeQuery();
 			
@@ -623,7 +627,7 @@ public final class HellboundManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection();
 			
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM hellbounds WHERE variable=?");
+			PreparedStatement statement = con.prepareStatement(LOAD_VARIABLE);
 			statement.setString(1, "warpgates_energy");
 			ResultSet rset = statement.executeQuery();
 			
@@ -647,9 +651,9 @@ public final class HellboundManager
 					
 					try
 					{
-						statement = con.prepareStatement("REPLACE INTO hellbounds VALUES (?,?)");
+						statement = con.prepareStatement(SAVE_VARIABLE);
 						statement.setString(1, "warpgatesLastcheck");
-						statement.setDouble(2, System.currentTimeMillis());
+						statement.setString(2, Long.toString(System.currentTimeMillis()));
 						statement.execute();
 						statement.close();
 					}

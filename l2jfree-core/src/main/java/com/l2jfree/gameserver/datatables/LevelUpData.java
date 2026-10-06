@@ -36,18 +36,18 @@ import com.l2jfree.gameserver.model.L2LvlupData;
 public class LevelUpData
 {
 	private static final String SELECT_ALL =
-			"SELECT classid, defaulthpbase, defaulthpadd, defaulthpmod, defaultcpbase, defaultcpadd, defaultcpmod, defaultmpbase, defaultmpadd, defaultmpmod, class_lvl FROM lvlupgain";
-	private static final String CLASS_LVL = "class_lvl";
-	private static final String MP_MOD = "defaultmpmod";
-	private static final String MP_ADD = "defaultmpadd";
-	private static final String MP_BASE = "defaultmpbase";
-	private static final String HP_MOD = "defaulthpmod";
-	private static final String HP_ADD = "defaulthpadd";
-	private static final String HP_BASE = "defaulthpbase";
-	private static final String CP_MOD = "defaultcpmod";
-	private static final String CP_ADD = "defaultcpadd";
-	private static final String CP_BASE = "defaultcpbase";
-	private static final String CLASS_ID = "classid";
+			"SELECT player_class_id, base_hp_max, hp_per_level, hp_per_level_increment, base_cp_max, cp_per_level, cp_per_level_increment, base_mp_max, mp_per_level, mp_per_level_increment, class_base_level FROM level_up_gain";
+	private static final String CLASS_LVL = "class_base_level";
+	private static final String MP_MOD = "mp_per_level_increment";
+	private static final String MP_ADD = "mp_per_level";
+	private static final String MP_BASE = "base_mp_max";
+	private static final String HP_MOD = "hp_per_level_increment";
+	private static final String HP_ADD = "hp_per_level";
+	private static final String HP_BASE = "base_hp_max";
+	private static final String CP_MOD = "cp_per_level_increment";
+	private static final String CP_ADD = "cp_per_level";
+	private static final String CP_BASE = "base_cp_max";
+	private static final String CLASS_ID = "player_class_id";
 	
 	private final static Logger _log = LoggerFactory.getLogger(LevelUpData.class);
 	

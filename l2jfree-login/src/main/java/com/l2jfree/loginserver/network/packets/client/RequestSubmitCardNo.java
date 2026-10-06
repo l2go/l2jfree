@@ -16,7 +16,7 @@ package com.l2jfree.loginserver.network.packets.client;
 
 import java.nio.BufferOverflowException;
 
-import com.l2jfree.Config;
+import com.l2jfree.loginserver.LoginConfig;
 import com.l2jfree.loginserver.network.L2Client;
 import com.l2jfree.loginserver.network.packets.L2ClientPacket;
 import com.l2jfree.loginserver.network.packets.server.LoginOk;
@@ -68,7 +68,7 @@ public class RequestSubmitCardNo extends L2ClientPacket
 		*/
 		L2Client client = getClient();
 		client.setCardAuthed(true);
-		if (Config.SHOW_LICENCE)
+		if (LoginConfig.SHOW_LICENCE)
 			client.sendPacket(new LoginOk(client.getSessionKey()));
 		else
 			client.sendPacket(new ServerList(client));

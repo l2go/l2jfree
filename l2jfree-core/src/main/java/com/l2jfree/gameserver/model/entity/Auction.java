@@ -17,6 +17,8 @@ package com.l2jfree.gameserver.model.entity;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Calendar;
 import java.util.Map;
 
@@ -30,12 +32,12 @@ import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.datatables.ClanTable;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.gameobjects.itemcontainer.PlayerInventory;
-import com.l2jfree.gameserver.idfactory.IdFactory;
 import com.l2jfree.gameserver.instancemanager.AuctionManager;
 import com.l2jfree.gameserver.instancemanager.ClanHallManager;
 import com.l2jfree.gameserver.model.clan.L2Clan;
 import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.SystemMessageId;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 
 public class Auction
 {
@@ -154,22 +156,23 @@ public class Auction
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			statement = con.prepareStatement("SELECT * FROM auction WHERE id = ?");
+			statement =
+					con.prepareStatement("SELECT current_bid, end_at, item_name, item_type, seller_player_id, seller_clan_name, seller_name, starting_bid FROM clan_hall_auction WHERE id = ?");
 			statement.setInt(1, getId());
 			rs = statement.executeQuery();
 			
 			while (rs.next())
 			{
-				_currentBid = rs.getInt("currentBid");
-				_endDate = rs.getLong("endDate");
-				_itemId = rs.getInt("itemId");
-				_itemName = rs.getString("itemName");
-				_itemObjectId = rs.getInt("itemObjectId");
-				_itemType = rs.getString("itemType");
-				_sellerId = rs.getInt("sellerId");
-				_sellerClanName = rs.getString("sellerClanName");
-				_sellerName = rs.getString("sellerName");
-				_startingBid = rs.getInt("startingBid");
+				_currentBid = Math.toIntExact(rs.getLong("current_bid"));
+				_endDate = rs.getTimestamp("end_at").getTime();
+				_itemId = getId(); // the auction and the clan hall on sale share the id
+				_itemName = rs.getString("item_name");
+				_itemObjectId = 0;
+				_itemType = rs.getString("item_type");
+				_sellerId = rs.getInt("seller_player_id"); // NULL is 0: NPCs sell the hall
+				_sellerClanName = rs.getString("seller_clan_name");
+				_sellerName = rs.getString("seller_name");
+				_startingBid = Math.toIntExact(rs.getLong("starting_bid"));
 			}
 			statement.close();
 			loadBid();
@@ -200,7 +203,7 @@ public class Auction
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			statement =
-					con.prepareStatement("SELECT bidderId, bidderName, maxBid, clan_name, time_bid FROM auction_bid WHERE auctionId = ? ORDER BY maxBid DESC");
+					con.prepareStatement("SELECT clan_id, bidder_name, max_bid, clan_name, bid_at FROM clan_hall_auction_bid WHERE clan_hall_auction_id = ? ORDER BY max_bid DESC");
 			statement.setInt(1, getId());
 			rs = statement.executeQuery();
 			
@@ -208,12 +211,12 @@ public class Auction
 			{
 				if (rs.isFirst())
 				{
-					_highestBidderId = rs.getInt("bidderId");
-					_highestBidderName = rs.getString("bidderName");
-					_highestBidderMaxBid = rs.getInt("maxBid");
+					_highestBidderId = rs.getInt("clan_id");
+					_highestBidderName = rs.getString("bidder_name");
+					_highestBidderMaxBid = Math.toIntExact(rs.getLong("max_bid"));
 				}
-				_bidders.put(rs.getInt("bidderId"), new Bidder(rs.getString("bidderName"), rs.getString("clan_name"),
-						rs.getInt("maxBid"), rs.getLong("time_bid")));
+				_bidders.put(rs.getInt("clan_id"), new Bidder(rs.getString("bidder_name"), rs.getString("clan_name"),
+						Math.toIntExact(rs.getLong("max_bid")), rs.getTimestamp("bid_at").getTime()));
 			}
 			
 			statement.close();
@@ -257,8 +260,8 @@ public class Auction
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("UPDATE auction SET endDate = ? WHERE id = ?");
-			statement.setLong(1, _endDate);
+			PreparedStatement statement = con.prepareStatement("UPDATE clan_hall_auction SET end_at = ? WHERE id = ?");
+			statement.setTimestamp(1, new Timestamp(_endDate));
 			statement.setInt(2, _id);
 			statement.execute();
 			
@@ -275,21 +278,28 @@ public class Auction
 	}
 	
 	/** Set a bid */
-	public synchronized void setBid(L2Player bidder, int bid)
+	public synchronized void setBid(final L2Player bidder, final int bid)
 	{
-		int requiredAdena = bid;
+		int adena = bid;
 		if (getHighestBidderName().equals(bidder.getClan().getLeaderName()))
-			requiredAdena = bid - getHighestBidderMaxBid();
+			adena = bid - getHighestBidderMaxBid();
+		final int requiredAdena = adena;
 		
 		if ((getHighestBidderId() > 0 && bid > getHighestBidderMaxBid())
 				|| (getHighestBidderId() == 0 && bid >= getStartingBid()))
 		{
-			if (takeItem(bidder, PlayerInventory.ADENA_ID, requiredAdena))
-			{
-				updateInDB(bidder, bid);
-				bidder.getClan().setAuctionBiddedAt(_id, true);
+			// The adena taken from the clan warehouse and the bid are stored together
+			final boolean[] placed = new boolean[1];
+			WorldTransaction.run("Clan hall auction bid", () -> {
+				if (takeItem(bidder, PlayerInventory.ADENA_ID, requiredAdena))
+				{
+					updateInDB(bidder, bid);
+					bidder.getClan().setAuctionBiddedAt(_id, true);
+					placed[0] = true;
+				}
+			});
+			if (placed[0])
 				return;
-			}
 		}
 		if ((bid < getStartingBid()) || (bid <= getHighestBidderMaxBid()))
 			bidder.sendPacket(SystemMessageId.BID_PRICE_MUST_BE_HIGHER);
@@ -304,7 +314,7 @@ public class Auction
 	private void returnItem(String Clan, int itemId, int quantity, boolean penalty)
 	{
 		if (penalty)
-			quantity *= 0.9; //take 10% tax fee if needed
+			quantity = (int) (quantity * 0.9); //take 10% tax fee if needed
 		ClanTable.getInstance().getClanByName(Clan).getWarehouse()
 				.addItem("Outbidded", PlayerInventory.ADENA_ID, quantity, null, null);
 	}
@@ -338,27 +348,25 @@ public class Auction
 			if (getBidders().get(bidder.getClanId()) != null)
 			{
 				statement =
-						con.prepareStatement("UPDATE auction_bid SET bidderId=?, bidderName=?, maxBid=?, time_bid=? WHERE auctionId=? AND bidderId=?");
-				statement.setInt(1, bidder.getClanId());
-				statement.setString(2, bidder.getClan().getLeaderName());
-				statement.setInt(3, bid);
-				statement.setLong(4, System.currentTimeMillis());
-				statement.setInt(5, getId());
-				statement.setInt(6, bidder.getClanId());
+						con.prepareStatement("UPDATE clan_hall_auction_bid SET bidder_name=?, max_bid=?, bid_at=? WHERE clan_hall_auction_id=? AND clan_id=?");
+				statement.setString(1, bidder.getClan().getLeaderName());
+				statement.setLong(2, bid);
+				statement.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+				statement.setInt(4, getId());
+				statement.setInt(5, bidder.getClanId());
 				statement.execute();
 				statement.close();
 			}
 			else
 			{
 				statement =
-						con.prepareStatement("INSERT INTO auction_bid (id, auctionId, bidderId, bidderName, maxBid, clan_name, time_bid) VALUES (?, ?, ?, ?, ?, ?, ?)");
-				statement.setInt(1, IdFactory.getInstance().getNextId());
-				statement.setInt(2, getId());
-				statement.setInt(3, bidder.getClanId());
-				statement.setString(4, bidder.getName());
-				statement.setInt(5, bid);
-				statement.setString(6, bidder.getClan().getName());
-				statement.setLong(7, System.currentTimeMillis());
+						con.prepareStatement("INSERT INTO clan_hall_auction_bid (clan_hall_auction_id, clan_id, bidder_name, max_bid, clan_name, bid_at) VALUES (?, ?, ?, ?, ?, ?)");
+				statement.setInt(1, getId());
+				statement.setInt(2, bidder.getClanId());
+				statement.setString(3, bidder.getName());
+				statement.setLong(4, bid);
+				statement.setString(5, bidder.getClan().getName());
+				statement.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
 				statement.execute();
 				statement.close();
 				L2Player highest = L2World.getInstance().getPlayer(_highestBidderName);
@@ -399,7 +407,7 @@ public class Auction
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
 			
-			statement = con.prepareStatement("DELETE FROM auction_bid WHERE auctionId=?");
+			statement = con.prepareStatement("DELETE FROM clan_hall_auction_bid WHERE clan_hall_auction_id=?");
 			statement.setInt(1, getId());
 			statement.execute();
 			
@@ -438,7 +446,7 @@ public class Auction
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
-			statement = con.prepareStatement("DELETE FROM auction WHERE itemId=?");
+			statement = con.prepareStatement("DELETE FROM clan_hall_auction WHERE id=?");
 			statement.setInt(1, _itemId);
 			statement.execute();
 			statement.close();
@@ -471,18 +479,21 @@ public class Auction
 				AuctionManager.getInstance().getAuctions().remove(aucId);
 				return;
 			}
-			if (_sellerId > 0)
-			{
-				returnItem(_sellerClanName, PlayerInventory.ADENA_ID, _highestBidderMaxBid, true);
-				returnItem(_sellerClanName, PlayerInventory.ADENA_ID, ClanHallManager.getInstance()
-						.getClanHallById(_itemId).getLease(), false);
-			}
-			deleteAuctionFromDB();
-			L2Clan Clan = ClanTable.getInstance().getClanByName(_bidders.get(_highestBidderId).getClanName());
-			_bidders.remove(_highestBidderId);
-			Clan.setAuctionBiddedAt(0, true);
-			removeBids();
-			ClanHallManager.getInstance().setOwner(_itemId, Clan);
+			// The seller refund, the bid refunds and the new owner of the clan hall are stored together
+			WorldTransaction.run("Clan hall auction settlement", () -> {
+				if (_sellerId > 0)
+				{
+					returnItem(_sellerClanName, PlayerInventory.ADENA_ID, _highestBidderMaxBid, true);
+					returnItem(_sellerClanName, PlayerInventory.ADENA_ID, ClanHallManager.getInstance()
+							.getClanHallById(_itemId).getLease(), false);
+				}
+				deleteAuctionFromDB();
+				L2Clan Clan = ClanTable.getInstance().getClanByName(_bidders.get(_highestBidderId).getClanName());
+				_bidders.remove(_highestBidderId);
+				Clan.setAuctionBiddedAt(0, true);
+				removeBids();
+				ClanHallManager.getInstance().setOwner(_itemId, Clan);
+			});
 		}
 		else
 		{
@@ -492,41 +503,47 @@ public class Auction
 	}
 	
 	/** Cancel bid */
-	public synchronized void cancelBid(int bidder)
+	public synchronized void cancelBid(final int bidder)
 	{
-		Connection con = null;
-		try
-		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement;
+		// The bid and the refund to the clan warehouse are stored together
+		WorldTransaction.run("Clan hall auction bid cancel", () -> {
+			Connection con = null;
+			try
+			{
+				con = L2DatabaseFactory.getInstance().getConnection(con);
+				PreparedStatement statement;
 			
-			statement = con.prepareStatement("DELETE FROM auction_bid WHERE auctionId=? AND bidderId=?");
-			statement.setInt(1, getId());
-			statement.setInt(2, bidder);
-			statement.execute();
+				statement = con.prepareStatement("DELETE FROM clan_hall_auction_bid WHERE clan_hall_auction_id=? AND clan_id=?");
+				statement.setInt(1, getId());
+				statement.setInt(2, bidder);
+				statement.execute();
 			
-			statement.close();
-		}
-		catch (Exception e)
-		{
-			_log.error("Exception: Auction.cancelBid(String bidder): " + e.getMessage(), e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+				statement.close();
+			}
+			catch (Exception e)
+			{
+				_log.error("Exception: Auction.cancelBid(String bidder): " + e.getMessage(), e);
+			}
+			finally
+			{
+				L2DatabaseFactory.close(con);
+			}
 		
-		returnItem(_bidders.get(bidder).getClanName(), PlayerInventory.ADENA_ID, _bidders.get(bidder).getBid(), true);
-		ClanTable.getInstance().getClanByName(_bidders.get(bidder).getClanName()).setAuctionBiddedAt(0, true);
-		_bidders.clear();
-		loadBid();
+			returnItem(_bidders.get(bidder).getClanName(), PlayerInventory.ADENA_ID, _bidders.get(bidder).getBid(), true);
+			ClanTable.getInstance().getClanByName(_bidders.get(bidder).getClanName()).setAuctionBiddedAt(0, true);
+			_bidders.clear();
+			loadBid();
+		});
 	}
 	
 	/** Cancel auction */
 	public void cancelAuction()
 	{
-		deleteAuctionFromDB();
-		removeBids();
+		// The auction and the refunds of its bids are stored together
+		WorldTransaction.run("Clan hall auction cancel", () -> {
+			deleteAuctionFromDB();
+			removeBids();
+		});
 	}
 	
 	/** Confirm an auction */
@@ -540,19 +557,20 @@ public class Auction
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
 			statement =
-					con.prepareStatement("INSERT INTO auction (id, sellerId, sellerName, sellerClanName, itemType, itemId, itemObjectId, itemName, itemQuantity, startingBid, currentBid, endDate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+					con.prepareStatement("INSERT INTO clan_hall_auction (id, seller_player_id, seller_name, seller_clan_name, item_type, item_name, item_quantity, starting_bid, current_bid, end_at) VALUES (?,?,?,?,?,?,?,?,?,?)");
 			statement.setInt(1, getId());
-			statement.setInt(2, _sellerId);
+			if (_sellerId > 0)
+				statement.setInt(2, _sellerId);
+			else
+				statement.setNull(2, Types.INTEGER); // NPCs sell the hall
 			statement.setString(3, _sellerName);
 			statement.setString(4, _sellerClanName);
 			statement.setString(5, _itemType);
-			statement.setInt(6, _itemId);
-			statement.setInt(7, _itemObjectId);
-			statement.setString(8, _itemName);
-			statement.setInt(9, _itemQuantity);
-			statement.setInt(10, _startingBid);
-			statement.setInt(11, _currentBid);
-			statement.setLong(12, _endDate);
+			statement.setString(6, _itemName);
+			statement.setInt(7, _itemQuantity);
+			statement.setLong(8, _startingBid);
+			statement.setLong(9, _currentBid);
+			statement.setTimestamp(10, new Timestamp(_endDate));
 			statement.execute();
 			statement.close();
 			loadBid();

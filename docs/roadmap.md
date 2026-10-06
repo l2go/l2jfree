@@ -44,9 +44,9 @@ Work is cut into a few large packages along module boundaries, not into small sl
 | Package | Milestone | Content |
 |---|---|---|
 | WP1. Decisions and direction | M1 | Decision records, vision revision, roadmap, risk register, docs index, retirement of 2.x |
-| WP2. Pipeline and image | M1 | Image on a pinned Arch Linux base, compose stack, start-to-ready check, first-packet probe, publication, ruleset update. Delivered as a walking skeleton that runs the LoginServer ([deploy](../deploy/README.md)) |
+| WP2. Pipeline and image | M1 | Image on a pinned Arch Linux base, compose stack, start-to-ready check, first-packet probe, publication, ruleset update. Delivered first as a walking skeleton that ran the LoginServer; since WP4 the image runs login and world in one process ([deploy](../deploy/README.md)) |
 | WP3. Data | M2 | Schemas, migrations, catalog loader, repository seam for inventory, player, and clan |
-| WP4. Modules and one process | M2 | Contract module, admission in process, dependency rules, configuration model |
+| WP4. Modules and one process | M2 | Contract module, admission in process, dependency rules, configuration model, one image process with a role per module. In progress |
 | WP5. Network on Netty | M2 | Netty pipeline, conformance tests, end-to-end smoke test |
 | WP6. Runtime | M2 | JDK collections, thread model, known concurrency defects |
 | WP7. Measurements | M2 | Repeatable start-up measurement and the collector decision |

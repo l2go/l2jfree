@@ -2,9 +2,21 @@
 # (ADR-0002). The stack runs on Docker Desktop (Windows), Colima (macOS), and
 # Docker Engine (Linux).
 #
-# The login service runs the LoginServer against PostgreSQL 18. The world on
-# port 7777 arrives with the rest of milestone M2, so the port is published but
-# nothing listens on it yet.
+# The server service is one process: the login module (port 2106) and the world
+# module (port 7777) of ADR-0003, both on PostgreSQL 18, each with its own
+# database role (ADR-0009). The world loads for minutes, so the stack is healthy
+# only when both ports accept a connection.
+#
+# Settings an operator may change:
+#   L2JFREE_IMAGE          image to run
+#   L2JFREE_BIND           host address that publishes the ports (default 0.0.0.0)
+#   L2JFREE_EXTERNAL_HOST  address the server tells a client to connect to when no
+#                          subnet rule matches (default 127.0.0.1, which suits a
+#                          client on the same machine; set the address of the host
+#                          for players on other machines)
+#   L2JFREE_JAVA_OPTS      JVM options (default -Xms1g -Xmx3g); keep the heap below
+#                          mem_limit, because the JVM needs memory beside the heap
+# Key overrides go in the config volume, see deploy/README.md and ADR-0011.
 
 name: l2jfree
 
@@ -44,32 +56,44 @@ services:
       start_period: 20s
     restart: unless-stopped
 
-  login:
+  server:
     <<: *server
     depends_on:
       db:
         condition: service_healthy
     environment:
       L2JFREE_DB_URL: jdbc:postgresql://db:5432/l2jfree
-      L2JFREE_DB_USER: l2jfree_login
-      L2JFREE_DB_PASSWORD_FILE: /var/lib/l2jfree/secrets/login_password
+      L2JFREE_LOGIN_DB_USER: l2jfree_login
+      L2JFREE_LOGIN_DB_PASSWORD_FILE: /var/lib/l2jfree/secrets/login_password
+      L2JFREE_WORLD_DB_USER: l2jfree_world
+      L2JFREE_WORLD_DB_PASSWORD_FILE: /var/lib/l2jfree/secrets/world_password
+      L2JFREE_EXTERNAL_HOST: ${L2JFREE_EXTERNAL_HOST:-127.0.0.1}
+      L2JFREE_JAVA_OPTS: ${L2JFREE_JAVA_OPTS:--Xms1g -Xmx3g}
+    mem_limit: 4g
     ports:
       - "${L2JFREE_BIND:-0.0.0.0}:2106:2106"
       - "${L2JFREE_BIND:-0.0.0.0}:7777:7777"
     volumes:
       - secrets:/var/lib/l2jfree/secrets:ro
       - logs:/var/lib/l2jfree/log
+      - work:/var/lib/l2jfree/work
+      # The operator directory: files here override single keys of the defaults.
+      # To edit it on the host, replace this line with ./config:/var/lib/l2jfree/config
+      - config:/var/lib/l2jfree/config
     tmpfs:
+      - /tmp:uid=10001,gid=10001,mode=1777
       - /run/l2jfree:uid=10001,gid=10001,mode=0700
     healthcheck:
-      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/2106"]
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/2106 && exec 4<>/dev/tcp/127.0.0.1/7777"]
       interval: 10s
       timeout: 3s
-      retries: 12
-      start_period: 15s
+      retries: 30
+      start_period: 300s
     restart: unless-stopped
 
 volumes:
   secrets:
   dbdata:
   logs:
+  work:
+  config:

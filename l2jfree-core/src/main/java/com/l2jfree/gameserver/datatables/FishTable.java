@@ -57,22 +57,22 @@ public class FishTable
 			_fishsHard = new FastList<FishData>();
 			FishData fish;
 			PreparedStatement statement =
-					con.prepareStatement("SELECT id, level, name, hp, hpregen, fish_type, fish_group, fish_guts, guts_check_time, wait_time, combat_time FROM fish ORDER BY id");
+					con.prepareStatement("SELECT item_template_id, level, name, hp, hp_regeneration, fish_type, fish_group, guts, guts_check_interval_ms, bite_wait_ms, combat_duration_ms FROM fish ORDER BY item_template_id");
 			ResultSet Fishes = statement.executeQuery();
 			
 			while (Fishes.next())
 			{
-				int id = Fishes.getInt("id");
+				int id = Fishes.getInt("item_template_id");
 				int lvl = Fishes.getInt("level");
 				String name = Fishes.getString("name");
 				int hp = Fishes.getInt("hp");
-				int hpreg = Fishes.getInt("hpregen");
+				int hpreg = Fishes.getInt("hp_regeneration");
 				int type = Fishes.getInt("fish_type");
 				int group = Fishes.getInt("fish_group");
-				int fish_guts = Fishes.getInt("fish_guts");
-				int guts_check_time = Fishes.getInt("guts_check_time");
-				int wait_time = Fishes.getInt("wait_time");
-				int combat_time = Fishes.getInt("combat_time");
+				int fish_guts = Fishes.getInt("guts");
+				int guts_check_time = Fishes.getInt("guts_check_interval_ms");
+				int wait_time = Fishes.getInt("bite_wait_ms");
+				int combat_time = Fishes.getInt("combat_duration_ms");
 				fish =
 						new FishData(id, lvl, name, hp, hpreg, type, group, fish_guts, guts_check_time, wait_time,
 								combat_time);

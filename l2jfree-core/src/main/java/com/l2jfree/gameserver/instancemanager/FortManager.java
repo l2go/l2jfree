@@ -246,9 +246,9 @@ public class FortManager implements InstanceListManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT * FROM fort_spawnlist Where fortId = ? and spawnType = ? ");
+					con.prepareStatement("SELECT npc_template_id, x, y, z, heading FROM fort_spawn WHERE fort_id = ? AND spawn_type = ?");
 			statement.setInt(1, getFort().getFortId());
-			statement.setInt(2, 0);
+			statement.setString(2, "NPC");
 			ResultSet rset = statement.executeQuery();
 			
 			L2Spawn spawnDat;
@@ -256,7 +256,7 @@ public class FortManager implements InstanceListManager
 			
 			while (rset.next())
 			{
-				template1 = NpcTable.getInstance().getTemplate(rset.getInt("npcId"));
+				template1 = NpcTable.getInstance().getTemplate(rset.getInt("npc_template_id"));
 				if (template1 != null)
 				{
 					spawnDat = new L2Spawn(template1);
@@ -272,7 +272,7 @@ public class FortManager implements InstanceListManager
 				}
 				else
 				{
-					_log.warn("FortManager.spawnNpcs: Data missing in NPC table for ID: " + rset.getInt("npcId") + ".");
+					_log.warn("FortManager.spawnNpcs: Data missing in NPC table for ID: " + rset.getInt("npc_template_id") + ".");
 				}
 			}
 			
@@ -298,18 +298,18 @@ public class FortManager implements InstanceListManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement1 =
-					con.prepareStatement("SELECT Distinct fortId FROM fort_spawnlist Where spawnType = ? ORDER BY fortId");
+					con.prepareStatement("SELECT DISTINCT fort_id FROM fort_spawn WHERE spawn_type = ? ORDER BY fort_id");
 			
-			statement1.setInt(1, 1);
+			statement1.setString(1, "COMMANDER");
 			ResultSet rset1 = statement1.executeQuery();
 			
 			while (rset1.next())
 			{
-				int fortId = rset1.getInt("fortId");
+				int fortId = rset1.getInt("fort_id");
 				PreparedStatement statement2 =
-						con.prepareStatement("SELECT id, npcId, x, y, z, heading FROM fort_spawnlist Where fortId = ? and spawnType = ? ORDER BY id");
+						con.prepareStatement("SELECT id, npc_template_id, x, y, z, heading FROM fort_spawn WHERE fort_id = ? AND spawn_type = ? ORDER BY id");
 				statement2.setInt(1, getFort().getFortId());
-				statement2.setInt(2, 1);
+				statement2.setString(2, "COMMANDER");
 				ResultSet rset2 = statement2.executeQuery();
 				
 				L2Spawn spawnDat;
@@ -317,7 +317,7 @@ public class FortManager implements InstanceListManager
 				_npcCommandersSpawns = new FastList<L2Spawn>();
 				while (rset2.next())
 				{
-					template1 = NpcTable.getInstance().getTemplate(rset2.getInt("npcId"));
+					template1 = NpcTable.getInstance().getTemplate(rset2.getInt("npc_template_id"));
 					if (template1 != null)
 					{
 						spawnDat = new L2Spawn(template1);
@@ -332,7 +332,7 @@ public class FortManager implements InstanceListManager
 					else
 					{
 						_log.warn("FortManager.initNpcCommanders: Data missing in NPC table for ID: "
-								+ rset2.getInt("npcId") + ".");
+								+ rset2.getInt("npc_template_id") + ".");
 					}
 				}
 				rset2.close();
@@ -361,18 +361,18 @@ public class FortManager implements InstanceListManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement1 =
-					con.prepareStatement("SELECT Distinct fortId FROM fort_spawnlist Where spawnType = ? ORDER BY fortId");
+					con.prepareStatement("SELECT DISTINCT fort_id FROM fort_spawn WHERE spawn_type = ? ORDER BY fort_id");
 			
-			statement1.setInt(1, 2);
+			statement1.setString(1, "SIEGE_NPC");
 			ResultSet rset1 = statement1.executeQuery();
 			
 			while (rset1.next())
 			{
-				int fortId = rset1.getInt("fortId");
+				int fortId = rset1.getInt("fort_id");
 				PreparedStatement statement2 =
-						con.prepareStatement("SELECT id, npcId, x, y, z, heading FROM fort_spawnlist Where fortId = ? and spawnType = ? ORDER BY id");
+						con.prepareStatement("SELECT id, npc_template_id, x, y, z, heading FROM fort_spawn WHERE fort_id = ? AND spawn_type = ? ORDER BY id");
 				statement2.setInt(1, getFort().getFortId());
-				statement2.setInt(2, 2);
+				statement2.setString(2, "SIEGE_NPC");
 				ResultSet rset2 = statement2.executeQuery();
 				
 				L2Spawn spawnDat;
@@ -380,7 +380,7 @@ public class FortManager implements InstanceListManager
 				_siegeNpcsSpawns = new FastList<L2Spawn>();
 				while (rset2.next())
 				{
-					template1 = NpcTable.getInstance().getTemplate(rset2.getInt("npcId"));
+					template1 = NpcTable.getInstance().getTemplate(rset2.getInt("npc_template_id"));
 					if (template1 != null)
 					{
 						spawnDat = new L2Spawn(template1);
@@ -395,7 +395,7 @@ public class FortManager implements InstanceListManager
 					else
 					{
 						_log.warn("FortManager.initSiegeNpcs: Data missing in NPC table for ID: "
-								+ rset2.getInt("npcId") + ".");
+								+ rset2.getInt("npc_template_id") + ".");
 					}
 				}
 				rset2.close();
@@ -425,18 +425,18 @@ public class FortManager implements InstanceListManager
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement1 =
-					con.prepareStatement("SELECT Distinct fortId FROM fort_spawnlist Where spawnType = ? ORDER BY fortId");
+					con.prepareStatement("SELECT DISTINCT fort_id FROM fort_spawn WHERE spawn_type = ? ORDER BY fort_id");
 			
-			statement1.setInt(1, 3);
+			statement1.setString(1, "SPECIAL_ENVOY");
 			ResultSet rset1 = statement1.executeQuery();
 			
 			while (rset1.next())
 			{
-				int fortId = rset1.getInt("fortId");
+				int fortId = rset1.getInt("fort_id");
 				PreparedStatement statement2 =
-						con.prepareStatement("SELECT id, npcId, x, y, z, heading, castleId FROM fort_spawnlist Where fortId = ? and spawnType = ? ORDER BY id");
+						con.prepareStatement("SELECT id, npc_template_id, x, y, z, heading, castle_id FROM fort_spawn WHERE fort_id = ? AND spawn_type = ? ORDER BY id");
 				statement2.setInt(1, getFort().getFortId());
-				statement2.setInt(2, 3);
+				statement2.setString(2, "SPECIAL_ENVOY");
 				ResultSet rset2 = statement2.executeQuery();
 				
 				L2Spawn spawnDat;
@@ -444,8 +444,8 @@ public class FortManager implements InstanceListManager
 				_specialEnvoysSpawns = new FastList<L2Spawn>();
 				while (rset2.next())
 				{
-					int castleId = rset2.getInt("castleId");
-					int npcId = rset2.getInt("npcId");
+					int castleId = rset2.getInt("castle_id");
+					int npcId = rset2.getInt("npc_template_id");
 					template1 = NpcTable.getInstance().getTemplate(npcId);
 					if (template1 != null)
 					{
@@ -462,7 +462,7 @@ public class FortManager implements InstanceListManager
 					else
 					{
 						_log.warn("FortManager.initSpecialEnvoys: Data missing in NPC table for ID: "
-								+ rset2.getInt("npcId") + ".");
+								+ rset2.getInt("npc_template_id") + ".");
 					}
 				}
 				rset2.close();

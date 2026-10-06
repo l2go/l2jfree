@@ -14,11 +14,6 @@
  */
 package com.l2jfree.gameserver.network.packets.client;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
-import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.cache.CrestCache;
 import com.l2jfree.gameserver.datatables.ClanTable;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -26,6 +21,7 @@ import com.l2jfree.gameserver.idfactory.IdFactory;
 import com.l2jfree.gameserver.model.clan.L2Clan;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.L2ClientPacket;
+import com.l2jfree.gameserver.persistence.clan.ClanRepository;
 
 /**
  * This class ...
@@ -84,29 +80,19 @@ public class RequestSetAllyCrest extends L2ClientPacket
 			return;
 		}
 		
-		if (clan.getAllyCrestId() != 0)
-			crestCache.removeAllyCrest(clan.getAllyCrestId());
-		
-		Connection con = null;
-		
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement =
-					con.prepareStatement("UPDATE clan_data SET ally_crest_id = ? WHERE ally_id = ?");
-			statement.setInt(1, newId);
-			statement.setInt(2, clan.getAllyId());
-			statement.executeUpdate();
-			statement.close();
+			// Every clan of the alliance shows the new crest
+			ClanRepository.getInstance().updateAllianceCrest(clan.getAllyId(), newId);
 		}
-		catch (SQLException e)
+		catch (Exception e)
 		{
 			_log.warn("could not update the ally crest id:", e);
 		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+		
+		// The clans point at the new crest now, so the old image can go
+		if (clan.getAllyCrestId() != 0)
+			crestCache.removeAllyCrest(clan.getAllyCrestId());
 		
 		for (L2Clan c : ClanTable.getInstance().getClans())
 		{

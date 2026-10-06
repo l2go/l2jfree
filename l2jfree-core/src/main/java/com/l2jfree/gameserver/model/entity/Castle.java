@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -48,6 +49,7 @@ import com.l2jfree.gameserver.model.sevensigns.SevenSigns;
 import com.l2jfree.gameserver.model.zone.L2SiegeDangerZone;
 import com.l2jfree.gameserver.network.packets.server.PlaySound;
 import com.l2jfree.gameserver.network.packets.server.PledgeShowInfoUpdate;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 
 public class Castle extends Siegeable<Siege>
 {
@@ -58,25 +60,34 @@ public class Castle extends Siegeable<Siege>
 	private boolean _isNextPeriodApproved = false;
 	
 	private static final String CASTLE_MANOR_DELETE_PRODUCTION =
-			"DELETE FROM castle_manor_production WHERE castle_id=?;";
+			"DELETE FROM castle_manor_production WHERE castle_id=?";
 	private static final String CASTLE_MANOR_DELETE_PRODUCTION_PERIOD =
-			"DELETE FROM castle_manor_production WHERE castle_id=? AND period=?;";
-	private static final String CASTLE_MANOR_DELETE_PROCURE = "DELETE FROM castle_manor_procure WHERE castle_id=?;";
+			"DELETE FROM castle_manor_production WHERE castle_id=? AND period=?";
+	private static final String CASTLE_MANOR_DELETE_PROCURE = "DELETE FROM castle_manor_procure WHERE castle_id=?";
 	private static final String CASTLE_MANOR_DELETE_PROCURE_PERIOD =
-			"DELETE FROM castle_manor_procure WHERE castle_id=? AND period=?;";
+			"DELETE FROM castle_manor_procure WHERE castle_id=? AND period=?";
+	private static final String CASTLE_MANOR_INSERT_PRODUCTION =
+			"INSERT INTO castle_manor_production (castle_id, seed_item_template_id, period, remaining_amount, start_amount, price) VALUES (?,?,?,?,?,?) "
+					+ "ON CONFLICT (castle_id, seed_item_template_id, period) DO UPDATE SET remaining_amount = EXCLUDED.remaining_amount, start_amount = EXCLUDED.start_amount, price = EXCLUDED.price";
+	private static final String CASTLE_MANOR_INSERT_PROCURE =
+			"INSERT INTO castle_manor_procure (castle_id, crop_item_template_id, period, remaining_amount, start_amount, price, reward_type) VALUES (?,?,?,?,?,?,?) "
+					+ "ON CONFLICT (castle_id, crop_item_template_id, period) DO UPDATE SET remaining_amount = EXCLUDED.remaining_amount, start_amount = EXCLUDED.start_amount, price = EXCLUDED.price, reward_type = EXCLUDED.reward_type";
 	private static final String CASTLE_UPDATE_CROP =
-			"UPDATE castle_manor_procure SET can_buy=? WHERE crop_id=? AND castle_id=? AND period=?";
+			"UPDATE castle_manor_procure SET remaining_amount=? WHERE crop_item_template_id=? AND castle_id=? AND period=?";
 	private static final String CASTLE_UPDATE_SEED =
-			"UPDATE castle_manor_production SET can_produce=? WHERE seed_id=? AND castle_id=? AND period=?";
+			"UPDATE castle_manor_production SET remaining_amount=? WHERE seed_item_template_id=? AND castle_id=? AND period=?";
 	
-	private static final String CASTLE_TAX_UPDATE_INSTANT = "UPDATE castle SET taxPercent=?, taxSetDate=0 WHERE id=?";
-	private static final String CASTLE_TAX_UPDATE_DELAYED = "UPDATE castle SET newTax=?, taxSetDate=? WHERE id=?";
+	private static final String CASTLE_TAX_UPDATE_INSTANT =
+			"UPDATE castle SET tax_percent=?, tax_set_at=NULL WHERE id=?";
+	private static final String CASTLE_TAX_UPDATE_DELAYED =
+			"UPDATE castle SET pending_tax_percent=?, tax_set_at=? WHERE id=?";
 	
-	private static final String CASTLE_TRAP_ADD = "INSERT INTO castle_zoneupgrade (level,castleId,side) VALUES (?,?,?)";
+	private static final String CASTLE_TRAP_ADD =
+			"INSERT INTO castle_trap_upgrade (level, castle_id, side) VALUES (?,?,?)";
 	private static final String CASTLE_TRAP_UPGRADE =
-			"UPDATE castle_zoneupgrade SET level=? WHERE castleId=? AND side=?";
-	private static final String CASTLE_TRAP_LOAD = "SELECT level FROM castle_zoneupgrade WHERE castleId=? AND side=?";
-	private static final String CASTLE_TRAPS_REMOVE = "DELETE FROM castle_zoneupgrade WHERE castleId=?";
+			"UPDATE castle_trap_upgrade SET level=? WHERE castle_id=? AND side=?";
+	private static final String CASTLE_TRAP_LOAD = "SELECT level FROM castle_trap_upgrade WHERE castle_id=? AND side=?";
+	private static final String CASTLE_TRAPS_REMOVE = "DELETE FROM castle_trap_upgrade WHERE castle_id=?";
 	
 	private final FastList<L2DoorInstance> _doors = new FastList<L2DoorInstance>();
 	private final FastList<String> _doorDefault = new FastList<String>();
@@ -230,21 +241,21 @@ public class Castle extends Siegeable<Siege>
 				if (newFunction)
 				{
 					statement =
-							con.prepareStatement("INSERT INTO castle_functions (castle_id, type, lvl, lease, rate, endTime) VALUES (?,?,?,?,?,?)");
+							con.prepareStatement("INSERT INTO castle_function (castle_id, function_type, level, lease, rate_ms, end_at) VALUES (?,?,?,?,?,?)");
 					statement.setInt(1, getCastleId());
 					statement.setInt(2, getType());
 					statement.setInt(3, getLvl());
 					statement.setInt(4, getLease());
 					statement.setLong(5, getRate());
-					statement.setLong(6, getEndTime());
+					statement.setTimestamp(6, moment(getEndTime()));
 				}
 				else
 				{
 					statement =
-							con.prepareStatement("UPDATE castle_functions SET lvl=?, lease=?, endTime=? WHERE castle_id=? AND type=?");
+							con.prepareStatement("UPDATE castle_function SET level=?, lease=?, end_at=? WHERE castle_id=? AND function_type=?");
 					statement.setInt(1, getLvl());
 					statement.setInt(2, getLease());
-					statement.setLong(3, getEndTime());
+					statement.setTimestamp(3, moment(getEndTime()));
 					statement.setInt(4, getCastleId());
 					statement.setInt(5, getType());
 				}
@@ -262,6 +273,18 @@ public class Castle extends Siegeable<Siege>
 				L2DatabaseFactory.close(con);
 			}
 		}
+	}
+	
+	/** Epoch milliseconds as a database moment; 0 or less means "not set" and is NULL. */
+	private static Timestamp moment(long millis)
+	{
+		return millis > 0 ? new Timestamp(millis) : null;
+	}
+
+	/** A database moment as epoch milliseconds; NULL means "not set" and is 0. */
+	private static long millis(Timestamp moment)
+	{
+		return moment == null ? 0 : moment.getTime();
 	}
 	
 	public Castle(int castleId)
@@ -419,10 +442,12 @@ public class Castle extends Siegeable<Siege>
 	// This method is used to begin removing all castle upgrades
 	public void removeUpgrade()
 	{
-		removeDoorUpgrade();
-		for (Map.Entry<Integer, CastleFunction> fc : _function.entrySet())
-			removeFunction(fc.getKey());
-		_function.clear();
+		WorldTransaction.run("Castle upgrades removal", () -> {
+			removeDoorUpgrade();
+			for (Map.Entry<Integer, CastleFunction> fc : _function.entrySet())
+				removeFunction(fc.getKey());
+			_function.clear();
+		});
 	}
 	
 	public void removeOwner(L2Clan clan)
@@ -444,13 +469,16 @@ public class Castle extends Siegeable<Siege>
 			}
 		}
 		
-		updateOwnerInDB(null);
-		if (getSiege().getIsInProgress())
-			getSiege().midVictory();
+		// The owner and its paid functions are removed together.
+		WorldTransaction.run("Castle owner removal", () -> {
+			updateOwnerInDB(null);
+			if (getSiege().getIsInProgress())
+				getSiege().midVictory();
 		
-		for (Map.Entry<Integer, CastleFunction> fc : _function.entrySet())
-			removeFunction(fc.getKey());
-		_function.clear();
+			for (Map.Entry<Integer, CastleFunction> fc : _function.entrySet())
+				removeFunction(fc.getKey());
+			_function.clear();
+		});
 	}
 	
 	// This method updates the castle owner
@@ -482,15 +510,18 @@ public class Castle extends Siegeable<Siege>
 			}
 		}
 		
-		updateOwnerInDB(clan); // Update in database
+		// The new owner and the loss of its fortress are stored together.
+		WorldTransaction.run("Castle owner change", () -> {
+			updateOwnerInDB(clan); // Update in database
 		
-		// if clan have fortress, remove it
-		if (clan != null && clan.getHasFort() > 0)
-		{
-			Fort fort = FortManager.getInstance().getFortByOwner(clan);
-			if (fort != null)
-				fort.removeOwner(true);
-		}
+			// if clan have fortress, remove it
+			if (clan != null && clan.getHasFort() > 0)
+			{
+				Fort fort = FortManager.getInstance().getFortByOwner(clan);
+				if (fort != null)
+					fort.removeOwner(true);
+			}
+		});
 		
 		if (clan == null)
 		{
@@ -532,7 +563,7 @@ public class Castle extends Siegeable<Siege>
 			{
 				statement = con.prepareStatement(CASTLE_TAX_UPDATE_DELAYED);
 				statement.setInt(1, taxPercent);
-				statement.setLong(2, System.currentTimeMillis());
+				statement.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
 				statement.setInt(3, getCastleId());
 				startUpdateTask();
 			}
@@ -617,7 +648,8 @@ public class Castle extends Siegeable<Siege>
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			statement = con.prepareStatement("SELECT * FROM castle WHERE id = ?");
+			statement =
+					con.prepareStatement("SELECT name, siege_at, registration_end_at, is_registration_over, treasury, tax_percent, pending_tax_percent, tax_set_at FROM castle WHERE id = ?");
 			statement.setInt(1, getCastleId());
 			rs = statement.executeQuery();
 			
@@ -627,19 +659,19 @@ public class Castle extends Siegeable<Siege>
 				//_ownerId = rs.getInt("ownerId");
 				
 				_siegeDate = Calendar.getInstance();
-				_siegeDate.setTimeInMillis(rs.getLong("siegeDate"));
+				_siegeDate.setTimeInMillis(millis(rs.getTimestamp("siege_at")));
 				
 				_siegeTimeRegistrationEndDate = Calendar.getInstance();
-				_siegeTimeRegistrationEndDate.setTimeInMillis(rs.getLong("regTimeEnd"));
-				_isTimeRegistrationOver = rs.getBoolean("regTimeOver");
+				_siegeTimeRegistrationEndDate.setTimeInMillis(millis(rs.getTimestamp("registration_end_at")));
+				_isTimeRegistrationOver = rs.getBoolean("is_registration_over");
 				
 				_treasury = rs.getLong("treasury");
-				_taxPercent = rs.getInt("taxPercent");
-				_taxPercentNew = rs.getInt("newTax");
+				_taxPercent = rs.getInt("tax_percent");
+				_taxPercentNew = rs.getInt("pending_tax_percent");
 				if (_taxPercentNew != 0)
 				{
 					Calendar update = Calendar.getInstance();
-					update.setTimeInMillis(rs.getLong("taxSetDate"));
+					update.setTimeInMillis(millis(rs.getTimestamp("tax_set_at")));
 					if (update.get(Calendar.HOUR_OF_DAY) >= 0)
 						update.add(Calendar.DAY_OF_MONTH, 1);
 					update.set(Calendar.HOUR_OF_DAY, 0);
@@ -657,13 +689,13 @@ public class Castle extends Siegeable<Siege>
 			
 			_taxRate = (_taxPercent + 100) / 100.0;
 			
-			statement = con.prepareStatement("SELECT clan_id FROM clan_data WHERE hasCastle = ?");
+			statement = con.prepareStatement("SELECT id FROM clan WHERE castle_id = ?");
 			statement.setInt(1, getCastleId());
 			rs = statement.executeQuery();
 			
 			while (rs.next())
 			{
-				_ownerId = rs.getInt("clan_id");
+				_ownerId = rs.getInt("id");
 			}
 			
 			if (getOwnerId() > 0)
@@ -700,7 +732,8 @@ public class Castle extends Siegeable<Siege>
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM castle_door WHERE castleId = ?");
+			PreparedStatement statement =
+					con.prepareStatement("SELECT id, name, x, y, z, range_x_min, range_y_min, range_z_min, range_x_max, range_y_max, range_z_max, hp, p_def, m_def FROM castle_door WHERE castle_id = ?");
 			statement.setInt(1, getCastleId());
 			ResultSet rs = statement.executeQuery();
 			
@@ -708,10 +741,10 @@ public class Castle extends Siegeable<Siege>
 			{
 				// Create list of the door default for use when respawning dead doors
 				_doorDefault.add(rs.getString("name") + ";" + rs.getInt("id") + ";" + rs.getInt("x") + ";"
-						+ rs.getInt("y") + ";" + rs.getInt("z") + ";" + rs.getInt("range_xmin") + ";"
-						+ rs.getInt("range_ymin") + ";" + rs.getInt("range_zmin") + ";" + rs.getInt("range_xmax") + ";"
-						+ rs.getInt("range_ymax") + ";" + rs.getInt("range_zmax") + ";" + rs.getInt("hp") + ";"
-						+ rs.getInt("pDef") + ";" + rs.getInt("mDef"));
+						+ rs.getInt("y") + ";" + rs.getInt("z") + ";" + rs.getInt("range_x_min") + ";"
+						+ rs.getInt("range_y_min") + ";" + rs.getInt("range_z_min") + ";" + rs.getInt("range_x_max") + ";"
+						+ rs.getInt("range_y_max") + ";" + rs.getInt("range_z_max") + ";" + rs.getInt("hp") + ";"
+						+ rs.getInt("p_def") + ";" + rs.getInt("m_def"));
 				
 				L2DoorInstance door = DoorTable.parseLine(_doorDefault.get(_doorDefault.size() - 1));
 				door.spawnMe(door.getX(), door.getY(), door.getZ());
@@ -742,13 +775,13 @@ public class Castle extends Siegeable<Siege>
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement = con
-					.prepareStatement("SELECT * FROM castle_doorupgrade WHERE doorId in (Select Id from castle_door where castleId = ?)");
+					.prepareStatement("SELECT door_id, hp, physical_defense, magic_defense FROM castle_door_upgrade WHERE door_id IN (SELECT id FROM castle_door WHERE castle_id = ?)");
 			statement.setInt(1, getCastleId());
 			ResultSet rs = statement.executeQuery();
 
 			while (rs.next())
 			{
-				upgradeDoor(rs.getInt("id"), rs.getInt("hp"), rs.getInt("pDef"), rs.getInt("mDef"));
+				upgradeDoor(rs.getInt("door_id"), rs.getInt("hp"), rs.getInt("physical_defense"), rs.getInt("magic_defense"));
 			}
 
 			rs.close();
@@ -772,7 +805,7 @@ public class Castle extends Siegeable<Siege>
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("DELETE FROM castle_doorupgrade WHERE doorId IN (SELECT id FROM castle_door WHERE castleId = ?)");
+					con.prepareStatement("DELETE FROM castle_door_upgrade WHERE door_id IN (SELECT id FROM castle_door WHERE castle_id = ?)");
 			statement.setInt(1, getCastleId());
 			statement.execute();
 			statement.close();
@@ -794,7 +827,8 @@ public class Castle extends Siegeable<Siege>
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("INSERT INTO castle_doorupgrade (doorId, hp, pDef, mDef) VALUES (?,?,?,?)");
+					con.prepareStatement("INSERT INTO castle_door_upgrade (door_id, hp, physical_defense, magic_defense) VALUES (?,?,?,?) "
+							+ "ON CONFLICT (door_id) DO UPDATE SET hp = EXCLUDED.hp, physical_defense = EXCLUDED.physical_defense, magic_defense = EXCLUDED.magic_defense");
 			statement.setInt(1, doorId);
 			statement.setInt(2, hp);
 			statement.setInt(3, pDef);
@@ -819,27 +853,38 @@ public class Castle extends Siegeable<Siege>
 		else
 			_ownerId = 0; // Remove owner
 			
-		Connection con = null;
+		// The previous owner loses the castle and the new one gets it, or none of it happens.
+		WorldTransaction.run("Castle owner change", () -> {
+			Connection con = null;
+			try
+			{
+				con = L2DatabaseFactory.getInstance().getConnection(con);
+				PreparedStatement statement;
+			
+				// The owner is stored in the clan row (clan.castle_id, unique).
+				statement = con.prepareStatement("UPDATE clan SET castle_id = NULL WHERE castle_id = ?");
+				statement.setInt(1, getCastleId());
+				statement.execute();
+				statement.close();
+			
+				statement = con.prepareStatement("UPDATE clan SET castle_id = ? WHERE id = ?");
+				statement.setInt(1, getCastleId());
+				statement.setInt(2, getOwnerId());
+				statement.execute();
+				statement.close();
+			}
+			catch (Exception e)
+			{
+				_log.error("Exception: updateOwnerInDB(L2Clan clan): " + e.getMessage(), e);
+			}
+			finally
+			{
+				L2DatabaseFactory.close(con);
+			}
+		});
+			
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement;
-			
-			// ============================================================================
-			// NEED TO REMOVE HAS CASTLE FLAG FROM CLAN_DATA
-			// SHOULD BE CHECKED FROM CASTLE TABLE
-			statement = con.prepareStatement("UPDATE clan_data SET hasCastle = 0 WHERE hasCastle = ?");
-			statement.setInt(1, getCastleId());
-			statement.execute();
-			statement.close();
-			
-			statement = con.prepareStatement("UPDATE clan_data SET hasCastle = ? WHERE clan_id = ?");
-			statement.setInt(1, getCastleId());
-			statement.setInt(2, getOwnerId());
-			statement.execute();
-			statement.close();
-			// ============================================================================
-			
 			// Announce to clan memebers
 			if (clan != null)
 			{
@@ -857,10 +902,6 @@ public class Castle extends Siegeable<Siege>
 		catch (Exception e)
 		{
 			_log.error("Exception: updateOwnerInDB(L2Clan clan): " + e.getMessage(), e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
 		}
 	}
 	
@@ -1033,255 +1074,167 @@ public class Castle extends Siegeable<Siege>
 	//save manor production data
 	public void saveSeedData()
 	{
-		Connection con = null;
-		PreparedStatement statement;
-		
-		try
-		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			
-			statement = con.prepareStatement(CASTLE_MANOR_DELETE_PRODUCTION);
-			statement.setInt(1, getCastleId());
-			
-			statement.execute();
-			statement.close();
-			
-			if (_log.isDebugEnabled())
-				_log.debug("Restored procure from BD");
-			
-			if (_production != null)
+		// The old rows are replaced as a whole: all of it is stored or none of it.
+		WorldTransaction.run("Castle manor seed data", () -> {
+			Connection con = null;
+			try
 			{
-				int count = 0;
-				String query = "INSERT INTO castle_manor_production VALUES ";
-				String values[] = new String[_production.size()];
-				for (SeedProduction s : _production)
-				{
-					values[count++] =
-							"(" + getCastleId() + "," + s.getId() + "," + s.getCanProduce() + "," + s.getStartProduce()
-									+ "," + s.getPrice() + "," + CastleManorManager.PERIOD_CURRENT + ")";
-				}
-				if (values.length > 0)
-				{
-					query += values[0];
-					for (int i = 1; i < values.length; i++)
-					{
-						query += "," + values[i];
-					}
-					statement = con.prepareStatement(query);
-					statement.execute();
-					statement.close();
-				}
-			}
+				con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			if (_productionNext != null)
-			{
-				int count = 0;
-				String query = "INSERT INTO castle_manor_production VALUES ";
-				String values[] = new String[_productionNext.size()];
-				for (SeedProduction s : _productionNext)
-				{
-					values[count++] =
-							"(" + getCastleId() + "," + s.getId() + "," + s.getCanProduce() + "," + s.getStartProduce()
-									+ "," + s.getPrice() + "," + CastleManorManager.PERIOD_NEXT + ")";
-				}
-				if (values.length > 0)
-				{
-					query += values[0];
-					for (int i = 1; i < values.length; i++)
-					{
-						query += "," + values[i];
-					}
-					statement = con.prepareStatement(query);
-					statement.execute();
-					statement.close();
-				}
+				PreparedStatement statement = con.prepareStatement(CASTLE_MANOR_DELETE_PRODUCTION);
+				statement.setInt(1, getCastleId());
+				statement.execute();
+				statement.close();
+			
+				insertSeeds(con, _production, CastleManorManager.PERIOD_CURRENT);
+				insertSeeds(con, _productionNext, CastleManorManager.PERIOD_NEXT);
 			}
-		}
-		catch (Exception e)
-		{
-			_log.info("Error adding seed production data for castle " + getName() + ": " + e.getMessage(), e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+			catch (Exception e)
+			{
+				_log.info("Error adding seed production data for castle " + getName() + ": " + e.getMessage(), e);
+			}
+			finally
+			{
+				L2DatabaseFactory.close(con);
+			}
+		});
 	}
 	
 	//save manor production data for specified period
 	public void saveSeedData(int period)
 	{
-		Connection con = null;
-		PreparedStatement statement;
+		WorldTransaction.run("Castle manor seed data", () -> {
+			Connection con = null;
+			try
+			{
+				con = L2DatabaseFactory.getInstance().getConnection(con);
+			
+				PreparedStatement statement = con.prepareStatement(CASTLE_MANOR_DELETE_PRODUCTION_PERIOD);
+				statement.setInt(1, getCastleId());
+				statement.setInt(2, period);
+				statement.execute();
+				statement.close();
+			
+				insertSeeds(con, getSeedProduction(period), period);
+			}
+			catch (Exception e)
+			{
+				_log.info("Error adding seed production data for castle " + getName() + ": " + e.getMessage(), e);
+			}
+			finally
+			{
+				L2DatabaseFactory.close(con);
+			}
+		});
+	}
+	
+	private void insertSeeds(Connection con, List<SeedProduction> seeds, int period) throws SQLException
+	{
+		if (seeds == null || seeds.isEmpty())
+			return;
+		
+		PreparedStatement statement = con.prepareStatement(CASTLE_MANOR_INSERT_PRODUCTION);
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			
-			statement = con.prepareStatement(CASTLE_MANOR_DELETE_PRODUCTION_PERIOD);
-			statement.setInt(1, getCastleId());
-			statement.setInt(1, getCastleId());
-			statement.setInt(2, period);
-			statement.execute();
-			statement.close();
-			
-			List<SeedProduction> prod = null;
-			prod = getSeedProduction(period);
-			
-			if (prod != null)
+			for (SeedProduction s : seeds)
 			{
-				int count = 0;
-				String query = "INSERT INTO castle_manor_production VALUES ";
-				String values[] = new String[prod.size()];
-				for (SeedProduction s : prod)
-				{
-					values[count++] =
-							"(" + getCastleId() + "," + s.getId() + "," + s.getCanProduce() + "," + s.getStartProduce()
-									+ "," + s.getPrice() + "," + period + ")";
-				}
-				if (values.length > 0)
-				{
-					query += values[0];
-					for (int i = 1; i < values.length; i++)
-					{
-						query += "," + values[i];
-					}
-					statement = con.prepareStatement(query);
-					statement.execute();
-					statement.close();
-				}
+				statement.setInt(1, getCastleId());
+				statement.setInt(2, s.getId());
+				statement.setInt(3, period);
+				statement.setLong(4, s.getCanProduce());
+				statement.setLong(5, s.getStartProduce());
+				statement.setLong(6, s.getPrice());
+				statement.addBatch();
 			}
-		}
-		catch (Exception e)
-		{
-			_log.info("Error adding seed production data for castle " + getName() + ": " + e.getMessage(), e);
+			statement.executeBatch();
 		}
 		finally
 		{
-			L2DatabaseFactory.close(con);
+			statement.close();
 		}
 	}
 	
 	//save crop procure data
 	public void saveCropData()
 	{
-		Connection con = null;
-		PreparedStatement statement;
-		try
-		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
+		// The old rows are replaced as a whole: all of it is stored or none of it.
+		WorldTransaction.run("Castle manor crop data", () -> {
+			Connection con = null;
+			try
+			{
+				con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			statement = con.prepareStatement(CASTLE_MANOR_DELETE_PROCURE);
-			statement.setInt(1, getCastleId());
-			statement.execute();
-			statement.close();
-			if (_procure != null)
-			{
-				int count = 0;
-				String query = "INSERT INTO castle_manor_procure VALUES ";
-				String values[] = new String[_procure.size()];
-				for (CropProcure cp : _procure)
-				{
-					values[count++] =
-							"(" + getCastleId() + "," + cp.getId() + "," + cp.getAmount() + "," + cp.getStartAmount()
-									+ "," + cp.getPrice() + "," + cp.getReward() + ","
-									+ CastleManorManager.PERIOD_CURRENT + ")";
-				}
-				if (values.length > 0)
-				{
-					query += values[0];
-					for (int i = 1; i < values.length; i++)
-					{
-						query += "," + values[i];
-					}
-					statement = con.prepareStatement(query);
-					statement.execute();
-					statement.close();
-				}
+				PreparedStatement statement = con.prepareStatement(CASTLE_MANOR_DELETE_PROCURE);
+				statement.setInt(1, getCastleId());
+				statement.execute();
+				statement.close();
+				
+				insertCrops(con, _procure, CastleManorManager.PERIOD_CURRENT);
+				insertCrops(con, _procureNext, CastleManorManager.PERIOD_NEXT);
 			}
-			if (_procureNext != null)
+			catch (Exception e)
 			{
-				int count = 0;
-				String query = "INSERT INTO castle_manor_procure VALUES ";
-				String values[] = new String[_procureNext.size()];
-				for (CropProcure cp : _procureNext)
-				{
-					values[count++] =
-							"(" + getCastleId() + "," + cp.getId() + "," + cp.getAmount() + "," + cp.getStartAmount()
-									+ "," + cp.getPrice() + "," + cp.getReward() + "," + CastleManorManager.PERIOD_NEXT
-									+ ")";
-				}
-				if (values.length > 0)
-				{
-					query += values[0];
-					for (int i = 1; i < values.length; i++)
-					{
-						query += "," + values[i];
-					}
-					statement = con.prepareStatement(query);
-					statement.execute();
-					statement.close();
-				}
+				_log.info("Error adding crop data for castle " + getName() + ": " + e.getMessage(), e);
 			}
-		}
-		catch (Exception e)
-		{
-			_log.info("Error adding crop data for castle " + getName() + ": " + e.getMessage(), e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+			finally
+			{
+				L2DatabaseFactory.close(con);
+			}
+		});
 	}
 	
 	//	save crop procure data for specified period
 	public void saveCropData(int period)
 	{
-		Connection con = null;
-		PreparedStatement statement;
+		WorldTransaction.run("Castle manor crop data", () -> {
+			Connection con = null;
+			try
+			{
+				con = L2DatabaseFactory.getInstance().getConnection(con);
+			
+				PreparedStatement statement = con.prepareStatement(CASTLE_MANOR_DELETE_PROCURE_PERIOD);
+				statement.setInt(1, getCastleId());
+				statement.setInt(2, period);
+				statement.execute();
+				statement.close();
+			
+				insertCrops(con, getCropProcure(period), period);
+			}
+			catch (Exception e)
+			{
+				_log.info("Error adding crop data for castle " + getName() + ": " + e.getMessage(), e);
+			}
+			finally
+			{
+				L2DatabaseFactory.close(con);
+			}
+		});
+	}
+	
+	private void insertCrops(Connection con, List<CropProcure> crops, int period) throws SQLException
+	{
+		if (crops == null || crops.isEmpty())
+			return;
+		
+		PreparedStatement statement = con.prepareStatement(CASTLE_MANOR_INSERT_PROCURE);
 		try
 		{
-			con = L2DatabaseFactory.getInstance().getConnection(con);
-			
-			statement = con.prepareStatement(CASTLE_MANOR_DELETE_PROCURE_PERIOD);
-			statement.setInt(1, getCastleId());
-			statement.setInt(2, period);
-			statement.execute();
-			statement.close();
-			
-			List<CropProcure> proc = null;
-			proc = getCropProcure(period);
-			
-			if (proc != null)
+			for (CropProcure cp : crops)
 			{
-				int count = 0;
-				String query = "INSERT INTO castle_manor_procure VALUES ";
-				String values[] = new String[proc.size()];
-				
-				for (CropProcure cp : proc)
-				{
-					values[count++] =
-							"(" + getCastleId() + "," + cp.getId() + "," + cp.getAmount() + "," + cp.getStartAmount()
-									+ "," + cp.getPrice() + "," + cp.getReward() + "," + period + ")";
-				}
-				if (values.length > 0)
-				{
-					query += values[0];
-					for (int i = 1; i < values.length; i++)
-					{
-						query += "," + values[i];
-					}
-					statement = con.prepareStatement(query);
-					statement.execute();
-					statement.close();
-				}
+				statement.setInt(1, getCastleId());
+				statement.setInt(2, cp.getId());
+				statement.setInt(3, period);
+				statement.setLong(4, cp.getAmount());
+				statement.setLong(5, cp.getStartAmount());
+				statement.setLong(6, cp.getPrice());
+				statement.setInt(7, cp.getReward());
+				statement.addBatch();
 			}
-		}
-		catch (Exception e)
-		{
-			_log.info("Error adding crop data for castle " + getName() + ": " + e.getMessage(), e);
+			statement.executeBatch();
 		}
 		finally
 		{
-			L2DatabaseFactory.close(con);
+			statement.close();
 		}
 	}
 	
@@ -1385,15 +1338,16 @@ public class Castle extends Siegeable<Siege>
 			PreparedStatement statement;
 			ResultSet rs;
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			statement = con.prepareStatement("Select * from castle_functions where castle_id = ?");
+			statement =
+					con.prepareStatement("SELECT function_type, level, lease, rate_ms, end_at FROM castle_function WHERE castle_id = ?");
 			statement.setInt(1, getCastleId());
 			rs = statement.executeQuery();
 			while (rs.next())
 			{
 				_function.put(
-						rs.getInt("type"),
-						new CastleFunction(rs.getInt("type"), rs.getInt("lvl"), rs.getInt("lease"), 0, rs
-								.getLong("rate"), rs.getLong("endTime"), true));
+						rs.getInt("function_type"),
+						new CastleFunction(rs.getInt("function_type"), rs.getInt("level"), rs.getInt("lease"), 0, rs
+								.getLong("rate_ms"), millis(rs.getTimestamp("end_at")), true));
 			}
 			statement.close();
 		}
@@ -1416,7 +1370,7 @@ public class Castle extends Siegeable<Siege>
 		{
 			PreparedStatement statement;
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			statement = con.prepareStatement("DELETE FROM castle_functions WHERE castle_id=? AND type=?");
+			statement = con.prepareStatement("DELETE FROM castle_function WHERE castle_id=? AND function_type=?");
 			statement.setInt(1, getCastleId());
 			statement.setInt(2, functionType);
 			statement.execute();

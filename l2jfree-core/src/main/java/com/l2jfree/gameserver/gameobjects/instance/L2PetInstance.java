@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.concurrent.Future;
 
 import com.l2jfree.Config;
@@ -820,7 +821,7 @@ public class L2PetInstance extends L2Summon
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("DELETE FROM pets WHERE item_obj_id=?");
+			PreparedStatement statement = con.prepareStatement("DELETE FROM pet WHERE item_id=?");
 			statement.setInt(1, getControlItemId());
 			statement.execute();
 			statement.close();
@@ -867,7 +868,7 @@ public class L2PetInstance extends L2Summon
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement =
-					con.prepareStatement("SELECT item_obj_id, name, level, curHp, curMp, exp, sp, fed, weapon, armor, jewel FROM pets WHERE item_obj_id=?");
+					con.prepareStatement("SELECT name, level, current_hp, current_mp, exp, sp, current_feed, weapon_template_id, armor_template_id, jewel_template_id FROM pet WHERE item_id=?");
 			statement.setInt(1, control.getObjectId());
 			ResultSet rset = statement.executeQuery();
 			if (!rset.next())
@@ -883,21 +884,22 @@ public class L2PetInstance extends L2Summon
 			pet.getStat().setExp(rset.getLong("exp"));
 			pet.getStat().setSp(rset.getInt("sp"));
 			
-			if (rset.getDouble("curHp") < 0.5)
+			if (rset.getDouble("current_hp") < 0.5)
 			{
 				pet.setIsDead(true);
 				pet.getStatus().stopHpMpRegeneration();
 			}
 			
-			int curFed = rset.getInt("fed");
+			int curFed = rset.getInt("current_feed");
 			
-			pet.getStatus().setCurrentHp(rset.getDouble("curHp"));
-			pet.getStatus().setCurrentMp(rset.getDouble("curMp"));
+			pet.getStatus().setCurrentHp(rset.getDouble("current_hp"));
+			pet.getStatus().setCurrentMp(rset.getDouble("current_mp"));
 			pet.getStatus().setCurrentCp(pet.getMaxCp());
 			
-			pet.setWeapon(rset.getInt("weapon"));
-			pet.setArmor(rset.getInt("armor"));
-			pet.setJewel(rset.getInt("jewel"));
+			// NULL (no item worn) reads as 0
+			pet.setWeapon(rset.getInt("weapon_template_id"));
+			pet.setArmor(rset.getInt("armor_template_id"));
+			pet.setJewel(rset.getInt("jewel_template_id"));
 			
 			// Hack for zero food
 			if (curFed == 0)
@@ -941,6 +943,14 @@ public class L2PetInstance extends L2Summon
 		return null;
 	}
 	
+	private static void setTemplateId(PreparedStatement statement, int index, int templateId) throws SQLException
+	{
+		if (templateId == 0)
+			statement.setNull(index, Types.INTEGER);
+		else
+			statement.setInt(index, templateId);
+	}
+	
 	@Override
 	public void store()
 	{
@@ -953,27 +963,33 @@ public class L2PetInstance extends L2Summon
 		String req;
 		if (!isRespawned())
 			req =
-					"INSERT INTO pets (name,level,curHp,curMp,exp,sp,fed,weapon,armor,jewel,item_obj_id) "
+					"INSERT INTO pet (name, level, current_hp, current_mp, exp, sp, current_feed, weapon_template_id, armor_template_id, jewel_template_id, item_id) "
 							+ "VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 		else
 			req =
-					"UPDATE pets SET name=?,level=?,curHp=?,curMp=?,exp=?,sp=?,fed=?,weapon=?,armor=?,jewel=? "
-							+ "WHERE item_obj_id = ?";
+					"UPDATE pet SET name=?, level=?, current_hp=?, current_mp=?, exp=?, sp=?, current_feed=?, weapon_template_id=?, armor_template_id=?, jewel_template_id=? "
+							+ "WHERE item_id = ?";
 		Connection con = null;
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement = con.prepareStatement(req);
-			statement.setString(1, getName());
+			// An empty name means the pet is unnamed: NULL
+			String name = getName();
+			if (name == null || name.isEmpty())
+				statement.setNull(1, Types.VARCHAR);
+			else
+				statement.setString(1, name);
 			statement.setInt(2, getStat().getLevel());
-			statement.setDouble(3, getStatus().getCurrentHp());
-			statement.setDouble(4, getStatus().getCurrentMp());
+			statement.setDouble(3, Math.max(0.0, getStatus().getCurrentHp()));
+			statement.setDouble(4, Math.max(0.0, getStatus().getCurrentMp()));
 			statement.setLong(5, getStat().getExp());
 			statement.setInt(6, getStat().getSp());
-			statement.setInt(7, getCurrentFed());
-			statement.setInt(8, getWeapon());
-			statement.setInt(9, getArmor());
-			statement.setInt(10, getJewel());
+			statement.setInt(7, Math.max(0, getCurrentFed()));
+			// 0 (no item worn) is NULL
+			setTemplateId(statement, 8, getWeapon());
+			setTemplateId(statement, 9, getArmor());
+			setTemplateId(statement, 10, getJewel());
 			statement.setInt(11, getControlItemId());
 			statement.executeUpdate();
 			statement.close();

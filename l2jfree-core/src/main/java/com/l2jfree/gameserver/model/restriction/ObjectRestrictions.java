@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -35,6 +36,7 @@ import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.world.L2World;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 
 /**
  * @author Noctarius
@@ -42,10 +44,13 @@ import com.l2jfree.gameserver.model.world.L2World;
 public final class ObjectRestrictions
 {
 	// Restrictions SQL String Definitions:
-	private static final String RESTORE_RESTRICTIONS = "SELECT obj_Id, type, delay, message FROM obj_restrictions";
-	private static final String DELETE_RESTRICTIONS = "DELETE FROM obj_restrictions";
+	private static final String RESTORE_RESTRICTIONS =
+			"SELECT player_id, restriction, remaining_ms, message FROM player_restriction";
+	private static final String DELETE_RESTRICTIONS = "DELETE FROM player_restriction";
+	// A restriction of a player that no longer exists is skipped (the player table is the foreign key target)
 	private static final String INSERT_RESTRICTIONS =
-			"INSERT INTO obj_restrictions (`obj_Id`, `type`, `delay`, `message`) VALUES (?, ?, ?, ?)";
+			"INSERT INTO player_restriction (player_id, restriction, remaining_ms, message)"
+					+ " SELECT p.id, CAST(? AS text), CAST(? AS bigint), CAST(? AS text) FROM player p WHERE p.id = ?";
 	
 	private static final Logger _log = LoggerFactory.getLogger(ObjectRestrictions.class);
 	
@@ -76,20 +81,16 @@ public final class ObjectRestrictions
 			
 			while (rset.next())
 			{
-				final Integer objId = rset.getInt("obj_Id");
-				final AvailableRestriction type = AvailableRestriction.forName(rset.getString("type"));
-				final int delay = rset.getInt("delay");
+				final Integer objId = rset.getInt("player_id");
+				final AvailableRestriction type = AvailableRestriction.forName(rset.getString("restriction"));
+				final long delay = rset.getLong("remaining_ms");
+				final boolean permanent = rset.wasNull(); // NULL: permanent restriction
 				final String message = rset.getString("message");
 				
-				switch (delay)
-				{
-					case -1:
-						addRestriction(objId, type);
-						break;
-					default:
-						timedRemoveRestriction(objId, type, delay, message);
-						break;
-				}
+				if (permanent)
+					addRestriction(objId, type);
+				else
+					timedRemoveRestriction(objId, type, delay, message);
 				count++;
 			}
 			
@@ -115,83 +116,86 @@ public final class ObjectRestrictions
 	{
 		System.out.println("ObjectRestrictions: storing started:");
 		
-		Connection con = null;
-		try
-		{
-			con = L2DatabaseFactory.getInstance().getConnection();
-			
-			// Clean up old table data
-			PreparedStatement statement = con.prepareStatement(DELETE_RESTRICTIONS);
-			statement.execute();
-			statement.close();
-			
-			System.out.println("ObjectRestrictions: storing permanent restrictions.");
-			// Store permanent restrictions
-			for (Entry<Integer, EnumSet<AvailableRestriction>> entry : _restrictionList.entrySet())
+		// Replacing all rows belongs together
+		WorldTransaction.run("Storing the object restrictions", () -> {
+			Connection con = null;
+			try
 			{
-				for (AvailableRestriction restriction : entry.getValue())
+				con = L2DatabaseFactory.getInstance().getConnection();
+				
+				// Clean up old table data
+				PreparedStatement statement = con.prepareStatement(DELETE_RESTRICTIONS);
+				statement.execute();
+				statement.close();
+				
+				System.out.println("ObjectRestrictions: storing permanent restrictions.");
+				// Store permanent restrictions
+				for (Entry<Integer, EnumSet<AvailableRestriction>> entry : _restrictionList.entrySet())
 				{
-					statement = con.prepareStatement(INSERT_RESTRICTIONS);
-					
-					statement.setInt(1, entry.getKey());
-					statement.setString(2, restriction.name());
-					statement.setLong(3, -1);
-					statement.setString(4, "");
-					
-					statement.execute();
-					statement.close();
+					for (AvailableRestriction restriction : entry.getValue())
+						insertRestriction(con, entry.getKey(), restriction, -1, null);
+				}
+				
+				System.out.println("ObjectRestrictions: storing paused events.");
+				// Store paused restriction events
+				for (Entry<Integer, List<PausedTimedEvent>> entry : _pausedActions.entrySet())
+				{
+					for (PausedTimedEvent paused : entry.getValue())
+					{
+						insertRestriction(con, entry.getKey(), paused.getAction().getRestriction(),
+								paused.getRemainingTime(), paused.getAction().getMessage());
+					}
+				}
+				
+				System.out.println("ObjectRestrictions: stopping and storing running events.");
+				// Store running restriction events
+				for (Entry<Integer, List<TimedRestrictionAction>> entry : _runningActions.entrySet())
+				{
+					for (TimedRestrictionAction action : entry.getValue())
+					{
+						// Shutdown task
+						action.getTask().cancel(true);
+						
+						insertRestriction(con, entry.getKey(), action.getRestriction(), action.getRemainingTime(),
+								action.getMessage());
+					}
 				}
 			}
-			
-			System.out.println("ObjectRestrictions: storing paused events.");
-			// Store paused restriction events
-			for (Entry<Integer, List<PausedTimedEvent>> entry : _pausedActions.entrySet())
+			catch (SQLException e)
 			{
-				for (PausedTimedEvent paused : entry.getValue())
-				{
-					statement = con.prepareStatement(INSERT_RESTRICTIONS);
-					
-					statement.setInt(1, entry.getKey());
-					statement.setString(2, paused.getAction().getRestriction().name());
-					statement.setLong(3, paused.getRemainingTime());
-					statement.setString(4, paused.getAction().getMessage());
-					
-					statement.execute();
-					statement.close();
-				}
+				throw new IllegalStateException("Could not store the object restrictions", e);
 			}
-			
-			System.out.println("ObjectRestrictions: stopping and storing running events.");
-			// Store running restriction events
-			for (Entry<Integer, List<TimedRestrictionAction>> entry : _runningActions.entrySet())
+			finally
 			{
-				for (TimedRestrictionAction action : entry.getValue())
-				{
-					// Shutdown task
-					action.getTask().cancel(true);
-					
-					statement = con.prepareStatement(INSERT_RESTRICTIONS);
-					
-					statement.setInt(1, entry.getKey());
-					statement.setString(2, action.getRestriction().name());
-					statement.setLong(3, action.getRemainingTime());
-					statement.setString(4, action.getMessage());
-					
-					statement.execute();
-					statement.close();
-				}
+				L2DatabaseFactory.close(con);
 			}
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+		});
 		
 		System.out.println("ObjectRestrictions: All data saved.");
+	}
+	
+	/**
+	 * @param remainingTime milliseconds left, -1 for a permanent restriction (stored as NULL)
+	 * @param message shown when the restriction ends, null or empty for none (stored as NULL)
+	 */
+	private static void insertRestriction(Connection con, int objId, AvailableRestriction restriction,
+			long remainingTime, String message) throws SQLException
+	{
+		PreparedStatement statement = con.prepareStatement(INSERT_RESTRICTIONS);
+		
+		statement.setString(1, restriction.name());
+		if (remainingTime == -1)
+			statement.setNull(2, Types.BIGINT);
+		else
+			statement.setLong(2, remainingTime);
+		if (message == null || message.isEmpty())
+			statement.setNull(3, Types.VARCHAR);
+		else
+			statement.setString(3, message);
+		statement.setInt(4, objId);
+		
+		statement.execute();
+		statement.close();
 	}
 	
 	/**

@@ -1,1 +1,0 @@
-ALTER TABLE `character_recipebook` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`,`charId`,`classIndex`);

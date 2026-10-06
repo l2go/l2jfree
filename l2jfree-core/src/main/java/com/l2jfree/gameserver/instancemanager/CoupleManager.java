@@ -71,7 +71,7 @@ public class CoupleManager
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			statement = con.prepareStatement("Select id from couples order by id");
+			statement = con.prepareStatement("SELECT id FROM couple ORDER BY id");
 			rs = statement.executeQuery();
 			
 			while (rs.next())
@@ -153,7 +153,7 @@ public class CoupleManager
 					{
 						con = L2DatabaseFactory.getInstance().getConnection(con);
 						PreparedStatement statement =
-								con.prepareStatement("DELETE FROM items WHERE owner_id = ? AND item_id = ?");
+								con.prepareStatement("DELETE FROM item WHERE owner_player_id = ? AND item_template_id = ?");
 						statement.setInt(1, PlayerId);
 						statement.setInt(2, ItemId);
 						statement.execute();
@@ -191,7 +191,7 @@ public class CoupleManager
 					{
 						con = L2DatabaseFactory.getInstance().getConnection(con);
 						PreparedStatement statement =
-								con.prepareStatement("DELETE FROM items WHERE owner_id = ? AND item_id = ?");
+								con.prepareStatement("DELETE FROM item WHERE owner_player_id = ? AND item_template_id = ?");
 						statement.setInt(1, Player2Id);
 						statement.setInt(2, Item2Id);
 						statement.execute();

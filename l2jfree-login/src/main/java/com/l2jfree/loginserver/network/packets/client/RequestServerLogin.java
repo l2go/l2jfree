@@ -14,8 +14,10 @@
  */
 package com.l2jfree.loginserver.network.packets.client;
 
-import com.l2jfree.Config;
-import com.l2jfree.loginserver.beans.SessionKey;
+import com.l2jfree.contract.SessionKey;
+import com.l2jfree.contract.WorldPort;
+import com.l2jfree.loginserver.LoginConfig;
+import com.l2jfree.loginserver.LoginModule;
 import com.l2jfree.loginserver.manager.LoginManager;
 import com.l2jfree.loginserver.network.L2Client;
 import com.l2jfree.loginserver.network.packets.L2ClientPacket;
@@ -23,7 +25,6 @@ import com.l2jfree.loginserver.network.packets.server.LoginFail;
 import com.l2jfree.loginserver.network.packets.server.PlayOk;
 import com.l2jfree.loginserver.services.exception.MaintenanceException;
 import com.l2jfree.loginserver.services.exception.MaturityException;
-import com.l2jfree.loginserver.thread.GameServerListener;
 
 /**
  * Fromat is ddc
@@ -92,20 +93,29 @@ public class RequestServerLogin extends L2ClientPacket
 		L2Client client = getClient();
 		SessionKey sk = client.getSessionKey();
 		
-		if (Config.SECURITY_CARD_LOGIN && !client.isCardAuthed())
+		if (LoginConfig.SECURITY_CARD_LOGIN && !client.isCardAuthed())
 		{
 			client.closeLoginGame(LoginFail.REASON_IGNORE);
 			return;
 		}
 		
 		// if we didn't show the license we can't check these values
-		if (!Config.SHOW_LICENCE || sk.checkLoginPair(_skey1, _skey2))
+		if (!LoginConfig.SHOW_LICENCE || client.hasLoginPair(_skey1, _skey2))
 		{
-			// make sure GS handles the info packet
-			GameServerListener.getInstance().playerSelectedServer(_serverId, client.getIp());
+			WorldPort world = LoginModule.currentWorld();
+			boolean chosenWorldExists = world != null && world.status().serverId() == _serverId;
+			if (chosenWorldExists)
+			{
+				// make sure the world handles the info packet
+				world.expect(client.getIp());
+			}
 			try
 			{
-				if (LoginManager.getInstance().isLoginPossible(client.getAge(), client.getAccessLevel(), _serverId))
+				// a server id that is not the id of the world is refused like a world under maintenance
+				if (!chosenWorldExists)
+					throw MaintenanceException.MAINTENANCE;
+				
+				if (LoginManager.getInstance().isLoginPossible(client.getAge(), client.getAccessLevel()))
 				{
 					client.setJoinedGS(true);
 					client.sendPacket(new PlayOk(sk));

@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.instancemanager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
@@ -47,6 +48,7 @@ import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.client.ConfirmDlgAnswer.AnswerHandler;
 import com.l2jfree.gameserver.network.packets.server.ConfirmDlg;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 
 /**
  * Completely revamped mercenary manager.
@@ -67,10 +69,14 @@ public class MercTicketManager
 	public static final String[] MESSAGES = { "To arms!", "I am ready to serve you my lord when the time comes.",
 			"You summon me." };
 	
-	private static final String LOAD_POSITIONS = "SELECT * FROM castle_hired_guards";
-	private static final String CLEAN_POSITIONS = "TRUNCATE TABLE castle_hired_guards";
-	private static final String ADD_POSITION = "INSERT INTO castle_hired_guards VALUES (?,?,?,?,?)";
-	private static final String REMOVE_POSITION = "DELETE FROM castle_hired_guards WHERE x=? AND y=? AND z=?";
+	private static final String LOAD_POSITIONS =
+			"SELECT item_template_id, x, y, z, heading FROM castle_hired_guard";
+	private static final String CLEAN_POSITIONS = "DELETE FROM castle_hired_guard";
+	private static final String ADD_POSITION =
+			"INSERT INTO castle_hired_guard (item_template_id, x, y, z, heading) VALUES (?,?,?,?,?)"
+					+ " ON CONFLICT (x, y, z) DO UPDATE SET item_template_id = EXCLUDED.item_template_id,"
+					+ " heading = EXCLUDED.heading";
+	private static final String REMOVE_POSITION = "DELETE FROM castle_hired_guard WHERE x=? AND y=? AND z=?";
 	
 	private static final int DAWN_MERCENARY_MIN = 35020;
 	private static final int DAWN_MERCENARY_MAX = 35029;
@@ -739,7 +745,7 @@ public class MercTicketManager
 			ResultSet rs = ps.executeQuery();
 			while (rs.next())
 			{
-				int item = rs.getInt("itemId");
+				int item = rs.getInt("item_template_id");
 				int x = rs.getInt("x");
 				int y = rs.getInt("y");
 				int z = rs.getInt("z");
@@ -1148,37 +1154,40 @@ public class MercTicketManager
 	public final void saveAll()
 	{
 		_update = null;
-		Connection con = null;
-		try
-		{
-			con = L2DatabaseFactory.getInstance().getConnection();
-			PreparedStatement ps = con.prepareStatement(CLEAN_POSITIONS);
-			ps.executeUpdate();
-			ps.close();
-			for (FastList<L2ItemInstance> posts : _positions.values())
+		// The old positions go and the current ones are stored, all together
+		WorldTransaction.run("Saving the mercenary positions", () -> {
+			Connection con = null;
+			try
 			{
-				L2ItemInstance[] pos = posts.toArray(new L2ItemInstance[posts.size()]);
-				for (L2ItemInstance post : pos)
+				con = L2DatabaseFactory.getInstance().getConnection();
+				PreparedStatement ps = con.prepareStatement(CLEAN_POSITIONS);
+				ps.executeUpdate();
+				ps.close();
+				for (FastList<L2ItemInstance> posts : _positions.values())
 				{
-					ps = con.prepareStatement(ADD_POSITION);
-					ps.setInt(1, post.getItemId());
-					ps.setInt(2, post.getX());
-					ps.setInt(3, post.getY());
-					ps.setInt(4, post.getZ());
-					ps.setInt(5, post.getHeading());
-					ps.executeUpdate();
-					ps.close();
+					L2ItemInstance[] pos = posts.toArray(new L2ItemInstance[posts.size()]);
+					for (L2ItemInstance post : pos)
+					{
+						ps = con.prepareStatement(ADD_POSITION);
+						ps.setInt(1, post.getItemId());
+						ps.setInt(2, post.getX());
+						ps.setInt(3, post.getY());
+						ps.setInt(4, post.getZ());
+						ps.setInt(5, post.getHeading());
+						ps.executeUpdate();
+						ps.close();
+					}
 				}
 			}
-		}
-		catch (Exception e)
-		{
-			_log.error("Could not save mercenary positions!", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+			catch (SQLException e)
+			{
+				throw new IllegalStateException("Could not save mercenary positions!", e);
+			}
+			finally
+			{
+				L2DatabaseFactory.close(con);
+			}
+		});
 	}
 	
 	/**

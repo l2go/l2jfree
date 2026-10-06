@@ -21,7 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.l2jfree.Config;
+import com.l2jfree.loginserver.LoginConfig;
 import com.zaxxer.hikari.HikariConfig;
 
 class LoginPoolBoundsTest
@@ -36,35 +36,35 @@ class LoginPoolBoundsTest
 	@BeforeEach
 	void rememberPoolSettings()
 	{
-		driver = Config.DATABASE_DRIVER;
-		url = Config.DATABASE_URL;
-		login = Config.DATABASE_LOGIN;
-		password = Config.DATABASE_PASSWORD;
-		maximum = Config.DATABASE_MAX_CONNECTIONS;
-		idle = Config.DATABASE_MIN_IDLE_CONNECTIONS;
-		Config.DATABASE_DRIVER = "org.postgresql.Driver";
-		Config.DATABASE_URL = "jdbc:postgresql://127.0.0.1/l2jfree_test";
-		Config.DATABASE_LOGIN = "test";
-		Config.DATABASE_PASSWORD = "test";
+		driver = LoginConfig.DATABASE_DRIVER;
+		url = LoginConfig.DATABASE_URL;
+		login = LoginConfig.DATABASE_LOGIN;
+		password = LoginConfig.DATABASE_PASSWORD;
+		maximum = LoginConfig.DATABASE_MAX_CONNECTIONS;
+		idle = LoginConfig.DATABASE_MIN_IDLE_CONNECTIONS;
+		LoginConfig.DATABASE_DRIVER = "org.postgresql.Driver";
+		LoginConfig.DATABASE_URL = "jdbc:postgresql://127.0.0.1/l2jfree_test";
+		LoginConfig.DATABASE_LOGIN = "test";
+		LoginConfig.DATABASE_PASSWORD = "test";
 	}
 	
 	@AfterEach
 	void restorePoolSettings()
 	{
-		Config.DATABASE_DRIVER = driver;
-		Config.DATABASE_URL = url;
-		Config.DATABASE_LOGIN = login;
-		Config.DATABASE_PASSWORD = password;
-		Config.DATABASE_MAX_CONNECTIONS = maximum;
-		Config.DATABASE_MIN_IDLE_CONNECTIONS = idle;
+		LoginConfig.DATABASE_DRIVER = driver;
+		LoginConfig.DATABASE_URL = url;
+		LoginConfig.DATABASE_LOGIN = login;
+		LoginConfig.DATABASE_PASSWORD = password;
+		LoginConfig.DATABASE_MAX_CONNECTIONS = maximum;
+		LoginConfig.DATABASE_MIN_IDLE_CONNECTIONS = idle;
 	}
 	
 	@Test
 	@DisplayName("the login pool keeps at least one connection and caps idle at that maximum")
 	void maximumHasAFloorOfOne()
 	{
-		Config.DATABASE_MAX_CONNECTIONS = 0;
-		Config.DATABASE_MIN_IDLE_CONNECTIONS = 5;
+		LoginConfig.DATABASE_MAX_CONNECTIONS = 0;
+		LoginConfig.DATABASE_MIN_IDLE_CONNECTIONS = 5;
 		
 		HikariConfig pool = LoginDataSource.createPoolConfig();
 		
@@ -76,8 +76,8 @@ class LoginPoolBoundsTest
 	@DisplayName("a negative login idle floor becomes zero")
 	void negativeIdleBecomesZero()
 	{
-		Config.DATABASE_MAX_CONNECTIONS = 8;
-		Config.DATABASE_MIN_IDLE_CONNECTIONS = -1;
+		LoginConfig.DATABASE_MAX_CONNECTIONS = 8;
+		LoginConfig.DATABASE_MIN_IDLE_CONNECTIONS = -1;
 		
 		HikariConfig pool = LoginDataSource.createPoolConfig();
 		

@@ -45,33 +45,34 @@ import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.InventoryUpdate;
 import com.l2jfree.gameserver.network.packets.server.SocialAction;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 import com.l2jfree.gameserver.templates.StatsSet;
 
 public class Hero
 {
 	private final static Logger _log = LoggerFactory.getLogger(Hero.class);
 	
-	private static final String GET_HEROES = "SELECT heroes.charId, "
-			+ "characters.char_name, heroes.class_id, heroes.count, heroes.played "
-			+ "FROM heroes, characters WHERE characters.charId = heroes.charId " + "AND heroes.played = 1";
-	private static final String GET_ALL_HEROES = "SELECT heroes.charId, "
-			+ "characters.char_name, heroes.class_id, heroes.count, heroes.played "
-			+ "FROM heroes, characters WHERE characters.charId = heroes.charId";
-	private static final String UPDATE_ALL = "UPDATE heroes SET played = 0";
-	private static final String INSERT_HERO = "INSERT INTO heroes VALUES (?,?,?,?)";
-	private static final String UPDATE_HERO = "UPDATE heroes SET count = ?, " + "played = ?" + " WHERE charId = ?";
-	private static final String GET_CLAN_ALLY = "SELECT characters.clanid "
-			+ "AS clanid, coalesce(clan_data.ally_Id, 0) AS allyId FROM characters "
-			+ "LEFT JOIN clan_data ON clan_data.clan_id = characters.clanid " + "WHERE characters.charId = ?";
-	private static final String GET_CLAN_NAME = "SELECT clan_name FROM clan_data "
-			+ "WHERE clan_id = (SELECT clanid FROM characters WHERE char_name = ?)";
+	private static final String GET_HEROES = "SELECT hero.player_id, "
+			+ "player.name, hero.class_id, hero.hero_count, hero.is_current "
+			+ "FROM hero JOIN player ON player.id = hero.player_id WHERE hero.is_current";
+	private static final String GET_ALL_HEROES = "SELECT hero.player_id, "
+			+ "player.name, hero.class_id, hero.hero_count, hero.is_current "
+			+ "FROM hero JOIN player ON player.id = hero.player_id";
+	private static final String UPDATE_ALL = "UPDATE hero SET is_current = false";
+	private static final String INSERT_HERO = "INSERT INTO hero (player_id, class_id, hero_count, is_current) VALUES (?,?,?,?)";
+	private static final String UPDATE_HERO = "UPDATE hero SET hero_count = ?, " + "is_current = ?" + " WHERE player_id = ?";
+	private static final String GET_CLAN_ALLY = "SELECT player.clan_id AS clan_id, "
+			+ "coalesce(clan.alliance_id, 0) AS alliance_id FROM player "
+			+ "LEFT JOIN clan ON clan.id = player.clan_id " + "WHERE player.id = ?";
+	private static final String GET_CLAN_NAME = "SELECT name FROM clan "
+			+ "WHERE id = (SELECT clan_id FROM player WHERE name = ?)";
 	// delete hero items
-	private static final String DELETE_ITEMS = "DELETE FROM items WHERE item_id IN "
+	private static final String DELETE_ITEMS = "DELETE FROM item WHERE item_template_id IN "
 			+ "(6842, 6611, 6612, 6613, 6614, 6615, 6616, 6617, 6618, 6619, 6620, 6621, 9388, 9389, 9390) "
-			+ "AND owner_id NOT IN (SELECT charId FROM characters WHERE accesslevel > 0)";
-	private static final String DELETE_SKILLS = "DELETE FROM character_skills WHERE skill_id IN "
+			+ "AND (owner_player_id IS NULL OR owner_player_id NOT IN (SELECT id FROM player WHERE access_level > 0))";
+	private static final String DELETE_SKILLS = "DELETE FROM player_skill WHERE skill_id IN "
 			+ "(395, 396, 1374, 1375, 1376) "
-			+ "AND charId NOT IN (SELECT charId FROM characters WHERE accesslevel > 0)";
+			+ "AND player_id NOT IN (SELECT id FROM player WHERE access_level > 0)";
 	
 	private static Map<Integer, StatsSet> _heroes;
 	private static Map<Integer, StatsSet> _completeHeroes;
@@ -117,11 +118,11 @@ public class Hero
 			while (rset.next())
 			{
 				StatsSet hero = new StatsSet();
-				int charId = rset.getInt(Olympiad.CHAR_ID);
-				hero.set(Olympiad.CHAR_NAME, rset.getString(Olympiad.CHAR_NAME));
-				hero.set(Olympiad.CLASS_ID, rset.getInt(Olympiad.CLASS_ID));
-				hero.set(COUNT, rset.getInt(COUNT));
-				hero.set(PLAYED, rset.getInt(PLAYED));
+				int charId = rset.getInt("player_id");
+				hero.set(Olympiad.CHAR_NAME, rset.getString("name"));
+				hero.set(Olympiad.CLASS_ID, rset.getInt("class_id"));
+				hero.set(COUNT, rset.getInt("hero_count"));
+				hero.set(PLAYED, rset.getBoolean("is_current") ? 1 : 0);
 				
 				statement2 = con2.prepareStatement(GET_CLAN_ALLY);
 				statement2.setInt(1, charId);
@@ -144,11 +145,11 @@ public class Hero
 			while (rset.next())
 			{
 				StatsSet hero = new StatsSet();
-				int charId = rset.getInt(Olympiad.CHAR_ID);
-				hero.set(Olympiad.CHAR_NAME, rset.getString(Olympiad.CHAR_NAME));
-				hero.set(Olympiad.CLASS_ID, rset.getInt(Olympiad.CLASS_ID));
-				hero.set(COUNT, rset.getInt(COUNT));
-				hero.set(PLAYED, rset.getInt(PLAYED));
+				int charId = rset.getInt("player_id");
+				hero.set(Olympiad.CHAR_NAME, rset.getString("name"));
+				hero.set(Olympiad.CLASS_ID, rset.getInt("class_id"));
+				hero.set(COUNT, rset.getInt("hero_count"));
+				hero.set(PLAYED, rset.getBoolean("is_current") ? 1 : 0);
 				
 				statement2 = con2.prepareStatement(GET_CLAN_ALLY);
 				statement2.setInt(1, charId);
@@ -188,8 +189,8 @@ public class Hero
 	{
 		if (resultSet.next())
 		{
-			int clanId = resultSet.getInt("clanid");
-			int allyId = resultSet.getInt("allyId");
+			int clanId = resultSet.getInt("clan_id");
+			int allyId = resultSet.getInt("alliance_id");
 			
 			String clanName = "";
 			String allyName = "";
@@ -231,8 +232,6 @@ public class Hero
 	
 	public synchronized void computeNewHeroes(List<StatsSet> newHeroes)
 	{
-		updateHeroes(true);
-		
 		if (!_heroes.isEmpty())
 		{
 			for (StatsSet hero : _heroes.values())
@@ -277,6 +276,7 @@ public class Hero
 		
 		if (newHeroes.size() == 0)
 		{
+			updateHeroes(true);
 			_heroes.clear();
 			return;
 		}
@@ -308,14 +308,17 @@ public class Hero
 			}
 		}
 		
-		deleteItemsInDb();
-		deleteSkillsInDb();
-		
 		_heroes.clear();
 		_heroes.putAll(heroes);
 		heroes.clear();
 		
-		updateHeroes(false);
+		// The old heroes are reset, their items and skills are removed and the new heroes are stored together.
+		WorldTransaction.run("Hero selection", () -> {
+			updateHeroes(true);
+			deleteItemsInDb();
+			deleteSkillsInDb();
+			updateHeroes(false);
+		});
 		
 		for (StatsSet hero : _heroes.values())
 		{
@@ -355,7 +358,7 @@ public class Hero
 					ResultSet rset = statement.executeQuery();
 					if (rset.next())
 					{
-						String clanName = rset.getString("clan_name");
+						String clanName = rset.getString("name");
 						if (clanName != null)
 						{
 							L2Clan clan = ClanTable.getInstance().getClanByName(clanName);
@@ -422,7 +425,7 @@ public class Hero
 							statement.setInt(1, heroId);
 							statement.setInt(2, hero.getInteger(Olympiad.CLASS_ID));
 							statement.setInt(3, hero.getInteger(COUNT));
-							statement.setInt(4, hero.getInteger(PLAYED));
+							statement.setBoolean(4, hero.getInteger(PLAYED) == 1);
 							statement.execute();
 							statement.close();
 							
@@ -451,7 +454,7 @@ public class Hero
 						{
 							statement = con.prepareStatement(UPDATE_HERO);
 							statement.setInt(1, hero.getInteger(COUNT));
-							statement.setInt(2, hero.getInteger(PLAYED));
+							statement.setBoolean(2, hero.getInteger(PLAYED) == 1);
 							statement.setInt(3, heroId);
 							statement.execute();
 							statement.close();

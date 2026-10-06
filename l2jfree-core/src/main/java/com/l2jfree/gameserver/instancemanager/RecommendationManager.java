@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Calendar;
 
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
 import com.l2jfree.gameserver.network.packets.server.UserInfo;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 
 /**
  * @author Savormix
@@ -39,15 +41,16 @@ import com.l2jfree.gameserver.network.packets.server.UserInfo;
 public final class RecommendationManager
 {
 	private static final String ADD_RECOMMENDATION_INFO =
-			"INSERT INTO character_recommend_data (charId,lastUpdate) VALUES (?,?)";
+			"INSERT INTO player_recommendation_status (player_id, updated_at) VALUES (?,?)";
 	private static final String UPDATE_RECOMMENDATION_INFO =
-			"UPDATE character_recommend_data SET evaluationAble = ?,evaluationPoints = ?,lastUpdate=? WHERE charId=?";
+			"UPDATE player_recommendation_status SET recommendations_left = ?, recommendations_received = ?, updated_at = ? WHERE player_id = ?";
 	private static final String RESTORE_RECOMMENDATION_INFO =
-			"SELECT evaluationAble,evaluationPoints,lastUpdate FROM character_recommend_data WHERE charId=?";
-	private static final String ADD_RECOMMENDATION_RESTRICTION = "INSERT INTO character_recommends VALUES (?,?)";
-	private static final String REMOVE_RECOMMENDATION_RESTRICTIONS = "TRUNCATE TABLE character_recommends";
+			"SELECT recommendations_left, recommendations_received, updated_at FROM player_recommendation_status WHERE player_id = ?";
+	private static final String ADD_RECOMMENDATION_RESTRICTION =
+			"INSERT INTO player_recommendation (player_id, recommended_player_id) VALUES (?,?)";
+	private static final String REMOVE_RECOMMENDATION_RESTRICTIONS = "DELETE FROM player_recommendation";
 	private static final String RESTORE_RECOMMENDATION_RESTRICTIONS =
-			"SELECT target_id FROM character_recommends WHERE charId=?";
+			"SELECT recommended_player_id FROM player_recommendation WHERE player_id = ?";
 	
 	private static final Logger _log = LoggerFactory.getLogger(RecommendationManager.class);
 	private static final long DAY = 24 * 3600 * 1000;
@@ -100,48 +103,59 @@ public final class RecommendationManager
 			return;
 		}
 		
-		Connection con = null;
-		PreparedStatement ps = null;
-		try
-		{
-			if (Config.ALT_RECOMMEND)
+		final int evaluatorLeft = evaluator.getEvaluations() - 1;
+		final int evaluatedPoints = evaluated.getEvalPoints() + 1;
+		
+		// The restriction and both counters belong together
+		boolean saved = WorldTransaction.run("Recommendation of " + evaluated.getName(), () -> {
+			Connection con = null;
+			try
 			{
 				con = L2DatabaseFactory.getInstance().getConnection(con);
-				ps = con.prepareStatement(ADD_RECOMMENDATION_RESTRICTION);
-				ps.setInt(1, evaluator.getObjectId());
-				ps.setInt(2, evaluated.getObjectId());
-				ps.executeUpdate();
-				ps.close();
+				if (Config.ALT_RECOMMEND)
+				{
+					PreparedStatement ps = con.prepareStatement(ADD_RECOMMENDATION_RESTRICTION);
+					ps.setInt(1, evaluator.getObjectId());
+					ps.setInt(2, evaluated.getObjectId());
+					ps.executeUpdate();
+					ps.close();
+				}
+				store(con, evaluator, evaluatorLeft, evaluator.getEvalPoints());
+				store(con, evaluated, evaluated.getEvaluations(), evaluatedPoints);
 			}
-			//ALWAYS. It's the same on retail!
-			evaluator.addEvalRestriction(evaluated.getObjectId());
-			update(evaluator, evaluator.getEvaluations() - 1, evaluator.getEvalPoints());
-			update(evaluated, evaluated.getEvaluations(), evaluated.getEvalPoints() + 1);
-			//changed available evaluation count, notify ONLY the evaluator
-			//don't remove this again!
-			evaluator.sendPacket(new UserInfo(evaluator));
-			SystemMessage sm =
-					new SystemMessage(SystemMessageId.YOU_HAVE_RECOMMENDED_C1_YOU_HAVE_S2_RECOMMENDATIONS_LEFT);
-			sm.addPcName(evaluated);
-			sm.addNumber(evaluator.getEvaluations());
-			evaluator.sendPacket(sm);
-			sm = new SystemMessage(SystemMessageId.YOU_HAVE_BEEN_RECOMMENDED_BY_C1);
-			sm.addPcName(evaluator);
-			evaluated.sendPacket(sm);
-			evaluated.broadcastUserInfo();
-		}
-		catch (SQLException e)
-		{
-			_log.error(evaluator.getName() + " failed evaluating player " + evaluated.getName() + "!", e);
-		}
-		finally
-		{
-			L2DatabaseFactory.close(con);
-		}
+			catch (SQLException e)
+			{
+				throw new IllegalStateException(evaluator.getName() + " failed evaluating player "
+						+ evaluated.getName() + "!", e);
+			}
+			finally
+			{
+				L2DatabaseFactory.close(con);
+			}
+		});
+		if (!saved)
+			return;
+		
+		//ALWAYS. It's the same on retail!
+		evaluator.addEvalRestriction(evaluated.getObjectId());
+		evaluator.setEvaluationCount(evaluatorLeft);
+		evaluated.setEvalPoints(evaluatedPoints);
+		//changed available evaluation count, notify ONLY the evaluator
+		//don't remove this again!
+		evaluator.sendPacket(new UserInfo(evaluator));
+		SystemMessage sm =
+				new SystemMessage(SystemMessageId.YOU_HAVE_RECOMMENDED_C1_YOU_HAVE_S2_RECOMMENDATIONS_LEFT);
+		sm.addPcName(evaluated);
+		sm.addNumber(evaluator.getEvaluations());
+		evaluator.sendPacket(sm);
+		sm = new SystemMessage(SystemMessageId.YOU_HAVE_BEEN_RECOMMENDED_BY_C1);
+		sm.addPcName(evaluator);
+		evaluated.sendPacket(sm);
+		evaluated.broadcastUserInfo();
 	}
 	
 	/**
-	 * <B>Create an entry in `character_recommend_data`</B>.<BR>
+	 * <B>Create an entry in player_recommendation_status</B>.<BR>
 	 * Called just after character creation, but may be also called when restoring player's
 	 * evaluation data and the entry is missing.
 	 * @param player The newly created player
@@ -154,7 +168,7 @@ public final class RecommendationManager
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement ps = con.prepareStatement(ADD_RECOMMENDATION_INFO);
 			ps.setInt(1, player.getObjectId());
-			ps.setLong(2, nextUpdate - DAY);
+			ps.setTimestamp(2, new Timestamp(nextUpdate - DAY));
 			ps.executeUpdate();
 			ps.close();
 		}
@@ -193,9 +207,9 @@ public final class RecommendationManager
 				onCreate(player);
 				rs = ps.executeQuery();
 			}
-			int evaluations = rs.getInt("evaluationAble");
-			int points = rs.getInt("evaluationPoints");
-			long lastUpdate = rs.getLong("lastUpdate");
+			int evaluations = rs.getInt("recommendations_left");
+			int points = rs.getInt("recommendations_received");
+			long lastUpdate = rs.getTimestamp("updated_at").getTime();
 			while (lastUpdate < (nextUpdate - DAY))
 			{
 				evaluations = getDailyRecommendations(player.getLevel());
@@ -236,20 +250,24 @@ public final class RecommendationManager
 		update(player, player.getEvaluations(), evalPoints);
 	}
 	
+	private void store(Connection con, L2Player player, int recomLeft, int evalPoints) throws SQLException
+	{
+		PreparedStatement ps = con.prepareStatement(UPDATE_RECOMMENDATION_INFO);
+		ps.setInt(1, recomLeft);
+		ps.setInt(2, evalPoints);
+		ps.setTimestamp(3, new Timestamp(nextUpdate - DAY));
+		ps.setInt(4, player.getObjectId());
+		ps.executeUpdate();
+		ps.close();
+	}
+	
 	private void update(L2Player player, int recomLeft, int evalPoints)
 	{
 		Connection con = null;
-		PreparedStatement ps = null;
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			ps = con.prepareStatement(UPDATE_RECOMMENDATION_INFO);
-			ps.setInt(1, recomLeft);
-			ps.setInt(2, evalPoints);
-			ps.setLong(3, nextUpdate - DAY);
-			ps.setInt(4, player.getObjectId());
-			ps.executeUpdate();
-			ps.close();
+			store(con, player, recomLeft, evalPoints);
 			player.setEvaluationCount(recomLeft);
 			player.setEvalPoints(evalPoints);
 		}
@@ -301,39 +319,42 @@ public final class RecommendationManager
 		@Override
 		public void run()
 		{
-			Connection con = null;
-			PreparedStatement ps = null;
-			int rec, pts;
-			try
-			{
-				con = L2DatabaseFactory.getInstance().getConnection();
-				for (L2Player player : L2World.getInstance().getAllPlayers())
+			// All counters and the emptied restrictions belong together
+			WorldTransaction.run("Daily update of the recommendations", () -> {
+				Connection con = null;
+				PreparedStatement ps = null;
+				int rec, pts;
+				try
 				{
-					ps = con.prepareStatement(UPDATE_RECOMMENDATION_INFO);
-					rec = getDailyRecommendations(player.getLevel());
-					pts = getNewEvalPoints(player);
-					ps.setInt(1, rec);
-					ps.setInt(2, pts);
-					ps.setLong(3, nextUpdate);
-					ps.setInt(4, player.getObjectId());
+					con = L2DatabaseFactory.getInstance().getConnection();
+					for (L2Player player : L2World.getInstance().getAllPlayers())
+					{
+						ps = con.prepareStatement(UPDATE_RECOMMENDATION_INFO);
+						rec = getDailyRecommendations(player.getLevel());
+						pts = getNewEvalPoints(player);
+						ps.setInt(1, rec);
+						ps.setInt(2, pts);
+						ps.setTimestamp(3, new Timestamp(nextUpdate));
+						ps.setInt(4, player.getObjectId());
+						ps.executeUpdate();
+						ps.close();
+						player.setEvaluationCount(rec);
+						player.setEvalPoints(pts);
+						player.cleanEvalRestrictions();
+					}
+					ps = con.prepareStatement(REMOVE_RECOMMENDATION_RESTRICTIONS);
 					ps.executeUpdate();
 					ps.close();
-					player.setEvaluationCount(rec);
-					player.setEvalPoints(pts);
-					player.cleanEvalRestrictions();
 				}
-				ps = con.prepareStatement(REMOVE_RECOMMENDATION_RESTRICTIONS);
-				ps.executeUpdate();
-				ps.close();
-			}
-			catch (SQLException e)
-			{
-				_log.error("Failed updating recommendations!", e);
-			}
-			finally
-			{
-				L2DatabaseFactory.close(con);
-			}
+				catch (SQLException e)
+				{
+					throw new IllegalStateException("Failed updating recommendations!", e);
+				}
+				finally
+				{
+					L2DatabaseFactory.close(con);
+				}
+			});
 			
 			Calendar update = Calendar.getInstance();
 			if (update.get(Calendar.HOUR_OF_DAY) >= 13)

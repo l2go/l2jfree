@@ -68,15 +68,15 @@ public final class AutoAnnouncements
 			conn = L2DatabaseFactory.getInstance().getConnection();
 			
 			PreparedStatement statement =
-					conn.prepareStatement("SELECT initial, delay, cycle, memo FROM auto_announcements");
+					conn.prepareStatement("SELECT initial_delay_s, interval_s, repeat_count, message FROM auto_announcement ORDER BY id");
 			ResultSet data = statement.executeQuery();
 			
 			while (data.next())
 			{
-				final long initial = data.getLong("initial");
-				final long delay = data.getLong("delay");
-				final int repeat = data.getInt("cycle");
-				final String[] memo = data.getString("memo").split("\n");
+				final long initial = data.getLong("initial_delay_s");
+				final long delay = data.getLong("interval_s");
+				final int repeat = data.getInt("repeat_count");
+				final String[] memo = data.getString("message").split("\n");
 				
 				_announcers.add(new AutoAnnouncer(memo, repeat, initial, delay));
 			}

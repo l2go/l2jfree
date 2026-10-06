@@ -380,7 +380,8 @@ public class AdminSmartShop implements IAdminCommandHandler
 	private void getAllItems()
 	{
 		String[] SQL_ITEM_SELECTS =
-				{ "SELECT item_id FROM etcitem", "SELECT item_id FROM armor", "SELECT item_id FROM weapon" };
+				{ "SELECT id FROM etc_item_template ORDER BY id", "SELECT id FROM armor_template ORDER BY id",
+						"SELECT id FROM weapon_template ORDER BY id" };
 		
 		Connection con = null;
 		try
@@ -394,16 +395,16 @@ public class AdminSmartShop implements IAdminCommandHandler
 				
 				while (rset.next())
 				{
-					Integer i = rset.getInt("item_id");
+					Integer i = rset.getInt("id");
 					smartList.add(i);
 					index++;
 					
-					if (selectQuery.endsWith("armor") && (armorStart == -1 || itemsEnd == -1))
+					if (selectQuery.contains("FROM armor_template") && (armorStart == -1 || itemsEnd == -1))
 					{
 						armorStart = index;
 						itemsEnd = index - 1;
 					}
-					else if (selectQuery.endsWith("weapon") && (armorEnd == -1 || weapnStart == -1))
+					else if (selectQuery.contains("FROM weapon_template") && (armorEnd == -1 || weapnStart == -1))
 					{
 						weapnStart = index;
 						armorEnd = index - 1;
@@ -2472,8 +2473,8 @@ public class AdminSmartShop implements IAdminCommandHandler
 		
 		List<Integer> shopIds = new FastList<Integer>();
 		String[] SQL_ITEM_SELECTS =
-				{ "SELECT item_id,shop_id FROM custom_merchant_buylists",
-						"SELECT item_id,shop_id FROM merchant_buylists" };
+				{ "SELECT item_template_id, merchant_shop_id FROM custom_merchant_buylist",
+						"SELECT item_template_id, merchant_shop_id FROM merchant_buylist" };
 		
 		Connection con = null;
 		try
@@ -2485,8 +2486,8 @@ public class AdminSmartShop implements IAdminCommandHandler
 				ResultSet rset = statement.executeQuery();
 				while (rset.next())
 				{
-					int itemId = rset.getInt("item_id");
-					Integer shopId = rset.getInt("shop_id");
+					int itemId = rset.getInt("item_template_id");
+					Integer shopId = rset.getInt("merchant_shop_id");
 					if (ItemId == itemId && !shopIds.contains(shopId))
 					{
 						shopIds.add(shopId);
@@ -2515,7 +2516,7 @@ public class AdminSmartShop implements IAdminCommandHandler
 		
 		List<Integer> NpcIds = new FastList<Integer>();
 		String[] SQL_ITEM_SELECTS =
-				{ "SELECT shop_id,npc_id FROM custom_merchant_shopids", "SELECT shop_id,npc_id FROM merchant_shopids" };
+				{ "SELECT id, npc_template_id FROM custom_merchant_shop", "SELECT id, npc_template_id FROM merchant_shop" };
 		
 		Connection con = null;
 		try
@@ -2527,8 +2528,9 @@ public class AdminSmartShop implements IAdminCommandHandler
 				ResultSet rset = statement.executeQuery();
 				while (rset.next())
 				{
-					Integer shopId = rset.getInt("shop_id");
-					Integer npcId = rset.getInt("npc_id");
+					Integer shopId = rset.getInt("id");
+					// A GM shop has no NPC
+					Integer npcId = rset.getInt("npc_template_id");
 					for (Integer i : list)
 					{
 						if (i.equals(shopId) && !NpcIds.contains(npcId))
@@ -2560,33 +2562,34 @@ public class AdminSmartShop implements IAdminCommandHandler
 		String message = "";
 		try
 		{
+			// The columns of the three template tables that the editor shows
 			String[] SQL_ITEM_SELECTS =
 					{
-							"item_id, name, crystallizable, item_type, weight, consume_type, material, crystal_type, duration, price, crystal_count, sellable, dropable, destroyable, tradeable",
+							"id, name, is_crystallizable, item_type, weight, consume_type, material, crystal_type, shadow_mana, price, crystal_count, is_sellable, is_droppable, is_destroyable, is_tradable",
 							
-							"item_id, name, bodypart, crystallizable, armor_type, weight,"
-									+ " material, crystal_type, avoid_modify, duration, p_def, m_def, mp_bonus,"
-									+ " price, crystal_count, sellable, dropable, destroyable, tradeable, item_skill_id, item_skill_lvl",
+							"id, name, body_part, is_crystallizable, armor_type, weight,"
+									+ " material, crystal_type, evasion_modifier, shadow_mana, physical_defense, magic_defense, mp_bonus,"
+									+ " price, crystal_count, is_sellable, is_droppable, is_destroyable, is_tradable, item_skills",
 							
-							"item_id, name, bodypart, crystallizable, weight, soulshots, spiritshots,"
-									+ " material, crystal_type, p_dam, rnd_dam, weaponType, critical, hit_modify, avoid_modify,"
-									+ " shield_def, shield_def_rate, atk_speed, mp_consume, m_dam, duration, price, crystal_count,"
-									+ " sellable,  dropable, destroyable, tradeable, item_skill_id, item_skill_lvl, enchant4_skill_id, enchant4_skill_lvl, onCast_skill_id, onCast_skill_lvl,"
-									+ " onCast_skill_chance, onCrit_skill_id, onCrit_skill_lvl, onCrit_skill_chance, change_weaponId" };
+							"id, name, body_part, is_crystallizable, weight, soulshot_count, spiritshot_count,"
+									+ " material, crystal_type, physical_damage, random_damage, weapon_type, critical_rate, accuracy_modifier, evasion_modifier,"
+									+ " shield_defense, shield_defense_rate, attack_speed, mp_consumption, magic_damage, shadow_mana, price, crystal_count,"
+									+ " is_sellable, is_droppable, is_destroyable, is_tradable, item_skills, enchant4_skills, on_cast_skills,"
+									+ " on_critical_skills, change_weapon_template_id" };
 			
 			L2Item item = ItemTable.getInstance().getTemplate(itemId);
 			
 			if (item instanceof L2Armor)
 			{
-				return editArmor(makeQuery("armor (" + SQL_ITEM_SELECTS[1] + ")"), (L2Armor)item);
+				return editArmor(makeQuery("armor_template", SQL_ITEM_SELECTS[1]), (L2Armor)item);
 			}
 			else if (item instanceof L2Weapon)
 			{
-				return editWeapon(makeQuery("weapon (" + SQL_ITEM_SELECTS[2] + ")"), (L2Weapon)item);
+				return editWeapon(makeQuery("weapon_template", SQL_ITEM_SELECTS[2]), (L2Weapon)item);
 			}
 			else if (item instanceof L2EtcItem)
 			{
-				return editEtcItem(makeQuery("etcitem (" + SQL_ITEM_SELECTS[0] + ")"), (L2EtcItem)item);
+				return editEtcItem(makeQuery("etc_item_template", SQL_ITEM_SELECTS[0]), (L2EtcItem)item);
 			}
 			
 		}
@@ -2597,15 +2600,10 @@ public class AdminSmartShop implements IAdminCommandHandler
 		return (message.isEmpty()) ? "<center><font color=\"FF0000\">Invalid Edit Command</font></center>" : "";
 	}
 	
-	private String makeQuery(String query)
+	/** The text the editor shows for a template table: the table and the columns of its rows. It is not executed. */
+	private String makeQuery(String table, String columns)
 	{
-		String param[] = query.split(",");
-		query = "REPLACE INTO " + query;
-		query += " VALUES (?";
-		for (int x = 0; x < param.length - 1; x++)
-			query += " , ?";
-		query += " )";
-		return query;
+		return table + " (" + columns + ")";
 	}
 	
 	/**

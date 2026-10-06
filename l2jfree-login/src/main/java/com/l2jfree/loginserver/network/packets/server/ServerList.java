@@ -16,13 +16,10 @@ package com.l2jfree.loginserver.network.packets.server;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Map;
 
-import javolution.util.FastMap;
-
-import com.l2jfree.loginserver.beans.GameServerInfo;
-import com.l2jfree.loginserver.manager.GameServerManager;
+import com.l2jfree.contract.WorldPort;
+import com.l2jfree.contract.WorldStatus;
+import com.l2jfree.loginserver.LoginModule;
 import com.l2jfree.loginserver.network.L2Client;
 import com.l2jfree.loginserver.network.packets.L2ServerPacket;
 
@@ -47,6 +44,8 @@ import com.l2jfree.loginserver.network.packets.L2ServerPacket;
  * <B><I>c</I></B>: 0 if you don't want to display brackets in front of sever name<BR>
  * <B><I>]</I></B>
  * <BR><BR>
+ * The platform has one world, so the list has one entry, or none while the login module has no world.
+ * <BR><BR>
  * Server will be considered as "Good" when the number of online players
  * is less than half the maximum; as "Normal" between half and 4/5
  * and "Full" when there's more than 4/5 of the maximum number of players
@@ -55,8 +54,8 @@ import com.l2jfree.loginserver.network.packets.L2ServerPacket;
  */
 public final class ServerList extends L2ServerPacket
 {
-	private final Map<Integer, ServerData> _servers;
-	private final Integer[] _serverIds;
+	/** The only world of the platform, or null when the login module has no world. */
+	private final ServerData _server;
 	
 	private static final class ServerData
 	{
@@ -96,40 +95,33 @@ public final class ServerList extends L2ServerPacket
 	
 	public ServerList(L2Client client)
 	{
-		_servers = new FastMap<Integer, ServerData>();
-		
-		for (GameServerInfo gsi : GameServerManager.getInstance().getRegisteredGameServers().values())
+		WorldPort world = LoginModule.currentWorld();
+		if (world == null)
 		{
-			String _ip =
-					(gsi.getGameServerThread() != null) ? gsi.getGameServerThread().getIp(client.getIp()) : "127.0.0.1";
-			_servers.put(
-					gsi.getId(),
-					new ServerData(gsi.getId(), _ip, gsi.getPort(), gsi.getAgeLimitation(), gsi.isPvp(), gsi
-							.getCurrentPlayerCount(), gsi.getMaxPlayers(), gsi.isOnline(), gsi.isUnk1(), gsi
-							.showClock(), gsi.hideName(), gsi.testServer(), gsi.showBrackets()));
+			_server = null;
+			return;
 		}
 		
-		_serverIds = _servers.keySet().toArray(new Integer[_servers.size()]);
-		Arrays.sort(_serverIds);
+		WorldStatus status = world.status();
+		_server = new ServerData(status.serverId(), world.addressFor(client.getIp()), status.port(),
+				status.ageLimit(), status.pvp(), status.onlinePlayers(), status.maxPlayers(), status.online(),
+				status.unknownBit(), status.clock(), status.hideName(), status.testServer(), status.brackets());
 	}
 	
 	@Override
 	public void write(L2Client client)
 	{
-		ServerData server;
-		
 		writeC(0x04);
-		writeC(_servers.size());
+		writeC(_server == null ? 0 : 1);
 		
-		server = _servers.get(client.getLastServerId());
-		if (server != null && server._online)
-			writeC(server._serverId);
+		if (_server != null && _server._online && _server._serverId == client.getLastServerId())
+			writeC(_server._serverId);
 		else
 			writeC(0);
 		
-		for (Integer serverId : _serverIds)
+		if (_server != null)
 		{
-			server = _servers.get(serverId);
+			ServerData server = _server;
 			
 			writeC(server._serverId);
 			

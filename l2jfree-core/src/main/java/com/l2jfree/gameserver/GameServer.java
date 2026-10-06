@@ -23,6 +23,8 @@ import java.util.Calendar;
 import com.l2jfree.Config;
 import com.l2jfree.L2AutoInitialization;
 import com.l2jfree.L2DatabaseFactory;
+import com.l2jfree.contract.LoginPort;
+import com.l2jfree.contract.WorldPort;
 import com.l2jfree.gameserver.cache.CrestCache;
 import com.l2jfree.gameserver.cache.HtmCache;
 import com.l2jfree.gameserver.cache.WarehouseCacheManager;
@@ -75,6 +77,8 @@ import com.l2jfree.gameserver.handler.SkillTargetHandler;
 import com.l2jfree.gameserver.handler.UserCommandHandler;
 import com.l2jfree.gameserver.handler.VoicedCommandHandler;
 import com.l2jfree.gameserver.idfactory.IdFactory;
+import com.l2jfree.gameserver.persistence.WorldLock;
+import com.l2jfree.gameserver.persistence.WorldSchemas;
 import com.l2jfree.gameserver.instancemanager.AirShipManager;
 import com.l2jfree.gameserver.instancemanager.AuctionManager;
 import com.l2jfree.gameserver.instancemanager.AutoChatManager;
@@ -151,10 +155,8 @@ import com.l2jfree.gameserver.taskmanager.PacketBroadcaster;
 import com.l2jfree.gameserver.taskmanager.SQLQueue;
 import com.l2jfree.gameserver.taskmanager.tasks.TaskManager;
 import com.l2jfree.gameserver.threadmanager.DeadlockDetector;
-import com.l2jfree.gameserver.util.DatabaseBackupManager;
 import com.l2jfree.gameserver.util.DynamicExtension;
 import com.l2jfree.gameserver.util.OfflineTradeManager;
-import com.l2jfree.gameserver.util.TableOptimizer;
 import com.l2jfree.gameserver.util.Util;
 import com.l2jfree.lang.management.StartupManager;
 import com.l2jfree.util.concurrent.RunnableStatsManager;
@@ -163,7 +165,19 @@ public final class GameServer extends L2AutoInitialization
 {
 	private static final Calendar _serverStarted = Calendar.getInstance();
 	
-	public static void main(String[] args) throws Exception
+	/** Held for as long as the server runs: it keeps a second server off the same world database. */
+	@SuppressWarnings("unused")
+	private static WorldLock _worldLock;
+	
+	/**
+	 * Loads the world and opens the world port. The platform calls it once, after the login module is prepared and
+	 * before the login port opens, so a client that reaches the login finds a world.
+	 * 
+	 * @param login the port of the login module, connected to the world just before the world port opens
+	 * @return the port the login module uses to reach the world, once the world is listening
+	 * @throws Exception when any part of the world fails to load or the world port cannot be opened
+	 */
+	public static WorldPort start(LoginPort login) throws Exception
 	{
 		CoreInfo.showStartupInfo();
 		
@@ -174,7 +188,8 @@ public final class GameServer extends L2AutoInitialization
 		Files.createDirectories(Paths.get("cache"));
 		
 		Util.printSection("Database");
-		L2DatabaseFactory.getInstance();
+		_worldLock = WorldLock.acquire(Config.DATABASE_URL, Config.DATABASE_LOGIN, Config.DATABASE_PASSWORD);
+		WorldSchemas.prepare(L2DatabaseFactory.getInstance().getDataSource(), Paths.get(Config.CATALOG_DIRECTORY));
 		Util.printSection("World");
 		L2World.getInstance();
 		if (Config.IS_TELNET_ENABLED)
@@ -190,10 +205,6 @@ public final class GameServer extends L2AutoInitialization
 			throw new Exception("Could not initialize the ID factory");
 		}
 		_log.info("IdFactory: Free ObjectID's remaining: " + IdFactory.getInstance().size());
-		if (Config.OPTIMIZE_DATABASE)
-			TableOptimizer.optimize();
-		if (Config.DATABASE_BACKUP_MAKE_BACKUP_ON_STARTUP)
-			DatabaseBackupManager.makeBackup();
 		Class.forName(RunnableStatsManager.class.getName());
 		ThreadPoolManager.getInstance();
 		if (Config.DEADLOCKCHECK_INTERVAL > 0)
@@ -437,7 +448,7 @@ public final class GameServer extends L2AutoInitialization
 		System.runFinalization();
 		
 		Util.printSection("ServerThreads");
-		LoginServerThread.getInstance().start();
+		LoginLink.getInstance().connect(login);
 		
 		L2ClientSelectorThread.getInstance().openServerSocket(Config.GAMESERVER_HOSTNAME, Config.PORT_GAME);
 		L2ClientSelectorThread.getInstance().start();
@@ -470,8 +481,22 @@ public final class GameServer extends L2AutoInitialization
 		if (Config.ENABLE_JYTHON_SHELL)
 		{
 			Util.printSection("JythonShell");
-			Util.JythonShell();
+			// The shell reads the console until it is closed. It runs on a thread of its own, so the platform can
+			// open the login port once this method returns.
+			Thread shell = new Thread("JythonShell")
+			{
+				@Override
+				public void run()
+				{
+					Util.JythonShell();
+				}
+			};
+			shell.setDaemon(true);
+			shell.start();
 		}
+		
+		// The world is loaded and listens: the login module may now ask it for status and admissions.
+		return LoginLink.getInstance();
 	}
 	
 	public static Calendar getStartedTime()

@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.model.entity;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
@@ -54,6 +55,7 @@ import com.l2jfree.gameserver.model.zone.L2SiegeZone;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.NpcSay;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 
 public class FortSiege extends AbstractSiege
 {
@@ -274,8 +276,11 @@ public class FortSiege extends AbstractSiege
 			teleportPlayer(FortSiege.TeleportWhoType.Attacker, TeleportWhereType.Town);
 			_isInProgress = false; // Flag so that siege instance can be started
 			getZone().updateSiegeStatus();
-			saveFortSiege(); // Save fort specific data
-			clearSiegeClan(); // Clear siege clan from db
+			// The next siege date and the cleared registrations are the stored result of the siege
+			WorldTransaction.run("Fort siege end", () -> {
+				saveFortSiege(); // Save fort specific data
+				clearSiegeClan(); // Clear siege clan from db
+			});
 			removeCommanders(); // Remove commander from this fort
 			getFort().getSpawnManager().spawnNpcCommanders(); // Spawn NPC commanders
 			getSiegeGuardManager().unspawnSiegeGuard(); // Remove all spawned siege guard from this fort
@@ -461,14 +466,14 @@ public class FortSiege extends AbstractSiege
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("DELETE FROM fortsiege_clans WHERE fort_id=?");
+			PreparedStatement statement = con.prepareStatement("DELETE FROM fort_siege_clan WHERE fort_id=?");
 			statement.setInt(1, getFort().getFortId());
 			statement.execute();
 			statement.close();
 			
 			if (getFort().getOwnerClan() != null)
 			{
-				PreparedStatement statement2 = con.prepareStatement("DELETE FROM fortsiege_clans WHERE clan_id=?");
+				PreparedStatement statement2 = con.prepareStatement("DELETE FROM fort_siege_clan WHERE clan_id=?");
 				statement2.setInt(1, getFort().getOwnerClan().getClanId());
 				statement2.execute();
 				statement2.close();
@@ -667,9 +672,9 @@ public class FortSiege extends AbstractSiege
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
 			if (clanId != 0)
-				statement = con.prepareStatement("DELETE FROM fortsiege_clans WHERE fort_id=? AND clan_id=?");
+				statement = con.prepareStatement("DELETE FROM fort_siege_clan WHERE fort_id=? AND clan_id=?");
 			else
-				statement = con.prepareStatement("DELETE FROM fortsiege_clans WHERE fort_id=?");
+				statement = con.prepareStatement("DELETE FROM fort_siege_clan WHERE fort_id=?");
 			
 			statement.setInt(1, getFort().getFortId());
 			if (clanId != 0)
@@ -895,7 +900,7 @@ public class FortSiege extends AbstractSiege
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			
-			statement = con.prepareStatement("SELECT clan_id FROM fortsiege_clans WHERE fort_id=?");
+			statement = con.prepareStatement("SELECT clan_id FROM fort_siege_clan WHERE fort_id=?");
 			statement.setInt(1, getFort().getFortId());
 			rs = statement.executeQuery();
 			
@@ -960,8 +965,9 @@ public class FortSiege extends AbstractSiege
 		try
 		{
 			con = L2DatabaseFactory.getInstance().getConnection(con);
-			PreparedStatement statement = con.prepareStatement("UPDATE fort SET siegeDate = ? WHERE id = ?");
-			statement.setLong(1, getSiegeDate().getTimeInMillis());
+			PreparedStatement statement = con.prepareStatement("UPDATE fort SET siege_at = ? WHERE id = ?");
+			long siegeDate = getSiegeDate().getTimeInMillis();
+			statement.setTimestamp(1, siegeDate > 0 ? new Timestamp(siegeDate) : null);
 			statement.setInt(2, getFort().getFortId());
 			statement.execute();
 			
@@ -992,7 +998,7 @@ public class FortSiege extends AbstractSiege
 			
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
-			statement = con.prepareStatement("INSERT INTO fortsiege_clans (clan_id,fort_id) VALUES (?,?)");
+			statement = con.prepareStatement("INSERT INTO fort_siege_clan (clan_id, fort_id) VALUES (?,?) ON CONFLICT (fort_id, clan_id) DO NOTHING");
 			statement.setInt(1, clan.getClanId());
 			statement.setInt(2, getFort().getFortId());
 			statement.execute();
