@@ -55,7 +55,8 @@ class StandardOutputAppenderTest
 			logger.addAppender(appender);
 			logger.info("Platform ready");
 			
-			assertThat(standard.toString(StandardCharsets.UTF_8)).isEqualTo("INFO Platform ready\n");
+			assertThat(standard.toString(StandardCharsets.UTF_8)).as("started %s, status %s", appender.isStarted(),
+					context.getStatusManager().getCopyOfStatusList()).isEqualTo("INFO Platform ready\n");
 			assertThat(replaced.size()).isZero();
 		}
 		finally
