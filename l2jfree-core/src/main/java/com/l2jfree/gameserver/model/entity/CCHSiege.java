@@ -112,17 +112,17 @@ public final class CCHSiege extends AbstractSiege
 			return result;
 		// absolutely custom
 		if (winner.getReputationScore() < loser.getReputationScore())
-			result *= 1.2;
+			result = (int) (result * 1.2);
 		else
-			result *= 0.8;
+			result = (int) (result * 0.8);
 		if (winner.getLevel() < loser.getLevel())
-			result *= 1.4;
+			result = (int) (result * 1.4);
 		else
-			result *= 0.75;
+			result = (int) (result * 0.75);
 		if (winner.getOnlineMembersList().size() < loser.getOnlineMembersList().size())
-			result *= 1.05;
+			result = (int) (result * 1.05);
 		else
-			result *= 0.9;
+			result = (int) (result * 0.9);
 		return result;
 	}
 	

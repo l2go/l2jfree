@@ -329,9 +329,9 @@ public class Lottery
 			for (int i = 0; i < 5; i++)
 			{
 				if (luckynums[i] < 17)
-					enchant += L2Math.pow(2, luckynums[i] - 1);
+					enchant = (int) (enchant + L2Math.pow(2, luckynums[i] - 1));
 				else
-					type2 += L2Math.pow(2, luckynums[i] - 17);
+					type2 = (int) (type2 + L2Math.pow(2, luckynums[i] - 17));
 			}
 			
 			if (_log.isDebugEnabled())

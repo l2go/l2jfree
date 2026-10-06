@@ -314,7 +314,7 @@ public class Auction
 	private void returnItem(String Clan, int itemId, int quantity, boolean penalty)
 	{
 		if (penalty)
-			quantity *= 0.9; //take 10% tax fee if needed
+			quantity = (int) (quantity * 0.9); //take 10% tax fee if needed
 		ClanTable.getInstance().getClanByName(Clan).getWarehouse()
 				.addItem("Outbidded", PlayerInventory.ADENA_ID, quantity, null, null);
 	}

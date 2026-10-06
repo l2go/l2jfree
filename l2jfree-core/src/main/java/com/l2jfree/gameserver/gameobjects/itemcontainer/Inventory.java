@@ -1407,7 +1407,7 @@ public abstract class Inventory extends ItemContainer
 		for (L2ItemInstance item : _items)
 		{
 			if (item != null && item.getItem() != null)
-				weight += item.getItem().getWeight() * item.getCount();
+				weight = (int) (weight + item.getItem().getWeight() * item.getCount());
 		}
 		
 		_totalWeight = weight;

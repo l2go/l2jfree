@@ -738,7 +738,7 @@ public final class QuestState
 	public boolean dropQuestItems(int itemId, long minCount, long maxCount, long neededCount, int dropChance,
 			boolean sound, boolean party)
 	{
-		dropChance *= Config.RATE_DROP_QUEST;
+		dropChance = (int) (dropChance * Config.RATE_DROP_QUEST);
 		if (party)
 		{
 			L2Party p = getPlayer().getParty();
