@@ -77,7 +77,7 @@ class L2DatabaseFactoryPostgresTest
 				ResultSet result = statement.executeQuery("SHOW search_path"))
 		{
 			assertThat(result.next()).isTrue();
-			assertThat(result.getString(1)).isEqualTo("world, catalog, public");
+			assertThat(result.getString(1).replace(" ", "")).isEqualTo("world,catalog,public");
 		}
 	}
 	
@@ -108,8 +108,8 @@ class L2DatabaseFactoryPostgresTest
 	@DisplayName("work that returns is committed and work that throws is rolled back")
 	void transactionCommitsAndRollsBack() throws Exception
 	{
-		boolean committed = WorldTransaction.run("commit", () -> insert(1));
-		boolean rolledBack = WorldTransaction.run("rollback", () -> {
+		boolean committed = WorldTransaction.run("commit", factory::getPoolConnection, () -> insert(1));
+		boolean rolledBack = WorldTransaction.run("rollback", factory::getPoolConnection, () -> {
 			insert(2);
 			throw new IllegalStateException("force a rollback");
 		});
@@ -123,9 +123,9 @@ class L2DatabaseFactoryPostgresTest
 	@DisplayName("a call made inside a transaction joins it, so a failure later in the work undoes the earlier writes")
 	void everythingOnTheThreadJoinsTheTransaction() throws Exception
 	{
-		boolean result = WorldTransaction.run("join", () -> {
+		boolean result = WorldTransaction.run("join", factory::getPoolConnection, () -> {
 			insert(10);
-			WorldTransaction.run("inner", () -> insert(11));
+			WorldTransaction.run("inner", factory::getPoolConnection, () -> insert(11));
 			throw new IllegalStateException("fail after both writes");
 		});
 		
