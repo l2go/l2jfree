@@ -11770,7 +11770,7 @@ public final class L2Player extends L2Playable
 		}
 		
 		// Store in database
-		storeCharBase();
+		storePlayerData();
 		
 		RegionBBSManager.changeCommunityBoard(this, PlayerStateOnCommunity.IN_JAIL);
 	}

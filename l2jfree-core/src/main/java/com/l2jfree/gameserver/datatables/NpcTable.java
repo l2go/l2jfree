@@ -633,14 +633,14 @@ public final class NpcTable
 			
 			if (Config.FACTION_ENABLED)
 			{
-				Faction faction;
+				Faction npcFaction;
 				for (int i = 0; i < FactionManager.getInstance().getFactions().size(); i++)
 				{
-					faction = FactionManager.getInstance().getFactions().get(i);
-					if (faction.getNpcList().contains(id))
+					npcFaction = FactionManager.getInstance().getFactions().get(i);
+					if (npcFaction.getNpcList().contains(id))
 					{
-						npcDat.set("NPCFaction", faction.getId());
-						npcDat.set("NPCFactionName", faction.getName());
+						npcDat.set("NPCFaction", npcFaction.getId());
+						npcDat.set("NPCFactionName", npcFaction.getName());
 					}
 				}
 			}

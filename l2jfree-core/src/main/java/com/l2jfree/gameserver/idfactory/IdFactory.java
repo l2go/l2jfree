@@ -36,93 +36,7 @@ public abstract class IdFactory
 {
 	private final static Logger _log = LoggerFactory.getLogger(IdFactory.class);
 	
-	/**
-	 * The statements that move one object id to another, for the compaction of the ids: the key column of every entity
-	 * and every column that refers to it. The foreign keys of the schema are not deferrable, so the compaction needs
-	 * them to be (see {@link BitSetRebuildFactory}).
-	 */
-	protected static final String[] ID_UPDATES = {
-			// Players
-			"UPDATE player SET id = ? WHERE id = ?",
-			"UPDATE player SET apprentice_player_id = ? WHERE apprentice_player_id = ?",
-			"UPDATE player SET sponsor_player_id = ? WHERE sponsor_player_id = ?",
-			"UPDATE player_subclass SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_subclass_certification SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_skill SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_skill_reuse SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_effect SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_henna SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_shortcut SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_macro SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_teleport_bookmark SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_recipe SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_quest_variable SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_quest_global_variable SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_instance_reentry SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_raid_score SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_birthday SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_name_title_color SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_recommendation_status SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_recommendation SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_recommendation SET recommended_player_id = ? WHERE recommended_player_id = ?",
-			"UPDATE player_friendship SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_friendship SET friend_player_id = ? WHERE friend_player_id = ?",
-			"UPDATE player_block SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_block SET blocked_player_id = ? WHERE blocked_player_id = ?",
-			"UPDATE item SET owner_player_id = ? WHERE owner_player_id = ?",
-			"UPDATE cursed_weapon SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_mail SET player_id = ? WHERE player_id = ?",
-			"UPDATE player_mail SET sender_player_id = ? WHERE sender_player_id = ?",
-			"UPDATE offline_store SET player_id = ? WHERE player_id = ?",
-			"UPDATE offline_store_item SET player_id = ? WHERE player_id = ?",
-			"UPDATE seven_signs_player SET player_id = ? WHERE player_id = ?",
-			"UPDATE olympiad_noble SET player_id = ? WHERE player_id = ?",
-			"UPDATE olympiad_noble_month_end SET player_id = ? WHERE player_id = ?",
-			"UPDATE hero SET player_id = ? WHERE player_id = ?",
-			"UPDATE couple SET player1_id = ? WHERE player1_id = ?",
-			"UPDATE couple SET player2_id = ? WHERE player2_id = ?",
-			"UPDATE forum SET owner_player_id = ? WHERE owner_player_id = ?",
-			"UPDATE forum_topic SET author_player_id = ? WHERE author_player_id = ?",
-			"UPDATE forum_post SET author_player_id = ? WHERE author_player_id = ?",
-			"UPDATE player_restriction SET player_id = ? WHERE player_id = ?",
-			"UPDATE leaderboard_entry SET player_id = ? WHERE player_id = ?",
-			"UPDATE clan SET leader_player_id = ? WHERE leader_player_id = ?",
-			"UPDATE clan_subpledge SET leader_player_id = ? WHERE leader_player_id = ?",
-			"UPDATE clan_hall_auction SET seller_player_id = ? WHERE seller_player_id = ?",
-			// Clans
-			"UPDATE clan SET id = ? WHERE id = ?",
-			"UPDATE player SET clan_id = ? WHERE clan_id = ?",
-			"UPDATE clan SET alliance_id = ? WHERE alliance_id = ?",
-			"UPDATE clan_notice SET clan_id = ? WHERE clan_id = ?",
-			"UPDATE clan_rank_privilege SET clan_id = ? WHERE clan_id = ?",
-			"UPDATE clan_skill SET clan_id = ? WHERE clan_id = ?",
-			"UPDATE clan_subpledge SET clan_id = ? WHERE clan_id = ?",
-			"UPDATE clan_war SET declaring_clan_id = ? WHERE declaring_clan_id = ?",
-			"UPDATE clan_war SET target_clan_id = ? WHERE target_clan_id = ?",
-			"UPDATE item SET owner_clan_id = ? WHERE owner_clan_id = ?",
-			"UPDATE castle_siege_clan SET clan_id = ? WHERE clan_id = ?",
-			"UPDATE fort_siege_clan SET clan_id = ? WHERE clan_id = ?",
-			"UPDATE clan_hall_siege_clan SET clan_id = ? WHERE clan_id = ?",
-			"UPDATE fort SET owner_clan_id = ? WHERE owner_clan_id = ?",
-			"UPDATE clan_hall SET owner_clan_id = ? WHERE owner_clan_id = ?",
-			"UPDATE clan_hall_auction_bid SET clan_id = ? WHERE clan_id = ?",
-			"UPDATE forum SET owner_clan_id = ? WHERE owner_clan_id = ?",
-			// Items and pets (a shortcut can point to an item)
-			"UPDATE item SET id = ? WHERE id = ?",
-			"UPDATE item SET owner_pet_id = ? WHERE owner_pet_id = ?",
-			"UPDATE pet SET item_id = ? WHERE item_id = ?",
-			"UPDATE item_attribute SET item_id = ? WHERE item_id = ?",
-			"UPDATE offline_store_item SET item_id = ? WHERE item_id = ?",
-			"UPDATE player_shortcut SET target_id = ? WHERE target_id = ? AND shortcut_type_id = 1",
-			// Couples, items on the ground, crests
-			"UPDATE couple SET id = ? WHERE id = ?",
-			"UPDATE ground_item SET id = ? WHERE id = ?",
-			"UPDATE clan SET crest_id = ? WHERE crest_id = ?",
-			"UPDATE clan SET large_crest_id = ? WHERE large_crest_id = ?",
-			"UPDATE clan SET alliance_crest_id = ? WHERE alliance_crest_id = ?",
-			"UPDATE crest SET id = ? WHERE id = ?" };
-	
-	/** The statements that look for a column that holds an id of a given range: the same columns as the updates. */
+	/** The statements that look for a column that holds an id of a given range: the key column of every entity and every column that refers to it. */
 	protected static final String[] ID_CHECKS = {
 			// Players
 			"SELECT id FROM player WHERE id >= ? AND id < ?",
@@ -231,8 +145,6 @@ public abstract class IdFactory
 				return new StackIDFactory();
 			case Increment:
 				return new IncrementIDFactory();
-			case Rebuild:
-				return new BitSetRebuildFactory();
 			default:
 				throw new IllegalStateException("Unsupported id factory type: " + Config.IDFACTORY_TYPE);
 		}

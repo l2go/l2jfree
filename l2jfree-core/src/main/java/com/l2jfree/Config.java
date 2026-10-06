@@ -959,11 +959,9 @@ public final class Config
 	// *******************************************************************************************
 	public static enum IdFactoryType
 	{
-		Compaction,
 		BitSet,
 		Stack,
-		Increment,
-		Rebuild
+		Increment
 	}
 	
 	public static IdFactoryType IDFACTORY_TYPE; // ID Factory type

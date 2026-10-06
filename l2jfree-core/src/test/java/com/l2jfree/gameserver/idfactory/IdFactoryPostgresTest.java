@@ -122,21 +122,12 @@ class IdFactoryPostgresTest
 	}
 
 	@Test
-	@DisplayName("the compaction and check statements run against the schema")
-	void compactionStatementsRun() throws Exception
+	@DisplayName("the check statements run against the schema")
+	void checkStatementsRun() throws Exception
 	{
 		int unused = 1_951_999_990;
 		try (Connection connection = L2DatabaseFactory.getInstance().getPoolConnection())
 		{
-			for (String sql : IdFactory.ID_UPDATES)
-			{
-				try (PreparedStatement statement = connection.prepareStatement(sql))
-				{
-					statement.setInt(1, unused + 1);
-					statement.setInt(2, unused);
-					assertThat(statement.executeUpdate()).as(sql).isZero();
-				}
-			}
 			for (String sql : IdFactory.ID_CHECKS)
 			{
 				try (PreparedStatement statement = connection.prepareStatement(sql))

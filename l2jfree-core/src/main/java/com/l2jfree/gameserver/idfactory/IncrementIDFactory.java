@@ -57,16 +57,6 @@ public class IncrementIDFactory extends IdFactory
 	}
 	
 	/**
-	 * This class is for test purpose, we don't need to clean up the db
-	 * @see com.l2jfree.gameserver.idfactory.IdFactory#cleanUpDB()
-	 */
-	@Override
-	protected void cleanUpDB()
-	{
-		// Do nothing
-	}
-	
-	/**
 	 * This class is for test purpose, we don't need to set all character offline
 	 * @see com.l2jfree.gameserver.idfactory.IdFactory#setAllCharacterOffline()
 	 */
