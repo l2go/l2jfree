@@ -311,6 +311,25 @@ class PlayerRepositoryPostgresTest
 	}
 
 	@Test
+	@DisplayName("a character created without a title is stored with an empty title")
+	void aNewCharacterHasAnEmptyTitle() throws Exception
+	{
+		PlayerRow row = newRow(ID, PREFIX + "_Untitled");
+		row.title = null;
+		REPOSITORY.insertPlayer(row);
+
+		assertThat(REPOSITORY.loadPlayer(ID).title).isEmpty();
+
+		row.title = "Knight";
+		REPOSITORY.updatePlayer(row);
+		assertThat(REPOSITORY.loadPlayer(ID).title).isEqualTo("Knight");
+
+		row.title = null;
+		REPOSITORY.updatePlayer(row);
+		assertThat(REPOSITORY.loadPlayer(ID).title).isEmpty();
+	}
+
+	@Test
 	@DisplayName("a value that is not set is NULL in the database and 0 in the game")
 	void notSetValues() throws Exception
 	{

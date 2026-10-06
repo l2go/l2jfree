@@ -361,7 +361,7 @@ public final class PlayerRepository
 			ps.setInt(++i, row.raceId);
 			ps.setInt(++i, row.activeClassId);
 			setMoment(ps, ++i, row.deleteAt);
-			ps.setString(++i, row.title);
+			ps.setString(++i, titleOrEmpty(row.title));
 			ps.setInt(++i, row.accessLevel);
 			ps.setBoolean(++i, row.online);
 			ps.setBoolean(++i, row.inSevenSignsDungeon);
@@ -562,7 +562,7 @@ public final class PlayerRepository
 			ps.setInt(++i, row.raceId);
 			ps.setInt(++i, row.activeClassId);
 			setMoment(ps, ++i, row.deleteAt);
-			ps.setString(++i, row.title);
+			ps.setString(++i, titleOrEmpty(row.title));
 			ps.setInt(++i, row.accessLevel);
 			ps.setBoolean(++i, row.online);
 			ps.setBoolean(++i, row.inSevenSignsDungeon);
@@ -1242,6 +1242,12 @@ public final class PlayerRepository
 	}
 
 	/** Binds epoch milliseconds as a moment; 0 or less is "not set" and becomes NULL. */
+	/** The column is NOT NULL: a character that was just created has no title yet, which the table stores as "". */
+	private static String titleOrEmpty(String title)
+	{
+		return title == null ? "" : title;
+	}
+
 	private static void setMoment(PreparedStatement ps, int index, long millis) throws SQLException
 	{
 		if (millis > 0)
