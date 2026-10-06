@@ -54,7 +54,7 @@ def ready_lines():
     return [m for m in (READY.search(line) for line in logs.splitlines()) if m]
 
 
-def wait_for_ready(count, seconds=180):
+def wait_for_ready(count, seconds=300):
     deadline = time.time() + seconds
     while time.time() < deadline:
         found = ready_lines()
