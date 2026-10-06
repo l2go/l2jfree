@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledFuture;
 
 import com.l2jfree.Config;
@@ -67,14 +68,14 @@ public class ValakasManager extends BossLair
 			{ 213200, -118160, -1424, 0 }
 	
 	};
-	protected List<L2Spawn> _teleportCubeSpawn = new ArrayList<L2Spawn>();
-	protected List<L2Npc> _teleportCube = new ArrayList<L2Npc>();
+	protected List<L2Spawn> _teleportCubeSpawn = new CopyOnWriteArrayList<L2Spawn>();
+	protected List<L2Npc> _teleportCube = new CopyOnWriteArrayList<L2Npc>();
 	
 	// Spawn data of monsters.
 	protected Map<Integer, L2Spawn> _monsterSpawn = new LinkedHashMap<Integer, L2Spawn>();
 	
 	// Instance of monsters.
-	protected List<L2Npc> _monsters = new ArrayList<L2Npc>();
+	protected List<L2Npc> _monsters = new CopyOnWriteArrayList<L2Npc>();
 	
 	// Tasks.
 	protected ScheduledFuture<?> _cubeSpawnTask = null;

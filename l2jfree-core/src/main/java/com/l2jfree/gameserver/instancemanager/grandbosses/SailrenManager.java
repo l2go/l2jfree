@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.instancemanager.grandbosses;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledFuture;
 
 import com.l2jfree.Config;
@@ -55,8 +56,8 @@ public class SailrenManager extends BossLair
 	
 	// Teleport cube location.
 	private final int _sailrenCubeLocation[][] = { { 27734, -6838, -1982, 0 } };
-	protected List<L2Spawn> _sailrenCubeSpawn = new ArrayList<L2Spawn>();
-	protected List<L2Npc> _sailrenCube = new ArrayList<L2Npc>();
+	protected List<L2Spawn> _sailrenCubeSpawn = new CopyOnWriteArrayList<L2Spawn>();
+	protected List<L2Npc> _sailrenCube = new CopyOnWriteArrayList<L2Npc>();
 	
 	// Spawn data of monsters
 	protected L2Spawn _velociraptorSpawn; // Velociraptor

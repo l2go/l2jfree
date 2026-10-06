@@ -23,9 +23,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.RSAKeyGenParameterSpec;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -110,8 +107,6 @@ public class LoginManager
 		SYSTEM_ERROR
 	}
 	
-	private List<L2Client> _connections;
-	
 	/**
 	 * Private constructor to avoid direct instantiation.
 	 * Initialize a key generator.
@@ -122,13 +117,11 @@ public class LoginManager
 		{
 			_log.info("LoginManager: initializing.");
 			
-			_hackProtection = new LinkedHashMap<InetAddress, FailedLoginAttempt>();
+			_hackProtection = new ConcurrentHashMap<InetAddress, FailedLoginAttempt>();
 			
 			_keyPairs = new ScrambledKeyPair[10];
 			
 			_service = L2Registry.getAccountsServices();
-			
-			_connections = new ArrayList<L2Client>();
 			
 			KeyPairGenerator keygen = null;
 			
@@ -172,10 +165,9 @@ public class LoginManager
 	 */
 	LoginManager(AccountsServices service)
 	{
-		_hackProtection = new LinkedHashMap<InetAddress, FailedLoginAttempt>();
+		_hackProtection = new ConcurrentHashMap<InetAddress, FailedLoginAttempt>();
 		_keyPairs = new ScrambledKeyPair[0];
 		_service = service;
-		_connections = new ArrayList<L2Client>();
 		_blowfishKeys = new byte[0][];
 	}
 	
@@ -609,7 +601,7 @@ public class LoginManager
 	 * @param password
 	 * @param address
 	 */
-	private void handleBadLogin(String user, String password, InetAddress address)
+	void handleBadLogin(String user, String password, InetAddress address)
 	{
 		_logLoginFailed.info("login failed for user : '" + user + "' "
 				+ (address == null ? "null" : address.getHostAddress()));
@@ -617,18 +609,13 @@ public class LoginManager
 		// In special case, adress is null, so this protection is useless
 		if (address != null)
 		{
-			FailedLoginAttempt failedAttempt = _hackProtection.get(address);
-			int failedCount;
-			if (failedAttempt == null)
-			{
-				_hackProtection.put(address, new FailedLoginAttempt(address, password));
-				failedCount = 1;
-			}
-			else
-			{
+			// the logins of one address arrive from several threads at once
+			int failedCount = _hackProtection.compute(address, (key, failedAttempt) -> {
+				if (failedAttempt == null)
+					return new FailedLoginAttempt(address, password);
 				failedAttempt.increaseCounter(password);
-				failedCount = failedAttempt.getCount();
-			}
+				return failedAttempt;
+			}).getCount();
 			
 			if (failedCount >= LoginConfig.LOGIN_TRY_BEFORE_BAN)
 			{
@@ -693,13 +680,10 @@ public class LoginManager
 		return false;
 	}
 	
-	public void addConnection(L2Client lc)
+	/** @return how many failed logins are counted against the address, 0 if none */
+	int failedLoginCount(InetAddress address)
 	{
-		_connections.add(lc);
-	}
-	
-	public void remConnection(L2Client lc)
-	{
-		_connections.remove(lc);
+		FailedLoginAttempt attempt = _hackProtection.get(address);
+		return attempt == null ? 0 : attempt.getCount();
 	}
 }

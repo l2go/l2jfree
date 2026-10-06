@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.datatables;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +59,7 @@ public class ClanTable
 	
 	private ClanTable()
 	{
-		_clans = new LinkedHashMap<Integer, L2Clan>();
+		_clans = new ConcurrentSkipListMap<Integer, L2Clan>(); // clans are listed in the order of their ids
 		L2Clan clan;
 		try
 		{

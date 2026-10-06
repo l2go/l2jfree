@@ -288,8 +288,6 @@ public final class L2Client extends Connection<L2Client, L2ClientPacket, L2Serve
 		if (_log.isDebugEnabled())
 			_log.info("onDisconnection: " + this);
 		
-		LoginManager.getInstance().remConnection(this);
-		
 		// If player was not on GS, don't forget to remove it from authed login on LS
 		if (getState() == LoginClientState.AUTHED_LOGIN && !hasJoinedGS())
 		{
