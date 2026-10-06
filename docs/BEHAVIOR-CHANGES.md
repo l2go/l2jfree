@@ -16,6 +16,9 @@ A feature is removed when the accepted data design has no table for it ([ADR-001
 | Database installer, SQL update scripts, table optimizer, and the dump-based backup | A backup is a `pg_dump` of the `login` and `world` schemas, taken by the operator |
 | Id factory options `Compaction` and `Rebuild` | The schema's foreign keys make rewriting ids impossible. `BitSet`, `Stack`, and `Increment` remain |
 | Admin command `admin_process_auction` | It processed the removed item auction |
+| Login-to-world socket, game server registration, `register_gameserver`, hex id, `servername.xml` | Login and world are one process and talk through Java calls ([ADR-0003](adr/0003-one-process-two-modules.md)). The world has one id from `ServerId` |
+| Telnet status of the login module | The world's telnet status is the only one. Unblocking an address means editing `banned_ip.cfg` and restarting |
+| Keys `LoginHost`, `LoginPort`, `RequestServerID`, `AcceptAlternateID`, `ReserveHostOnLogin`, `AcceptNewGameServer`, `IpUpdateTime`, and the five flood-protection keys of the login | They only served the removed socket and its listener |
 
 ## What a player can notice
 
@@ -28,6 +31,7 @@ A feature is removed when the accepted data design has no table for it ([ADR-001
 - A large clan crest can be replaced and deleted. Before, the delete usually failed.
 - A friend pair is stored once. A war between clans is recorded once.
 - A raid boss or a grand boss that has no saved state spawns with full health.
+- The age limit of the server (`ServerAgeLimitation`) is applied. An account younger than the limit is refused at the server choice. The old code never applied it.
 
 ## What an operator can notice
 
@@ -35,6 +39,9 @@ A feature is removed when the accepted data design has no table for it ([ADR-001
 - Game content comes from the catalog files of the release and is loaded when their revision changes. An edit made by an admin command to a catalog row lasts until the next catalog load.
 - A merchant restock interval is kept in seconds. A negative price set by an admin command for a shop item means the item's reference price.
 - A statement that fails inside a transaction rolls back the whole block and the method continues after it, with the error in the log.
+- Settings live in two places: the shipped defaults, read-only, and the operator directory, which overrides single keys ([ADR-0011](adr/0011-configuration-model.md)). The database address, the bind address, and the announced address come from `L2JFREE_*` environment variables.
+- The address a client is sent for the world is worked out once at start. A host name that does not resolve is logged and the client's own address is used.
+- `ConnectionFiltering` is always effective, because the login always supports it.
 - The telnet GM check, the jail command, and the item give command use the new names. An unknown character name is reported instead of raising an error.
 
 ## What a script author can notice

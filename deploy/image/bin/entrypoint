@@ -1,43 +1,43 @@
 #!/bin/bash
-# Starts the LoginServer. The application tree in the image is read-only, so
-# the configuration is copied to a work directory and adjusted from the
-# environment before the process starts.
+# Starts the platform: the login module and the world module in one process.
+# The entry point validates the deployment settings and starts Java; it does
+# nothing else with configuration. The defaults are read-only in
+# /opt/l2jfree/config and the operator's changes live in
+# /var/lib/l2jfree/config (ADR-0011).
 set -euo pipefail
 
-home=/opt/l2jfree/loginserver
-work="${L2JFREE_WORKDIR:-/run/l2jfree/login}"
+home=/opt/l2jfree
+work=/var/lib/l2jfree/work
+logs=/var/lib/l2jfree/log
 
 fail() { echo "entrypoint: $*" >&2; exit 1; }
 
-: "${L2JFREE_DB_URL:?L2JFREE_DB_URL is required}"
-: "${L2JFREE_DB_USER:?L2JFREE_DB_USER is required}"
-: "${L2JFREE_DB_PASSWORD_FILE:?L2JFREE_DB_PASSWORD_FILE is required}"
-[ -s "$L2JFREE_DB_PASSWORD_FILE" ] || fail "the database password file is missing or empty"
+for name in L2JFREE_DB_URL L2JFREE_LOGIN_DB_USER L2JFREE_WORLD_DB_USER; do
+	[ -n "${!name:-}" ] || fail "$name is required"
+done
 
-mkdir -p "$work"
-cp -r "$home/config" "$work/config"
-cp "$home/servername.xml" "$home/server_names.xsd" "$work/"
-ln -sfn /var/lib/l2jfree/log "$work/log"
+for name in L2JFREE_LOGIN_DB_PASSWORD_FILE L2JFREE_WORLD_DB_PASSWORD_FILE; do
+	[ -n "${!name:-}" ] || fail "$name is required"
+	[ -s "${!name}" ] || fail "the file named by $name (${!name}) is missing or empty"
+done
 
-# Replaces the value of a key in a .properties file, or adds the key.
-set_prop() {
-	local file="$1" key="$2" value="$3"
-	awk -v k="$key" -v v="$value" 'BEGIN { FS = " = " } $1 == k { print k " = " v; found = 1; next } { print } END { if (!found) print k " = " v }' \
-		"$file" > "$file.tmp"
-	mv "$file.tmp" "$file"
-}
-
-props="$work/config/loginserver.properties"
-set_prop "$props" Driver org.postgresql.Driver
-set_prop "$props" URL "$L2JFREE_DB_URL"
-set_prop "$props" Login "$L2JFREE_DB_USER"
-set_prop "$props" Password "$(< "$L2JFREE_DB_PASSWORD_FILE")"
-set_prop "$props" LoginServerHostname "${L2JFREE_LOGIN_BIND:-0.0.0.0}"
+# The logging configuration writes to log/ below the work directory. Keep it in
+# the log volume when that volume is mounted. A real directory that an earlier
+# start created in the work volume stays where it is.
+if [ -d "$logs" ] && { [ ! -e "$work/log" ] || [ -L "$work/log" ]; }; then
+	ln -sfn "$logs" "$work/log"
+fi
 
 cd "$work"
+
+# The Java options are split on blanks, so L2JFREE_JAVA_OPTS can hold several.
+read -r -a java_opts <<< "${L2JFREE_JAVA_OPTS:--Xms1g -Xmx3g}"
+
 exec java \
 	-Dfile.encoding=UTF-8 \
-	-Dlogback.configurationFile="$work/config/logback.xml" \
-	-Xmx64m \
-	-cp "$work/config:$home/libs/*:$home/*" \
-	com.l2jfree.loginserver.LoginServer
+	-Dlogback.configurationFile="$home/config/logback.xml" \
+	-Dl2jfree.config.defaults="$home/config" \
+	-Dl2jfree.config.operator=/var/lib/l2jfree/config \
+	"${java_opts[@]}" \
+	-cp "$home/config:$home/libs/*:$home/l2jfree-platform.jar" \
+	com.l2jfree.platform.Platform

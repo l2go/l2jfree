@@ -60,10 +60,6 @@ SourceRevision=${l2jfree.build.revision}</concat>
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>

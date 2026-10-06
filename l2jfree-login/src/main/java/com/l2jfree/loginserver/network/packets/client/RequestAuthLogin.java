@@ -18,8 +18,9 @@ import java.security.GeneralSecurityException;
 
 import javax.crypto.Cipher;
 
-import com.l2jfree.Config;
-import com.l2jfree.loginserver.beans.GameServerInfo;
+import com.l2jfree.contract.WorldPort;
+import com.l2jfree.loginserver.LoginConfig;
+import com.l2jfree.loginserver.LoginModule;
 import com.l2jfree.loginserver.manager.LoginManager;
 import com.l2jfree.loginserver.manager.LoginManager.AuthLoginResult;
 import com.l2jfree.loginserver.network.L2Client;
@@ -116,9 +117,9 @@ public class RequestAuthLogin extends L2ClientPacket
 					client.setAccount(_user);
 					client.setState(LoginClientState.AUTHED_LOGIN);
 					client.setSessionKey(lc.assignSessionKeyToClient(_user, client));
-					if (Config.SECURITY_CARD_LOGIN)
+					if (LoginConfig.SECURITY_CARD_LOGIN)
 						client.sendPacket(new LoginFail(LoginFail.REASON_INVALID_SECURITY_CARD_NO));
-					else if (Config.SHOW_LICENCE)
+					else if (LoginConfig.SHOW_LICENCE)
 						client.sendPacket(new LoginOk(client.getSessionKey()));
 					else
 						client.sendPacket(new ServerList(client));
@@ -135,14 +136,14 @@ public class RequestAuthLogin extends L2ClientPacket
 					client.closeLogin(LoginFail.REASON_ALREADY_IN_USE);
 					break;
 				case ALREADY_ON_GS:
-					GameServerInfo gsi;
-					if ((gsi = lc.getAccountOnGameServer(_user)) != null)
+					if (lc.isAccountInWorld(_user))
 					{
 						client.closeLogin(LoginFail.REASON_ALREADY_IN_USE);
 						
 						// kick from there
-						if (gsi.isAuthed())
-							gsi.getGameServerThread().kickPlayer(_user);
+						WorldPort world = LoginModule.currentWorld();
+						if (world != null)
+							world.kick(_user);
 					}
 					break;
 				case SYSTEM_ERROR:
@@ -154,8 +155,8 @@ public class RequestAuthLogin extends L2ClientPacket
 		// catch (HackingException e)
 		// {
 		// 	InetAddress address = getClient().getSocket().getInetAddress();
-		// 	BanManager.getInstance().addBanForAddress(address, Config.LOGIN_BLOCK_AFTER_BAN * 1000);
-		// 	_log.info("Banned (" + address + ") for " + Config.LOGIN_BLOCK_AFTER_BAN + " seconds, due to " + e.getConnects() + " incorrect login attempts.");
+		// 	BanManager.getInstance().addBanForAddress(address, LoginConfig.LOGIN_BLOCK_AFTER_BAN * 1000);
+		// 	_log.info("Banned (" + address + ") for " + LoginConfig.LOGIN_BLOCK_AFTER_BAN + " seconds, due to " + e.getConnects() + " incorrect login attempts.");
 		// }
 		catch (AccountBannedException e)
 		{

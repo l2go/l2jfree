@@ -43,7 +43,7 @@ import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.Announcements;
 import com.l2jfree.gameserver.GameServer;
-import com.l2jfree.gameserver.LoginServerThread;
+import com.l2jfree.gameserver.LoginLink;
 import com.l2jfree.gameserver.Shutdown;
 import com.l2jfree.gameserver.Shutdown.DisableType;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -6381,7 +6381,7 @@ public final class L2Player extends L2Playable
 	
 	public void setAccountAccesslevel(int level)
 	{
-		LoginServerThread.getInstance().sendAccessLevel(getAccountName(), level);
+		LoginLink.getInstance().sendAccessLevel(getAccountName(), level);
 	}
 	
 	/**

@@ -9,6 +9,7 @@ Platform 3.0 is in development. v2.5.0 is the final release of the 2.x line, whi
 | [Roadmap](roadmap.md) | Milestones, exit criteria, and work packages for Platform 3.0 |
 | [Architecture](architecture.md) | Context, containers, walking skeleton, pipeline, and login admission as diagrams |
 | [Deploy](../deploy/README.md) | The Linux image and the Docker Compose stack |
+| [Platform module](../l2jfree-platform/README.md) | The launcher, the layout of the distribution, and how the two ports are wired |
 | [Risk register](risks.md) | Open risks and their mitigations |
 | [Milestone reports](reports/m1-foundation.md) | Plan, result, deviations, and delivery numbers of each closed milestone |
 | [Architecture decision records](adr/README.md) | One record per decision, with rationale and consequences |

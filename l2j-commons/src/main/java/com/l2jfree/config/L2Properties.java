@@ -48,14 +48,31 @@ public final class L2Properties extends Properties
 	
 	// ===================================================================================
 	
+	/**
+	 * Loads the file of this name, resolved against the defaults and operator directories (ADR-0011).
+	 */
 	public L2Properties(String name) throws IOException
 	{
-		load(new FileInputStream(name));
+		this(new File(name));
 	}
 	
+	/**
+	 * Loads the file, resolved against the defaults and operator directories (ADR-0011).
+	 */
 	public L2Properties(File file) throws IOException
 	{
-		load(new FileInputStream(file));
+		ConfigOverlay.load(this, file);
+	}
+	
+	/**
+	 * Resolves a plain file that is not a property file (a text list, for example) against the operator and defaults
+	 * directories: the operator file when it exists, else the defaults file, else the path as given.
+	 */
+	public static File resolveFile(String path)
+	{
+		final File asGiven = new File(path);
+		final File operator = ConfigOverlay.operatorFile(asGiven);
+		return operator != null ? operator : ConfigOverlay.defaultsFile(asGiven);
 	}
 	
 	public L2Properties(InputStream inStream) throws IOException

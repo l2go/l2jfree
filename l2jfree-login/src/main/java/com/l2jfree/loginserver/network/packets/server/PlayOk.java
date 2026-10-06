@@ -14,7 +14,7 @@
  */
 package com.l2jfree.loginserver.network.packets.server;
 
-import com.l2jfree.loginserver.beans.SessionKey;
+import com.l2jfree.contract.SessionKey;
 import com.l2jfree.loginserver.network.L2Client;
 import com.l2jfree.loginserver.network.packets.L2ServerPacket;
 
@@ -27,8 +27,8 @@ public final class PlayOk extends L2ServerPacket
 	
 	public PlayOk(SessionKey sessionKey)
 	{
-		_playOk1 = sessionKey.playOkID1;
-		_playOk2 = sessionKey.playOkID2;
+		_playOk1 = sessionKey.playOk1();
+		_playOk2 = sessionKey.playOk2();
 	}
 	
 	/**

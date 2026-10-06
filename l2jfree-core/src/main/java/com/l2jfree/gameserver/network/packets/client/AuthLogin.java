@@ -15,8 +15,8 @@
 package com.l2jfree.gameserver.network.packets.client;
 
 import com.l2jfree.Config;
-import com.l2jfree.gameserver.LoginServerThread;
-import com.l2jfree.gameserver.LoginServerThread.SessionKey;
+import com.l2jfree.gameserver.LoginLink;
+import com.l2jfree.contract.SessionKey;
 import com.l2jfree.gameserver.network.L2Client;
 import com.l2jfree.gameserver.network.packets.L2ClientPacket;
 import com.l2jfree.gameserver.network.packets.server.LoginFail;
@@ -69,7 +69,7 @@ public class AuthLogin extends L2ClientPacket
 		// avoid potential exploits
 		if (client.getAccountName() == null)
 		{
-			if (!LoginServerThread.getInstance().addWaitingClientAndSendRequest(_loginName, client, key))
+			if (!LoginLink.getInstance().addWaitingClientAndSendRequest(_loginName, client, key))
 			{
 				client.sendPacket(new LoginFail(LoginFail.ACOUNT_ALREADY_IN_USE));
 				client.closeNow();

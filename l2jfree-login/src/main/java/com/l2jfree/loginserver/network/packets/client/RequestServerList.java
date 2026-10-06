@@ -14,7 +14,7 @@
  */
 package com.l2jfree.loginserver.network.packets.client;
 
-import com.l2jfree.Config;
+import com.l2jfree.loginserver.LoginConfig;
 import com.l2jfree.loginserver.network.L2Client;
 import com.l2jfree.loginserver.network.packets.L2ClientPacket;
 import com.l2jfree.loginserver.network.packets.server.LoginFail;
@@ -72,13 +72,13 @@ public class RequestServerList extends L2ClientPacket
 	public void runImpl()
 	{
 		L2Client client = getClient();
-		if (Config.SECURITY_CARD_LOGIN && !client.isCardAuthed())
+		if (LoginConfig.SECURITY_CARD_LOGIN && !client.isCardAuthed())
 		{
 			client.closeLogin(LoginFail.REASON_IGNORE);
 			return;
 		}
 		
-		if (client.getSessionKey().checkLoginPair(_skey1, _skey2))
+		if (client.hasLoginPair(_skey1, _skey2))
 			client.sendPacket(new ServerList(client));
 		else
 			client.closeLogin(LoginFail.REASON_ACCESS_FAILED_TRY_AGAIN);

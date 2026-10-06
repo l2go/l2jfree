@@ -31,7 +31,7 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.l2jfree.Config;
+import com.l2jfree.loginserver.LoginConfig;
 import com.l2jfree.loginserver.beans.Accounts;
 import com.l2jfree.loginserver.beans.FailedLoginAttempt;
 import com.l2jfree.loginserver.services.AccountsServices;
@@ -58,8 +58,8 @@ class LoginFailureResetTest
 		InetAddress otherAddress = InetAddress.getByName("198.51.100.2");
 		attempts.put(otherAddress, new FailedLoginAttempt(otherAddress, "other-wrong"));
 
-		int oldLimit = Config.LOGIN_TRY_BEFORE_BAN;
-		Config.LOGIN_TRY_BEFORE_BAN = 3;
+		int oldLimit = LoginConfig.LOGIN_TRY_BEFORE_BAN;
+		LoginConfig.LOGIN_TRY_BEFORE_BAN = 3;
 		try
 		{
 			assertThatThrownBy(() -> manager.loginValid("alice", "wrong-one", address))
@@ -78,7 +78,7 @@ class LoginFailureResetTest
 		}
 		finally
 		{
-			Config.LOGIN_TRY_BEFORE_BAN = oldLimit;
+			LoginConfig.LOGIN_TRY_BEFORE_BAN = oldLimit;
 		}
 	}
 

@@ -16,7 +16,7 @@ package com.l2jfree.loginserver.network;
 
 import java.nio.ByteBuffer;
 
-import com.l2jfree.Config;
+import com.l2jfree.loginserver.LoginConfig;
 import com.l2jfree.loginserver.network.L2Client.LoginClientState;
 import com.l2jfree.loginserver.network.packets.L2ClientPacket;
 import com.l2jfree.loginserver.network.packets.L2ServerPacket;
@@ -73,7 +73,7 @@ public final class L2ClientPacketHandler implements
 				}
 				else if (opcode == 0x06)
 				{
-					if (Config.SECURITY_CARD_LOGIN)
+					if (LoginConfig.SECURITY_CARD_LOGIN)
 						return new RequestSubmitCardNo();
 				}
 				else

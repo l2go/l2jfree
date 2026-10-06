@@ -17,7 +17,10 @@ package com.l2jfree;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -278,7 +281,7 @@ public abstract class L2AutoInitialization
 			
 			try
 			{
-				loadReader(new BufferedReader(new FileReader(getFileName())));
+				loadReader(openReader());
 			}
 			catch (Exception e)
 			{
@@ -286,6 +289,12 @@ public abstract class L2AutoInitialization
 				
 				throw new Exception("Failed to load '" + getFileName() + "'!");
 			}
+		}
+		
+		/** Opens the file. A subclass that resolves the file against the operator directory overrides it. */
+		protected BufferedReader openReader() throws IOException
+		{
+			return new BufferedReader(new FileReader(getFileName()));
 		}
 		
 		protected abstract void loadReader(BufferedReader reader) throws Exception;
@@ -297,6 +306,15 @@ public abstract class L2AutoInitialization
 		protected final String getFileName()
 		{
 			return "./config/" + getName().trim() + ".properties";
+		}
+		
+		/** Reads the file through the defaults and operator directories (ADR-0011) and hands the merged keys on. */
+		@Override
+		protected final BufferedReader openReader() throws IOException
+		{
+			final StringWriter merged = new StringWriter();
+			new L2Properties(getFileName()).store(merged, null);
+			return new BufferedReader(new StringReader(merged.toString()));
 		}
 		
 		protected Class<?>[] getAnnotatedClasses()

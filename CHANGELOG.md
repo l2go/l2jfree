@@ -23,12 +23,16 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - A check that prepares every SQL statement of the compiled server (688 today) against the real schema, a schema test for the database conventions, and a data dictionary with entity diagrams generated from the migrated database and compared in CI.
 - Decision record ADR-0010 for game content as catalog data, the database conventions, and a list of the behavior changes since the 2.x line.
 - Monthly Dependabot updates for the image base and the compose images.
+- One process for login and world: a `contract` module with `LoginPort` and `WorldPort`, admission and status as Java calls, and a `platform` module that starts both and assembles the one distribution. Architecture rules fail the build when the login module and the world module depend on each other.
+- A configuration model with the defaults in the image and the operator's changes in one directory, and `L2JFREE_*` environment variables for the database, the bind address, and the announced address ([ADR-0011](docs/adr/0011-configuration-model.md)).
 
 ### Changed
 
 - The vision describes a Linux image delivered with Docker Compose on Docker Desktop, Colima, or Docker Engine, with ports 2106 and 7777.
 - The documentation archive carries the whole `docs/` tree.
 - The Docker Compose stack runs PostgreSQL 18 instead of MySQL, with passwords generated on the first start.
+- The image carries the login and the world in one service. The world connects with its own database role and the login with its own.
+- The age limit of the world is applied to a world that is online. The old code returned no limit for an online world.
 
 ### Removed
 
@@ -37,6 +41,9 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - MySQL from the login module, its SQL files and installer scripts, and the Liquibase compatibility test.
 - MySQL from the game server, the build, and the repository: the database installer, the 214 SQL files of the datapack, the update scripts, the dump-based backup, and the table optimizer.
 - The optional content mods of the 2.x line.
+- The internal login-to-world socket and its protocol, the registration of a game server, the `game_server` table, `servername.xml`, the hex id file, and the `register_gameserver` tool.
+- The telnet status server of the login module and its four commands; only the world has a telnet status.
+- The separate distributions of the login, the world, and the datapack, and their launcher scripts.
 - Features whose data has no home in the schema: the factions, the community board item auction, and the archive of deleted mail.
 - The experimental Rebuild id factory and the Compaction option.
 

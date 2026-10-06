@@ -8,7 +8,7 @@ package com.l2jfree.loginserver.db;
 
 import javax.sql.DataSource;
 
-import com.l2jfree.Config;
+import com.l2jfree.loginserver.LoginConfig;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
@@ -30,13 +30,13 @@ public final class LoginDataSource implements AutoCloseable
 	{
 		HikariConfig pool = new HikariConfig();
 		pool.setPoolName("l2jfree-loginserver");
-		pool.setDriverClassName(Config.DATABASE_DRIVER);
-		pool.setJdbcUrl(Config.DATABASE_URL);
-		pool.setUsername(Config.DATABASE_LOGIN);
-		pool.setPassword(Config.DATABASE_PASSWORD);
+		pool.setDriverClassName(LoginConfig.DATABASE_DRIVER);
+		pool.setJdbcUrl(LoginConfig.DATABASE_URL);
+		pool.setUsername(LoginConfig.DATABASE_LOGIN);
+		pool.setPassword(LoginConfig.DATABASE_PASSWORD);
 		pool.setAutoCommit(true);
-		int maximumPoolSize = Math.max(1, Config.DATABASE_MAX_CONNECTIONS);
-		int idleConnections = Config.DATABASE_MIN_IDLE_CONNECTIONS;
+		int maximumPoolSize = Math.max(1, LoginConfig.DATABASE_MAX_CONNECTIONS);
+		int idleConnections = LoginConfig.DATABASE_MIN_IDLE_CONNECTIONS;
 		if (idleConnections < 0)
 			idleConnections = 0;
 		if (idleConnections > maximumPoolSize)

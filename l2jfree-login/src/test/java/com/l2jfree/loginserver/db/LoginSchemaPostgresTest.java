@@ -33,14 +33,12 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
-import com.l2jfree.Config;
+import com.l2jfree.loginserver.LoginConfig;
 import com.l2jfree.loginserver.beans.Accounts;
-import com.l2jfree.loginserver.beans.Gameservers;
 import com.l2jfree.loginserver.dao.JdbcTransactions;
 import com.l2jfree.loginserver.dao.LoginDataAccessException;
 import com.l2jfree.loginserver.dao.LoginObjectNotFoundException;
 import com.l2jfree.loginserver.dao.impl.AccountsDAOJdbc;
-import com.l2jfree.loginserver.dao.impl.GameserversDAOJdbc;
 import com.l2jfree.sql.SchemaMigration;
 
 /** The login module against a real PostgreSQL 18: the migration, the pool settings, and the DAOs. */
@@ -53,7 +51,6 @@ class LoginSchemaPostgresTest
 	
 	private static LoginDataSource source;
 	private static AccountsDAOJdbc accounts;
-	private static GameserversDAOJdbc gameservers;
 	
 	@BeforeAll
 	static void migrateTheSchema() throws Exception
@@ -63,19 +60,18 @@ class LoginSchemaPostgresTest
 			statement.execute("CREATE SCHEMA login");
 		}
 		
-		Config.DATABASE_DRIVER = "org.postgresql.Driver";
-		Config.DATABASE_URL = POSTGRES.getJdbcUrl();
-		Config.DATABASE_LOGIN = POSTGRES.getUsername();
-		Config.DATABASE_PASSWORD = POSTGRES.getPassword();
-		Config.DATABASE_MAX_CONNECTIONS = 4;
-		Config.DATABASE_MIN_IDLE_CONNECTIONS = 1;
+		LoginConfig.DATABASE_DRIVER = "org.postgresql.Driver";
+		LoginConfig.DATABASE_URL = POSTGRES.getJdbcUrl();
+		LoginConfig.DATABASE_LOGIN = POSTGRES.getUsername();
+		LoginConfig.DATABASE_PASSWORD = POSTGRES.getPassword();
+		LoginConfig.DATABASE_MAX_CONNECTIONS = 4;
+		LoginConfig.DATABASE_MIN_IDLE_CONNECTIONS = 1;
 		
 		source = new LoginDataSource(LoginDataSource.createPoolConfig());
 		SchemaMigration.migrate(source.getDataSource(), LoginDataSource.SCHEMA, "classpath:db/login");
 		
 		JdbcTransactions transactions = new JdbcTransactions(source.getDataSource());
 		accounts = new AccountsDAOJdbc(transactions);
-		gameservers = new GameserversDAOJdbc(transactions);
 	}
 	
 	@AfterAll
@@ -94,11 +90,38 @@ class LoginSchemaPostgresTest
 		try (Connection connection = source.getDataSource().getConnection();
 				PreparedStatement statement = connection.prepareStatement(
 						"SELECT count(*) FROM information_schema.tables WHERE table_schema = 'login' "
-								+ "AND table_name IN ('account', 'game_server')");
+								+ "AND table_name = 'account'");
 				ResultSet result = statement.executeQuery())
 		{
 			assertThat(result.next()).isTrue();
-			assertThat(result.getInt(1)).isEqualTo(2);
+			assertThat(result.getInt(1)).isEqualTo(1);
+		}
+	}
+	
+	@Test
+	@DisplayName("V2 removed the world server table and left the last world of an account a plain number")
+	void gameServerTableIsGone() throws Exception
+	{
+		try (Connection connection = source.getDataSource().getConnection();
+				Statement statement = connection.createStatement())
+		{
+			try (ResultSet result = statement.executeQuery("SELECT to_regclass('login.game_server')"))
+			{
+				assertThat(result.next()).isTrue();
+				assertThat(result.getString(1)).isNull();
+			}
+			try (ResultSet result = statement.executeQuery("SELECT count(*) FROM pg_constraint "
+					+ "WHERE conrelid = 'login.account'::regclass AND contype = 'f'"))
+			{
+				assertThat(result.next()).isTrue();
+				assertThat(result.getInt(1)).isZero();
+			}
+			try (ResultSet result = statement.executeQuery("SELECT count(*) FROM flyway_schema_history "
+					+ "WHERE version = '2' AND success"))
+			{
+				assertThat(result.next()).isTrue();
+				assertThat(result.getInt(1)).isEqualTo(1);
+			}
 		}
 	}
 	
@@ -205,30 +228,12 @@ class LoginSchemaPostgresTest
 	}
 	
 	@Test
-	@DisplayName("removing a world server clears the last world of its accounts")
-	void removingAWorldClearsTheLastWorld()
+	@DisplayName("the last world of an account is stored without a world server table")
+	void lastWorldIsAPlainNumber()
 	{
-		gameservers.createGameserver(new Gameservers(7, "ab12cd", "world.example"));
 		accounts.createAccount(new Accounts("World_User", "hash", null, 0, 7, 2000, 1, 1, null));
+		
 		assertThat(accounts.getAccountById("world_user").getLastServerId()).isEqualTo(7);
-		
-		gameservers.removeGameserverByServerId(7);
-		
-		assertThat(accounts.getAccountById("world_user").getLastServerId()).isZero();
-	}
-	
-	@Test
-	@DisplayName("a world server is created, updated through the upsert, and read back")
-	void gameserverUpsert()
-	{
-		gameservers.createOrUpdate(new Gameservers(9, "key-one", "first.example"));
-		gameservers.createOrUpdate(new Gameservers(9, "key-two", "second.example"));
-		
-		Gameservers found = gameservers.getGameserverByServerId(9);
-		
-		assertThat(found.getHexid()).isEqualTo("key-two");
-		assertThat(found.getHost()).isEqualTo("second.example");
-		assertThat(gameservers.getAllGameservers()).extracting(Gameservers::getServerId).contains(9);
 	}
 	
 	@Test

@@ -16,7 +16,7 @@ package com.l2jfree.gameserver.handler.admincommands;
 
 import java.util.StringTokenizer;
 
-import com.l2jfree.gameserver.LoginServerThread;
+import com.l2jfree.gameserver.LoginLink;
 import com.l2jfree.gameserver.gameobjects.L2Object;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.handler.IAdminCommandHandler;
@@ -132,7 +132,7 @@ public class AdminBan implements IAdminCommandHandler
 				}
 				else
 				{
-					LoginServerThread.getInstance().sendAccessLevel(nameToBan, level);
+					LoginLink.getInstance().sendAccessLevel(nameToBan, level);
 					activeChar.sendMessage("Ban for account " + nameToBan + " requested.");
 				}
 			}
@@ -141,7 +141,7 @@ public class AdminBan implements IAdminCommandHandler
 		{
 			if (nameToBan == null)
 				nameToBan = player.getAccountName();
-			LoginServerThread.getInstance().sendAccessLevel(nameToBan, 0);
+			LoginLink.getInstance().sendAccessLevel(nameToBan, 0);
 			activeChar.sendMessage("Unban for account " + nameToBan + " requested.");
 		}
 		return true;

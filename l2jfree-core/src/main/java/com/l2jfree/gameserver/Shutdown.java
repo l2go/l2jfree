@@ -113,7 +113,7 @@ public final class Shutdown extends Thread
 			try
 			{
 				if (_counter <= 60)
-					LoginServerThread.getInstance().setServerStatusDown();
+					LoginLink.getInstance().setServerStatusDown();
 			}
 			catch (Exception e)
 			{
@@ -240,15 +240,6 @@ public final class Shutdown extends Thread
 		try
 		{
 			GameTimeManager.stopTimer();
-		}
-		catch (Throwable t)
-		{
-			t.printStackTrace();
-		}
-		
-		try
-		{
-			LoginServerThread.getInstance().interrupt();
 		}
 		catch (Throwable t)
 		{

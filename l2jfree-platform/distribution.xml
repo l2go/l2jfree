@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.1
+                      http://maven.apache.org/xsd/assembly-1.1.1.xsd">
+	<!--
+		One directory, l2jfree/, that holds the whole process (ADR-0003, ADR-0011):
+		l2jfree-platform.jar, libs/, agents/, config/ (the defaults of both modules), data/, catalog/.
+	-->
+	<id>dist</id>
+	<includeBaseDirectory>false</includeBaseDirectory>
+	<formats>
+		<format>zip</format>
+	</formats>
+	<dependencySets>
+		<dependencySet>
+			<outputDirectory>l2jfree/agents/</outputDirectory>
+			<includes>
+				<include>io.opentelemetry.javaagent:opentelemetry-javaagent</include>
+			</includes>
+			<outputFileNameMapping>opentelemetry-javaagent.jar</outputFileNameMapping>
+			<useTransitiveDependencies>false</useTransitiveDependencies>
+		</dependencySet>
+		<dependencySet>
+			<outputDirectory>l2jfree/</outputDirectory>
+			<includes>
+				<include>com.l2jfree:l2jfree-platform</include>
+			</includes>
+			<outputFileNameMapping>l2jfree-platform.jar</outputFileNameMapping>
+			<useTransitiveDependencies>false</useTransitiveDependencies>
+		</dependencySet>
+		<dependencySet>
+			<outputDirectory>l2jfree/libs/</outputDirectory>
+			<excludes>
+				<exclude>io.opentelemetry.javaagent:opentelemetry-javaagent</exclude>
+				<exclude>com.l2jfree:l2jfree-platform</exclude>
+			</excludes>
+		</dependencySet>
+	</dependencySets>
+	<fileSets>
+		<!-- The world's files first. Its logback.xml and telnet.properties are the ones of the platform. -->
+		<fileSet>
+			<directory>../l2jfree-core/config/</directory>
+			<outputDirectory>l2jfree/config/</outputDirectory>
+		</fileSet>
+		<fileSet>
+			<directory>../l2jfree-login/config/</directory>
+			<outputDirectory>l2jfree/config/</outputDirectory>
+			<excludes>
+				<exclude>logback.xml</exclude>
+				<exclude>telnet.properties</exclude>
+			</excludes>
+		</fileSet>
+		<!-- The datapack: its data, the scripts it compiled to class files, and the catalog. -->
+		<fileSet>
+			<directory>../l2jfree-datapack/data/</directory>
+			<outputDirectory>l2jfree/data/</outputDirectory>
+		</fileSet>
+		<fileSet>
+			<directory>../l2jfree-datapack/target/classes</directory>
+			<outputDirectory>l2jfree/data/scripts/</outputDirectory>
+			<includes>
+				<include>**/*.class</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<directory>../l2jfree-datapack/catalog/</directory>
+			<outputDirectory>l2jfree/catalog/</outputDirectory>
+		</fileSet>
+	</fileSets>
+</assembly>

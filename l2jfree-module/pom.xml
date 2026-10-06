@@ -26,6 +26,7 @@
 		<jython.version>2.7.5b1</jython.version>
 		<jython.artifactId>jython-standalone</jython.artifactId>
 		<opentelemetry.javaagent.version>2.32.0</opentelemetry.javaagent.version>
+		<archunit.version>1.5.1</archunit.version>
 		<jfr.argLine></jfr.argLine>
 		<surefire.excludedGroups>integration</surefire.excludedGroups>
 	</properties>
@@ -266,8 +267,10 @@
 		<module>../l2j-commons</module>
 		<module>../l2j-mmocore</module>
 		<module>../l2jfree-scripting-engines</module>
+		<module>../l2jfree-contract</module>
 		<module>../l2jfree-login</module>
 		<module>../l2jfree-core</module>
 		<module>../l2jfree-datapack</module>
+		<module>../l2jfree-platform</module>
 	</modules>
 </project>

@@ -29,8 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
-import com.l2jfree.gameserver.LoginServerThread;
-import com.l2jfree.gameserver.LoginServerThread.SessionKey;
+import com.l2jfree.gameserver.LoginLink;
+import com.l2jfree.contract.SessionKey;
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.datatables.ClanTable;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -389,7 +389,7 @@ public final class L2Client extends MMOConnection<L2Client, L2ClientPacket, L2Se
 	
 	void setDisconnected()
 	{
-		LoginServerThread.getInstance().sendLogout(getAccountName(), this);
+		LoginLink.getInstance().sendLogout(getAccountName(), this);
 		
 		_disconnected = true;
 	}

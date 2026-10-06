@@ -3,8 +3,12 @@
 # The Platform 3.0 image. linux/amd64 on Arch Linux, pinned by dated tag and
 # digest, with a Temurin 25 JRE archive pinned by SHA-256 (ADR-0002).
 #
-# This is the walking skeleton: it carries the LoginServer of the current code
-# base. The world, PostgreSQL, and the single process arrive in milestone M2.
+# The image carries the login module and the world module in one process
+# (ADR-0003). The platform distribution is unpacked next to this file as
+# l2jfree/. It lands read-only in /opt/l2jfree: the defaults of every
+# configuration key, the libraries, the datapack data, and the catalog. State
+# lives in volumes: the work directory, the operator configuration (ADR-0011),
+# the log, and the secrets.
 
 FROM archlinux:base-20261004.0.606936@sha256:4e77cf2ea5f410e6f8be5abf93ccf17ce2436e87a138c167208356711a405dbd AS jre
 
@@ -16,17 +20,31 @@ RUN mkdir -p /opt/jre && tar -xzf /tmp/jre.tar.gz -C /opt/jre --strip-components
 FROM archlinux:base-20261004.0.606936@sha256:4e77cf2ea5f410e6f8be5abf93ccf17ce2436e87a138c167208356711a405dbd
 
 RUN useradd --system --uid 10001 --user-group --home-dir /var/lib/l2jfree --shell /usr/bin/nologin l2jfree \
- && install -d -o 10001 -g 10001 -m 0750 /var/lib/l2jfree /var/lib/l2jfree/log \
- && install -d -o 10001 -g 10001 -m 0755 /var/lib/l2jfree/secrets
+ && install -d -o 10001 -g 10001 -m 0750 /var/lib/l2jfree /var/lib/l2jfree/log /var/lib/l2jfree/work \
+ && install -d -o 10001 -g 10001 -m 0755 /var/lib/l2jfree/config /var/lib/l2jfree/secrets
 
 COPY --from=jre /opt/jre /opt/jre
-COPY loginserver /opt/l2jfree/loginserver
+COPY l2jfree /opt/l2jfree
 COPY --chmod=0755 bin/ /opt/l2jfree/bin/
+
+# The world reads the datapack and the catalog from the read-only tree, so the
+# two path keys of the shipped defaults name it. An operator can still override
+# them (ADR-0011). The build fails when a key is missing from the defaults.
+RUN set -eu; \
+    cd /opt/l2jfree; \
+    if [ ! -f l2jfree-platform.jar ]; then \
+        set -- l2jfree-platform-*.jar; \
+        [ "$#" -eq 1 ] && [ -f "$1" ] && mv "$1" l2jfree-platform.jar; \
+    fi; \
+    test -f l2jfree-platform.jar; \
+    sed -i -E 's|^DatapackRoot[[:space:]]*=.*|DatapackRoot = /opt/l2jfree|; s|^CatalogDirectory[[:space:]]*=.*|CatalogDirectory = /opt/l2jfree/catalog|' config/server.properties; \
+    grep -qx 'DatapackRoot = /opt/l2jfree' config/server.properties; \
+    grep -qx 'CatalogDirectory = /opt/l2jfree/catalog' config/server.properties
 
 ENV JAVA_HOME=/opt/jre \
     PATH=/opt/jre/bin:/usr/local/sbin:/usr/local/bin:/usr/bin
 
 USER 10001:10001
-WORKDIR /var/lib/l2jfree
+WORKDIR /var/lib/l2jfree/work
 EXPOSE 2106 7777
 ENTRYPOINT ["/opt/l2jfree/bin/entrypoint"]

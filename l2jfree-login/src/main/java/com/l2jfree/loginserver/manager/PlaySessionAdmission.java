@@ -15,8 +15,10 @@
 package com.l2jfree.loginserver.manager;
 
 /**
- * Whether a password check may open a login session, and whether a play request may reserve the game server.
- * The account must be on the game server before another login is granted. Leaving it in neither set is the gap.
+ * Whether a password check may open a login session, and whether an admission may put the account in the world.
+ * The account must be in the world before another login is granted. Leaving it in neither set is the gap.
+ * {@link LoginManager} applies both rules under the lock that guards its login-session map, so an account is
+ * always in the login-session map, in the world, or in neither, never in both and never half-moved.
  */
 public final class PlaySessionAdmission
 {
@@ -24,13 +26,13 @@ public final class PlaySessionAdmission
 	{
 	}
 	
-	public static boolean mayAuthenticate(boolean onGameServer, boolean onLoginServer)
+	public static boolean mayAuthenticate(boolean inWorld, boolean onLoginServer)
 	{
-		return !onGameServer && !onLoginServer;
+		return !inWorld && !onLoginServer;
 	}
 	
-	public static boolean reserveGameServer(boolean alreadyOnGameServer)
+	public static boolean reserveGameServer(boolean alreadyInWorld)
 	{
-		return !alreadyOnGameServer;
+		return !alreadyInWorld;
 	}
 }

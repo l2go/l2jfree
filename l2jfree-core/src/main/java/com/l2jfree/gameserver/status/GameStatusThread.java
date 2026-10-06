@@ -35,7 +35,7 @@ import com.l2jfree.L2AutoInitialization;
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.config.L2Properties;
 import com.l2jfree.gameserver.Announcements;
-import com.l2jfree.gameserver.LoginServerThread;
+import com.l2jfree.gameserver.LoginLink;
 import com.l2jfree.gameserver.Shutdown;
 import com.l2jfree.gameserver.Shutdown.ShutdownMode;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -334,7 +334,7 @@ public final class GameStatusThread extends Thread
 				}
 				else if (_usrCommand.equals("status"))
 				{
-					int max = LoginServerThread.getInstance().getMaxPlayer();
+					int max = LoginLink.getInstance().getMaxPlayer();
 					
 					int playerCount = L2World.getInstance().getAllPlayersCount();
 					int objectCount = L2World.getInstance().getAllVisibleObjectsCount();
