@@ -69,8 +69,8 @@ class GameCryptConformanceTest
 		
 		private static void advance(byte[] key, int size)
 		{
-			ByteBuffer word = ByteBuffer.wrap(key, 8, 4).order(ByteOrder.LITTLE_ENDIAN);
-			word.putInt(0, word.getInt(0) + size);
+			ByteBuffer word = ByteBuffer.wrap(key).order(ByteOrder.LITTLE_ENDIAN);
+			word.putInt(8, word.getInt(8) + size);
 		}
 	}
 	
