@@ -54,7 +54,7 @@ def ready_lines():
     return [m for m in (READY.search(line) for line in logs.splitlines()) if m]
 
 
-def wait_for_ready(count, seconds=300):
+def wait_for_ready(count, seconds=180):
     deadline = time.time() + seconds
     while time.time() < deadline:
         found = ready_lines()
@@ -64,11 +64,10 @@ def wait_for_ready(count, seconds=300):
         if state.stdout.strip() == "false":
             raise SystemExit("the server stopped before it was ready:\n" + compose("logs", "--tail", "60", "server").stdout)
         time.sleep(1)
-    # a thread dump goes to the log of the container, which shows what the server waits for
-    run(["docker", "kill", "-s", "QUIT", "l2jfree-measure-server-1"], check=False)
-    time.sleep(3)
-    raise SystemExit("the server was not ready after %d s:\n%s\n%s" % (
-        seconds, compose("ps", "-a").stdout, compose("logs", "--no-color", "--tail", "250", "server").stdout))
+    logs = compose("logs", "--no-color", "server").stdout
+    marked = "\n".join(line for line in logs.splitlines() if "Platform" in line or "ready" in line)
+    raise SystemExit("the server was not ready after %d s; the lines about the platform:\n%s\n%s" % (
+        seconds, marked, compose("ps", "-a").stdout))
 
 
 def resident_megabytes():
