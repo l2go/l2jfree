@@ -64,7 +64,11 @@ def wait_for_ready(count, seconds=300):
         if state.stdout.strip() == "false":
             raise SystemExit("the server stopped before it was ready:\n" + compose("logs", "--tail", "60", "server").stdout)
         time.sleep(1)
-    raise SystemExit("the server was not ready after %d s:\n%s" % (seconds, compose("logs", "--no-color", "--tail", "80", "server").stdout))
+    # a thread dump goes to the log of the container, which shows what the server waits for
+    run(["docker", "kill", "-s", "QUIT", "l2jfree-measure-server-1"], check=False)
+    time.sleep(3)
+    raise SystemExit("the server was not ready after %d s:\n%s\n%s" % (
+        seconds, compose("ps", "-a").stdout, compose("logs", "--no-color", "--tail", "250", "server").stdout))
 
 
 def resident_megabytes():
