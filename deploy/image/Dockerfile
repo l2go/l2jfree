@@ -16,7 +16,8 @@ RUN mkdir -p /opt/jre && tar -xzf /tmp/jre.tar.gz -C /opt/jre --strip-components
 FROM archlinux:base-20261004.0.606936@sha256:4e77cf2ea5f410e6f8be5abf93ccf17ce2436e87a138c167208356711a405dbd
 
 RUN useradd --system --uid 10001 --user-group --home-dir /var/lib/l2jfree --shell /usr/bin/nologin l2jfree \
- && install -d -o 10001 -g 10001 -m 0750 /var/lib/l2jfree /var/lib/l2jfree/log /var/lib/l2jfree/secrets
+ && install -d -o 10001 -g 10001 -m 0750 /var/lib/l2jfree /var/lib/l2jfree/log \
+ && install -d -o 10001 -g 10001 -m 0755 /var/lib/l2jfree/secrets
 
 COPY --from=jre /opt/jre /opt/jre
 COPY loginserver /opt/l2jfree/loginserver

@@ -25,6 +25,7 @@
 
 - A role that owns its schema can alter it. The boundary between modules is the schema, not the role's rights inside it.
 - A new module needs an entry in the init script and a role password in the secrets volume.
+- The secrets volume is readable by the database container, which runs as a different user than the server. The files are world-readable inside that volume, which only the services of the stack mount.
 - The untyped-parameter setting affects every statement. The statement checks of the data port run against the real schema, so a statement that depends on a parameter type fails a test.
 
 ## Revisit when
