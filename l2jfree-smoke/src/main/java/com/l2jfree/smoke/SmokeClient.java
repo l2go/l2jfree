@@ -15,6 +15,7 @@
 package com.l2jfree.smoke;
 
 import java.util.List;
+import java.security.SecureRandom;
 import java.util.Random;
 
 /**
@@ -73,7 +74,8 @@ public final class SmokeClient
 	static Result run(Config config, Reporter reporter)
 	{
 		final Deadline deadline = Deadline.after(config.timeoutSeconds());
-		final Random random = new Random();
+		// the password of the test account is random, so it comes from a secure source
+		final Random random = new SecureRandom();
 		final String account = config.account() != null ? config.account() : "smoke" + letters(random, 6);
 		final String password = config.password() != null ? config.password() : "pw" + letters(random, 10);
 		final String character = "Smoke" + letters(random, 6);
