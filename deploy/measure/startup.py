@@ -54,7 +54,7 @@ def ready_lines():
     return [m for m in (READY.search(line) for line in logs.splitlines()) if m]
 
 
-def wait_for_ready(count, seconds=600):
+def wait_for_ready(count, seconds=300):
     deadline = time.time() + seconds
     while time.time() < deadline:
         found = ready_lines()
@@ -64,7 +64,7 @@ def wait_for_ready(count, seconds=600):
         if state.stdout.strip() == "false":
             raise SystemExit("the server stopped before it was ready:\n" + compose("logs", "--tail", "60", "server").stdout)
         time.sleep(1)
-    raise SystemExit("the server was not ready after %d s" % seconds)
+    raise SystemExit("the server was not ready after %d s:\n%s" % (seconds, compose("logs", "--no-color", "--tail", "80", "server").stdout))
 
 
 def resident_megabytes():
