@@ -14,18 +14,12 @@
  */
 package com.l2jfree.gameserver.instancemanager.leaderboards;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.LineNumberReader;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 
-import javolution.util.FastMap;
-
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +31,9 @@ import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.SystemMessageId;
 import com.l2jfree.gameserver.network.packets.server.ItemList;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
-import com.l2jfree.gameserver.util.RuntimeData;
+import com.l2jfree.gameserver.persistence.LeaderboardStore;
+import com.l2jfree.gameserver.persistence.LeaderboardStore.Board;
+import com.l2jfree.gameserver.persistence.LeaderboardStore.Entry;
 import com.l2jfree.gameserver.util.Util;
 
 /**
@@ -48,7 +44,7 @@ public class FishermanManager
 {
 	private static final Logger _log = LoggerFactory.getLogger(FishermanManager.class);
 	
-	public Map<Integer, FishRank> _ranks = new FastMap<Integer, FishRank>();
+	public Map<Integer, FishRank> _ranks = new LinkedHashMap<Integer, FishRank>();
 	protected Future<?> _actionTask = null;
 	protected int SAVETASK_DELAY = Config.FISHERMAN_INTERVAL;
 	protected Long nextTimeUpdateReward = 0L;
@@ -122,7 +118,7 @@ public class FishermanManager
 	
 	public void formRank()
 	{
-		Map<Integer, Integer> scores = new FastMap<Integer, Integer>();
+		Map<Integer, Integer> scores = new LinkedHashMap<Integer, Integer>();
 		for (int obj : _ranks.keySet())
 		{
 			FishRank ar = _ranks.get(obj);
@@ -166,7 +162,7 @@ public class FishermanManager
 	
 	public String showHtm(int owner)
 	{
-		Map<Integer, Integer> scores = new FastMap<Integer, Integer>();
+		Map<Integer, Integer> scores = new LinkedHashMap<Integer, Integer>();
 		for (int obj : _ranks.keySet())
 		{
 			FishRank ar = _ranks.get(obj);
@@ -252,90 +248,25 @@ public class FishermanManager
 	
 	public void engineInit()
 	{
-		_ranks = new FastMap<Integer, FishRank>();
-		String line = null;
-		LineNumberReader lnr = null;
-		String lineId = "";
-		FishRank rank = null;
-		File file = RuntimeData.file("fish.dat");
-		
-		try
+		_ranks = new LinkedHashMap<Integer, FishRank>();
+		for (Entry entry : LeaderboardStore.load(Board.FISHING))
 		{
-			boolean created = file.createNewFile();
-			if (created)
-				_log.info("FishManager: fish.dat was not existing and has been created.");
+			FishRank rank = new FishRank();
+			rank.cought = entry.wins();
+			rank.escaped = entry.losses();
+			rank.name = entry.playerName();
+			_ranks.put(entry.playerId(), rank);
 		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-		finally
-		{
-			try
-			{
-				lnr = new LineNumberReader(new BufferedReader(new FileReader(file)));
-				while ((line = lnr.readLine()) != null)
-				{
-					if (line.trim().length() == 0 || line.startsWith("#"))
-						continue;
-					
-					lineId = line;
-					line = line.replaceAll(" ", "");
-					
-					String t[] = line.split(":");
-					
-					int owner = Integer.parseInt(t[0]);
-					rank = new FishRank();
-					
-					rank.cought = Integer.parseInt(t[1].split("-")[0]);
-					rank.escaped = Integer.parseInt(t[1].split("-")[1]);
-					
-					rank.name = t[2];
-					
-					_ranks.put(owner, rank);
-				}
-			}
-			catch (Exception e)
-			{
-				_log.warn("FishManager.engineInit() >> last line parsed is \n[" + lineId + "]\n", e);
-			}
-			finally
-			{
-				IOUtils.closeQuietly(lnr);
-			}
-			
-			startSaveTask();
-			_log.info("FishManager: Loaded " + _ranks.size() + " player(s).");
-		}
+		startSaveTask();
+		_log.info("FishManager: Loaded " + _ranks.size() + " player(s).");
 	}
 	
 	public void saveData()
 	{
-		String pattern = "";
-		
-		for (Integer object : _ranks.keySet())
-		{
-			FishRank ar = _ranks.get(object);
-			
-			pattern += object + " : " + ar.cought + "-" + ar.escaped + " : " + ar.name + "\n";
-		}
-		
-		File file = RuntimeData.file("fish.dat");
-		try
-		{
-			FileWriter fw = new FileWriter(file);
-			
-			fw.write("# ownerId : cought-escaped-name\n");
-			fw.write("# ===============================\n\n");
-			fw.write(pattern);
-			
-			fw.flush();
-			fw.close();
-		}
-		catch (IOException e)
-		{
-			_log.warn("", e);
-		}
+		List<Entry> entries = new ArrayList<Entry>();
+		for (Map.Entry<Integer, FishRank> rank : _ranks.entrySet())
+			entries.add(new Entry(rank.getKey(), rank.getValue().name, rank.getValue().cought, rank.getValue().escaped));
+		LeaderboardStore.replace(Board.FISHING, entries);
 	}
 	
 	public class FishRank

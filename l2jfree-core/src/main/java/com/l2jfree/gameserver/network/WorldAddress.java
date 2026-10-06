@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
+import java.util.function.Function;
+import java.util.function.LongSupplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +31,8 @@ import com.l2jfree.tools.network.SubNetHost;
 /**
  * Chooses the address a client must use to reach the world. The choice follows the subnet configuration: the
  * first host whose subnets contain the client address wins, and a client that matches no host gets its own
- * address back. The host names are resolved once, when the object is built.
+ * address back. The host names are resolved when the object is built and, when an update interval is set, again
+ * after that interval, so a host whose address changes (dynamic DNS) is followed without a restart.
  * <p>
  * The net-config string is a list of entries separated by {@code ;}. An entry is a host, optionally followed by
  * {@code ,} and the subnets in the form {@code network/mask} that use it. A host without subnets matches every
@@ -40,12 +43,37 @@ public final class WorldAddress
 	private static final Logger _log = LoggerFactory.getLogger(WorldAddress.class);
 
 	private final List<SubNetHost> _hosts = new ArrayList<SubNetHost>();
+	private final Function<String, String> _resolver;
+	private final long _updateMillis;
+	private final LongSupplier _clock;
+	private long _lastUpdate; // guarded by this
 
 	/**
 	 * @param netConfig the net-config string, see the class description. A null or blank string has no hosts.
 	 */
 	public WorldAddress(String netConfig)
 	{
+		this(netConfig, 0);
+	}
+
+	/**
+	 * @param netConfig the net-config string, see the class description
+	 * @param updateMillis how often the host names are resolved again, in milliseconds; 0 resolves them once
+	 */
+	public WorldAddress(String netConfig, long updateMillis)
+	{
+		this(netConfig, WorldAddress::lookup, updateMillis, System::currentTimeMillis);
+	}
+
+	/**
+	 * @param resolver host name to address, null when the name does not resolve
+	 * @param clock the time in milliseconds, so a test controls when an update is due
+	 */
+	WorldAddress(String netConfig, Function<String, String> resolver, long updateMillis, LongSupplier clock)
+	{
+		_resolver = resolver;
+		_updateMillis = updateMillis;
+		_clock = clock;
 		parse(netConfig);
 		resolve();
 	}
@@ -90,6 +118,9 @@ public final class WorldAddress
 	 */
 	public String addressFor(String clientIp)
 	{
+		if (_updateMillis > 0)
+			updateIfDue();
+
 		for (SubNetHost host : _hosts)
 			if (host.isInSubnet(clientIp))
 			{
@@ -145,21 +176,40 @@ public final class WorldAddress
 		}
 	}
 
-	private void resolve()
+	private synchronized void updateIfDue()
 	{
+		if (_clock.getAsLong() > _lastUpdate + _updateMillis)
+			resolve();
+	}
+
+	private synchronized void resolve()
+	{
+		_lastUpdate = _clock.getAsLong();
+
 		for (SubNetHost host : _hosts)
 		{
 			String name = host.getHostname();
-			try
-			{
-				String address = InetAddress.getByName(name).getHostAddress();
-				host.setIp(address);
-				_log.info("World address: {}", name.equals(address) ? address : name + " (" + address + ")");
-			}
-			catch (UnknownHostException e)
+			String address = _resolver.apply(name);
+			if (address == null)
 			{
 				_log.warn("Couldn't resolve hostname \"{}\"", name);
+				continue;
 			}
+
+			host.setIp(address);
+			_log.info("World address: {}", name.equals(address) ? address : name + " (" + address + ")");
+		}
+	}
+
+	private static String lookup(String name)
+	{
+		try
+		{
+			return InetAddress.getByName(name).getHostAddress();
+		}
+		catch (UnknownHostException e)
+		{
+			return null;
 		}
 	}
 }

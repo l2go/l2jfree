@@ -77,8 +77,6 @@ import com.l2jfree.gameserver.handler.SkillTargetHandler;
 import com.l2jfree.gameserver.handler.UserCommandHandler;
 import com.l2jfree.gameserver.handler.VoicedCommandHandler;
 import com.l2jfree.gameserver.idfactory.IdFactory;
-import com.l2jfree.gameserver.persistence.WorldLock;
-import com.l2jfree.gameserver.persistence.WorldSchemas;
 import com.l2jfree.gameserver.instancemanager.AirShipManager;
 import com.l2jfree.gameserver.instancemanager.AuctionManager;
 import com.l2jfree.gameserver.instancemanager.AutoChatManager;
@@ -165,10 +163,6 @@ public final class GameServer extends L2AutoInitialization
 {
 	private static final Calendar _serverStarted = Calendar.getInstance();
 	
-	/** Held for as long as the server runs: it keeps a second server off the same world database. */
-	@SuppressWarnings("unused")
-	private static WorldLock _worldLock;
-	
 	/**
 	 * Loads the world and opens the world port. The platform calls it once, after the login module is prepared and
 	 * before the login port opens, so a client that reaches the login finds a world.
@@ -188,8 +182,8 @@ public final class GameServer extends L2AutoInitialization
 		Files.createDirectories(Paths.get("cache"));
 		
 		Util.printSection("Database");
-		_worldLock = WorldLock.acquire(Config.DATABASE_URL, Config.DATABASE_LOGIN, Config.DATABASE_PASSWORD);
-		WorldSchemas.prepare(L2DatabaseFactory.getInstance().getDataSource(), Paths.get(Config.CATALOG_DIRECTORY));
+		// takes the world lock first: it keeps a second server off the same world database for as long as this one runs
+		L2DatabaseFactory.getInstance().prepareSchemas(Paths.get(Config.CATALOG_DIRECTORY));
 		Util.printSection("World");
 		L2World.getInstance();
 		if (Config.IS_TELNET_ENABLED)

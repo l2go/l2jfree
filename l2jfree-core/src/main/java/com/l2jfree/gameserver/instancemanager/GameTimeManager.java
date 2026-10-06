@@ -14,17 +14,11 @@
  */
 package com.l2jfree.gameserver.instancemanager;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.OptionalLong;
 
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +31,7 @@ import com.l2jfree.gameserver.gameobjects.L2Player.ConditionListenerDependency;
 import com.l2jfree.gameserver.instancemanager.hellbound.HellboundManager;
 import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.packets.server.ClientSetTime;
+import com.l2jfree.gameserver.persistence.GameClockStore;
 import com.l2jfree.gameserver.util.Broadcast;
 import com.l2jfree.lang.L2Thread;
 
@@ -56,13 +51,11 @@ public final class GameTimeManager
 	
 	private GameTimeManager()
 	{
-		new File("data/serial").mkdirs();
+		final OptionalLong saved = loadData();
 		
-		final Calendar cal = loadData();
-		
-		if (cal != null)
+		if (saved.isPresent())
 		{
-			_calendar.setTimeInMillis(cal.getTimeInMillis());
+			_calendar.setTimeInMillis(saved.getAsLong());
 		}
 		else
 		{
@@ -80,28 +73,12 @@ public final class GameTimeManager
 		_log.info("GameTimeController: Initialized.");
 	}
 	
-	private GregorianCalendar loadData()
+	private OptionalLong loadData()
 	{
 		if (!Config.DATETIME_SAVECAL)
-			return null;
+			return OptionalLong.empty();
 		
-		ObjectInputStream is = null;
-		try
-		{
-			is = new ObjectInputStream(new FileInputStream("data/serial/clock.dat"));
-			
-			return (GregorianCalendar)is.readObject();
-		}
-		catch (Exception e)
-		{
-			_log.warn("", e);
-			
-			return null;
-		}
-		finally
-		{
-			IOUtils.closeQuietly(is);
-		}
+		return GameClockStore.load();
 	}
 	
 	private void saveData()
@@ -109,21 +86,7 @@ public final class GameTimeManager
 		if (!Config.DATETIME_SAVECAL)
 			return;
 		
-		ObjectOutputStream os = null;
-		try
-		{
-			os = new ObjectOutputStream(new FileOutputStream("data/serial/clock.dat"));
-			
-			os.writeObject(_calendar);
-		}
-		catch (IOException e)
-		{
-			_log.warn("", e);
-		}
-		finally
-		{
-			IOUtils.closeQuietly(os);
-		}
+		GameClockStore.save(_calendar.getTimeInMillis());
 	}
 	
 	private static final SimpleDateFormat FORMAT1 = new SimpleDateFormat("hh:mm a");

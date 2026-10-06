@@ -44,7 +44,7 @@ A feature is removed when the accepted data design has no table for it ([ADR-001
 - Settings live in two places: the shipped defaults, read-only, and the operator directory, which overrides single keys ([ADR-0011](adr/0011-configuration-model.md)). The database address, the bind address, and the announced address come from `L2JFREE_*` environment variables.
 - The address a client is sent for the world is worked out once at start. A host name that does not resolve is logged and the client's own address is used.
 - `ConnectionFiltering` is always effective, because the login always supports it.
-- State that the world writes while it runs (the leaderboards `arena.dat` and `fish.dat`, the admin bookmarks, the announcements edited in game, and the geodata bug list) lives in the `state` directory of the working directory, not next to the datapack. The datapack is read-only in the image.
+- The announcements, the admin bookmarks, the arena and fishing leaderboards, and the game clock are kept in the database (`announcement`, `admin_bookmark`, `leaderboard_entry`, `game_clock`), not in files. A new world starts with the one announcement the migration inserts. Files that the world still writes while it runs (the geodata bug list) go to the `state` directory of the working directory, because the datapack is read-only in the image.
 - The telnet GM check, the jail command, and the item give command use the new names. An unknown character name is reported instead of raising an error.
 
 ## What a script author can notice

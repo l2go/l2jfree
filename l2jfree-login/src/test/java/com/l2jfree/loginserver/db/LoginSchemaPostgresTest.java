@@ -29,45 +29,36 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
-import com.l2jfree.loginserver.LoginConfig;
 import com.l2jfree.loginserver.beans.Accounts;
 import com.l2jfree.loginserver.dao.JdbcTransactions;
 import com.l2jfree.loginserver.dao.LoginDataAccessException;
 import com.l2jfree.loginserver.dao.LoginObjectNotFoundException;
 import com.l2jfree.loginserver.dao.impl.AccountsDAOJdbc;
 import com.l2jfree.sql.SchemaMigration;
+import com.l2jfree.testing.PostgresWorld;
+import com.l2jfree.testing.TestDatabase;
+import com.l2jfree.testing.TestDatabases;
 
-/** The login module against a real PostgreSQL 18: the migration, the pool settings, and the DAOs. */
+/**
+ * The login module against a real PostgreSQL 18: the migration, the pool settings, and the DAOs. The class has a
+ * database of its own, prepared as the init script of the stack prepares it: the extension and the empty schema exist
+ * before the migration runs.
+ */
 @Tag("integration")
-@Testcontainers
 class LoginSchemaPostgresTest
 {
-	@Container
-	private static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18.6");
-	
 	private static LoginDataSource source;
 	private static AccountsDAOJdbc accounts;
 	
 	@BeforeAll
 	static void migrateTheSchema() throws Exception
 	{
-		try (Connection connection = POSTGRES.createConnection(""); Statement statement = connection.createStatement())
-		{
-			statement.execute("CREATE SCHEMA login");
-		}
+		TestDatabase database = TestDatabases.postgres();
+		PostgresWorld.prepare(database, "login");
 		
-		LoginConfig.DATABASE_DRIVER = "org.postgresql.Driver";
-		LoginConfig.DATABASE_URL = POSTGRES.getJdbcUrl();
-		LoginConfig.DATABASE_LOGIN = POSTGRES.getUsername();
-		LoginConfig.DATABASE_PASSWORD = POSTGRES.getPassword();
-		LoginConfig.DATABASE_MAX_CONNECTIONS = 4;
-		LoginConfig.DATABASE_MIN_IDLE_CONNECTIONS = 1;
-		
-		source = new LoginDataSource(LoginDataSource.createPoolConfig());
+		source = new LoginDataSource(LoginDataSource.poolConfig("org.postgresql.Driver", database.jdbcUrl(),
+				database.user(), database.password(), 4, 1));
 		SchemaMigration.migrate(source.getDataSource(), LoginDataSource.SCHEMA, "classpath:db/login");
 		
 		JdbcTransactions transactions = new JdbcTransactions(source.getDataSource());
@@ -234,6 +225,85 @@ class LoginSchemaPostgresTest
 		accounts.createAccount(new Accounts("World_User", "hash", null, 0, 7, 2000, 1, 1, null));
 		
 		assertThat(accounts.getAccountById("world_user").getLastServerId()).isEqualTo(7);
+	}
+	
+	@Test
+	@DisplayName("the table holds the converted values: a moment, a date, an inet address, and a world id")
+	void columnsHoldTheConvertedValues() throws Exception
+	{
+		long lastActive = 1_700_000_000_123L;
+		accounts.createAccount(new Accounts("Raw_Columns", "hash", BigDecimal.valueOf(lastActive), 5, 7, 1985, 6, 21,
+				"192.168.1.20"));
+		
+		try (Connection connection = source.getDataSource().getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet rs = statement.executeQuery("SELECT last_active_at, birthday_on, host(last_ip), last_world_id "
+						+ "FROM account WHERE name = 'raw_columns'"))
+		{
+			assertThat(rs.next()).isTrue();
+			assertThat(rs.getObject(1, java.time.OffsetDateTime.class).toInstant())
+					.isEqualTo(java.time.Instant.ofEpochMilli(lastActive));
+			assertThat(rs.getObject(2, java.time.LocalDate.class)).isEqualTo(java.time.LocalDate.of(1985, 6, 21));
+			assertThat(rs.getString(3)).isEqualTo("192.168.1.20");
+			assertThat(rs.getInt(4)).isEqualTo(7);
+		}
+	}
+	
+	@Test
+	@DisplayName("a last activity of 0 is NULL, and a last world of 0 is NULL")
+	void notSetValuesAreStoredAsNull() throws Exception
+	{
+		accounts.createAccount(new Accounts("Not_Set", "hash", BigDecimal.ZERO, 0, 0, 2000, 1, 1, null));
+		
+		try (Connection connection = source.getDataSource().getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet rs = statement.executeQuery("SELECT last_active_at, last_world_id FROM account "
+						+ "WHERE name = 'not_set'"))
+		{
+			assertThat(rs.next()).isTrue();
+			assertThat(rs.getObject(1)).isNull();
+			assertThat(rs.getObject(2)).isNull();
+		}
+	}
+	
+	@Test
+	@DisplayName("an IPv6 address with a zone is stored without the zone")
+	void ipv6ZoneIsStripped()
+	{
+		accounts.createAccount(new Accounts("Ipv6_User", "hash", null, 0, 0, 2000, 1, 1, "fe80::1%eth0"));
+		
+		assertThat(accounts.getAccountById("ipv6_user").getLastIp()).isEqualTo("fe80::1");
+	}
+	
+	@Test
+	@DisplayName("an account is removed one by one and in a batch, and a missing account is reported")
+	void accountsAreRemoved()
+	{
+		for (String name : java.util.List.of("gone_1", "gone_2", "gone_3"))
+			accounts.createAccount(new Accounts(name, "hash", null, 0, 0, 2000, 1, 1, null));
+		
+		accounts.removeAccountById("GONE_1");
+		accounts.removeAll(java.util.List.of(new Accounts("gone_2"), new Accounts("gone_3")));
+		
+		assertThat(accounts.getAllAccounts()).extracting(Accounts::getLogin).doesNotContain("gone_1", "gone_2",
+				"gone_3");
+		assertThatThrownBy(() -> accounts.removeAccountById("gone_1")).isInstanceOf(LoginObjectNotFoundException.class);
+	}
+	
+	@Test
+	@DisplayName("the pool sends strings untyped, so the server types the parameter")
+	void poolSendsUntypedStrings() throws Exception
+	{
+		try (Connection connection = source.getDataSource().getConnection();
+				PreparedStatement statement = connection.prepareStatement("SELECT 1 + ?"))
+		{
+			statement.setString(1, "2");
+			try (ResultSet rs = statement.executeQuery())
+			{
+				assertThat(rs.next()).isTrue();
+				assertThat(rs.getInt(1)).isEqualTo(3);
+			}
+		}
 	}
 	
 	@Test
