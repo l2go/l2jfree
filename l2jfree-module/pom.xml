@@ -310,6 +310,7 @@
 		<module>../l2jfree-network</module>
 		<module>../l2jfree-scripting-engines</module>
 		<module>../l2jfree-contract</module>
+		<module>../l2jfree-smoke</module>
 		<module>../l2jfree-test-support</module>
 		<module>../l2jfree-login</module>
 		<module>../l2jfree-core</module>
