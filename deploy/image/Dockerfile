@@ -21,7 +21,7 @@ FROM archlinux:base-20261004.0.606936@sha256:4e77cf2ea5f410e6f8be5abf93ccf17ce24
 
 RUN useradd --system --uid 10001 --user-group --home-dir /var/lib/l2jfree --shell /usr/bin/nologin l2jfree \
  && install -d -o 10001 -g 10001 -m 0750 /var/lib/l2jfree /var/lib/l2jfree/log /var/lib/l2jfree/work \
- && install -d -o 10001 -g 10001 -m 0755 /var/lib/l2jfree/config /var/lib/l2jfree/secrets /var/lib/l2jfree/secrets-db
+ && install -d -o 10001 -g 10001 -m 0755 /var/lib/l2jfree/config /var/lib/l2jfree/secrets /var/lib/l2jfree/secrets-db /var/lib/l2jfree/aot
 
 COPY --from=jre /opt/jre /opt/jre
 COPY l2jfree /opt/l2jfree
