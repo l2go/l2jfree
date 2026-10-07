@@ -437,7 +437,6 @@ public class Hero
 							rset2.close();
 							statement2.close();
 							
-							_heroes.remove(heroId);
 							_heroes.put(heroId, hero);
 							
 							_completeHeroes.put(heroId, hero);

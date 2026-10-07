@@ -586,7 +586,6 @@ public final class Olympiad
 				List<L2Player> classed = _classBasedRegisters.get(noble.getClassId().getId());
 				classed.add(noble);
 				
-				_classBasedRegisters.remove(noble.getClassId().getId());
 				_classBasedRegisters.put(noble.getClassId().getId(), classed);
 			}
 			else
@@ -619,7 +618,6 @@ public final class Olympiad
 	
 	protected static synchronized void updateNobleStats(int playerId, StatsSet stats)
 	{
-		_nobles.remove(playerId);
 		_nobles.put(playerId, stats);
 	}
 	
@@ -728,7 +726,6 @@ public final class Olympiad
 			List<L2Player> classed = _classBasedRegisters.get(noble.getClassId().getId());
 			classed.remove(noble);
 			
-			_classBasedRegisters.remove(noble.getClassId().getId());
 			_classBasedRegisters.put(noble.getClassId().getId(), classed);
 		}
 		
@@ -750,7 +747,6 @@ public final class Olympiad
 		{
 			classed.remove(player);
 			
-			_classBasedRegisters.remove(player.getClassId().getId());
 			_classBasedRegisters.put(player.getClassId().getId(), classed);
 		}
 	}

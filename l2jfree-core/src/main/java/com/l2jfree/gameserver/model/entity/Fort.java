@@ -640,7 +640,6 @@ public class Fort extends Siegeable<FortSiege>
 					_log.warn("Called Fort.updateFunctions diffLease : " + diffLease);
 				if (diffLease > 0)
 				{
-					_function.remove(type);
 					_function.put(type, new FortFunction(type, lvl, lease, 0, rate, -1, false));
 				}
 				else

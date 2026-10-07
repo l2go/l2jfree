@@ -572,7 +572,6 @@ public class ClanHall extends Siegeable<CCHSiege>
 					_log.warn("Called ClanHall.updateFunctions diffLease : " + diffLease);
 				if (diffLease > 0)
 				{
-					_functions.remove(type);
 					_functions.put(type, new ClanHallFunction(type, lvl, lease, 0, rate, -1, false));
 				}
 				else
