@@ -25,6 +25,8 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - Monthly Dependabot updates for the image base and the compose images.
 - One process for login and world: a `contract` module with `LoginPort` and `WorldPort`, admission and status as Java calls, and a `platform` module that starts both and assembles the one distribution. Architecture rules fail the build when the login module and the world module depend on each other.
 - A check that compares every JDBC setter and getter of the game server with the PostgreSQL type of its parameter or column, a test that keeps the number of classes with direct database access from growing, source and bytecode rules that refuse the removed libraries and the update of a map by remove and put, and tests for code that came over without them.
+- The limits on the connections from one address are keys of the configuration (`AcceptWarn`, `AcceptReject`, `AcceptSeconds`, and the long-period keys), with the old values as defaults.
+- Checks on the running image: many clients at once, what each database role may reach, the scripts that loaded, the errors in the log, and how the server stops. A coverage report on request, and a record of what the platform takes from PostgreSQL ([ADR-0013](docs/adr/0013-what-the-platform-takes-from-postgresql.md)).
 - A check in the pipeline that no datapack script fails to load and tests of the script that creates the passwords.
 - The database counts and explains its statements (`pg_stat_statements`, `auto_explain`), and the deployment guide names the backup and the restore.
 - A check in the pipeline that an account and its character survive a restart of the server, and the report of milestone M2.
