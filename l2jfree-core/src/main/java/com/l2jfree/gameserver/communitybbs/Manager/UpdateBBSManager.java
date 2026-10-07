@@ -16,6 +16,7 @@ package com.l2jfree.gameserver.communitybbs.Manager;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -56,7 +57,7 @@ public class UpdateBBSManager extends BaseBBSManager
 			{
 				UpdateItem it = new UpdateItem();
 				it.id = (int) result.getLong("id");
-				it.udate = result.getString("published_on");
+				it.udate = String.valueOf(result.getObject("published_on", LocalDate.class));
 				it.introduction = result.getString("introduction");
 				it.text = result.getString("body");
 				it.author = result.getString("author");

@@ -672,13 +672,16 @@ public class FortSiege extends AbstractSiege
 			con = L2DatabaseFactory.getInstance().getConnection(con);
 			PreparedStatement statement;
 			if (clanId != 0)
+			{
 				statement = con.prepareStatement("DELETE FROM fort_siege_clan WHERE fort_id=? AND clan_id=?");
-			else
-				statement = con.prepareStatement("DELETE FROM fort_siege_clan WHERE fort_id=?");
-			
-			statement.setInt(1, getFort().getFortId());
-			if (clanId != 0)
+				statement.setInt(1, getFort().getFortId());
 				statement.setInt(2, clanId);
+			}
+			else
+			{
+				statement = con.prepareStatement("DELETE FROM fort_siege_clan WHERE fort_id=?");
+				statement.setInt(1, getFort().getFortId());
+			}
 			statement.execute();
 			statement.close();
 			
