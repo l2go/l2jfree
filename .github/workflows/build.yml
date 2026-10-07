@@ -397,7 +397,7 @@ jobs:
             echo
             cat startup/startup.md
             echo
-            echo "Cold is the first start on an empty database. Warm is a restart on the loaded database. Resident memory is read ten seconds after the ports open. Runner: $(nproc) CPUs, $(free -m | awk '/Mem:/ {print $2}') MiB."
+            echo "Cold is the first start on an empty database, without a cache. New container is the next start in a new container on the loaded database. Restart is a restart of that container. Resident memory is read ten seconds after the ports open. Runner: $(nproc) CPUs, $(free -m | awk '/Mem:/ {print $2}') MiB."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Keep the numbers
