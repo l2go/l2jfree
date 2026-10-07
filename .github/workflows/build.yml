@@ -350,6 +350,21 @@ jobs:
           # and an account that is new after the restart works as well
           java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240
 
+      # One command collects what an incident needs, from a server that keeps running.
+      - name: Capture the state of the running stack
+        env:
+          L2JFREE_IMAGE: l2jfree:ci
+        run: |
+          deploy/probe/capture.sh capture
+          ls -l capture
+          test -s capture/server.log
+          grep -q 'Full thread dump' capture/thread-dump.txt || { echo "::error::the capture has no thread dump"; exit 1; }
+          test "$(grep -c '| "' capture/thread-dump.txt)" -gt 20 || { echo "::error::the thread dump holds too few threads"; exit 1; }
+          grep -q 'rows)' capture/pg_stat_statements.txt || { echo "::error::the capture has no statement statistics"; exit 1; }
+          grep -q 'rows)' capture/pg_stat_activity.txt || { echo "::error::the capture has no session list"; exit 1; }
+          # the server is still serving
+          python3 deploy/probe/login_init.py --host 127.0.0.1 --port 2106 --timeout 60
+
       # The server stops when asked: within the time Docker gives it, without being killed, and after it saved the
       # state of the world. A save that never ends shows as a kill (exit code 137).
       - name: Stop the server and check how it stops
@@ -367,6 +382,47 @@ jobs:
           for line in 'RaidBossSpawnManager: All raidboss info saved' 'Olympiad System: Data saved' 'Data saved. All players disconnected'; do
             grep -q "$line" stop.log || { echo "::error::the stop did not log: $line"; exit 1; }
           done
+
+      # The backup and the restore of the deployment guide, run as the guide writes them: a dump of the two schemas, a
+      # stack destroyed with its volumes, a clean start, the restore, and the account of the first session finds its
+      # character again. The server is stopped by the step before, and the database is still running.
+      - name: Rehearse the backup and the restore
+        env:
+          L2JFREE_IMAGE: l2jfree:ci
+        run: |
+          set -euo pipefail
+          compose="docker compose -f deploy/compose.yaml"
+          account_count() {
+            $compose exec -T db psql -U postgres -d l2jfree -Atc "SELECT count(*) FROM login.account WHERE name = 'smokesave'"
+          }
+          test "$(account_count)" = 1
+          $compose exec -T db pg_dump -U postgres -d l2jfree -n login -n world -Fc > l2jfree-backup.dump
+          test -s l2jfree-backup.dump
+          $compose exec -T db pg_restore -l < l2jfree-backup.dump > backup.list
+          grep -q 'TABLE DATA login account' backup.list || { echo "::error::the dump holds no accounts"; exit 1; }
+          grep -q 'TABLE DATA world player' backup.list || { echo "::error::the dump holds no players"; exit 1; }
+          if grep -q ' catalog ' backup.list; then echo "::error::the dump holds the catalog, which the image brings"; exit 1; fi
+
+          $compose down -v
+          $compose up -d --wait --wait-timeout 600
+          test "$(account_count)" = 0 || { echo "::error::the clean stack already has the account"; exit 1; }
+
+          $compose stop server
+          $compose exec -T db psql -U postgres -d l2jfree \
+            -c 'DROP SCHEMA IF EXISTS report, catalog, world, login CASCADE' \
+            -c 'CREATE SCHEMA catalog AUTHORIZATION l2jfree_world' \
+            -c 'CREATE SCHEMA report AUTHORIZATION l2jfree_world'
+          $compose exec -T db pg_restore -U postgres -d l2jfree --exit-on-error < l2jfree-backup.dump
+          test "$(account_count)" = 1 || { echo "::error::the restore did not bring the account back"; exit 1; }
+          $compose start server
+          $compose up -d --wait --wait-timeout 600
+
+          python3 deploy/probe/login_init.py --host 127.0.0.1 --port 2106 --timeout 60
+          # the same account, with the password of the first session, finds its characters: the first session made one
+          # and the session after the restart another
+          java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240 --account smokesave --password "$SMOKE_PASSWORD" --existing-characters 2
+          # the roles of the restored database still reach only their own schema
+          deploy/probe/check-roles.sh
 
       - name: Show the service logs after a failure
         if: failure()

@@ -114,25 +114,37 @@ docker compose -f deploy/compose.yaml exec db psql -U postgres -d l2jfree \
   -c 'SELECT calls, round(total_exec_time) AS ms, left(query, 80) FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 10'
 ```
 
+## Capture an incident
+
+One command collects the state of the containers, the logs of the server and the database, the ten statements that took the most time, what the database sessions are doing, and a thread dump of the server into one directory. The server keeps running: the thread dump is a SIGQUIT, which makes the JVM print its threads to the container log.
+
+```sh
+deploy/probe/capture.sh [directory]
+```
+
+The pipeline runs the script against the running stack on every merge.
+
 ## Backup and restore
 
 The backup is the `login` and `world` schemas. The catalog comes from the image and is loaded again at start, and the `report` views are created again at start, so neither is backed up.
 
 ```sh
-docker compose -f deploy/compose.yaml exec db pg_dump -U postgres -d l2jfree -n login -n world -Fc > l2jfree-$(date +%F).dump
+docker compose -f deploy/compose.yaml exec -T db pg_dump -U postgres -d l2jfree -n login -n world -Fc > l2jfree-$(date +%F).dump
 ```
 
-To restore, stop the server first. The views of `report` read `world`, so the restore drops the schema and creates it again before it replaces the tables:
+To restore, stop the server first. The tables of `catalog` have foreign keys into the reference tables of `world`, and the views of `report` read `world`, so the restore drops all four schemas and creates `catalog` and `report` again empty. The server builds both when it starts: the catalog is loaded from the image, and the views are created again. The dump brings back `login` and `world` with their owners and their rights:
 
 ```sh
 docker compose -f deploy/compose.yaml stop server
-docker compose -f deploy/compose.yaml exec db psql -U postgres -d l2jfree \
-  -c 'DROP SCHEMA IF EXISTS report CASCADE' -c 'CREATE SCHEMA report AUTHORIZATION l2jfree_world'
-docker compose -f deploy/compose.yaml exec -T db pg_restore -U postgres -d l2jfree --clean --if-exists < l2jfree-2026-10-07.dump
+docker compose -f deploy/compose.yaml exec -T db psql -U postgres -d l2jfree \
+  -c 'DROP SCHEMA IF EXISTS report, catalog, world, login CASCADE' \
+  -c 'CREATE SCHEMA catalog AUTHORIZATION l2jfree_world' \
+  -c 'CREATE SCHEMA report AUTHORIZATION l2jfree_world'
+docker compose -f deploy/compose.yaml exec -T db pg_restore -U postgres -d l2jfree --exit-on-error < l2jfree-2026-10-07.dump
 docker compose -f deploy/compose.yaml start server
 ```
 
-The restore is rehearsed on a clean host before the release (milestone M3).
+The `-T` keeps a terminal from altering the dump. The pipeline runs these commands on every merge: it dumps a stack that holds an account with a character, destroys the stack with its volumes, starts a clean one, restores the dump, and the same account finds its character again. A restore on a clean host by the maintainer is still part of milestone M3.
 
 ## Environments
 
