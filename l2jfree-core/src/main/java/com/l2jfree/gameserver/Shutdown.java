@@ -73,13 +73,14 @@ public final class Shutdown extends Thread
 	
 	private static final Logger _log = LoggerFactory.getLogger(Shutdown.class);
 	
-	private static int _counter = Integer.MAX_VALUE;
-	private static ShutdownMode _mode = ShutdownMode.NONE;
+	// written by the admin and countdown threads, read by the game threads and by the countdown loop
+	private static volatile int _counter = Integer.MAX_VALUE;
+	private static volatile ShutdownMode _mode = ShutdownMode.NONE;
 	
-	private static Shutdown _counterInstance;
-	private static Shutdown _hookInstance;
+	private static volatile Shutdown _counterInstance;
+	private static volatile Shutdown _hookInstance;
 	
-	public static Shutdown getInstance()
+	public static synchronized Shutdown getInstance()
 	{
 		if (_hookInstance == null)
 			_hookInstance = new Shutdown();
@@ -258,6 +259,16 @@ public final class Shutdown extends Thread
 		try
 		{
 			ThreadPoolManager.getInstance().shutdown();
+		}
+		catch (Throwable t)
+		{
+			t.printStackTrace();
+		}
+		
+		// the periodic flush is stopped with the pools: write what a task queued in the meantime
+		try
+		{
+			SQLQueue.getInstance().run();
 		}
 		catch (Throwable t)
 		{

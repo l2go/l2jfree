@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.olympiad.Olympiad.COMP_TYPE;
@@ -56,7 +57,8 @@ class OlympiadManager implements Runnable
 	
 	OlympiadManager()
 	{
-		_olympiadInstances = new LinkedHashMap<Integer, OlympiadGame>();
+		// the packet threads read the games (unregister, titles) while this thread starts and ends them
+		_olympiadInstances = new ConcurrentSkipListMap<Integer, OlympiadGame>();
 	}
 	
 	public static OlympiadManager getInstance()
@@ -390,13 +392,20 @@ class OlympiadManager implements Runnable
 		if (loopCount < 1)
 			return opponents;
 		
-		first = Rnd.nextInt(list.size());
-		opponents.add(list.get(first));
-		list.remove(first);
-		
-		second = Rnd.nextInt(list.size());
-		opponents.add(list.get(second));
-		list.remove(second);
+		// a registration or an unregistration must not change the list between the size and the removal
+		synchronized (Olympiad.REGISTRATION_LOCK)
+		{
+			if (list.size() < 2)
+				return opponents;
+			
+			first = Rnd.nextInt(list.size());
+			opponents.add(list.get(first));
+			list.remove(first);
+			
+			second = Rnd.nextInt(list.size());
+			opponents.add(list.get(second));
+			list.remove(second);
+		}
 		
 		return opponents;
 		
