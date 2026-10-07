@@ -120,6 +120,26 @@ class SourcePatternsTest
 		assertThat(found).as("scripts that call time.sleep").isEmpty();
 	}
 	
+	/**
+	 * A session key and a generated password must come from a generator that cannot be predicted. {@code Rnd} has 48
+	 * bits of state, made for the rates of the game: a few outputs reveal the rest.
+	 */
+	@Test
+	void secretsAreNotMadeWithTheGameGenerator() throws IOException
+	{
+		Pattern secret = Pattern.compile("new SessionKey\\([^;]*[^e]Rnd\\.|generateRandomPassword[^}]*[^e]Rnd\\.");
+		List<String> found = new ArrayList<String>();
+		for (Path file : sources())
+		{
+			String source = Files.readString(file).replace("\r", "");
+			Matcher matcher = secret.matcher(source);
+			while (matcher.find())
+				found.add(file + ":" + lineOf(source, matcher.start()));
+		}
+		
+		assertThat(found).as("secrets made with Rnd").isEmpty();
+	}
+	
 	private static boolean isConcurrent(String source, String name)
 	{
 		Matcher declaration = Pattern.compile("\\b" + name + "\\s*=\\s*[^;]*;").matcher(source);

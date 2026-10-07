@@ -44,7 +44,7 @@ import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.Disconnection;
 import com.l2jfree.gameserver.network.SystemChatChannelId;
 import com.l2jfree.gameserver.network.packets.server.CreatureSay;
-import com.l2jfree.tools.random.Rnd;
+import com.l2jfree.tools.random.SecureRnd;
 
 public class RemoteAdministrationImpl extends UnicastRemoteObject implements IRemoteAdministration
 {
@@ -294,17 +294,17 @@ public class RemoteAdministrationImpl extends UnicastRemoteObject implements IRe
 		String digits = "1234567890";
 		for (int i = 0; i < length; i++)
 		{
-			int charSet = Rnd.nextInt(3);
+			int charSet = SecureRnd.nextInt(3);
 			switch (charSet)
 			{
 				case 0:
-					password.append(lowerChar.charAt(Rnd.nextInt(lowerChar.length() - 1)));
+					password.append(lowerChar.charAt(SecureRnd.nextInt(lowerChar.length() - 1)));
 					break;
 				case 1:
-					password.append(upperChar.charAt(Rnd.nextInt(upperChar.length() - 1)));
+					password.append(upperChar.charAt(SecureRnd.nextInt(upperChar.length() - 1)));
 					break;
 				case 2:
-					password.append(digits.charAt(Rnd.nextInt(digits.length() - 1)));
+					password.append(digits.charAt(SecureRnd.nextInt(digits.length() - 1)));
 					break;
 			}
 		}

@@ -53,6 +53,7 @@ import com.l2jfree.loginserver.services.exception.MaturityException;
 import com.l2jfree.tools.codec.Base64;
 import com.l2jfree.tools.math.ScrambledKeyPair;
 import com.l2jfree.tools.random.Rnd;
+import com.l2jfree.tools.random.SecureRnd;
 
 /**
  * This class handles login on loginserver.
@@ -220,8 +221,8 @@ public class LoginManager
 		SessionKey key;
 		
 		key =
-				new SessionKey(Rnd.nextInt(Integer.MAX_VALUE), Rnd.nextInt(Integer.MAX_VALUE),
-						Rnd.nextInt(Integer.MAX_VALUE), Rnd.nextInt(Integer.MAX_VALUE));
+				new SessionKey(SecureRnd.nextInt(Integer.MAX_VALUE), SecureRnd.nextInt(Integer.MAX_VALUE),
+						SecureRnd.nextInt(Integer.MAX_VALUE), SecureRnd.nextInt(Integer.MAX_VALUE));
 		_loginServerClients.put(account, client);
 		return key;
 	}
@@ -247,8 +248,8 @@ public class LoginManager
 		SessionKey key;
 		
 		key =
-				new SessionKey(Rnd.nextInt(Integer.MAX_VALUE), Rnd.nextInt(Integer.MAX_VALUE),
-						Rnd.nextInt(Integer.MAX_VALUE), Rnd.nextInt(Integer.MAX_VALUE));
+				new SessionKey(SecureRnd.nextInt(Integer.MAX_VALUE), SecureRnd.nextInt(Integer.MAX_VALUE),
+						SecureRnd.nextInt(Integer.MAX_VALUE), SecureRnd.nextInt(Integer.MAX_VALUE));
 		_loginServerClients.put(account, client);
 		return key;
 	}

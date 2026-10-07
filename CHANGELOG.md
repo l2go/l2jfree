@@ -36,6 +36,8 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - A vulnerability policy with severity classes, times to fix, and what blocks the `v3.0.0` tag; a Trivy scan of the image on every merge and a daily scan of the published image that fails on a fixed critical or high finding; and a check, right after each publication, that the signature, the provenance, and the SBOM of the image verify with the commands of the new image verification guide.
 - The first scan of the published image found twenty fixed high vulnerabilities, all in `captree`, a Go program of the Arch base that the server never runs. The image no longer carries it, and the check of the image content fails if it comes back. The Java libraries had none.
 - A runbook for the first start, the daily checks, a backup and a restore, an update of the image and the way back, the capture of an incident, and the stop; the pipeline rehearses the update of the image from the published one to the one of the commit. The compose file gives the server 60 seconds to stop instead of Docker's 10, since the save goes through the players one after the other.
+- A threat model for the six data flows of the platform, with the control that shows each defence and the residual risk with a decision.
+- The play keys that the login hands to the world, and the passwords that the optional telnet and remote administration generate, were made with the fast game generator, whose 48 bits of state can be recovered from a few outputs. They come from `SecureRandom` now, and a test fails the build if a session key or a generated password uses the game generator again.
 
 ### Changed
 
