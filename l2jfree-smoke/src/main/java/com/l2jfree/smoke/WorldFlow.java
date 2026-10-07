@@ -40,10 +40,10 @@ final class WorldFlow
 	 * Plays one session: ProtocolVersion, KeyPacket, AuthLogin, CharSelectionInfo, character creation,
 	 * CharacterSelected, EnterWorld, UserInfo, Logout, LeaveWorld.
 	 *
-	 * @param freshAccount whether the account was made for this run, so its character list must be empty
+	 * @param expectedCharacters how many characters the account has on entry, or {@link SmokeClient.Config#UNCHECKED}
 	 */
 	static void play(SmokeClient.Config config, Deadline deadline, Reporter reporter, LoginFlow.Session session,
-			String account, boolean freshAccount, String characterName) throws SmokeException
+			String account, int expectedCharacters, String characterName) throws SmokeException
 	{
 		reporter.begin("world: connect");
 		try (GameConnection game = connect(config, deadline, reporter, session.world()))
@@ -66,10 +66,10 @@ final class WorldFlow
 					session.loginOk2()));
 			GamePackets.CharacterList before = GamePackets.parseCharacterList(game.expect(
 					GamePackets.OP_CHAR_SELECTION_INFO, "CharSelectionInfo"));
-			if (freshAccount && before.count() != 0)
+			if (expectedCharacters != SmokeClient.Config.UNCHECKED && before.count() != expectedCharacters)
 			{
-				throw new SmokeException("the character list of the new account has " + before.count()
-						+ " characters instead of none");
+				throw new SmokeException("the character list has " + before.count() + " characters instead of "
+						+ expectedCharacters);
 			}
 			reporter.ok(before.count() + " characters in the list");
 

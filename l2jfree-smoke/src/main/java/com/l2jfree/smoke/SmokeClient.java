@@ -29,15 +29,18 @@ import java.util.Random;
 public final class SmokeClient
 {
 	private static final String USAGE = "usage: SmokeClient [--host HOST] [--login-port N] [--world-port N] "
-			+ "[--protocol-revision N] [--timeout-seconds N] [--account NAME] [--password TEXT]";
+			+ "[--protocol-revision N] [--timeout-seconds N] [--account NAME] [--password TEXT] [--existing-characters N]";
 
 	/** The settings of a run. */
 	record Config(String host, int loginPort, int worldPort, int protocolRevision, int timeoutSeconds, String account,
-			String password)
+			String password, int existingCharacters)
 	{
+		/** {@code existingCharacters} when the number of characters the account has on entry is not checked */
+		static final int UNCHECKED = -1;
+		
 		static Config defaults()
 		{
-			return new Config("127.0.0.1", 2106, 7777, 87, 120, null, null);
+			return new Config("127.0.0.1", 2106, 7777, 87, 120, null, null, UNCHECKED);
 		}
 	}
 
@@ -79,12 +82,13 @@ public final class SmokeClient
 		final String account = config.account() != null ? config.account() : "smoke" + letters(random, 6);
 		final String password = config.password() != null ? config.password() : "pw" + letters(random, 10);
 		final String character = "Smoke" + letters(random, 6);
-		final boolean freshAccount = config.account() == null;
+		// a new account has no characters; a given one has as many as the caller says, when it says
+		final int expectedCharacters = config.account() == null ? 0 : config.existingCharacters();
 
 		try
 		{
 			LoginFlow.Session session = LoginFlow.selectWorld(config, deadline, reporter, account, password);
-			WorldFlow.play(config, deadline, reporter, session, account, freshAccount, character);
+			WorldFlow.play(config, deadline, reporter, session, account, expectedCharacters, character);
 			LoginFlow.loginAgain(config, deadline, reporter, account, password);
 			return new Result(true, reporter.lines(), null);
 		}
@@ -103,55 +107,63 @@ public final class SmokeClient
 
 	static Config parse(String[] args)
 	{
-		Config config = Config.defaults();
+		final Config defaults = Config.defaults();
+		String host = defaults.host();
+		int loginPort = defaults.loginPort();
+		int worldPort = defaults.worldPort();
+		int protocolRevision = defaults.protocolRevision();
+		int timeoutSeconds = defaults.timeoutSeconds();
+		String account = null;
+		String password = null;
+		int existingCharacters = Config.UNCHECKED;
+		
 		for (int i = 0; i < args.length; i++)
 		{
 			String name = args[i];
 			if (i + 1 >= args.length)
 				throw new IllegalArgumentException("missing value for " + name);
-
+			
 			String value = args[++i];
 			switch (name)
 			{
 				case "--host":
-					config = new Config(value, config.loginPort(), config.worldPort(), config.protocolRevision(),
-							config.timeoutSeconds(), config.account(), config.password());
+					host = value;
 					break;
 				case "--login-port":
-					config = new Config(config.host(), number(name, value), config.worldPort(),
-							config.protocolRevision(), config.timeoutSeconds(), config.account(), config.password());
+					loginPort = number(name, value);
 					break;
 				case "--world-port":
-					config = new Config(config.host(), config.loginPort(), number(name, value),
-							config.protocolRevision(), config.timeoutSeconds(), config.account(), config.password());
+					worldPort = number(name, value);
 					break;
 				case "--protocol-revision":
-					config = new Config(config.host(), config.loginPort(), config.worldPort(), number(name, value),
-							config.timeoutSeconds(), config.account(), config.password());
+					protocolRevision = number(name, value);
 					break;
 				case "--timeout-seconds":
-					config = new Config(config.host(), config.loginPort(), config.worldPort(),
-							config.protocolRevision(), number(name, value), config.account(), config.password());
+					timeoutSeconds = number(name, value);
 					break;
 				case "--account":
-					config = new Config(config.host(), config.loginPort(), config.worldPort(),
-							config.protocolRevision(), config.timeoutSeconds(), value, config.password());
+					account = value;
 					break;
 				case "--password":
-					config = new Config(config.host(), config.loginPort(), config.worldPort(),
-							config.protocolRevision(), config.timeoutSeconds(), config.account(), value);
+					password = value;
+					break;
+				case "--existing-characters":
+					existingCharacters = number(name, value);
 					break;
 				default:
 					throw new IllegalArgumentException("unknown option " + name);
 			}
 		}
-
-		if ((config.account() == null) != (config.password() == null))
+		
+		if ((account == null) != (password == null))
 			throw new IllegalArgumentException("--account and --password go together");
-
-		return config;
+		if (existingCharacters != Config.UNCHECKED && account == null)
+			throw new IllegalArgumentException("--existing-characters needs --account, a new account has none");
+		
+		return new Config(host, loginPort, worldPort, protocolRevision, timeoutSeconds, account, password,
+				existingCharacters);
 	}
-
+	
 	private static int number(String name, String value)
 	{
 		try

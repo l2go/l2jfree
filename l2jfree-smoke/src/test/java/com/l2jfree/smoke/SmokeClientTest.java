@@ -37,9 +37,9 @@ class SmokeClientTest
 	{
 		SmokeClient.Config config = SmokeClient.parse(new String[] { "--host", "example.org", "--login-port", "2107",
 				"--world-port", "7778", "--protocol-revision", "83", "--timeout-seconds", "30", "--account", "anna",
-				"--password", "secret" });
+				"--password", "secret", "--existing-characters", "1" });
 		
-		assertThat(config).isEqualTo(new SmokeClient.Config("example.org", 2107, 7778, 83, 30, "anna", "secret"));
+		assertThat(config).isEqualTo(new SmokeClient.Config("example.org", 2107, 7778, 83, 30, "anna", "secret", 1));
 	}
 	
 	@Test
@@ -49,12 +49,14 @@ class SmokeClientTest
 		assertThatThrownBy(() -> SmokeClient.parse(new String[] { "--login-port" })).hasMessageContaining("missing value");
 		assertThatThrownBy(() -> SmokeClient.parse(new String[] { "--login-port", "x" })).hasMessageContaining("number");
 		assertThatThrownBy(() -> SmokeClient.parse(new String[] { "--account", "anna" })).hasMessageContaining("together");
+		assertThatThrownBy(() -> SmokeClient.parse(new String[] { "--existing-characters", "1" }))
+				.hasMessageContaining("needs --account");
 	}
 	
 	@Test
 	void aRunAgainstNothingFailsWithAReasonAndDoesNotThrow()
 	{
-		SmokeClient.Config config = new SmokeClient.Config("127.0.0.1", 1, 1, 87, 5, null, null);
+		SmokeClient.Config config = new SmokeClient.Config("127.0.0.1", 1, 1, 87, 5, null, null, SmokeClient.Config.UNCHECKED);
 		Reporter reporter = new Reporter(new java.io.PrintStream(java.io.OutputStream.nullOutputStream()));
 		
 		SmokeClient.Result result = SmokeClient.run(config, reporter);

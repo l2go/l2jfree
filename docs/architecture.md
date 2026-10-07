@@ -68,7 +68,7 @@ flowchart TB
 
 ## 3. Compose stack (today)
 
-The image that the pipeline builds and publishes now, with the services and volumes of the compose file. The server starts the login module, then the world, then opens the login port. The defaults are read-only in the image under `/opt/l2jfree`, and the operator changes only single keys in the `config` volume ([ADR-0011](adr/0011-configuration-model.md)). Work package WP4 is in progress: the pipeline checks both ports, and the smoke test of a full play session arrives with WP5.
+The image that the pipeline builds and publishes now, with the services and volumes of the compose file. The server starts the login module, then the world, then opens the login port. The defaults are read-only in the image under `/opt/l2jfree`, and the operator changes only single keys in the `config` volume ([ADR-0011](adr/0011-configuration-model.md)). The pipeline takes a client through a full play session, before and after a restart, with the smoke client of [deploy](../deploy/README.md).
 
 ```mermaid
 flowchart TB

@@ -2,7 +2,7 @@
 
 The delivery of Platform 3.0: one Linux image started with Docker Compose. The decision and its limits are in [ADR-0002](../docs/adr/0002-linux-image-delivered-with-compose.md). The [architecture views](../docs/architecture.md) show how the parts fit.
 
-> **Work in progress.** The image runs the login module and the world module in one process on PostgreSQL 18 (work package WP4, [roadmap](../docs/roadmap.md)). Until the end-to-end smoke test is green, a player cannot yet be taken through a full session in CI: the pipeline checks that both ports are open and that the login port sends its first packet.
+> **Status.** The image runs the login module and the world module in one process on PostgreSQL 18. The pipeline takes a client through a full session, before and after a restart. The run with a real client is the last step of milestone M2 ([report](../docs/reports/m2-platform.md)).
 
 ## Run it
 
@@ -151,4 +151,4 @@ Every pull request builds the image from the verified platform distribution (`l2
 java -jar l2jfree-smoke.jar --host 127.0.0.1
 ```
 
-The options are `--login-port`, `--world-port`, `--protocol-revision`, `--timeout-seconds`, and `--account` with `--password` for an existing account. The jar is part of the `l2jfree-dist` artifact of the pipeline.
+The options are `--login-port`, `--world-port`, `--protocol-revision`, `--timeout-seconds`, `--account` with `--password` for an existing account, and `--existing-characters` for the number of characters that account must have on entry. The pipeline uses the last one to check that an account and its character survive a restart. The jar is part of the `l2jfree-dist` artifact of the pipeline.
