@@ -311,6 +311,24 @@ public class PlayerStat extends PlayableStat
 		return super.getExp();
 	}
 	
+	/** The experience of the base class, also while a subclass is active: what the player row stores. */
+	public final long getBaseClassExp()
+	{
+		return super.getExp();
+	}
+	
+	/** The level of the base class, also while a subclass is active. */
+	public final byte getBaseClassLevel()
+	{
+		return super.getLevel();
+	}
+	
+	/** The skill points of the base class, also while a subclass is active. */
+	public final int getBaseClassSp()
+	{
+		return super.getSp();
+	}
+	
 	@Override
 	public final void setExp(long value)
 	{

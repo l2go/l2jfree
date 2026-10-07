@@ -83,6 +83,9 @@ public class LoginManager
 	/** Authed Clients on LoginServer*/
 	protected Map<String, L2Client> _loginServerClients = new ConcurrentHashMap<String, L2Client>();
 	
+	/** Serializes the automatic creation of accounts. */
+	private final Object _accountCreation = new Object();
+	
 	/** Accounts that are in the world. Changed only under the lock of {@link #_loginServerClients}. */
 	private final Set<String> _accountsInWorld = ConcurrentHashMap.newKeySet();
 	
@@ -226,6 +229,12 @@ public class LoginManager
 	public void removeAuthedLoginClient(String account)
 	{
 		_loginServerClients.remove(account);
+	}
+	
+	/** Removes the entry of the account only if it belongs to this client. */
+	public void removeAuthedLoginClient(String account, L2Client client)
+	{
+		_loginServerClients.remove(account, client);
 	}
 	
 	public boolean isAccountInLoginServer(String account)
@@ -432,9 +441,10 @@ public class LoginManager
 	{
 		try
 		{
-			Accounts acc = _service.getAccountById(account);
+			// only the column that changes: the rest of the row may have been changed since it was read
+			Accounts acc = new Accounts(account);
 			acc.setLastServerId(lastServerId);
-			_service.addOrUpdateAccount(acc);
+			_service.updateGivenColumns(acc);
 		}
 		catch (AccountModificationException e)
 		{
@@ -556,12 +566,15 @@ public class LoginManager
 			try
 			{
 				checkPassword(hash, acc);
-				acc.setLastactive(new BigDecimal(System.currentTimeMillis()));
+				// Write only what a login changes. The row read above may be stale by now: a ban set meanwhile
+				// must not be written back.
+				Accounts seen = new Accounts(acc.getLogin());
+				seen.setLastactive(new BigDecimal(System.currentTimeMillis()));
 				if (address != null)
 				{
-					acc.setLastIp(address.getHostAddress());
+					seen.setLastIp(address.getHostAddress());
 				}
-				_service.addOrUpdateAccount(acc);
+				_service.updateGivenColumns(seen);
 				handleGoodLogin(user, address);
 			}
 			// If password are different
@@ -662,10 +675,18 @@ public class LoginManager
 		{
 			if ((user.length() >= 2) && (user.length() <= 14))
 			{
-				acc =
-						new Accounts(user, Base64.encodeBytes(hash), new BigDecimal(System.currentTimeMillis()), 0, 0,
-								1900, 1, 1, (address == null ? "null" : address.getHostAddress()));
-				_service.addOrUpdateAccount(acc);
+				// the creation is an upsert: of two clients that create the same name at once, the second would
+				// replace the password of the first
+				synchronized (_accountCreation)
+				{
+					if (_service.getAccountById(user) != null)
+						return false;
+					
+					acc =
+							new Accounts(user, Base64.encodeBytes(hash), new BigDecimal(System.currentTimeMillis()), 0,
+									0, 1900, 1, 1, (address == null ? null : address.getHostAddress()));
+					_service.addOrUpdateAccount(acc);
+				}
 				
 				_logLogin.info("Account created: " + user);
 				_log.info("An account was newly created: " + user);

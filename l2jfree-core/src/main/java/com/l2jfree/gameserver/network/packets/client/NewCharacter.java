@@ -144,6 +144,13 @@ public class NewCharacter extends L2ClientPacket
 			L2Player newChar =
 					L2Player.create(objectId, template, getClient().getAccountName(), _name, _hairStyle,
 							_hairColor, _face, _sex != 0);
+			if (newChar == null)
+			{
+				// the row could not be written: answer the client and give the id back
+				IdFactory.getInstance().releaseId(objectId);
+				sendPacket(new CharacterCreateFail(CharacterCreateFail.REASON_CREATION_FAILED));
+				return;
+			}
 			newChar.getStatus().setCurrentHp(template.getBaseHpMax());
 			newChar.getStatus().setCurrentCp(template.getBaseCpMax());
 			newChar.getStatus().setCurrentMp(template.getBaseMpMax());

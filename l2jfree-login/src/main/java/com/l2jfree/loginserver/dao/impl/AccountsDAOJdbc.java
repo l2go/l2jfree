@@ -201,6 +201,32 @@ public final class AccountsDAOJdbc implements AccountsDAO
 		});
 	}
 
+	@Override
+	public boolean updateGiven(Object partial)
+	{
+		Accounts account = requireAccount(partial);
+		List<Column> columns = new ArrayList<Column>(givenColumns(account));
+		columns.remove(Column.NAME);
+		if (columns.isEmpty())
+		{
+			return true;
+		}
+		List<String> assignments = new ArrayList<String>();
+		for (Column column : columns)
+		{
+			assignments.add(column.sqlName + " = " + column.placeholder);
+		}
+		columns.add(Column.NAME);
+		return transactions.withConnection(connection -> {
+			try (PreparedStatement statement = connection.prepareStatement("UPDATE account SET "
+					+ String.join(", ", assignments) + " WHERE name = ?"))
+			{
+				bind(statement, account, columns);
+				return statement.executeUpdate() > 0;
+			}
+		});
+	}
+
 	/** Inserts the account, or updates the columns the bean gives; columns it leaves null keep their value. */
 	private static void upsert(Connection connection, Accounts account) throws SQLException
 	{

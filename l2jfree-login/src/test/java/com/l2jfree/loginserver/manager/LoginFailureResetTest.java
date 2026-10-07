@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
@@ -30,6 +31,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.l2jfree.loginserver.LoginConfig;
 import com.l2jfree.loginserver.beans.Accounts;
@@ -82,6 +84,31 @@ class LoginFailureResetTest
 		}
 	}
 
+	/** The row read for the password check may be stale: a login writes the last login and nothing else. */
+	@Test
+	@DisplayName("a login writes the time and the address, not the access level or the password")
+	void loginWritesOnlyWhatItChanges() throws Exception
+	{
+		LoginManager manager = mock(LoginManager.class, CALLS_REAL_METHODS);
+		AccountsServices service = mock(AccountsServices.class);
+		byte[] hash = MessageDigest.getInstance("SHA").digest("correct".getBytes(StandardCharsets.UTF_8));
+		Accounts account = new Accounts("alice", Base64.encodeBytes(hash), BigDecimal.ZERO, 0, 0,
+				1900, 1, 1, "192.0.2.1");
+		when(service.getAccountById("alice")).thenReturn(account);
+		setField(manager, "_service", service);
+		setField(manager, "_hackProtection", new HashMap<InetAddress, FailedLoginAttempt>());
+		
+		assertThat(manager.loginValid("alice", "correct", InetAddress.getByName("192.0.2.7"))).isTrue();
+		
+		ArgumentCaptor<Accounts> written = ArgumentCaptor.forClass(Accounts.class);
+		verify(service).updateGivenColumns(written.capture());
+		assertThat(written.getValue().getLogin()).isEqualTo("alice");
+		assertThat(written.getValue().getLastIp()).isEqualTo("192.0.2.7");
+		assertThat(written.getValue().getLastactive()).isNotNull();
+		assertThat(written.getValue().getAccessLevel()).isNull();
+		assertThat(written.getValue().getPassword()).isNull();
+	}
+	
 	private static void setField(LoginManager manager, String name, Object value) throws Exception
 	{
 		Field field = LoginManager.class.getDeclaredField(name);

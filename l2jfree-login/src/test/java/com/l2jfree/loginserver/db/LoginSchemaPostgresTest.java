@@ -207,6 +207,30 @@ class LoginSchemaPostgresTest
 	}
 	
 	@Test
+	@DisplayName("updateGiven writes only the columns the bean gives and reports a missing account")
+	void updateGivenLeavesTheOtherColumns()
+	{
+		accounts.createAccount(new Accounts("Partial_User", "hash", null, 50, 3, 2000, 1, 1, "192.0.2.1"));
+		
+		Accounts login = new Accounts("Partial_User");
+		login.setLastactive(BigDecimal.valueOf(1_700_000_000_000L));
+		login.setLastIp("198.51.100.9");
+		assertThat(accounts.updateGiven(login)).isTrue();
+		
+		Accounts found = accounts.getAccountById("partial_user");
+		assertThat(found.getLastIp()).isEqualTo("198.51.100.9");
+		assertThat(found.getLastactive().longValue()).isEqualTo(1_700_000_000_000L);
+		assertThat(found.getPassword()).isEqualTo("hash");
+		assertThat(found.getAccessLevel()).isEqualTo(50);
+		assertThat(found.getLastServerId()).isEqualTo(3);
+		
+		assertThat(accounts.updateGiven(new Accounts("No_Such_Partial"))).isTrue();
+		Accounts missing = new Accounts("No_Such_Partial");
+		missing.setLastServerId(1);
+		assertThat(accounts.updateGiven(missing)).isFalse();
+	}
+	
+	@Test
 	@DisplayName("updateAccessLevel is true for an existing account even when the level does not change")
 	void updateAccessLevelWithoutChange()
 	{
