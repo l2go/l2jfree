@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
-import com.l2jfree.config.L2Properties;
 import com.l2jfree.gameserver.Announcements;
 import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -64,7 +63,6 @@ public final class Olympiad
 	private static Map<Integer, List<L2Player>> _classBasedRegisters;
 	private static Map<Integer, Integer> _noblesRank;
 	
-	private static final String OLYMPIAD_DATA_FILE = "config/olympiad.properties";
 	public static final String OLYMPIAD_HTML_PATH = "data/html/olympiad/";
 	private static final String OLYMPIAD_LOAD_DATA = "SELECT current_cycle, period, competition_end_at, validation_end_at, "
 			+ "next_weekly_change_at FROM olympiad_state WHERE id = 0";
@@ -229,22 +227,12 @@ public final class Olympiad
 		
 		if (!loaded)
 		{
-			L2Properties properties;
-			try
-			{
-				properties = new L2Properties("./" + OLYMPIAD_DATA_FILE);
-			}
-			catch (Exception e)
-			{
-				_log.error("Olympiad System: Error loading olympiad properties: ", e);
-				return;
-			}
-			
-			_currentCycle = Integer.parseInt(properties.getProperty("CurrentCycle", "1"));
-			_period = Integer.parseInt(properties.getProperty("Period", "0"));
-			_olympiadEnd = Long.parseLong(properties.getProperty("OlympiadEnd", "0"));
-			_validationEnd = Long.parseLong(properties.getProperty("ValidationEnd", "0"));
-			_nextWeeklyChange = Long.parseLong(properties.getProperty("NextWeeklyChange", "0"));
+			// the first start of a world: the first cycle, no dates yet
+			_currentCycle = 1;
+			_period = 0;
+			_olympiadEnd = 0;
+			_validationEnd = 0;
+			_nextWeeklyChange = 0;
 		}
 		
 		switch (_period)
@@ -1132,7 +1120,7 @@ public final class Olympiad
 	}
 	
 	/**
-	 * Save olympiad.properties file with current olympiad status and update noblesse table in database
+	 * Saves the noble statistics and the Olympiad state (olympiad_state) to the database
 	 */
 	public void saveOlympiadStatus()
 	{
@@ -1166,37 +1154,6 @@ public final class Olympiad
 		{
 			L2DatabaseFactory.close(con);
 		}
-		/*
-		FileOutputStream fos = null;
-		try
-		{
-			fos = new FileOutputStream(new File("./" + OLYMPIAD_DATA_FILE));
-			
-			Properties properties = new L2Properties();
-			properties.setProperty("CurrentCycle", String.valueOf(_currentCycle));
-			properties.setProperty("Period", String.valueOf(_period));
-			properties.setProperty("OlympiadEnd", String.valueOf(_olympiadEnd));
-			properties.setProperty("ValidationEnd", String.valueOf(_validationEnd));
-			properties.setProperty("NextWeeklyChange", String.valueOf(_nextWeeklyChange));
-			
-			properties.store(fos, "Olympiad Properties");
-		}
-		catch (Exception e)
-		{
-			_log.warn("Olympiad System: Unable to save olympiad properties to file: ", e);
-		}
-		finally
-		{
-			try
-			{
-				if (fos != null)
-					fos.close();
-			}
-			catch (Exception e)
-			{
-			}
-		}
-		*/
 	}
 	
 	protected void updateMonthlyData()
