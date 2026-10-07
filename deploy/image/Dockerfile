@@ -19,7 +19,10 @@ RUN mkdir -p /opt/jre && tar -xzf /tmp/jre.tar.gz -C /opt/jre --strip-components
 
 FROM archlinux:base-20261004.0.606936@sha256:4e77cf2ea5f410e6f8be5abf93ccf17ce2436e87a138c167208356711a405dbd
 
-RUN useradd --system --uid 10001 --user-group --home-dir /var/lib/l2jfree --shell /usr/bin/nologin l2jfree \
+# captree is a Go program of the Arch base that the server never runs. Its Go standard library carried twenty fixed
+# high vulnerabilities at the first scan (SECURITY.md), so it is removed, not excepted.
+RUN rm -f /usr/bin/captree \
+ && useradd --system --uid 10001 --user-group --home-dir /var/lib/l2jfree --shell /usr/bin/nologin l2jfree \
  && install -d -o 10001 -g 10001 -m 0750 /var/lib/l2jfree /var/lib/l2jfree/log /var/lib/l2jfree/work \
  && install -d -o 10001 -g 10001 -m 0755 /var/lib/l2jfree/config /var/lib/l2jfree/secrets /var/lib/l2jfree/secrets-db /var/lib/l2jfree/aot
 

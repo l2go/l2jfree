@@ -20,6 +20,7 @@ inside 'java -version 2>&1 | head -n1 | grep -q "\"25\."' || fail "the JRE is no
 inside 'java -XshowSettings:properties -version 2>&1 | grep -q "java.vendor = Eclipse Adoptium"' \
 	|| fail "the JRE is not Eclipse Temurin"
 
+inside 'test ! -e /usr/bin/captree' || fail "captree is in the image: its Go standard library has fixed vulnerabilities"
 inside 'test -x /opt/l2jfree/bin/entrypoint && test -x /opt/l2jfree/bin/init-secrets' || fail "the scripts are missing"
 for file in config/server.properties config/loginserver.properties config/logback.xml l2jfree-platform.jar \
 	data/scripts.cfg catalog/npc_template.csv; do
