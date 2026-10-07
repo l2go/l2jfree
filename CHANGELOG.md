@@ -54,6 +54,7 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - The death of a player aborted when a quest left the death-notification list, the Olympiad cleaned up while matches ran, and the party matching, petition, and fort siege lists were changed by several threads at once.
 - Benom never appeared on a new database and the siege event passed no monster to its timers. Quest timers with the same name can no longer replace each other, a one-shot timer no longer interrupts its own thread, and four quests that called `time.sleep` in a handler use a timer or no delay. A repeating Saga timer is cancelled when its monster despawns, and quest spawns leave the spawn table when they decay.
 - A new pet failed on its foreign key while its control item waited in the write queue, a save that was rolled back on disconnect was not repeated, and a deleted character kept its name and its place on the account until the next start.
+- The Olympiad registers and the game map were changed by the packet threads and the manager thread at once, and two clicks could register a noble twice. A player's `deleteMe` could run twice when the disconnect, a relogin, and the shutdown met, and the shutdown now writes the SQL queue once more after the pools stop.
 
 ### Removed
 
