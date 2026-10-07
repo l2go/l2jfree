@@ -15,7 +15,6 @@
 package com.l2jfree.network;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.ByteArrayOutputStream;
@@ -195,7 +194,17 @@ class NetworkServerTest
 			
 			_server.stopAccepting();
 			
-			assertThatThrownBy(() -> new Client(port)).isInstanceOf(java.io.IOException.class);
+			// On loopback a connect to a closed port in the ephemeral range can connect the socket to itself, so the
+			// test does not expect an error: it expects that the server never sees the connection.
+			try (Client late = new Client(port))
+			{
+				Thread.sleep(300);
+			}
+			catch (java.io.IOException refused)
+			{
+				// the usual case
+			}
+			assertThat(_server.connections).hasSize(1);
 			client.send(echo("alive", 4));
 			assertThat(client.readText()).isEqualTo("alive:8");
 		}
