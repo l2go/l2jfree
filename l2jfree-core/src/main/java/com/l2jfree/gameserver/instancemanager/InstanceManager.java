@@ -177,27 +177,35 @@ public class InstanceManager
 		return ("UnknownInstance");
 	}
 	
+	/**
+	 * Reads the {@code instance} elements of an instance names document (id and name attributes) into the table.
+	 */
+	static void parseInstanceNames(InputStream in, LookupTable<String> names) throws XMLStreamException
+	{
+		XMLInputFactory factory = XMLInputFactory.newFactory();
+		factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+		XMLStreamReader xpp = factory.createXMLStreamReader(in);
+		for (int e = xpp.getEventType(); e != XMLStreamConstants.END_DOCUMENT; e = xpp.next())
+		{
+			if (e == XMLStreamConstants.START_ELEMENT)
+			{
+				if (xpp.getLocalName().equals("instance"))
+				{
+					Integer id = Integer.valueOf(xpp.getAttributeValue(null, "id"));
+					String name = xpp.getAttributeValue(null, "name");
+					names.put(id, name);
+				}
+			}
+		}
+	}
+	
 	private void loadInstanceNames()
 	{
 		InputStream in = null;
 		try
 		{
 			in = new FileInputStream(Config.DATAPACK_ROOT + "/data/instancenames.xml");
-			XMLInputFactory factory = XMLInputFactory.newFactory();
-			factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
-			XMLStreamReader xpp = factory.createXMLStreamReader(in);
-			for (int e = xpp.getEventType(); e != XMLStreamConstants.END_DOCUMENT; e = xpp.next())
-			{
-				if (e == XMLStreamConstants.START_ELEMENT)
-				{
-					if (xpp.getLocalName().equals("instance"))
-					{
-						Integer id = Integer.valueOf(xpp.getAttributeValue(null, "id"));
-						String name = xpp.getAttributeValue(null, "name");
-						_instanceIdNames.put(id, name);
-					}
-				}
-			}
+			parseInstanceNames(in, _instanceIdNames);
 		}
 		catch (FileNotFoundException e)
 		{
