@@ -418,8 +418,9 @@ jobs:
           $compose up -d --wait --wait-timeout 600
 
           python3 deploy/probe/login_init.py --host 127.0.0.1 --port 2106 --timeout 60
-          # the same account, with the password of the first session, finds its character
-          java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240 --account smokesave --password "$SMOKE_PASSWORD" --existing-characters 1
+          # the same account, with the password of the first session, finds its characters: the first session made one
+          # and the session after the restart another
+          java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240 --account smokesave --password "$SMOKE_PASSWORD" --existing-characters 2
           # the roles of the restored database still reach only their own schema
           deploy/probe/check-roles.sh
 
