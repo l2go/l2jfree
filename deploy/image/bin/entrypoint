@@ -30,6 +30,23 @@ fi
 
 cd "$work"
 
+# L2JFREE_ITEM_LOG=rotate gives each start its own item log: the files of the previous run move to
+# log/item/runs/<UTC time>, and the last ten runs are kept.
+case "${L2JFREE_ITEM_LOG:-keep}" in
+	keep) ;;
+	rotate)
+		items="$work/log/item"
+		files=("$items"/item*.log)
+		if [ -e "${files[0]}" ]; then
+			run="$items/runs/$(date -u +%Y%m%dT%H%M%S.%NZ)"
+			mkdir -p "$run"
+			mv -- "${files[@]}" "$run/"
+			ls -d "$items"/runs/*/ | LC_ALL=C sort | head -n -10 | xargs -r rm -r --
+		fi
+		;;
+	*) fail "L2JFREE_ITEM_LOG must be keep or rotate, not $L2JFREE_ITEM_LOG" ;;
+esac
+
 # The HTML cache is built from the datapack of the image. The work volume
 # outlives an image update, so a cache from an older image would hide the new
 # pages. The world rebuilds it in seconds.
