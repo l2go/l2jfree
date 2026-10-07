@@ -23,4 +23,17 @@ This is a noncommercial archive project with one maintainer, so there is no guar
 
 ## Supply chain
 
-Releases publish checksums, a CycloneDX SBOM, a vulnerability scan report, and signed provenance. See the [verification guide](docs/RELEASE-VERIFICATION.md) for the 2.x releases. The same checks are planned for the 3.0 image ([roadmap](docs/roadmap.md)).
+The Platform 3.0 image is signed with cosign, carries an SBOM and build provenance, and is verified by the pipeline right after it is published. The [image verification guide](docs/image-verification.md) shows the commands. The 2.x releases are verified as the [retired guide](docs/RELEASE-VERIFICATION.md) describes.
+
+## Vulnerability policy
+
+The image and its dependencies are scanned with Trivy on every merge and every day. A finding counts when a fixed version exists.
+
+| Severity | Fix within | Blocks the `v3.0.0` tag |
+|---|---|---|
+| Critical | 7 days | Yes |
+| High | 30 days | Yes |
+| Medium | the next release | No |
+| Low | when convenient | No |
+
+A critical or high finding that is in a package the image runs and has a fixed version blocks the tag until the fix is in, or until an exception is recorded. An exception is a dated entry in [.trivyignore](.trivyignore) with the identifier, the reason, and the date it is reviewed again. The scan reports on merges and does not fail them; the daily scan and the release job fail on a finding that blocks.

@@ -33,6 +33,7 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - A repeatable start-up measurement under G1 and ZGC, with and without the AOT cache, a record of the decision for G1 without a cache ([ADR-0012](docs/adr/0012-garbage-collector-and-aot-cache.md)), and a ready line that reports the start by step.
 - A configuration model with the defaults in the image and the operator's changes in one directory, and `L2JFREE_*` environment variables for the database, the bind address, and the announced address ([ADR-0011](docs/adr/0011-configuration-model.md)).
 - The backup and restore of the deployment guide run in the pipeline: a dump of a stack with an account and a character, a stack destroyed with its volumes, the restore, and the same account finds its character. A script collects the logs, the slowest statements, the database sessions, and a thread dump of the running stack, and the pipeline runs it.
+- A vulnerability policy with severity classes, times to fix, and what blocks the `v3.0.0` tag; a Trivy scan of the image on every merge and a daily scan of the published image that fails on a fixed critical or high finding; and a check, right after each publication, that the signature, the provenance, and the SBOM of the image verify with the commands of the new image verification guide.
 
 ### Changed
 

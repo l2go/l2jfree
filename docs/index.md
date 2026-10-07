@@ -11,6 +11,7 @@ Platform 3.0 is in development. v2.5.0 is the final release of the 2.x line, whi
 | [Deploy](../deploy/README.md) | The Linux image and the Docker Compose stack |
 | [Platform module](../l2jfree-platform/README.md) | The launcher, the layout of the distribution, and how the two ports are wired |
 | [Risk register](risks.md) | Open risks and their mitigations |
+| [Image verification](image-verification.md) | Signature, provenance, and SBOM of the Platform 3.0 image |
 | [Milestone reports](reports/m1-foundation.md) | Plan, result, deviations, and delivery numbers of each closed milestone |
 | [Milestone report M2](reports/m2-platform.md) | Result of the Platform 3.0 platform work against its exit criteria, deviations, and the acceptance run |
 | [Start-up measurement](reports/startup-measurement.md) | The start of the server under G1 and ZGC, with and without the AOT cache |
@@ -29,7 +30,7 @@ These describe Windows 10, MySQL 8.4, and two processes. They stay as history.
 |---|---|
 | [Operations runbook](OPERATIONS-RUNBOOK.md) | Release acceptance and routine operation of v2.5.0 |
 | [Deployment qualification](2026-Q4-UPGRADE.md) | Windows 10 qualification notes |
-| [Release verification](RELEASE-VERIFICATION.md) | Checksums and attestations of the published releases |
+| [Release verification](RELEASE-VERIFICATION.md) | Checksums and attestations of the retired 2.x releases |
 | [Dependency inventory](DEPENDENCY-INVENTORY.md) | Direct dependencies of v2.5.0 |
 | [Infrastructure stack](INFRASTRUCTURE-STACK.md) | Stack map of the 2.0 line |
 | [Infrastructure vision 2.0](INFRASTRUCTURE-MODERNIZATION-VISION-2.0.md) | Target and execution status of the 2.0 line |
