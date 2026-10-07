@@ -97,9 +97,13 @@ jobs:
       - name: Take the release notes from the changelog
         env:
           VERSION: ${{ inputs.version }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -euo pipefail
-          awk -v v="$VERSION" '
+          section="$VERSION"
+          # a dry run happens before the changelog is ready: it reads the section of the next release
+          if [ "$DRY_RUN" = true ] && ! grep -q "^## \\[$VERSION\\]" CHANGELOG.md; then section=Unreleased; fi
+          awk -v v="$section" '
             $0 ~ "^## \\[" v "\\]" { found = 1; next }
             found && /^## \[/ { exit }
             found { print }

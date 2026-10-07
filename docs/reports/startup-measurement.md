@@ -23,6 +23,17 @@ Run 37567781550, three restarts per configuration:
 
 The same stop followed by a restart, by a start after 30 s, and by a new container took 17.1 s, 17.6 s, and 17.3 s.
 
+## Cost of the flight recording
+
+The image keeps a flight recording of the last 12 hours, at most 256 MB, in the log volume (`L2JFREE_FLIGHT_RECORDER`, default on). Run 37681189697, same runner, three restarts per configuration, G1 with and without the recording:
+
+| Configuration | Cold start | New container | Restart, median | Restart, range | Before main | World | Resident memory |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| G1 with the recording | 10.9 s | 10.4 s | 10.3 s | 10.0 - 10.4 s | 0.4 s | 9.2 s | 1266 MiB |
+| G1 without the recording | 11.2 s | 10.3 s | 9.8 s | 9.5 - 9.9 s | 0.3 s | 8.9 s | 1220 MiB |
+
+The recording adds about half a second to a restart and about 46 MiB of resident memory. The cold start and a new container differ by less than the spread of the runs, so the cost at start is small and close to the noise of a shared runner. The cost under load is not measured: the recording uses the default settings of the JDK, which cost about one percent of the CPU of a busy application, and a flight recording under the load of the smoke client is the next measurement to take. The absolute times are not comparable with the table above, which came from another run on another runner.
+
 ## What the earlier runs showed and why they are not used
 
 Three runs before this one gave the same order of the four configurations but restarts 8 s slower than new containers (for G1, 25 s against 17 s), growing with every restart. The script read the whole container log at every poll, the log grew with every start, and the reading slowed the server it measured. Reading only the end of the log removed the difference. The comparison of the collectors and of the cache held in every run: ZGC was 15 to 16 % slower and held twice the memory, and the cache gained between 0 and 2 s.
