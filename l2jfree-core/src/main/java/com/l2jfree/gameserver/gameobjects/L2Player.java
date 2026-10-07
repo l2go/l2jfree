@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -617,7 +618,11 @@ public final class L2Player extends L2Playable
 	public static final byte ONLINE_STATE_ONLINE = 1;
 	public static final byte ONLINE_STATE_DELETED = 2;
 	
-	private byte _isOnline = ONLINE_STATE_LOADED;
+	// written by the disconnect, the relogin and the shutdown threads
+	private volatile byte _isOnline = ONLINE_STATE_LOADED;
+	
+	/** Set by the first deleteMe(): the disconnect task, a relogin and the shutdown can all call it. */
+	private final AtomicBoolean _deleteStarted = new AtomicBoolean();
 	
 	protected boolean _inventoryDisabled = false;
 	
@@ -10702,7 +10707,7 @@ public final class L2Player extends L2Playable
 	{
 		final HashSet<L2Zone> before = getZonesPlayerIn();
 		
-		if (getOnlineState() == ONLINE_STATE_DELETED)
+		if (getOnlineState() == ONLINE_STATE_DELETED || !_deleteStarted.compareAndSet(false, true))
 			return;
 		
 		// Publish the flag before the rest of the work, so a second deleteMe on this instance returns.

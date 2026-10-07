@@ -30,6 +30,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledFuture;
 
 import org.slf4j.Logger;
@@ -194,7 +196,8 @@ public final class Olympiad
 	
 	private void load()
 	{
-		_nobles = new LinkedHashMap<Integer, StatsSet>();
+		// read by the packet threads, the manager thread and the save, written by the registration
+		_nobles = new ConcurrentHashMap<Integer, StatsSet>();
 		
 		Connection con = null;
 		
@@ -387,8 +390,8 @@ public final class Olympiad
 		if (_period == 1)
 			return;
 		
-		_nonClassBasedRegisters = new ArrayList<L2Player>();
-		_classBasedRegisters = new LinkedHashMap<Integer, List<L2Player>>();
+		_nonClassBasedRegisters = new CopyOnWriteArrayList<L2Player>();
+		_classBasedRegisters = new ConcurrentHashMap<Integer, List<L2Player>>();
 		
 		_compStart = Calendar.getInstance();
 		_compStart.set(Calendar.HOUR_OF_DAY, COMP_START);
@@ -454,7 +457,18 @@ public final class Olympiad
 		}
 	}
 	
+	/** The registers are checked and changed in one step: two clicks must not register a noble twice. */
+	protected static final Object REGISTRATION_LOCK = new Object();
+	
 	public boolean registerNoble(L2Player noble, boolean classBased)
+	{
+		synchronized (REGISTRATION_LOCK)
+		{
+			return registerNobleLocked(noble, classBased);
+		}
+	}
+	
+	private boolean registerNobleLocked(L2Player noble, boolean classBased)
 	{
 		if (GlobalRestrictions.isRestricted(noble, OlympiadRestriction.class))
 		{
@@ -578,7 +592,7 @@ public final class Olympiad
 			}
 			else
 			{
-				List<L2Player> classed = new ArrayList<L2Player>();
+				List<L2Player> classed = new CopyOnWriteArrayList<L2Player>();
 				classed.add(noble);
 				
 				_classBasedRegisters.put(noble.getClassId().getId(), classed);
@@ -666,6 +680,14 @@ public final class Olympiad
 	
 	public boolean unRegisterNoble(L2Player noble)
 	{
+		synchronized (REGISTRATION_LOCK)
+		{
+			return unRegisterNobleLocked(noble);
+		}
+	}
+	
+	private boolean unRegisterNobleLocked(L2Player noble)
+	{
 		SystemMessage sm;
 		/*
 		 * if (_compStarted) {
@@ -727,15 +749,18 @@ public final class Olympiad
 		if (OlympiadManager.getInstance().getOlympiadGame(player.getOlympiadGameId()) != null)
 			OlympiadManager.getInstance().getOlympiadGame(player.getOlympiadGameId()).handleDisconnect(player);
 		
-		List<L2Player> classed = _classBasedRegisters.get(player.getClassId().getId());
-		
-		if (_nonClassBasedRegisters.contains(player))
-			_nonClassBasedRegisters.remove(player);
-		else if (classed != null && classed.contains(player))
+		synchronized (REGISTRATION_LOCK)
 		{
-			classed.remove(player);
+			List<L2Player> classed = _classBasedRegisters.get(player.getClassId().getId());
 			
-			_classBasedRegisters.put(player.getClassId().getId(), classed);
+			if (_nonClassBasedRegisters.contains(player))
+				_nonClassBasedRegisters.remove(player);
+			else if (classed != null && classed.contains(player))
+			{
+				classed.remove(player);
+				
+				_classBasedRegisters.put(player.getClassId().getId(), classed);
+			}
 		}
 	}
 	
