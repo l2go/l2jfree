@@ -100,7 +100,8 @@ public final class LoginLink implements WorldPort
 	private volatile WorldAddress _address;
 	private volatile ServerStatus _status = ServerStatus.STATUS_AUTO;
 
-	private LoginLink()
+	/** For tests: a link of its own. The server uses {@link #getInstance()}. */
+	LoginLink()
 	{
 	}
 

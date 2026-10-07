@@ -145,7 +145,6 @@ public abstract class BossSpawnManager
 			info.set("respawnTime", 0L);
 		}
 		
-		_storedInfo.remove(boss.getNpcId());
 		_storedInfo.put(boss.getNpcId(), info);
 		_log.info(getClass().getSimpleName() + ": Updated "
 				+ NpcTable.getInstance().getTemplate(boss.getNpcId()).getName() + "(" + boss.getNpcId()

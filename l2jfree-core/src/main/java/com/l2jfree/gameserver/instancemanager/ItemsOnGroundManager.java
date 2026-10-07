@@ -16,6 +16,7 @@ package com.l2jfree.gameserver.instancemanager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,7 @@ public class ItemsOnGroundManager
 	{
 		if (!Config.SAVE_DROPPED_ITEM)
 			return;
-		_items = new ArrayList<L2ItemInstance>();
+		_items = new CopyOnWriteArrayList<L2ItemInstance>();
 		load();
 		if (Config.SAVE_DROPPED_ITEM_INTERVAL > 0)
 			ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(new StoreInDb(),

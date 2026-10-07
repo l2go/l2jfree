@@ -134,7 +134,6 @@ public class DayNightSpawnManager
 					if (creature == null)
 						continue;
 					
-					SpawnCreatures.remove(spawnDat);
 					SpawnCreatures.put(spawnDat, creature);
 					creature.getStatus().setCurrentHp(creature.getMaxHp());
 					creature.getStatus().setCurrentMp(creature.getMaxMp());
@@ -238,7 +237,6 @@ public class DayNightSpawnManager
 					else
 						continue;
 					
-					_bosses.remove(spawn);
 					_bosses.put(spawn, boss);
 					continue;
 				}

@@ -59,7 +59,6 @@ public class TopicBBSManager extends BaseBBSManager
 	
 	public void setMaxID(int id, Forum f)
 	{
-		_maxId.remove(f);
 		_maxId.put(f, id);
 	}
 	

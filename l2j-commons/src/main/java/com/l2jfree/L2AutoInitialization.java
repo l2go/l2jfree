@@ -88,75 +88,16 @@ public abstract class L2AutoInitialization
 			System.exit(-1);
 		}
 		
-		final Map<String, List<String>> libs = new HashMap<String, List<String>>();
+		final Map<String, List<String>> conflicts = ClassPathConflicts.find(System.getProperty("java.class.path"));
 		
-		final Set<File> files = new HashSet<File>();
-		
-		for (String classPath : System.getProperty("java.class.path").split(File.pathSeparator))
-		{
-			final File classPathFile = new File(classPath);
-			
-			if (classPathFile.isDirectory())
-			{
-				for (File f : classPathFile.listFiles())
-					files.add(f);
-			}
-			else
-				files.add(classPathFile);
-		}
-		
-		boolean shouldExit = false;
-		
-		for (File f : files)
-		{
-			if (!f.getName().endsWith("jar"))
-				continue;
-			
-			final StringBuilder sb = new StringBuilder();
-			
-			final StringTokenizer st = new StringTokenizer(f.getName(), "-");
-			
-			tokenizer: while (st.hasMoreTokens())
-			{
-				final String token = st.nextToken();
-				
-				boolean numberOnly = true;
-				
-				for (int i = 0; i < token.length(); i++)
-				{
-					char c = token.charAt(i);
-					
-					if (numberOnly && c == '.')
-						break tokenizer;
-					
-					numberOnly &= Character.isDigit(c);
-				}
-				
-				if (sb.length() != 0)
-					sb.append("-");
-				
-				sb.append(token);
-			}
-			
-			List<String> list = libs.get(sb.toString());
-			
-			if (list == null)
-				libs.put(sb.toString(), list = new ArrayList<String>());
-			else
-				shouldExit = true;
-			
-			list.add(f.getName());
-		}
-		
-		if (shouldExit)
+		if (!conflicts.isEmpty())
 		{
 			System.out.println("Server should not run with classpath conflicts! "
 					+ "(rename/remove possible conflicting classpath entries)");
 			
-			for (Map.Entry<String, List<String>> entry : libs.entrySet())
-				if (entry.getValue().size() > 1)
-					for (String name : entry.getValue())
-						System.out.println("\t'" + name + "'");
+			for (List<String> names : conflicts.values())
+				for (String name : names)
+					System.out.println("\t'" + name + "'");
 			
 			System.exit(-1);
 		}

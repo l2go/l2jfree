@@ -118,15 +118,7 @@ def getDate(self):
     DAY = int(dayFormat.format(date))
     MONTH = int(monthFormat.format(date))
     YEAR = int(yearFormat.format(date))
-    if MONTH < 10:
-        TEMP1 = "%d0%d" % (YEAR, MONTH)
-    else:
-        TEMP1 = "%d%d" % (YEAR, MONTH)
-    if DAY < 10:
-        CURRENTDATE = "%d0%d" % (TEMP1, DAY)
-    else:
-        CURRENTDATE = "%d%d" % (TEMP1, DAY)
-    return CURRENTDATE
+    return "%04d%02d%02d" % (YEAR, MONTH, DAY)
 
 def check(self,player) :
     account = player.getAccountName()

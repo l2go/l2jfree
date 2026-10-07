@@ -1409,7 +1409,6 @@ public class Castle extends Siegeable<Siege>
 					_log.warn("Called Castle.updateFunctions diffLease : " + diffLease);
 				if (diffLease > 0)
 				{
-					_function.remove(type);
 					_function.put(type, new CastleFunction(type, lvl, lease, 0, rate, -1, false));
 				}
 				else

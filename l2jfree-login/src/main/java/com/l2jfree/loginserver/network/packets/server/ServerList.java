@@ -95,7 +95,12 @@ public final class ServerList extends L2ServerPacket
 	
 	public ServerList(L2Client client)
 	{
-		WorldPort world = LoginModule.currentWorld();
+		this(LoginModule.currentWorld(), client);
+	}
+	
+	/** @param world the world of the platform, or null while the login module has none */
+	ServerList(WorldPort world, L2Client client)
+	{
 		if (world == null)
 		{
 			_server = null;

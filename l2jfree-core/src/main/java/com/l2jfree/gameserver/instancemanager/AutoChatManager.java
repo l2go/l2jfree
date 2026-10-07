@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
 import org.slf4j.Logger;
@@ -343,7 +344,7 @@ public class AutoChatManager implements SpawnListener
 		private boolean _isActive;
 		
 		private final Map<Integer, AutoChatDefinition> _chatDefinitions =
-				new LinkedHashMap<Integer, AutoChatDefinition>();
+				new ConcurrentHashMap<Integer, AutoChatDefinition>();
 		protected ScheduledFuture<?> _chatTask;
 		
 		protected AutoChatInstance(int npcId, String[] chatTexts, long chatDelay, int chatRange, boolean chatRandom,

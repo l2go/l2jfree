@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.datatables;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.LocalDate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +61,7 @@ public final class RecordTable
 			if (rset.next())
 			{
 				_record = rset.getInt("player_count");
-				_date = rset.getString("recorded_on");
+				_date = String.valueOf(rset.getObject("recorded_on", LocalDate.class));
 			}
 			
 			rset.close();

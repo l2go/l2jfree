@@ -81,7 +81,6 @@ public final class L2ScriptEngineManager
 	
 	private final CompiledScriptCache _cache;
 	
-	private final ThreadLocal<File> _currentLoadingScript = new ThreadLocal<>();
 	private final LongAdder _scriptLoadAttempts = new LongAdder();
 	private final LongAdder _scriptLoadSuccesses = new LongAdder();
 	private final LongAdder _scriptLoadFailures = new LongAdder();
@@ -435,27 +434,19 @@ public final class L2ScriptEngineManager
 			context.setAttribute("sourcepath", SCRIPT_FOLDER.getAbsolutePath(), ScriptContext.ENGINE_SCOPE);
 			context.setAttribute("parentLoader", ClassLoader.getSystemClassLoader(), ScriptContext.ENGINE_SCOPE);
 			
-			setCurrentLoadingScript(file);
 			ScriptContext ctx = engine.getContext();
 			try
 			{
 				engine.setContext(context);
-				if (USE_COMPILED_CACHE)
-				{
-					CompiledScript cs = _cache.loadCompiledScript(engine, file);
-					cs.eval(context);
-				}
-				else
-				{
-					Compilable eng = (Compilable)engine;
-					CompiledScript cs = eng.compile(reader);
-					cs.eval(context);
-				}
+				ManagedScript.loading(file, () -> {
+					CompiledScript cs = USE_COMPILED_CACHE ? _cache.loadCompiledScript(engine, file)
+							: ((Compilable)engine).compile(reader);
+					return cs.eval(context);
+				});
 			}
 			finally
 			{
 				engine.setContext(ctx);
-				setCurrentLoadingScript(null);
 				context.removeAttribute(ScriptEngine.FILENAME, ScriptContext.ENGINE_SCOPE);
 				context.removeAttribute("mainClass", ScriptContext.ENGINE_SCOPE);
 				context.removeAttribute("parentLoader", ScriptContext.ENGINE_SCOPE);
@@ -470,14 +461,12 @@ public final class L2ScriptEngineManager
 			context.setAttribute("classpath", getScriptClassPath(), ScriptContext.ENGINE_SCOPE);
 			context.setAttribute("sourcepath", SCRIPT_FOLDER.getAbsolutePath(), ScriptContext.ENGINE_SCOPE);
 			context.setAttribute("parentLoader", ClassLoader.getSystemClassLoader(), ScriptContext.ENGINE_SCOPE);
-			setCurrentLoadingScript(file);
 			try
 			{
-				engine.eval(reader, context);
+				ManagedScript.loading(file, () -> engine.eval(reader, context));
 			}
 			finally
 			{
-				setCurrentLoadingScript(null);
 				engine.getContext().removeAttribute(ScriptEngine.FILENAME, ScriptContext.ENGINE_SCOPE);
 				engine.getContext().removeAttribute("mainClass", ScriptContext.ENGINE_SCOPE);
 				engine.getContext().removeAttribute("parentLoader", ScriptContext.ENGINE_SCOPE);
@@ -519,7 +508,26 @@ public final class L2ScriptEngineManager
 	{
 		_scriptLoadAttempts.increment();
 		boolean loaded = false;
-		setCurrentLoadingScript(file);
+		try
+		{
+			ManagedScript.loading(file, () -> runPackagedJavaScript(file));
+			loaded = true;
+		}
+		finally
+		{
+			if (loaded)
+			{
+				_scriptLoadSuccesses.increment();
+			}
+			else
+			{
+				_scriptLoadFailures.increment();
+			}
+		}
+	}
+
+	private Void runPackagedJavaScript(File file) throws IOException, ScriptException
+	{
 		try
 		{
 			String className = getClassForFile(file).replace('/', '.').replace('\\', '.');
@@ -543,23 +551,11 @@ public final class L2ScriptEngineManager
 				throw new ScriptException("no main method in " + className);
 			}
 			main.invoke(null, (Object)context.getAttribute("arguments"));
-			loaded = true;
+			return null;
 		}
 		catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException e)
 		{
 			throw new ScriptException(e);
-		}
-		finally
-		{
-			setCurrentLoadingScript(null);
-			if (loaded)
-			{
-				_scriptLoadSuccesses.increment();
-			}
-			else
-			{
-				_scriptLoadFailures.increment();
-			}
 		}
 	}
 
@@ -707,28 +703,6 @@ public final class L2ScriptEngineManager
 		
 	}
 	
-	/**
-	 * @param currentLoadingScript The currentLoadingScript to set.
-	 */
-	protected void setCurrentLoadingScript(File currentLoadingScript)
-	{
-		if (currentLoadingScript == null)
-		{
-			_currentLoadingScript.remove();
-		}
-		else
-		{
-			_currentLoadingScript.set(currentLoadingScript);
-		}
-	}
-	
-	/**
-	 * @return Returns the currentLoadingScript.
-	 */
-	protected File getCurrentLoadingScript()
-	{
-		return _currentLoadingScript.get();
-	}
 	
 	@SuppressWarnings("synthetic-access")
 	private static class SingletonHolder

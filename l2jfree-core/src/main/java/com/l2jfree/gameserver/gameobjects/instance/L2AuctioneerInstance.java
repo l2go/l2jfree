@@ -123,9 +123,6 @@ public final class L2AuctioneerInstance extends L2Npc
 						Auction a =
 								new Auction(player.getClan().getHasHideout(), player.getClan(), days * 86400000L, bid,
 										ClanHallManager.getInstance().getClanHallByOwner(player.getClan()).getName());
-						if (_pendingAuctions.get(a.getId()) != null)
-							_pendingAuctions.remove(a.getId());
-						
 						_pendingAuctions.put(a.getId(), a);
 						
 						String filename = "data/html/auction/AgitSale3.htm";

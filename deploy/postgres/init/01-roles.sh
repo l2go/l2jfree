@@ -14,6 +14,8 @@ psql -v ON_ERROR_STOP=1 -v login_password="$login_password" -v world_password="$
 -- Case-insensitive text for login names. The migrations rely on it and the
 -- module roles do not need the right to create extensions.
 CREATE EXTENSION IF NOT EXISTS citext SCHEMA public;
+-- Counts every statement of the database; an operator reads it with SELECT ... FROM pg_stat_statements.
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements SCHEMA public;
 
 -- The login module: accounts and session data. Owns the schema "login".
 CREATE ROLE l2jfree_login LOGIN PASSWORD :'login_password';

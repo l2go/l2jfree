@@ -163,7 +163,7 @@ public class LoginManager
 	 * For tests: a manager that works on the given accounts service and has no RSA and Blowfish keys, so the admission
 	 * rules can be tested without the key generation and without the database registry.
 	 */
-	LoginManager(AccountsServices service)
+	public LoginManager(AccountsServices service)
 	{
 		_hackProtection = new ConcurrentHashMap<InetAddress, FailedLoginAttempt>();
 		_keyPairs = new ScrambledKeyPair[0];

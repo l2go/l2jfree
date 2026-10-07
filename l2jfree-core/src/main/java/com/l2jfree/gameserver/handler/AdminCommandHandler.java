@@ -15,6 +15,7 @@
 package com.l2jfree.gameserver.handler;
 
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 import java.util.concurrent.TimeUnit;
 
 import com.l2jfree.Config;
@@ -259,12 +260,10 @@ public final class AdminCommandHandler extends HandlerRegistry<String, IAdminCom
 			@Override
 			public void run()
 			{
-				_activeGm.set(activeChar);
-				
 				final long begin = System.currentTimeMillis();
 				try
 				{
-					handler.useAdminCommand(message, activeChar);
+					runAs(activeChar::sendMessage, () -> handler.useAdminCommand(message, activeChar));
 				}
 				catch (RuntimeException e)
 				{
@@ -274,8 +273,6 @@ public final class AdminCommandHandler extends HandlerRegistry<String, IAdminCom
 				}
 				finally
 				{
-					_activeGm.set(null);
-					
 					final long runtime = System.currentTimeMillis() - begin;
 					
 					if (runtime < ThreadPoolManager.MAXIMUM_RUNTIME_IN_MILLISEC_WITHOUT_WARNING)
@@ -305,7 +302,8 @@ public final class AdminCommandHandler extends HandlerRegistry<String, IAdminCom
 		protected static final AdminCommandHandler _instance = new AdminCommandHandler();
 	}
 	
-	private static final ThreadLocal<L2Player> _activeGm = new ThreadLocal<L2Player>();
+	/** Messages to the GM whose command runs on this thread; log lines written meanwhile go there as well. */
+	private static final ScopedValue<Consumer<String>> ACTIVE_GM = ScopedValue.newInstance();
 	
 	static
 	{
@@ -313,11 +311,14 @@ public final class AdminCommandHandler extends HandlerRegistry<String, IAdminCom
 			@Override
 			public void write(String s)
 			{
-				final L2Player gm = _activeGm.get();
-				
-				if (gm != null)
-					gm.sendMessage(s);
+				if (ACTIVE_GM.isBound())
+					ACTIVE_GM.get().accept(s);
 			}
 		});
+	}
+	
+	static void runAs(Consumer<String> gm, Runnable command)
+	{
+		ScopedValue.where(ACTIVE_GM, gm).run(command);
 	}
 }

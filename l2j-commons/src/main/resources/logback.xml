@@ -6,8 +6,8 @@
 	</contextListener>
 	<conversionRule conversionWord="legacyCaller" converterClass="com.l2jfree.util.logging.LegacyCallerConverter"/>
 	<conversionRule conversionWord="l2ex" converterClass="com.l2jfree.util.logging.LegacyThrowableConverter"/>
-	<!-- Not the console appender: the server replaces System.out, and that appender follows it (see the class). -->
-	<appender name="STDOUT" class="com.l2jfree.util.logging.StandardOutputAppender">
+	<!-- Not Logback's console appender: System.out is redirected into the logger, see ProcessStdoutAppender. -->
+	<appender name="STDOUT" class="com.l2jfree.util.logging.ProcessStdoutAppender">
 		<encoder><pattern>%level [%date{"dd MMM HH:mm:ss,SSS"}] %legacyCaller%msg%l2ex%n</pattern></encoder>
 	</appender>
 	<appender name="JAVA" class="ch.qos.logback.core.rolling.RollingFileAppender">

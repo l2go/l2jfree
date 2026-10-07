@@ -604,7 +604,7 @@ public final class HellboundManager
 			ResultSet rset = statement.executeQuery();
 			
 			if (rset.next())
-				_trustPoints = rset.getInt("value");
+				_trustPoints = Integer.parseInt(rset.getString("value"));
 			else
 				_trustPoints = 0;
 			
@@ -632,7 +632,7 @@ public final class HellboundManager
 			ResultSet rset = statement.executeQuery();
 			
 			if (rset.next())
-				_warpgateEnergy = rset.getInt("value");
+				_warpgateEnergy = Integer.parseInt(rset.getString("value"));
 			else
 				_warpgateEnergy = 0;
 			
@@ -643,7 +643,7 @@ public final class HellboundManager
 			
 			if (rset.next())
 			{
-				double lastCheck = rset.getDouble("value");
+				double lastCheck = Double.parseDouble(rset.getString("value"));
 				
 				if (System.currentTimeMillis() >= lastCheck + (24 * 60 * 60 * 1000))
 				{

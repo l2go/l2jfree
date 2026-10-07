@@ -8,7 +8,7 @@ A feature is removed when the accepted data design has no table for it ([ADR-001
 
 | Feature | What is gone |
 |---|---|
-| Factions | Joining a faction, faction points, and faction quests. The faction managers load nothing and keep empty lists. NPCs of the faction types do nothing when clicked |
+| Factions | Joining a faction, faction points, and faction quests. The code of the faction mod is removed; the mod had no schema and its settings were never read. The factions of NPCs that make them help each other stay |
 | Community board item auction | Listing, bidding, buying, and creating item lots on the board. The board shows that the auction is not available. The clan hall auction is not affected |
 | Archive of deleted mail | Deleted letters are no longer copied to an archive. The option `MailStoreDeletedLetters` is removed |
 | Old crest files | Crests are read from and written to the `crest` table, not to `.bmp` files. The command `admin_cache_crest_fix` is removed |

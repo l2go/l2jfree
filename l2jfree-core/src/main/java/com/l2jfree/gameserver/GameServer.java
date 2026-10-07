@@ -92,8 +92,6 @@ import com.l2jfree.gameserver.instancemanager.CrownManager;
 import com.l2jfree.gameserver.instancemanager.CursedWeaponsManager;
 import com.l2jfree.gameserver.instancemanager.DayNightSpawnManager;
 import com.l2jfree.gameserver.instancemanager.DimensionalRiftManager;
-import com.l2jfree.gameserver.instancemanager.FactionManager;
-import com.l2jfree.gameserver.instancemanager.FactionQuestManager;
 import com.l2jfree.gameserver.instancemanager.FortManager;
 import com.l2jfree.gameserver.instancemanager.FortSiegeManager;
 import com.l2jfree.gameserver.instancemanager.FourSepulchersManager;
@@ -397,12 +395,6 @@ public final class GameServer extends L2AutoInitialization
 		FrintezzaManager.getInstance().init();
 		
 		Util.printSection("Extensions");
-		if (Config.FACTION_ENABLED)
-		{
-			Util.printSection("Factions");
-			FactionManager.getInstance();
-			FactionQuestManager.getInstance();
-		}
 		try
 		{
 			DynamicExtension.getInstance();
