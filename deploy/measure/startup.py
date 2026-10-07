@@ -13,6 +13,7 @@ The result is a Markdown table (stdout, and DIR/startup.md) and DIR/startup.json
 the decision is taken from the numbers (ADR-0012).
 """
 import argparse
+import datetime
 import json
 import os
 import re
@@ -48,25 +49,42 @@ def compose(*args, env=None, check=True, timeout=900):
     return run(COMPOSE + list(args), env=env, check=check, timeout=timeout)
 
 
-def ready_lines():
-    logs = compose("logs", "--no-color", "server").stdout
-    return [m for m in (READY.search(line) for line in logs.splitlines()) if m]
+def now():
+    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
-def wait_for_ready(count, seconds=300):
+def ready_since(since):
+    """The ready line that the server wrote after `since`. Only the end of the log is read: reading all of it at every
+    poll cost more with every start of a container and slowed the server that was being measured."""
+    logs = run(["docker", "logs", "--since", since, "--tail", "400", "l2jfree-measure-server-1"]).stdout
+    for line in logs.splitlines():
+        match = READY.search(line)
+        if match:
+            return match
+    return None
+
+
+def wait_for_ready(since, seconds=300):
     deadline = time.time() + seconds
     while time.time() < deadline:
-        found = ready_lines()
-        if len(found) >= count:
-            return found[count - 1]
+        found = ready_since(since)
+        if found:
+            return found
         state = run(["docker", "inspect", "-f", "{{.State.Running}}", "l2jfree-measure-server-1"], check=False)
         if state.stdout.strip() == "false":
             raise SystemExit("the server stopped before it was ready:\n" + compose("logs", "--tail", "60", "server").stdout)
-        time.sleep(1)
-    logs = compose("logs", "--no-color", "server").stdout
-    marked = "\n".join(line for line in logs.splitlines() if "Platform" in line or "ready" in line)
+        time.sleep(3)
+    marked = "\n".join(line for line in compose("logs", "--no-color", "--tail", "400", "server").stdout.splitlines()
+                       if "Platform" in line or "ready" in line)
     raise SystemExit("the server was not ready after %d s; the lines about the platform:\n%s\n%s" % (
         seconds, marked, compose("ps", "-a").stdout))
+
+
+def start_and_sample(*args, env=None):
+    """Runs a compose command that starts the server and measures that start."""
+    since = now()
+    compose(*args, env=env)
+    return sample(wait_for_ready(since))
 
 
 def resident_megabytes():
@@ -92,8 +110,7 @@ def measure(name, image, runs):
     # the first start loads the catalog into the empty database. Without a cache it is the cold start that is
     # reported; with one it also writes the cache when the JVM exits, so it is not comparable and not reported.
     loading = options + (" -XX:AOTCacheOutput=" + AOT_FILE if config["aot"] else "")
-    compose("up", "-d", "--no-deps", "server", env=dict(env, L2JFREE_JAVA_OPTS=loading))
-    cold = sample(wait_for_ready(1))
+    cold = start_and_sample("up", "-d", "--no-deps", "server", env=dict(env, L2JFREE_JAVA_OPTS=loading))
     compose("stop", "-t", "120", "server", env=env)
     if config["aot"]:
         listing = run(["docker", "run", "--rm", "-v", "l2jfree-measure_aot:/aot", "--entrypoint", "ls", image,
@@ -105,14 +122,10 @@ def measure(name, image, runs):
     else:
         result["cold"] = cold
     env = dict(env, L2JFREE_JAVA_OPTS=options)
-    # a new container on the loaded database; its log starts empty
-    compose("up", "-d", "--no-deps", "--force-recreate", "server", env=env)
-    result["fresh"] = sample(wait_for_ready(1))
-    seen = 1
+    # a new container on the loaded database
+    result["fresh"] = start_and_sample("up", "-d", "--no-deps", "--force-recreate", "server", env=env)
     for _ in range(runs):
-        compose("restart", "-t", "60", "server", env=env)
-        seen += 1
-        result["restarts"].append(sample(wait_for_ready(seen)))
+        result["restarts"].append(start_and_sample("restart", "-t", "60", "server", env=env))
     compose("down", "-v", "--remove-orphans", check=False)
     return result
 
@@ -149,8 +162,7 @@ def diagnose(image, runs):
     print("== diagnose: %s" % options, file=sys.stderr)
     compose("down", "-v", "--remove-orphans", check=False)
     compose("up", "-d", "--wait", "db", env=env)
-    compose("up", "-d", "--no-deps", "server", env=env)
-    wait_for_ready(1)
+    start_and_sample("up", "-d", "--no-deps", "server", env=env)
     results = {"restart at once": [], "start after 30 s": [], "new container at once": []}
     for _ in range(runs):
         for kind in results:
@@ -158,12 +170,9 @@ def diagnose(image, runs):
             if kind == "start after 30 s":
                 time.sleep(30)
             if kind == "new container at once":
-                compose("up", "-d", "--no-deps", "--force-recreate", "server", env=env)
-                before = 0
+                results[kind].append(start_and_sample("up", "-d", "--no-deps", "--force-recreate", "server", env=env))
             else:
-                before = len(ready_lines())
-                compose("start", "server", env=env)
-            results[kind].append(sample(wait_for_ready(before + 1)))
+                results[kind].append(start_and_sample("start", "server", env=env))
     compose("down", "-v", "--remove-orphans", check=False)
     return results
 
