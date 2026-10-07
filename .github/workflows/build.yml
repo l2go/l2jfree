@@ -450,6 +450,31 @@ jobs:
           # the roles of the restored database still reach only their own schema
           deploy/probe/check-roles.sh
 
+      # The update of the image as the runbook writes it: a stack on the image that is published now (edge) is replaced
+      # by the image of this commit, on the same volumes. The account and the character of the old image must survive
+      # the migrations of the new one.
+      - name: Rehearse the update of the image
+        env:
+          NEW_IMAGE: l2jfree:ci
+          OLD_IMAGE: ghcr.io/l2go/l2jfree:edge
+        run: |
+          set -euo pipefail
+          compose="docker compose -f deploy/compose.yaml"
+          if ! docker pull "$OLD_IMAGE"; then
+            echo "::warning::$OLD_IMAGE cannot be pulled, so the update was not rehearsed"
+            exit 0
+          fi
+          L2JFREE_IMAGE=l2jfree:ci $compose down -v
+          L2JFREE_IMAGE="$OLD_IMAGE" $compose up -d --wait --wait-timeout 600
+          password="$(openssl rand -hex 8)"
+          echo "::add-mask::$password"
+          java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240 --account smokeupdate --password "$password" --existing-characters 0
+
+          L2JFREE_IMAGE="$NEW_IMAGE" $compose up -d --wait --wait-timeout 600
+          test "$(docker inspect -f '{{.Config.Image}}' l2jfree-server-1)" = "$NEW_IMAGE"
+          python3 deploy/probe/login_init.py --host 127.0.0.1 --port 2106 --timeout 60
+          java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240 --account smokeupdate --password "$password" --existing-characters 1
+
       - name: Show the service logs after a failure
         if: failure()
         env:
