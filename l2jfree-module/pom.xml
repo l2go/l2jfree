@@ -196,8 +196,8 @@
 					<failIfNoTests>false</failIfNoTests>
 					<!-- Database tests opt in through -Dgroups=integration -Dsurefire.excludedGroups= (both: the exclusion above is applied as well, so the group alone selects nothing). The default build stays on unit tests. -->
 					<excludedGroups>${surefire.excludedGroups}</excludedGroups>
-					<!-- JDK 21+ refuses Mockito's self-attach. The agent is declared explicitly. -->
-					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar ${jfr.argLine} ${jacoco.argLine}</argLine>
+					<!-- JDK 21+ refuses Mockito's self-attach. The agent is declared explicitly. @{jacoco.argLine} is read when the tests start, after the JaCoCo agent set it; ${...} would be replaced when the POM is loaded, with the empty default. -->
+					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar ${jfr.argLine} @{jacoco.argLine}</argLine>
 				</configuration>
 			</plugin>
 			<plugin>
