@@ -132,13 +132,15 @@ The backup is the `login` and `world` schemas. The catalog comes from the image 
 docker compose -f deploy/compose.yaml exec -T db pg_dump -U postgres -d l2jfree -n login -n world -Fc > l2jfree-$(date +%F).dump
 ```
 
-To restore, stop the server first. The views of `report` read `world`, so the restore drops the schema and creates it again before it replaces the tables:
+To restore, stop the server first. The tables of `catalog` have foreign keys into the reference tables of `world`, and the views of `report` read `world`, so the restore drops all four schemas and creates `catalog` and `report` again empty. The server builds both when it starts: the catalog is loaded from the image, and the views are created again. The dump brings back `login` and `world` with their owners and their rights:
 
 ```sh
 docker compose -f deploy/compose.yaml stop server
 docker compose -f deploy/compose.yaml exec -T db psql -U postgres -d l2jfree \
-  -c 'DROP SCHEMA IF EXISTS report CASCADE' -c 'CREATE SCHEMA report AUTHORIZATION l2jfree_world'
-docker compose -f deploy/compose.yaml exec -T db pg_restore -U postgres -d l2jfree --clean --if-exists < l2jfree-2026-10-07.dump
+  -c 'DROP SCHEMA IF EXISTS report, catalog, world, login CASCADE' \
+  -c 'CREATE SCHEMA catalog AUTHORIZATION l2jfree_world' \
+  -c 'CREATE SCHEMA report AUTHORIZATION l2jfree_world'
+docker compose -f deploy/compose.yaml exec -T db pg_restore -U postgres -d l2jfree --exit-on-error < l2jfree-2026-10-07.dump
 docker compose -f deploy/compose.yaml start server
 ```
 

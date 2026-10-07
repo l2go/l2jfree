@@ -409,8 +409,10 @@ jobs:
 
           $compose stop server
           $compose exec -T db psql -U postgres -d l2jfree \
-            -c 'DROP SCHEMA IF EXISTS report CASCADE' -c 'CREATE SCHEMA report AUTHORIZATION l2jfree_world'
-          $compose exec -T db pg_restore -U postgres -d l2jfree --clean --if-exists < l2jfree-backup.dump
+            -c 'DROP SCHEMA IF EXISTS report, catalog, world, login CASCADE' \
+            -c 'CREATE SCHEMA catalog AUTHORIZATION l2jfree_world' \
+            -c 'CREATE SCHEMA report AUTHORIZATION l2jfree_world'
+          $compose exec -T db pg_restore -U postgres -d l2jfree --exit-on-error < l2jfree-backup.dump
           test "$(account_count)" = 1 || { echo "::error::the restore did not bring the account back"; exit 1; }
           $compose start server
           $compose up -d --wait --wait-timeout 600
