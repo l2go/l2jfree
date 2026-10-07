@@ -73,13 +73,13 @@ public final class TowerOfNaiaRoom
 						_preOpenDoorIds = ArrayUtils.add(_preOpenDoorIds, doorId);
 						break;
 					case "PRE_CLOSE":
-						_preCloseDoorIds = ArrayUtils.add(_preOpenDoorIds, doorId);
+						_preCloseDoorIds = ArrayUtils.add(_preCloseDoorIds, doorId);
 						break;
 					case "POST_OPEN":
-						_postOpenDoorIds = ArrayUtils.add(_preOpenDoorIds, doorId);
+						_postOpenDoorIds = ArrayUtils.add(_postOpenDoorIds, doorId);
 						break;
 					case "POST_CLOSE":
-						_postCloseDoorIds = ArrayUtils.add(_preOpenDoorIds, doorId);
+						_postCloseDoorIds = ArrayUtils.add(_postCloseDoorIds, doorId);
 						break;
 				}
 			}

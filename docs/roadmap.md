@@ -7,8 +7,8 @@ Platform 3.0 is built in three milestones and shipped as one release, `v3.0.0` (
 | Milestone | Outcome | Status |
 |---|---|---|
 | M1. Foundation | Decisions recorded, vision revised, 2.x retired, docs structured, and a pipeline that builds a Linux image and starts it with Docker Compose in CI | Done ([report](reports/m1-foundation.md)) |
-| M2. Platform 3.0 | The image runs on PostgreSQL 18 in one process with Netty. An end-to-end smoke test (log in, list the world, enter it, leave) is green in CI. A real client has reached the world | In progress |
-| M3. Release | Runbook, restore rehearsal, threat model, vulnerability policy, signature and SBOM verified, and the tag `v3.0.0` | In progress |
+| M2. Platform 3.0 | The image runs on PostgreSQL 18 in one process with Netty. An end-to-end smoke test (log in, list the world, enter it, leave) is green in CI. A real client has reached the world | Done except the run with a real client ([report](reports/m2-platform.md)) |
+| M3. Release | Runbook, restore rehearsal, threat model, vulnerability policy, signature and SBOM verified, and the tag `v3.0.0` | Everything the pipeline can do is done; the maintainer's runs and the approval are open |
 
 ## Exit criteria
 
@@ -22,36 +22,36 @@ M1 is done when all of these hold:
 
 M2 is done when:
 
-1. Account and character save and restart pass on PostgreSQL 18 in CI.
-2. Login and world run in one process, and the architecture rules report no forbidden dependencies between modules.
-3. The Netty core passes the frame and cipher conformance tests, and the end-to-end smoke test is green.
-4. The suspected concurrency defects listed in the risk register are confirmed or dismissed with tests, and the confirmed ones are fixed.
-5. Start-up time is measured in CI and the collector and AOT-cache decision is recorded with numbers.
-6. The maintainer has run a real client against the `edge` image.
+1. Account and character save and restart pass on PostgreSQL 18 in CI. *Met: the image job restarts the server and finds the character.*
+2. Login and world run in one process, and the architecture rules report no forbidden dependencies between modules. *Met: the architecture rules and the check of the database roles.*
+3. The Netty core passes the frame and cipher conformance tests, and the end-to-end smoke test is green. *Met, also with 24 clients at once.*
+4. The suspected concurrency defects listed in the risk register are confirmed or dismissed with tests, and the confirmed ones are fixed. *Met; later reading of the code found more of the same kind, which are fixed and guarded by source tests. The rest is in [R-9](risks.md).*
+5. Start-up time is measured in CI and the collector and AOT-cache decision is recorded with numbers. *Met: [ADR-0012](adr/0012-garbage-collector-and-aot-cache.md), [measurement](reports/startup-measurement.md).*
+6. The maintainer has run a real client against the `edge` image. *Open.*
 
 M3 is done when:
 
-1. The runbook covers first start, backup, restore, upgrade of the image, and incident capture, and the restore has been rehearsed on a clean host.
-2. The threat model is written and checked against the delivered image.
-3. The vulnerability policy is in force and the scan passes under it.
-4. The cosign signature and the SBOM verify with the commands in the documentation.
-5. The maintainer has run a real client again and approved the release in the `stable-release` environment.
+1. The runbook covers first start, backup, restore, upgrade of the image, and incident capture, and the restore has been rehearsed on a clean host. *The [runbook](runbook.md) is written; the pipeline rehearses the backup, the restore, the update, and the capture on every merge. The rehearsal on a clean host by the maintainer is open.*
+2. The threat model is written and checked against the delivered image. *Met: [threat model](threat-model.md), each defence names its test or check.*
+3. The vulnerability policy is in force and the scan passes under it. *Met: [policy](../SECURITY.md#vulnerability-policy), a scan on every merge and a daily scan.*
+4. The cosign signature and the SBOM verify with the commands in the documentation. *Met: the pipeline runs the commands of the [image verification guide](image-verification.md) after every publication.*
+5. The maintainer has run a real client again and approved the release in the `stable-release` environment. *Open. The release workflow (`release.yml`) is ready and passes as a dry run.*
 
 ## Work packages
 
 Work is cut into a few large packages along module boundaries, not into small slices.
 
-| Package | Milestone | Content |
-|---|---|---|
-| WP1. Decisions and direction | M1 | Decision records, vision revision, roadmap, risk register, docs index, retirement of 2.x |
-| WP2. Pipeline and image | M1 | Image on a pinned Arch Linux base, compose stack, start-to-ready check, first-packet probe, publication, ruleset update. Delivered first as a walking skeleton that ran the LoginServer; since WP4 the image runs login and world in one process ([deploy](../deploy/README.md)) |
-| WP3. Data | M2 | Schemas, migrations, catalog loader, repository seam for inventory, player, and clan |
-| WP4. Modules and one process | M2 | Contract module, admission in process, dependency rules, configuration model, one image process with a role per module |
-| WP5. Network on Netty | M2 | Netty pipeline, conformance tests, end-to-end smoke test |
-| WP6. Runtime | M2 | JDK collections, thread model, known concurrency defects |
-| WP7. Measurements | M2 | Repeatable start-up measurement and the collector decision |
-| WP8. Operations | M3 | Runbook, observability, restore rehearsal, threat model |
-| WP9. Release | M3 | Policy checks, verification of signature and SBOM, the tag |
+| Package | Milestone | Content | State |
+|---|---|---|---|
+| WP1. Decisions and direction | M1 | Decision records, vision revision, roadmap, risk register, docs index, retirement of 2.x | Done |
+| WP2. Pipeline and image | M1 | Image on a pinned Arch Linux base, compose stack, start-to-ready check, first-packet probe, publication, ruleset update. Delivered first as a walking skeleton that ran the LoginServer; since WP4 the image runs login and world in one process ([deploy](../deploy/README.md)) | Done |
+| WP3. Data | M2 | Schemas, migrations, catalog loader, repository seam for inventory, player, and clan | Done |
+| WP4. Modules and one process | M2 | Contract module, admission in process, dependency rules, configuration model, one image process with a role per module | Done |
+| WP5. Network on Netty | M2 | Netty pipeline, conformance tests, end-to-end smoke test | Done |
+| WP6. Runtime | M2 | JDK collections, thread model, known concurrency defects | Done |
+| WP7. Measurements | M2 | Repeatable start-up measurement and the collector decision | Done |
+| WP8. Operations | M3 | Runbook, flight recording, restore rehearsal, capture of an incident, threat model | Done; the restore on a clean host is the maintainer's |
+| WP9. Release | M3 | Vulnerability policy and scans, verification of signature and SBOM, the release workflow and the tag | Ready; the tag waits for the maintainer |
 
 ## Reports
 

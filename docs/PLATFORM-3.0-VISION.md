@@ -229,7 +229,7 @@ IRC, Jython 2.7.5b1, or CI script work from that release.
    There is no parallel run of MySQL and no migration of 2.x databases.
 3. Move the remaining JDBC paths to PostgreSQL behind the targeted repository
    seam ([ADR-0006](adr/0006-data-access-layer.md)). The pool has a wait
-   ceiling and metrics.
+   ceiling and its metrics are exposed over JMX.
 4. Measure the start under G1 and ZGC, with and without the AOT cache, and
    keep the fastest configuration that needs no extra build step (done:
    [ADR-0012](adr/0012-garbage-collector-and-aot-cache.md)).

@@ -2,7 +2,7 @@
 
 The delivery of Platform 3.0: one Linux image started with Docker Compose. The decision and its limits are in [ADR-0002](../docs/adr/0002-linux-image-delivered-with-compose.md). The [architecture views](../docs/architecture.md) show how the parts fit.
 
-> **Status.** The image runs the login module and the world module in one process on PostgreSQL 18. The pipeline takes a client through a full session, before and after a restart. The run with a real client is the last step of milestone M2 ([report](../docs/reports/m2-platform.md)).
+> **Status.** The image runs the login module and the world module in one process on PostgreSQL 18. The pipeline takes clients through full sessions, before and after a restart, and rehearses the backup, the restore, the update of the image, and the capture of an incident on every merge ([runbook](../docs/runbook.md)). The run with a real client is the last open step of milestone M2 ([report](../docs/reports/m2-platform.md)).
 
 ## Run it
 
@@ -54,6 +54,7 @@ The entry point of the image only validates these variables and starts the proce
 | `L2JFREE_BIND` | no | Listen address of both ports, default `0.0.0.0`. Compose does not pass it; it uses the variable for the published ports |
 | `L2JFREE_EXTERNAL_HOST` | no | Address the world announces when no subnet matches, default the value of `ExternalHostname` in `server.properties` |
 | `L2JFREE_JAVA_OPTS` | no | JVM options, default `-Xms1g -Xmx3g -XX:+UseG1GC` |
+| `L2JFREE_NETWORK_TRANSPORT` | no | `epoll` (default), `io_uring` (needs a container profile that allows it), `nio`, or `auto` (the first available of the three). A transport that is not available stops the start and the log names the reason |
 | `L2JFREE_FLIGHT_RECORDER` | no | `on` (default) keeps a JFR flight recording of the last 12 hours, at most 256 MB, in the `log` volume under `jfr/`; `off` turns it off |
 | `L2JFREE_HEALTH_PORT` | no | Port of the readiness endpoint (`/health/live`, `/health/ready`), default off. `L2JFREE_HEALTH_HOST` sets its address, default `127.0.0.1` |
 

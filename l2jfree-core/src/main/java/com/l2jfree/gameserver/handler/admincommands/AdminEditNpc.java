@@ -1756,24 +1756,31 @@ public class AdminEditNpc implements IAdminCommandHandler
 			
 			npcData.clearAllDropData();
 			
-			PreparedStatement statement = con.prepareStatement("SELECT item_template_id, min_count, max_count, chance, category FROM drop WHERE npc_template_id = ?");
-			statement.setInt(1, npcId);
-			ResultSet dropDataList = statement.executeQuery();
-			
-			while (dropDataList.next())
+			// the drops of the catalog and the custom drops: a full load of the NPC table reads both
+			String[] queries = {
+					"SELECT item_template_id, min_count, max_count, chance, category FROM drop WHERE npc_template_id = ?",
+					"SELECT item_template_id, min_count, max_count, chance, category FROM custom_drop WHERE npc_template_id = ?" };
+			for (String query : queries)
 			{
-				L2DropData dropData = new L2DropData();
+				PreparedStatement statement = con.prepareStatement(query);
+				statement.setInt(1, npcId);
+				ResultSet dropDataList = statement.executeQuery();
 				
-				dropData.setItemId(dropDataList.getInt("item_template_id"));
-				dropData.setMinDrop(dropDataList.getInt("min_count"));
-				dropData.setMaxDrop(dropDataList.getInt("max_count"));
-				dropData.setChance(dropDataList.getInt("chance"));
-				
-				int category = dropDataList.getInt("category");
-				npcData.addDropData(dropData, category);
+				while (dropDataList.next())
+				{
+					L2DropData dropData = new L2DropData();
+					
+					dropData.setItemId(dropDataList.getInt("item_template_id"));
+					dropData.setMinDrop(dropDataList.getInt("min_count"));
+					dropData.setMaxDrop(dropDataList.getInt("max_count"));
+					dropData.setChance(dropDataList.getInt("chance"));
+					
+					int category = dropDataList.getInt("category");
+					npcData.addDropData(dropData, category);
+				}
+				dropDataList.close();
+				statement.close();
 			}
-			dropDataList.close();
-			statement.close();
 		}
 		catch (Exception e)
 		{

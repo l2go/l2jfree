@@ -49,8 +49,16 @@ if [ "${L2JFREE_FLIGHT_RECORDER:-on}" != off ] && mkdir -p "$logs/jfr" 2>/dev/nu
 	)
 fi
 
+# The network transport is epoll unless the operator chooses another (ADR-0002): io_uring is opt-in because the
+# default container profile blocks it. A transport that is not available stops the start with its reason.
+native=/run/l2jfree-native
+native_opts=()
+[ -d "$native" ] && native_opts=("-Dio.netty.native.workdir=$native")
+
 exec java \
 	-Dfile.encoding=UTF-8 \
+	"-Dl2jfree.network.transport=${L2JFREE_NETWORK_TRANSPORT:-epoll}" \
+	"${native_opts[@]}" \
 	-Dlogback.configurationFile="$home/config/logback.xml" \
 	-Dl2jfree.config.defaults="$home/config" \
 	-Dl2jfree.config.operator=/var/lib/l2jfree/config \
