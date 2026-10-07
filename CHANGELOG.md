@@ -49,6 +49,11 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - The failed logins of one address and the announced connections of the world were counted with lost updates; a non-player character without skills failed when it got its first skill, and one with skills got an error.
 - The fort siege clans were deleted with two bound values for one parameter, the dates of the changelog and of the online record were read as text, and the Hellbound variables, which are text, as numbers.
 - The log of the server reached the container output only for its section headers.
+- Loops that removed from the list or map they walked threw an exception that Javolution's collections had tolerated: leaving a quest, cancelling and unloading quest timers, dissolving a clan or deleting a pet (the items), removing castle upgrades or releasing a clan hall, and casting a skill with more than eight targets. They walk a copy, a test fails the build on a new case, and the timers of one quest no longer disappear when another quest is unloaded.
+- A packet that arrived while the per-client queue finished was left unread until the next packet, and an `Error` in one periodic task stopped it for the rest of the process. The queue looks again under its lock, and the wrapper logs the error and keeps the schedule.
+- The death of a player aborted when a quest left the death-notification list, the Olympiad cleaned up while matches ran, and the party matching, petition, and fort siege lists were changed by several threads at once.
+- Benom never appeared on a new database and the siege event passed no monster to its timers. Quest timers with the same name can no longer replace each other, a one-shot timer no longer interrupts its own thread, and four quests that called `time.sleep` in a handler use a timer or no delay. A repeating Saga timer is cancelled when its monster despawns, and quest spawns leave the spawn table when they decay.
+- A new pet failed on its foreign key while its control item waited in the write queue, a save that was rolled back on disconnect was not repeated, and a deleted character kept its name and its place on the account until the next start.
 
 ### Removed
 

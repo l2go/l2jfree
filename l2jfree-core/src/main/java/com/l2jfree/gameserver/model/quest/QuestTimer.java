@@ -39,8 +39,9 @@ public class QuestTimer
 			
 			try
 			{
+				// this very task is running: interrupting it would break sleeps and connection waits of the script
 				if (!getIsRepeating())
-					cancel();
+					cancel(false);
 				getQuest().notifyEvent(getName(), getNpc(), getPlayer());
 			}
 			catch (Exception e)
@@ -90,10 +91,15 @@ public class QuestTimer
 	// Method - Public
 	public void cancel()
 	{
+		cancel(true);
+	}
+	
+	private void cancel(boolean interrupt)
+	{
 		_isActive = false;
 		
 		if (_scheduler != null)
-			_scheduler.cancel(true);
+			_scheduler.cancel(interrupt);
 		
 		getQuest().removeQuestTimer(this);
 	}

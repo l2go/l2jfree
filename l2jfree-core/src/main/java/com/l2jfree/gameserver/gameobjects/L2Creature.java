@@ -2045,7 +2045,8 @@ public abstract class L2Creature extends L2Object
 		L2Player actingPlayer = getActingPlayer();
 		if (actingPlayer != null)
 		{
-			for (QuestState qs : actingPlayer.getNotifyQuestOfDeath())
+			// a quest leaves the list in notifyDeath() (exitQuest), so walk a copy
+			for (QuestState qs : new ArrayList<QuestState>(actingPlayer.getNotifyQuestOfDeath()))
 			{
 				qs.getQuest().notifyDeath((killer == null ? this : killer), this, qs);
 			}
@@ -5851,7 +5852,8 @@ public abstract class L2Creature extends L2Object
 		
 		if (escapeRange > 0)
 		{
-			for (L2Creature target : targets)
+			// out of range or protected targets are removed from the list, so walk a copy
+			for (L2Creature target : new ArrayList<L2Creature>(targets))
 			{
 				if ((!Util.checkIfInRange(escapeRange, this, target, true) || !GeoData.getInstance().canSeeTarget(this,
 						target)))

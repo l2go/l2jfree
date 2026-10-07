@@ -115,6 +115,19 @@ public class L2Spawn
 	/** If True then spawn point is custom */
 	private boolean _customSpawn;
 	
+	/** A spawn made by a script for one use: the spawn table forgets it when its NPC decays without a respawn. */
+	private boolean _temporary;
+	
+	public boolean isTemporary()
+	{
+		return _temporary;
+	}
+	
+	public void setTemporary(boolean temporary)
+	{
+		_temporary = temporary;
+	}
+	
 	private L2Npc _lastSpawn;
 	
 	/** The task launching the function doSpawn() */

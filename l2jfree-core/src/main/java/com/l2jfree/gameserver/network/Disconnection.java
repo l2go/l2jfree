@@ -28,6 +28,8 @@ public final class Disconnection
 {
 	private static final Logger _log = LoggerFactory.getLogger(Disconnection.class);
 	
+	private static final int STORE_ATTEMPTS = 3;
+	
 	public static L2Client getClient(L2Client client, L2Player activeChar)
 	{
 		if (client != null)
@@ -79,8 +81,22 @@ public final class Disconnection
 	{
 		try
 		{
+			// a rolled-back save loses everything since the last one, and nothing saves this player afterwards
 			if (_activeChar != null)
-				_activeChar.store(true, true);
+			{
+				boolean saved = false;
+				for (int attempt = 1; attempt <= STORE_ATTEMPTS && !saved; attempt++)
+				{
+					saved = _activeChar.store(true, true);
+					if (!saved)
+						_log.warn("Saving " + _activeChar.getName() + " on disconnect failed, attempt " + attempt + " of "
+								+ STORE_ATTEMPTS);
+				}
+				
+				if (!saved)
+					_log.error("Could not save " + _activeChar.getName()
+							+ " on disconnect: the progress since the last save is lost.");
+			}
 		}
 		catch (RuntimeException e)
 		{

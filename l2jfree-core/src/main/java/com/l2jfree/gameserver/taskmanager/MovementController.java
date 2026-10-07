@@ -117,7 +117,7 @@ public final class MovementController extends AbstractPeriodicTaskManager
 				if (cha.hasAI())
 					cha.getAI().notifyEvent(CtrlEvent.EVT_ARRIVED);
 			}
-			catch (RuntimeException e)
+			catch (RuntimeException | Error e)
 			{
 				_log.warn("", e);
 			}
@@ -142,7 +142,7 @@ public final class MovementController extends AbstractPeriodicTaskManager
 				if (cha.hasAI())
 					cha.getAI().notifyEvent(CtrlEvent.EVT_ARRIVED_REVALIDATE);
 			}
-			catch (RuntimeException e)
+			catch (RuntimeException | Error e)
 			{
 				_log.warn("", e);
 			}

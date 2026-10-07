@@ -81,7 +81,32 @@ public abstract class FIFOExecutableQueue implements Runnable
 		}
 		finally
 		{
-			setState(QUEUED, NONE);
+			// a producer can add between the last isEmpty() and this point and see QUEUED, so check again under the lock
+			if (release())
+				ThreadPoolManager.getInstance().execute(this);
+		}
+	}
+	
+	/**
+	 * @return true if the queue got an element in the meantime, so the state stays QUEUED and the caller must run again
+	 */
+	private boolean release()
+	{
+		lock();
+		try
+		{
+			if (_state != QUEUED)
+				throw new IllegalStateException("state: " + _state + ", expected: " + QUEUED);
+			
+			if (!isEmpty())
+				return true;
+			
+			_state = NONE;
+			return false;
+		}
+		finally
+		{
+			unlock();
 		}
 	}
 	

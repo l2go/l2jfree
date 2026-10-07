@@ -450,6 +450,8 @@ public class SagasSuperClass extends QuestJython
 			{
 				AutoChat(npc, Text[15].replace("PLAYERNAME", player.getName()));
 				st.set("Quest0", "2");
+				// the repeating timer of this NPC would otherwise run for ever
+				cancelQuestTimer("Mob_3 Timer 1", npc, player);
 				DeleteSpawn(st, npc);
 				return null;
 			}
@@ -497,7 +499,11 @@ public class SagasSuperClass extends QuestJython
 			}
 		}
 		else
+		{
+			// a timer of an aborted quest must not go on: this stops its repeats
+			cancelQuestTimer(event, npc, player);
 			return null;
+		}
 		
 		return htmltext;
 	}

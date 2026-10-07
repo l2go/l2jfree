@@ -45,25 +45,127 @@ class SourcePatternsTest
 	void mapsAreNotUpdatedByRemoveThenPut() throws IOException
 	{
 		List<String> found = new ArrayList<String>();
+		for (Path file : sources())
+		{
+			String source = Files.readString(file).replace("\r", "");
+			Matcher matcher = REMOVE_THEN_PUT.matcher(source);
+			while (matcher.find())
+				found.add(file + ":" + lineOf(source, matcher.start()) + " " + matcher.group(1));
+		}
+		
+		assertThat(found).as("remove-then-put of the same key").isEmpty();
+	}
+	
+	/** {@code for (T x : name)}, {@code name.values()}, {@code name.keySet()} or {@code name.entrySet()}. */
+	private static final Pattern LOOP = Pattern
+			.compile("for\\s*\\(\\s*[\\w<>\\[\\], ?.]+\\s+\\w+\\s*:\\s*(\\w+)(?:\\.(?:values|keySet|entrySet)\\(\\))?\\s*\\)");
+	
+	/** A change of the collection that the loop walks, by name. */
+	private static final String CHANGE = "\\.(?:remove|clear|add|addAll|removeAll|removeIf)\\(";
+	
+	/** What may follow the change when it ends the loop: a few resets of fields, then {@code break} or {@code return}. */
+	private static final Pattern ENDS_THE_LOOP = Pattern.compile("^\\s*(?:\\w+\\s*=\\s*null;\\s*)*(?:break|return)\\b");
+	
+	/**
+	 * Javolution's FastList and FastMap let a loop remove from the collection it walks. On the JDK collections this
+	 * throws ConcurrentModificationException at the next step (clan dissolve, quest exit, castle upgrades and spell
+	 * targets did). A loop may change its own collection only when the change ends the loop, or when the collection
+	 * is a concurrent one. Otherwise walk a copy.
+	 */
+	@Test
+	void collectionsAreNotChangedWhileTheyAreWalked() throws IOException
+	{
+		List<String> found = new ArrayList<String>();
+		for (Path file : sources())
+		{
+			String source = Files.readString(file).replace("\r", "");
+			Matcher loop = LOOP.matcher(source);
+			while (loop.find())
+			{
+				String name = loop.group(1);
+				String body = bodyAfter(source, loop.end());
+				Matcher change = Pattern.compile("\\b" + name + CHANGE).matcher(body);
+				if (!change.find() || isConcurrent(source, name))
+					continue;
+				
+				String after = body.substring(change.end());
+				String rest = after.substring(Math.min(after.length(), after.indexOf(';') + 1));
+				boolean ends = ENDS_THE_LOOP.matcher(rest).find() || body.contains("return " + name + ".remove(");
+				if (!ends)
+					found.add(file + ":" + lineOf(source, loop.start()) + " " + name);
+			}
+		}
+		
+		assertThat(found).as("loops that change the collection they walk").isEmpty();
+	}
+	
+	/**
+	 * Jython's {@code time.sleep} takes seconds and blocks the thread of the event: a packet thread of a player or a
+	 * scheduled-pool thread. A delay is a quest timer.
+	 */
+	@Test
+	void scriptsDoNotSleepInHandlers() throws IOException
+	{
+		List<String> found = new ArrayList<String>();
+		try (Stream<Path> files = Files.walk(Path.of("../l2jfree-datapack/data/scripts")))
+		{
+			for (Path file : (Iterable<Path>)files.filter(f -> f.toString().endsWith(".py"))::iterator)
+			{
+				String source = Files.readString(file);
+				if (source.contains("time.sleep("))
+					found.add(file.toString());
+			}
+		}
+		
+		assertThat(found).as("scripts that call time.sleep").isEmpty();
+	}
+	
+	private static boolean isConcurrent(String source, String name)
+	{
+		Matcher declaration = Pattern.compile("\\b" + name + "\\s*=\\s*[^;]*;").matcher(source);
+		while (declaration.find())
+			if (declaration.group().matches("(?s).*(Concurrent|CopyOnWrite|setShared).*"))
+				return true;
+		return false;
+	}
+	
+	/** The block or the single statement after a loop header. */
+	private static String bodyAfter(String source, int from)
+	{
+		int start = from;
+		while (Character.isWhitespace(source.charAt(start)))
+			start++;
+		if (source.charAt(start) != '{')
+			return source.substring(start, source.indexOf(';', start) + 1);
+		
+		int depth = 0;
+		for (int i = start; i < source.length(); i++)
+		{
+			if (source.charAt(i) == '{')
+				depth++;
+			else if (source.charAt(i) == '}' && --depth == 0)
+				return source.substring(start + 1, i);
+		}
+		return source.substring(start + 1);
+	}
+	
+	private static int lineOf(String source, int offset)
+	{
+		return source.substring(0, offset).split("\n", -1).length;
+	}
+	
+	private static List<Path> sources() throws IOException
+	{
+		List<Path> sources = new ArrayList<Path>();
 		for (Path root : List.of(Path.of("../l2j-commons/src/main/java"), Path.of("../l2jfree-login/src/main/java"),
 				Path.of("../l2jfree-core/src/main/java"), Path.of("../l2jfree-datapack/data/scripts")))
 		{
 			assertThat(root).isDirectory();
 			try (Stream<Path> files = Files.walk(root))
 			{
-				for (Path file : (Iterable<Path>)files.filter(f -> f.toString().endsWith(".java"))::iterator)
-				{
-					String source = Files.readString(file).replace("\r", "");
-					Matcher matcher = REMOVE_THEN_PUT.matcher(source);
-					while (matcher.find())
-					{
-						int line = source.substring(0, matcher.start()).split("\n", -1).length;
-						found.add(file + ":" + line + " " + matcher.group(1));
-					}
-				}
+				files.filter(f -> f.toString().endsWith(".java")).forEach(sources::add);
 			}
 		}
-		
-		assertThat(found).as("remove-then-put of the same key").isEmpty();
+		return sources;
 	}
 }

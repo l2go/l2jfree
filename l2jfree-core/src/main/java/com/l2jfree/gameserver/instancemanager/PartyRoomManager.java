@@ -15,11 +15,12 @@
 package com.l2jfree.gameserver.instancemanager;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.party.L2Party;
@@ -36,15 +37,15 @@ public class PartyRoomManager
 {
 	public static final int ENTRIES_PER_PAGE = 64;
 	
-	private volatile int _nextId;
+	// every logout and many packets use these on different threads: concurrent collections, ordered like before
+	private final AtomicInteger _nextId = new AtomicInteger(1);
 	private final Set<L2Player> _waitingList;
 	private final Map<Integer, L2PartyRoom> _rooms;
 	
 	public PartyRoomManager()
 	{
-		_nextId = 1;
-		_waitingList = new LinkedHashSet<L2Player>();
-		_rooms = new LinkedHashMap<Integer, L2PartyRoom>();
+		_waitingList = new CopyOnWriteArraySet<L2Player>();
+		_rooms = new ConcurrentSkipListMap<Integer, L2PartyRoom>();
 	}
 	
 	public static final PartyRoomManager getInstance()
@@ -105,7 +106,7 @@ public class PartyRoomManager
 	 */
 	public void createRoom(L2Player leader, int minLevel, int maxLevel, int maxMembers, int lootDist, String title)
 	{
-		L2PartyRoom room = new L2PartyRoom(_nextId++, minLevel, maxLevel, maxMembers, lootDist, title);
+		L2PartyRoom room = new L2PartyRoom(_nextId.getAndIncrement(), minLevel, maxLevel, maxMembers, lootDist, title);
 		room.addMember(leader);
 		leader.setLookingForParty(true);
 		leader.broadcastUserInfo();

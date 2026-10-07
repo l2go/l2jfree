@@ -62,7 +62,9 @@ import com.l2jfree.gameserver.network.packets.server.StatusUpdate;
 import com.l2jfree.gameserver.network.packets.server.StopMove;
 import com.l2jfree.gameserver.network.packets.server.SystemMessage;
 import com.l2jfree.gameserver.network.packets.server.ValidateLocation;
+import com.l2jfree.gameserver.persistence.WorldTransaction;
 import com.l2jfree.gameserver.taskmanager.DecayTaskManager;
+import com.l2jfree.gameserver.taskmanager.SQLQueue;
 import com.l2jfree.tools.random.Rnd;
 
 public class L2PetInstance extends L2Summon
@@ -959,6 +961,11 @@ public class L2PetInstance extends L2Summon
 			// This is a summon, not a pet, don't store anything
 			return;
 		}
+		
+		// pet.item_id references item, and the control item may still wait in the queue of the SQL writer. Inside
+		// a transaction the caller (the save of the player) flushes the queue before it starts.
+		if (!isRespawned() && WorldTransaction.current() == null)
+			SQLQueue.getInstance().run();
 		
 		String req;
 		if (!isRespawned())

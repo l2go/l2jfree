@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
@@ -85,7 +87,8 @@ public class Quest extends ManagedScript
 	/** HashMap containing events from String value of the event */
 	private static Map<String, Quest> _allEventsS = new LinkedHashMap<String, Quest>();
 	/** HashMap containing lists of timers from the name of the timer */
-	private static Map<String, List<QuestTimer>> _allEventTimers = new LinkedHashMap<String, List<QuestTimer>>();
+	private static final Map<String, List<QuestTimer>> _allEventTimers =
+			new ConcurrentHashMap<String, List<QuestTimer>>();
 	
 	private final ReentrantReadWriteLock _rwLock = new ReentrantReadWriteLock();
 	
@@ -255,32 +258,13 @@ public class Quest extends ManagedScript
 	 */
 	public void startQuestTimer(String name, long time, L2Npc npc, L2Player player, boolean repeating)
 	{
-		// Add quest timer if timer doesn't already exist
-		List<QuestTimer> timers = getQuestTimers(name);
-		// no timer exists with the same name, at all
-		if (timers == null)
+		// the list of a name is shared by all quests, so the check and the add are one step on that list
+		List<QuestTimer> timers = _allEventTimers.computeIfAbsent(name, key -> new CopyOnWriteArrayList<QuestTimer>());
+		synchronized (timers)
 		{
-			timers = new ArrayList<QuestTimer>();
-			timers.add(new QuestTimer(this, name, time, npc, player, repeating));
-			_allEventTimers.put(name, timers);
-		}
-		// a timer with this name exists, but may not be for the same set of npc and player
-		else
-		{
-			// if there exists a timer with this name, allow the timer only if the [npc, player] set is unique
-			// nulls act as wildcards
+			// allow the timer only if the [npc, player] set is unique for this name; nulls act as wildcards
 			if (getQuestTimer(name, npc, player) == null)
-			{
-				try
-				{
-					_rwLock.writeLock().lock();
-					timers.add(new QuestTimer(this, name, time, npc, player, repeating));
-				}
-				finally
-				{
-					_rwLock.writeLock().unlock();
-				}
-			}
+				timers.add(new QuestTimer(this, name, time, npc, player, repeating));
 		}
 	}
 	
@@ -322,7 +306,8 @@ public class Quest extends ManagedScript
 		try
 		{
 			_rwLock.writeLock().lock();
-			for (QuestTimer timer : timers)
+			// cancel() removes the timer from this list, so walk a copy
+			for (QuestTimer timer : new ArrayList<QuestTimer>(timers))
 			{
 				if (timer != null)
 				{
@@ -1670,10 +1655,11 @@ public class Quest extends ManagedScript
 				spawn.setLocy(y);
 				spawn.setLocz(z + 20);
 				spawn.stopRespawn();
+				spawn.setTemporary(true);
 				result = spawn.spawnOne(isSummonSpawn);
 				SpawnTable.getInstance().addNewSpawn(spawn, false);
 				
-				if (despawnDelay > 0)
+				if (result != null && despawnDelay > 0)
 					ThreadPoolManager.getInstance().scheduleGeneral(new DeSpawnScheduleTimerTask(result), despawnDelay);
 				
 				return result;
@@ -1681,7 +1667,7 @@ public class Quest extends ManagedScript
 		}
 		catch (Exception e1)
 		{
-			_log.warn("Could not spawn Npc " + npcId);
+			_log.warn("Could not spawn Npc " + npcId, e1);
 		}
 		
 		return null;
@@ -1731,10 +1717,11 @@ public class Quest extends ManagedScript
 		// if timers ought to be restarted, the quest can take care of it
 		// with its code (example: save global data indicating what timer must
 		// be restarted).
+		// the lists are shared by all quests: cancel only the timers of this one (cancel() removes from the list)
 		for (List<QuestTimer> timers : _allEventTimers.values())
-			for (QuestTimer timer : timers)
-				timer.cancel();
-		_allEventTimers.clear();
+			for (QuestTimer timer : new ArrayList<QuestTimer>(timers))
+				if (timer.getQuest() == this)
+					timer.cancel();
 		return QuestManager.getInstance().removeQuest(this);
 	}
 	

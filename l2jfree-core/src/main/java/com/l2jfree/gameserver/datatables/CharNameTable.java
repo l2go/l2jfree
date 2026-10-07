@@ -92,6 +92,16 @@ public final class CharNameTable
 		characterInfo.updateNames(accountName, name);
 	}
 	
+	/**
+	 * Forgets a deleted character, so that its name and its place on the account are free again.
+	 */
+	public void remove(int objectId)
+	{
+		CharacterInfo characterInfo = _mapByObjectId.remove(objectId);
+		if (characterInfo != null && characterInfo._name != null)
+			_mapByName.remove(characterInfo._name.toLowerCase());
+	}
+	
 	private class CharacterInfo
 	{
 		private final Integer _objectId;

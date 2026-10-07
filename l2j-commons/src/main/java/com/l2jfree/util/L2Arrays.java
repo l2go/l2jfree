@@ -15,7 +15,6 @@
 package com.l2jfree.util;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -100,16 +99,8 @@ public final class L2Arrays
 		if (newSize == 0 && !allowAddition)
 			return L2Collections.emptyList();
 		
-		if (newSize <= 8)
-			return new CopyOnWriteArrayList<T>(compact(array));
-		
-		final List<T> result = new ArrayList<T>(newSize);
-		
-		for (T t : array)
-			if (t != null)
-				result.add(t);
-		
-		return result;
+		// copy-on-write at every size: an ArrayList above eight elements broke the contract of this method
+		return new CopyOnWriteArrayList<T>(compact(array));
 	}
 	
 	public static <T> Iterable<T> iterable(Object[] array)

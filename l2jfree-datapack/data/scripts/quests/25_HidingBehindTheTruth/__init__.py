@@ -3,7 +3,6 @@
 # Visit http://www.l2jdp.com/forum for more details.
 
 import sys
-import time
 
 from com.l2jfree.gameserver.gameobjects.ai                    import CtrlIntention
 from com.l2jfree.gameserver.model.quest           import State
@@ -68,7 +67,6 @@ class Quest (JQuest) :
             if st.getInt("step") == 0:
                st.set("step","1")
                triol = st.addSpawn(Triol,59712,-47568,-2712,0,0,300000,1)
-               time.sleep(1)
                triol.broadcastPacket(NpcSay(triol.getObjectId(), 0, triol.getNpcId(), "That box was sealed by my master. Don't touch it!"))
                triol.setRunning()
                triol.addDamageHate(player,0,999)

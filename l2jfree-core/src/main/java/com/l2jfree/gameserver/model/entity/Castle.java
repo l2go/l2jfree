@@ -442,8 +442,9 @@ public class Castle extends Siegeable<Siege>
 	{
 		WorldTransaction.run("Castle upgrades removal", () -> {
 			removeDoorUpgrade();
-			for (Map.Entry<Integer, CastleFunction> fc : _function.entrySet())
-				removeFunction(fc.getKey());
+			// removeFunction() removes from _function, so walk a copy of the keys
+			for (Integer functionType : new ArrayList<Integer>(_function.keySet()))
+				removeFunction(functionType);
 			_function.clear();
 		});
 	}
@@ -473,8 +474,9 @@ public class Castle extends Siegeable<Siege>
 			if (getSiege().getIsInProgress())
 				getSiege().midVictory();
 		
-			for (Map.Entry<Integer, CastleFunction> fc : _function.entrySet())
-				removeFunction(fc.getKey());
+			// removeFunction() removes from _function, so walk a copy of the keys
+			for (Integer functionType : new ArrayList<Integer>(_function.keySet()))
+				removeFunction(functionType);
 			_function.clear();
 		});
 	}
