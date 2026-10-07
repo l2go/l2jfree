@@ -84,6 +84,9 @@ services:
       # The readiness endpoint, reachable only from inside the container: 200 once both ports accept players.
       L2JFREE_HEALTH_PORT: "8080"
     mem_limit: 4g
+    # The stop saves every player one after the other, so Docker's default of 10 seconds would kill a busy world
+    # in the middle of the save.
+    stop_grace_period: 60s
     # The log of the server goes to the container output as well as to the log volume; keep the copy of Docker small.
     logging:
       driver: json-file
