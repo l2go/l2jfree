@@ -53,20 +53,21 @@ public final class L2Client extends Connection<L2Client, L2ClientPacket, L2Serve
 		AUTHED_LOGIN;
 	}
 	
-	private LoginClientState _state = LoginClientState.CONNECTED;
+	// the packet threads (virtual threads) and the I/O thread of the connection read and write these
+	private volatile LoginClientState _state = LoginClientState.CONNECTED;
 	
 	// Crypt
 	private LoginCrypt _loginCrypt;
 	private final ScrambledKeyPair _scrambledPair;
 	private final byte[] _blowfishKey;
 	
-	private String _account;
+	private volatile String _account;
 	private int _accessLevel;
 	private int _lastServerId;
 	private int _age;
-	private SessionKey _sessionKey;
+	private volatile SessionKey _sessionKey;
 	private final int _sessionId = Rnd.nextInt(Integer.MAX_VALUE);
-	private boolean _joinedGS;
+	private volatile boolean _joinedGS;
 	private final String _ip;
 	
 	private boolean _card;
@@ -288,10 +289,12 @@ public final class L2Client extends Connection<L2Client, L2ClientPacket, L2Serve
 		if (_log.isDebugEnabled())
 			_log.info("onDisconnection: " + this);
 		
-		// If player was not on GS, don't forget to remove it from authed login on LS
-		if (getState() == LoginClientState.AUTHED_LOGIN && !hasJoinedGS())
+		// If player was not on GS, don't forget to remove it from authed login on LS. Only the entry of this
+		// connection: a newer connection of the same account owns its own.
+		final String account = getAccount();
+		if (account != null && !hasJoinedGS())
 		{
-			LoginManager.getInstance().removeAuthedLoginClient(getAccount());
+			LoginManager.getInstance().removeAuthedLoginClient(account, this);
 		}
 	}
 	
