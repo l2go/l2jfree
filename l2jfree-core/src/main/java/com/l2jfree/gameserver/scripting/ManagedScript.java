@@ -16,6 +16,7 @@ package com.l2jfree.gameserver.scripting;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 
 import javax.script.ScriptException;
 
@@ -26,13 +27,46 @@ import javax.script.ScriptException;
  */
 public abstract class ManagedScript
 {
+	/** The script file being loaded, bound by {@link #loading} while the loader runs it. */
+	private static final ScopedValue<File> LOADING_FILE = ScopedValue.newInstance();
+	
+	/** One step of loading a script file. */
+	@FunctionalInterface
+	interface Load<T>
+	{
+		T run() throws IOException, ScriptException;
+	}
+	
+	/** Runs {@code load} with {@code file} as the file of every script object it creates. */
+	static <T> T loading(File file, Load<T> load) throws IOException, ScriptException
+	{
+		try
+		{
+			// The carrier passes one checked exception type through; IOException travels unchecked.
+			return ScopedValue.where(LOADING_FILE, file).call(() -> {
+				try
+				{
+					return load.run();
+				}
+				catch (IOException e)
+				{
+					throw new UncheckedIOException(e);
+				}
+			});
+		}
+		catch (UncheckedIOException e)
+		{
+			throw e.getCause();
+		}
+	}
+	
 	private final File _scriptFile;
 	private long _lastLoadTime;
 	private boolean _isActive;
 	
 	public ManagedScript()
 	{
-		_scriptFile = L2ScriptEngineManager.getInstance().getCurrentLoadingScript();
+		_scriptFile = LOADING_FILE.isBound() ? LOADING_FILE.get() : null;
 		setLastLoadTime(System.currentTimeMillis());
 	}
 	
