@@ -32,7 +32,7 @@ inside 'grep -qx "DatapackRoot = /opt/l2jfree" /opt/l2jfree/config/server.proper
 	|| fail "the default data paths of the world do not name the image tree"
 
 if inside 'ls /opt/l2jfree/libs' \
-	| grep -Eiq '(spring|hibernate|cglib|ehcache|c3p0|mchange-commons|ecj|irclib|commons-logging|jcl-over-slf4j|slf4j-jdk14)'; then
+	| grep -Eiq '(spring|hibernate|cglib|ehcache|c3p0|mchange-commons|ecj|irclib|commons-logging|jcl-over-slf4j|slf4j-jdk14|liquibase|mysql-connector|javolution|trove4j|l2j-mmocore|graalpy|polyglot|truffle)'; then
 	fail "the image contains a removed library"
 fi
 
