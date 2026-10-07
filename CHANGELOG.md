@@ -24,6 +24,7 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - Decision record ADR-0010 for game content as catalog data, the database conventions, and a list of the behavior changes since the 2.x line.
 - Monthly Dependabot updates for the image base and the compose images.
 - One process for login and world: a `contract` module with `LoginPort` and `WorldPort`, admission and status as Java calls, and a `platform` module that starts both and assembles the one distribution. Architecture rules fail the build when the login module and the world module depend on each other.
+- A repeatable start-up measurement under G1 and ZGC, with and without the AOT cache, a record of the decision for G1 without a cache ([ADR-0012](docs/adr/0012-garbage-collector-and-aot-cache.md)), and a ready line that reports the start by step.
 - A configuration model with the defaults in the image and the operator's changes in one directory, and `L2JFREE_*` environment variables for the database, the bind address, and the announced address ([ADR-0011](docs/adr/0011-configuration-model.md)).
 
 ### Changed

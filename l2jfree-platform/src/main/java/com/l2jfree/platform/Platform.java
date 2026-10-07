@@ -14,6 +14,8 @@
  */
 package com.l2jfree.platform;
 
+import java.lang.management.ManagementFactory;
+
 import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
@@ -48,17 +50,21 @@ public final class Platform extends L2AutoInitialization
 	
 	private static void start() throws Exception
 	{
+		final StartupTimings timings = new StartupTimings(ManagementFactory.getRuntimeMXBean().getUptime(), System::nanoTime);
 		final Readiness readiness = Readiness.ofThisProcess("l2jfree");
 		HealthServer.startIfConfigured(readiness);
 		
 		final LoginModule login = LoginModule.prepare();
+		timings.done("login prepared");
 		final WorldPort world = GameServer.start(login);
+		timings.done("world started");
 		login.start(world);
+		timings.done("login opened");
 		
 		// both ports are open: the health endpoint now answers ready
 		readiness.markReady();
 		
-		LoggerFactory.getLogger(Platform.class).info("Platform ready: login {}:{}, world {}:{}",
+		LoggerFactory.getLogger(Platform.class).info("Platform ready in {}: login {}:{}, world {}:{}", timings.summary(),
 				LoginConfig.LOGIN_SERVER_HOSTNAME, LoginConfig.LOGIN_SERVER_PORT, Config.GAMESERVER_HOSTNAME,
 				world.status().port());
 	}

@@ -14,7 +14,7 @@
 #                          subnet rule matches (default 127.0.0.1, which suits a
 #                          client on the same machine; set the address of the host
 #                          for players on other machines)
-#   L2JFREE_JAVA_OPTS      JVM options (default -Xms1g -Xmx3g); keep the heap below
+#   L2JFREE_JAVA_OPTS      JVM options (default -Xms1g -Xmx3g -XX:+UseG1GC, ADR-0012); keep the heap below
 #                          mem_limit, because the JVM needs memory beside the heap
 # Key overrides go in the config volume, see deploy/README.md and ADR-0011.
 
@@ -72,10 +72,16 @@ services:
       L2JFREE_WORLD_DB_USER: l2jfree_world
       L2JFREE_WORLD_DB_PASSWORD_FILE: /var/lib/l2jfree/secrets/world_password
       L2JFREE_EXTERNAL_HOST: ${L2JFREE_EXTERNAL_HOST:-127.0.0.1}
-      L2JFREE_JAVA_OPTS: ${L2JFREE_JAVA_OPTS:--Xms1g -Xmx3g}
+      L2JFREE_JAVA_OPTS: ${L2JFREE_JAVA_OPTS:--Xms1g -Xmx3g -XX:+UseG1GC}
       # The readiness endpoint, reachable only from inside the container: 200 once both ports accept players.
       L2JFREE_HEALTH_PORT: "8080"
     mem_limit: 4g
+    # The log of the server goes to the container output as well as to the log volume; keep the copy of Docker small.
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
     ports:
       - "${L2JFREE_BIND:-0.0.0.0}:2106:2106"
       - "${L2JFREE_BIND:-0.0.0.0}:7777:7777"

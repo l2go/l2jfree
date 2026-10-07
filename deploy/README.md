@@ -36,7 +36,7 @@ Variables you set in the shell or in an `.env` file next to `compose.yaml`:
 | `L2JFREE_IMAGE` | `ghcr.io/l2go/l2jfree:edge` | Image to run |
 | `L2JFREE_BIND` | `0.0.0.0` | Host address that publishes the two ports. It is a compose setting: the process inside the container always listens on all of its addresses |
 | `L2JFREE_EXTERNAL_HOST` | `127.0.0.1` | Address the server tells a client to connect to for the world. `127.0.0.1` suits a client on the same machine. For players on other machines, set the address or name of the host |
-| `L2JFREE_JAVA_OPTS` | `-Xms1g -Xmx3g` | JVM options. The container is limited to 4 GB (`mem_limit`), so keep the heap well below it |
+| `L2JFREE_JAVA_OPTS` | `-Xms1g -Xmx3g -XX:+UseG1GC` | JVM options. The container is limited to 4 GB (`mem_limit`), so keep the heap well below it |
 
 Stop with `docker compose -f deploy/compose.yaml down`. Add `-v` to delete the volumes, which removes the database, the logs, and your configuration overrides.
 
@@ -53,7 +53,7 @@ The entry point of the image only validates these variables and starts the proce
 | `L2JFREE_WORLD_DB_PASSWORD_FILE` | yes | File with the password of the world role. The entry point stops when it is missing or empty |
 | `L2JFREE_BIND` | no | Listen address of both ports, default `0.0.0.0`. Compose does not pass it; it uses the variable for the published ports |
 | `L2JFREE_EXTERNAL_HOST` | no | Address the world announces when no subnet matches, default the value of `ExternalHostname` in `server.properties` |
-| `L2JFREE_JAVA_OPTS` | no | JVM options, default `-Xms1g -Xmx3g` |
+| `L2JFREE_JAVA_OPTS` | no | JVM options, default `-Xms1g -Xmx3g -XX:+UseG1GC` |
 | `L2JFREE_HEALTH_PORT` | no | Port of the readiness endpoint (`/health/live`, `/health/ready`), default off. `L2JFREE_HEALTH_HOST` sets its address, default `127.0.0.1` |
 
 A secret is never an environment value: a variable that ends in `_FILE` names a file inside the container, and the `secrets` volume holds the files.

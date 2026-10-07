@@ -353,3 +353,112 @@ jobs:
           subject-name: ${{ env.REGISTRY_IMAGE }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
+
+  # Measures the start of the server under the JVM configurations of ADR-0012. It runs on request (workflow_dispatch),
+  # reports, and never fails the pipeline: a shared runner is too noisy to gate on, a run takes about twenty minutes,
+  # and the numbers are read by a person.
+  startup:
+    if: github.event_name == 'workflow_dispatch'
+    needs: [build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Download the verified distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: l2jfree-dist
+          path: dist
+
+      - name: Stage the image context
+        run: unzip -q dist/l2jfree-platform-*-dist.zip -d deploy/image
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: deploy/image
+          load: true
+          tags: l2jfree:ci
+          cache-from: type=gha
+
+      - name: Measure the start
+        run: |
+          mkdir -p startup
+          python3 deploy/measure/startup.py --image l2jfree:ci --runs 3 --output startup | tee startup/table.txt
+          {
+            echo "### Start of the server, from the start of the JVM to the open ports"
+            echo
+            cat startup/startup.md
+            echo
+            echo "Cold is the first start on an empty database, without a cache. New container is the next start in a new container on the loaded database. Restart is a restart of that container. Resident memory is read ten seconds after the ports open. Runner: $(nproc) CPUs, $(free -m | awk '/Mem:/ {print $2}') MiB."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the numbers
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: startup-measurement
+          path: startup
+          if-no-files-found: ignore
+
+  # A restart of the container is slower than a start in a new container. The same stop is followed by three kinds of
+  # start to find out what the difference depends on.
+  restart-diagnosis:
+    if: github.event_name == 'workflow_dispatch'
+    needs: [build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Download the verified distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: l2jfree-dist
+          path: dist
+
+      - name: Stage the image context
+        run: unzip -q dist/l2jfree-platform-*-dist.zip -d deploy/image
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: deploy/image
+          load: true
+          tags: l2jfree:ci
+          cache-from: type=gha
+
+      - name: Compare the kinds of start after a stop
+        run: |
+          mkdir -p startup
+          python3 deploy/measure/startup.py --image l2jfree:ci --runs 3 --diagnose --output startup | tee startup/restart-table.txt
+          {
+            echo "### The same stop, followed by three kinds of start (G1)"
+            echo
+            cat startup/restart.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the numbers
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: restart-diagnosis
+          path: startup
+          if-no-files-found: ignore

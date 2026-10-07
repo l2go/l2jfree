@@ -36,7 +36,7 @@ cd "$work"
 rm -f "$work/cache/html.cache"
 
 # The Java options are split on blanks, so L2JFREE_JAVA_OPTS can hold several.
-read -r -a java_opts <<< "${L2JFREE_JAVA_OPTS:--Xms1g -Xmx3g}"
+read -r -a java_opts <<< "${L2JFREE_JAVA_OPTS:--Xms1g -Xmx3g -XX:+UseG1GC}"
 
 exec java \
 	-Dfile.encoding=UTF-8 \

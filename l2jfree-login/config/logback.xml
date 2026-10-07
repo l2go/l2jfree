@@ -6,8 +6,8 @@
 	</contextListener>
 	<conversionRule conversionWord="legacyCaller" converterClass="com.l2jfree.util.logging.LegacyCallerConverter"/>
 	<conversionRule conversionWord="l2ex" converterClass="com.l2jfree.util.logging.LegacyThrowableConverter"/>
-	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-		<target>System.out</target>
+	<!-- Not the console appender: the server replaces System.out, and that appender follows it (see the class). -->
+	<appender name="STDOUT" class="com.l2jfree.util.logging.StandardOutputAppender">
 		<encoder><pattern>%level [%date{"dd MMM HH:mm:ss,SSS"}] %legacyCaller%msg%l2ex%n</pattern></encoder>
 	</appender>
 	<appender name="JAVA" class="ch.qos.logback.core.rolling.RollingFileAppender">

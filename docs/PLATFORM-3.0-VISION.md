@@ -73,9 +73,9 @@ integrity.
   weak trade on the 2.0 host. Docker's default security profile blocks
   `io_uring` inside containers, so the default transport is epoll and
   `io_uring` is an opt-in ([ADR-0002](adr/0002-linux-image-delivered-with-compose.md)).
-- JDK 25 provides virtual threads, scoped values, and the Project Leyden AOT
-  cache. One process warms once, without a native image. Generational ZGC
-  holds pauses on a long-lived process with allocation spikes.
+- JDK 25 provides virtual threads and scoped values. One process warms once,
+  without a native image. G1, the default collector, runs the server
+  ([ADR-0012](adr/0012-garbage-collector-and-aot-cache.md)).
 - PostgreSQL 18 provides transactional DDL, `INSERT ... ON CONFLICT`, advisory
   locks, `SKIP LOCKED`, exclusion constraints, partitioned logs, and `COPY`.
   These are data properties. They are not a wrapper around the MySQL schema.
@@ -126,8 +126,8 @@ module.
 
 One process fits because there is one world. A restart already drops play.
 A login process that stays up during that restart does not keep the world
-session. A shared heap and a shared collector are an accepted cost: ZGC and the
-AOT cache are configured once, and a world deadlock is visible in one JFR
+session. A shared heap and a shared collector are an accepted cost: the
+collector is configured once, and a world deadlock is visible in one JFR
 recording. A second world on the same login is a later product. The same Java
 admission interface could then grow a socket adapter, and the second world
 would be another process of the same image. Platform 3.0 does not build that
@@ -137,8 +137,8 @@ adapter in advance.
 
 | Area | Choice | Reason |
 |---|---|---|
-| Memory | Generational ZGC | The process lives for a long time. Pause time matters more than G1 peak throughput. On JDK 25, ZGC runs in generational mode. |
-| Startup | JDK 25 AOT cache | Warmup of the single process is stored in the image. A native image is the wrong tool for a long-running HotSpot server. |
+| Memory | G1 | Measured against ZGC: the start is 16 % faster and the resident memory half as large ([ADR-0012](adr/0012-garbage-collector-and-aot-cache.md)). |
+| Startup | No AOT cache | The cache saved at most 5 % of a 17 s start and needs a database in the image build. A native image is the wrong tool for a long-running HotSpot server. |
 | JDBC driver | pgjdbc 42.7.13 | BSD license, ordinary JDBC, current PostgreSQL coverage. |
 | Driver candidate | pg-java | August 2026 pre-release. Blocking API that avoids pinning virtual threads. It enters a release only after full JDBC coverage and a comparison with pgjdbc. |
 | Pool | HikariCP 7.1 | The pool stays small. Virtual threads wait for a connection. One connection per thread overloads PostgreSQL. |
@@ -232,8 +232,9 @@ IRC, Jython 2.7.5b1, or CI script work from that release.
 3. Move the remaining JDBC paths to PostgreSQL behind the targeted repository
    seam ([ADR-0006](adr/0006-data-access-layer.md)). The pool has a wait
    ceiling and metrics.
-4. Enable the AOT cache and ZGC in the image. Compare time-to-accept-players
-   with the previous start.
+4. Measure the start under G1 and ZGC, with and without the AOT cache, and
+   keep the fastest configuration that needs no extra build step (done:
+   [ADR-0012](adr/0012-garbage-collector-and-aot-cache.md)).
 5. Build the catalog and scripts into the image. Remove the separate datapack
    archive. Split `login`, `world`, and `catalog`.
 6. Collapse login and world into one process and replace the internal
