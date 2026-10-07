@@ -103,6 +103,12 @@ public final class Config
 	public static boolean PACKET_HANDLER_DEBUG;
 	public static int SERVER_ID; // Number the client's server list shows for this world
 	public static long IP_UPDATE_TIME; // How often the host names of the world are resolved again, in ms; 0 resolves them once
+	public static int ACCEPT_WARN = 10; // Connections from one address in the short period above which the server warns
+	public static int ACCEPT_REJECT = 20; // ... above which it refuses
+	public static int ACCEPT_SECONDS = 10; // The short period
+	public static int ACCEPT_WARN_LONG = 30; // The same for the long period
+	public static int ACCEPT_REJECT_LONG = 60;
+	public static int ACCEPT_SECONDS_LONG = 60;
 	public static Pattern CNAME_PATTERN; // Character name template
 	public static Pattern PET_NAME_PATTERN; // Pet name template
 	public static Pattern CLAN_ALLY_NAME_PATTERN; // Clan and ally name template
@@ -149,6 +155,12 @@ public final class Config
 			
 			SERVER_ID = Integer.parseInt(serverSettings.getProperty("ServerId", "1"));
 			IP_UPDATE_TIME = Long.parseLong(serverSettings.getProperty("IpUpdateTime", "0")) * 60 * 1000;
+			ACCEPT_WARN = Integer.parseInt(serverSettings.getProperty("AcceptWarn", "10"));
+			ACCEPT_REJECT = Integer.parseInt(serverSettings.getProperty("AcceptReject", "20"));
+			ACCEPT_SECONDS = Integer.parseInt(serverSettings.getProperty("AcceptSeconds", "10"));
+			ACCEPT_WARN_LONG = Integer.parseInt(serverSettings.getProperty("AcceptWarnLong", "30"));
+			ACCEPT_REJECT_LONG = Integer.parseInt(serverSettings.getProperty("AcceptRejectLong", "60"));
+			ACCEPT_SECONDS_LONG = Integer.parseInt(serverSettings.getProperty("AcceptSecondsLong", "60"));
 			PORT_GAME = Integer.parseInt(serverSettings.getProperty("GameserverPort", "7777"));
 			try
 			{

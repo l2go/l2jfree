@@ -273,6 +273,17 @@ jobs:
       - name: Verify the image content
         run: deploy/verify-image.sh l2jfree:ci
 
+      # Every client of the load test comes from the address of the Docker gateway, and one address may open only so many
+      # connections in a short time. The operator directory raises the limits, as an operator behind such an address does.
+      - name: Raise the accept limits of the stack for the load
+        run: |
+          docker volume create l2jfree_config
+          docker run --rm --entrypoint bash -v l2jfree_config:/var/lib/l2jfree/config l2jfree:ci -c '
+            for file in server loginserver; do
+              printf "AcceptWarn = 1000\nAcceptReject = 2000\nAcceptWarnLong = 3000\nAcceptRejectLong = 6000\n" \
+                > "/var/lib/l2jfree/config/$file.properties"
+            done'
+
       - name: Start the stack with Docker Compose
         env:
           L2JFREE_IMAGE: l2jfree:ci

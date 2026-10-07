@@ -96,6 +96,9 @@ public abstract class NetworkServer<T extends Connection<T, RP, SP>, RP extends 
 	protected NetworkServer(NetworkConfig config, PacketHandler<T, RP, SP> packetHandler)
 	{
 		_packetHandler = packetHandler;
+		_accepts = new FloodManager(1000, config.getAcceptShort(), config.getAcceptLong()); // 1000 msec per tick
+		_packets = new FloodManager(1000, new FloodManager.FloodFilter(250, 300, 2));
+		_errors = new FloodManager(200, new FloodManager.FloodFilter(10, 10, 1)); // 200 msec per tick
 		_byteOrder = config.getByteOrder();
 		_maxFrameSize = config.getMaxFrameSize();
 		_writeHighWaterMark = config.getWriteHighWaterMark();
@@ -295,18 +298,6 @@ public abstract class NetworkServer<T extends Connection<T, RP, SP>, RP extends 
 	private final FloodManager _packets;
 	private final FloodManager _errors;
 	
-	{
-		// TODO: fine tune
-		_accepts = new FloodManager(1000, // 1000 msec per tick
-				new FloodManager.FloodFilter(10, 20, 10), // short period
-				new FloodManager.FloodFilter(30, 60, 60)); // long period
-		
-		_packets = new FloodManager(1000, // 1000 msec per tick
-				new FloodManager.FloodFilter(250, 300, 2));
-		
-		_errors = new FloodManager(200, // 200 msec per tick
-				new FloodManager.FloodFilter(10, 10, 1));
-	}
 	
 	protected String getVersionInfo()
 	{

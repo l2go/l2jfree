@@ -54,6 +54,22 @@ class NetworkConfigTest
 	}
 	
 	@Test
+	@DisplayName("accept limits that cannot work are refused, and good ones are taken")
+	void acceptLimits()
+	{
+		assertThat(new NetworkConfig().setAcceptLimits(5, 5, 1, 100, 1000, 3600)).isNotNull();
+		
+		assertThatThrownBy(() -> new NetworkConfig().setAcceptLimits(0, 20, 10, 30, 60, 60))
+				.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> new NetworkConfig().setAcceptLimits(10, 5, 10, 30, 60, 60))
+				.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> new NetworkConfig().setAcceptLimits(10, 20, 0, 30, 60, 60))
+				.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> new NetworkConfig().setAcceptLimits(10, 20, 10, 30, 60, 3601))
+				.isInstanceOf(IllegalArgumentException.class);
+	}
+	
+	@Test
 	@DisplayName("values that cannot work are refused")
 	void validation()
 	{
