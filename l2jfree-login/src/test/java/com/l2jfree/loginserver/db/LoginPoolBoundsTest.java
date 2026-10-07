@@ -60,6 +60,17 @@ class LoginPoolBoundsTest
 	}
 	
 	@Test
+	@DisplayName("the login pool has a name and registers its state in JMX")
+	void theStateOfThePoolCanBeRead()
+	{
+		HikariConfig pool = LoginDataSource.createPoolConfig();
+		
+		assertThat(pool.getPoolName()).isEqualTo("l2jfree-loginserver");
+		assertThat(pool.isRegisterMbeans()).isTrue();
+		assertThat(pool.getConnectionTimeout()).as("the wait for a connection has a ceiling").isEqualTo(30_000);
+	}
+	
+	@Test
 	@DisplayName("the login pool keeps at least one connection and caps idle at that maximum")
 	void maximumHasAFloorOfOne()
 	{

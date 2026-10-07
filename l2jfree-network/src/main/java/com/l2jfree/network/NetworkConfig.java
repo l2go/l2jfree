@@ -38,10 +38,18 @@ public final class NetworkConfig
 	/** The most I/O threads the automatic choice picks. */
 	public static final int MAX_AUTOMATIC_IO_THREADS = 4;
 	
+	/** The default limits on the connections accepted from one address: warn, refuse, and the seconds they count over. */
+	public static final int[] DEFAULT_ACCEPT_SHORT = { 10, 20, 10 };
+	
+	/** The default limits over a longer period. */
+	public static final int[] DEFAULT_ACCEPT_LONG = { 30, 60, 60 };
+	
 	private int _ioThreads = 0; // 0: automatic
 	private int _maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
 	private int _writeHighWaterMark = DEFAULT_WRITE_HIGH_WATER_MARK;
 	private ByteOrder _byteOrder = ByteOrder.LITTLE_ENDIAN;
+	private FloodManager.FloodFilter _acceptShort = filter(DEFAULT_ACCEPT_SHORT);
+	private FloodManager.FloodFilter _acceptLong = filter(DEFAULT_ACCEPT_LONG);
 	
 	public NetworkConfig()
 	{
@@ -127,5 +135,54 @@ public final class NetworkConfig
 	public ByteOrder getByteOrder()
 	{
 		return _byteOrder;
+	}
+	
+	/**
+	 * Sets how many connections one address may open. The server logs a warning above the first number and refuses
+	 * above the second, counted over the seconds named, in a short and in a long period. All the players behind one
+	 * address (a gateway of Docker Desktop or Colima, a network address translator) count as one address, so a server
+	 * that many of them reach through such an address needs higher numbers.
+	 * 
+	 * @param shortWarn connections in the short period above which the server warns, at least 1
+	 * @param shortReject connections in the short period above which the server refuses, at least {@code shortWarn}
+	 * @param shortSeconds the length of the short period, 1 to 3600 seconds
+	 * @param longWarn the same for the long period
+	 * @param longReject the same for the long period
+	 * @param longSeconds the same for the long period
+	 */
+	public NetworkConfig setAcceptLimits(int shortWarn, int shortReject, int shortSeconds, int longWarn, int longReject,
+			int longSeconds)
+	{
+		validateLimits("short", shortWarn, shortReject, shortSeconds);
+		validateLimits("long", longWarn, longReject, longSeconds);
+		
+		_acceptShort = filter(new int[] { shortWarn, shortReject, shortSeconds });
+		_acceptLong = filter(new int[] { longWarn, longReject, longSeconds });
+		return this;
+	}
+	
+	FloodManager.FloodFilter getAcceptShort()
+	{
+		return _acceptShort;
+	}
+	
+	FloodManager.FloodFilter getAcceptLong()
+	{
+		return _acceptLong;
+	}
+	
+	private static FloodManager.FloodFilter filter(int[] limits)
+	{
+		return new FloodManager.FloodFilter(limits[0], limits[1], limits[2]);
+	}
+	
+	private static void validateLimits(String period, int warn, int reject, int seconds)
+	{
+		if (warn < 1 || reject < warn)
+			throw new IllegalArgumentException("the " + period + " accept limits must satisfy 1 <= warn <= reject: " + warn
+					+ ", " + reject);
+		
+		if (seconds < 1 || seconds > 3600)
+			throw new IllegalArgumentException("the " + period + " accept period must be 1 to 3600 seconds: " + seconds);
 	}
 }

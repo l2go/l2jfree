@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledFuture;
 
 import org.slf4j.Logger;
@@ -237,7 +238,8 @@ public class FortSiege extends AbstractSiege
 	// =========================================================
 	// Data Field
 	// Attacker and Defender
-	private final List<L2SiegeClan> _attackerClans = new ArrayList<L2SiegeClan>(); // L2SiegeClan
+	// registrations, the countdown and the relation updates of players run on different threads
+	private final List<L2SiegeClan> _attackerClans = new CopyOnWriteArrayList<L2SiegeClan>();
 	
 	// Fort setting
 	protected Map<Integer, List<L2Spawn>> _commanders = new LinkedHashMap<Integer, List<L2Spawn>>();

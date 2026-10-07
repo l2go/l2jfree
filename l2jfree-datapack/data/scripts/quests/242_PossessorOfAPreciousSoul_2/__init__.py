@@ -1,6 +1,5 @@
 # Made by disKret
 import sys
-import time
 from com.l2jfree.gameserver.model.quest import State
 from com.l2jfree.gameserver.model.quest import QuestState
 from com.l2jfree.gameserver.model.quest.jython import QuestJython as JQuest
@@ -85,7 +84,6 @@ class Quest (JQuest) :
    elif event == "2" :
      npc.doDie(npc)
      npc2 = st.addSpawn(FALLEN_UNICORN,npc,False)
-     time.sleep(1000)
      npc2.getSpawn().startRespawn()
    return htmltext
 

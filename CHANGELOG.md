@@ -25,6 +25,8 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - Monthly Dependabot updates for the image base and the compose images.
 - One process for login and world: a `contract` module with `LoginPort` and `WorldPort`, admission and status as Java calls, and a `platform` module that starts both and assembles the one distribution. Architecture rules fail the build when the login module and the world module depend on each other.
 - A check that compares every JDBC setter and getter of the game server with the PostgreSQL type of its parameter or column, a test that keeps the number of classes with direct database access from growing, source and bytecode rules that refuse the removed libraries and the update of a map by remove and put, and tests for code that came over without them.
+- The limits on the connections from one address are keys of the configuration (`AcceptWarn`, `AcceptReject`, `AcceptSeconds`, and the long-period keys), with the old values as defaults.
+- Checks on the running image: many clients at once, what each database role may reach, the scripts that loaded, the errors in the log, and how the server stops. A coverage report on request, and a record of what the platform takes from PostgreSQL ([ADR-0013](docs/adr/0013-what-the-platform-takes-from-postgresql.md)).
 - A check in the pipeline that no datapack script fails to load and tests of the script that creates the passwords.
 - The database counts and explains its statements (`pg_stat_statements`, `auto_explain`), and the deployment guide names the backup and the restore.
 - A check in the pipeline that an account and its character survive a restart of the server, and the report of milestone M2.
@@ -47,6 +49,11 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - The failed logins of one address and the announced connections of the world were counted with lost updates; a non-player character without skills failed when it got its first skill, and one with skills got an error.
 - The fort siege clans were deleted with two bound values for one parameter, the dates of the changelog and of the online record were read as text, and the Hellbound variables, which are text, as numbers.
 - The log of the server reached the container output only for its section headers.
+- Loops that removed from the list or map they walked threw an exception that Javolution's collections had tolerated: leaving a quest, cancelling and unloading quest timers, dissolving a clan or deleting a pet (the items), removing castle upgrades or releasing a clan hall, and casting a skill with more than eight targets. They walk a copy, a test fails the build on a new case, and the timers of one quest no longer disappear when another quest is unloaded.
+- A packet that arrived while the per-client queue finished was left unread until the next packet, and an `Error` in one periodic task stopped it for the rest of the process. The queue looks again under its lock, and the wrapper logs the error and keeps the schedule.
+- The death of a player aborted when a quest left the death-notification list, the Olympiad cleaned up while matches ran, and the party matching, petition, and fort siege lists were changed by several threads at once.
+- Benom never appeared on a new database and the siege event passed no monster to its timers. Quest timers with the same name can no longer replace each other, a one-shot timer no longer interrupts its own thread, and four quests that called `time.sleep` in a handler use a timer or no delay. A repeating Saga timer is cancelled when its monster despawns, and quest spawns leave the spawn table when they decay.
+- A new pet failed on its foreign key while its control item waited in the write queue, a save that was rolled back on disconnect was not repeated, and a deleted character kept its name and its place on the account until the next start.
 
 ### Removed
 

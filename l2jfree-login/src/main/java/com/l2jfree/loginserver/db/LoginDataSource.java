@@ -44,6 +44,8 @@ public final class LoginDataSource implements AutoCloseable
 	{
 		HikariConfig pool = new HikariConfig();
 		pool.setPoolName("l2jfree-loginserver");
+		// the state of the pool (busy, idle, waiting) is read from JMX or from a flight recording
+		pool.setRegisterMbeans(true);
 		pool.setDriverClassName(driver);
 		pool.setJdbcUrl(url);
 		pool.setUsername(user);

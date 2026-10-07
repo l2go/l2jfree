@@ -185,6 +185,46 @@ class NetworkServerTest
 	}
 	
 	@Test
+	void anAddressThatOpensTooManyConnectionsIsRefused() throws Exception
+	{
+		start(Transport.Kind.NIO, new NetworkConfig().setIoThreads(2).setAcceptLimits(1, 2, 60, 100, 200, 600));
+		
+		try (Client first = new Client(port()); Client second = new Client(port()))
+		{
+			assertThat(first.readText()).isEqualTo("hello");
+			assertThat(second.readText()).isEqualTo("hello");
+			try (Client third = new Client(port()))
+			{
+				assertThat(third.endOfStream()).isTrue();
+			}
+		}
+		assertThat(_server.connections).hasSize(2);
+	}
+	
+	@Test
+	void higherLimitsAdmitTheConnectionsOfPlayersBehindOneAddress() throws Exception
+	{
+		start(Transport.Kind.NIO, new NetworkConfig().setIoThreads(2).setAcceptLimits(100, 200, 10, 300, 600, 60));
+		
+		List<Client> clients = new ArrayList<Client>();
+		try
+		{
+			for (int i = 0; i < 30; i++)
+			{
+				Client client = new Client(port());
+				clients.add(client);
+				assertThat(client.readText()).isEqualTo("hello");
+			}
+		}
+		finally
+		{
+			for (Client client : clients)
+				client.close();
+		}
+		assertThat(_server.connections).hasSize(30);
+	}
+	
+	@Test
 	void aServerAcceptsOnlyAfterStart() throws Exception
 	{
 		System.setProperty(Transport.PROPERTY, "nio");

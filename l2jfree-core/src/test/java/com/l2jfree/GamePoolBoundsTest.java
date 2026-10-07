@@ -59,6 +59,17 @@ class GamePoolBoundsTest
 	}
 	
 	@Test
+	@DisplayName("the pool has a name and registers its state in JMX")
+	void theStateOfThePoolCanBeRead()
+	{
+		HikariConfig pool = L2DatabaseFactory.createPoolConfig();
+		
+		assertThat(pool.getPoolName()).isEqualTo("l2jfree-gameserver");
+		assertThat(pool.isRegisterMbeans()).isTrue();
+		assertThat(pool.getConnectionTimeout()).as("the wait for a connection has a ceiling").isEqualTo(30_000);
+	}
+	
+	@Test
 	@DisplayName("idle connections cannot exceed the configured maximum")
 	void idleIsCappedAtTheMaximum()
 	{

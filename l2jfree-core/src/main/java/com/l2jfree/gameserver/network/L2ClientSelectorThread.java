@@ -40,7 +40,8 @@ public final class L2ClientSelectorThread extends NetworkServer<L2Client, L2Clie
 		
 		static
 		{
-			final NetworkConfig sc = new NetworkConfig();
+			final NetworkConfig sc = new NetworkConfig().setAcceptLimits(Config.ACCEPT_WARN, Config.ACCEPT_REJECT,
+					Config.ACCEPT_SECONDS, Config.ACCEPT_WARN_LONG, Config.ACCEPT_REJECT_LONG, Config.ACCEPT_SECONDS_LONG);
 			
 			try
 			{

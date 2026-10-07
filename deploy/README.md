@@ -165,7 +165,7 @@ Every pull request builds the image from the verified platform distribution (`l2
 
 ## Known limits
 
-- Server features that depend on the client address, such as bans and connection limits, see the Docker gateway address on Docker Desktop and Colima.
+- Server features that depend on the client address, such as bans and connection limits, see the Docker gateway address on Docker Desktop and Colima. The server refuses more than 20 connections in 10 seconds, and more than 60 in a minute, from one address, so behind such an address a crowd that reconnects at once is partly refused. The keys `AcceptWarn`, `AcceptReject`, `AcceptSeconds`, `AcceptWarnLong`, `AcceptRejectLong`, and `AcceptSecondsLong` of `server.properties` and of `loginserver.properties` raise the limits; set them in the operator directory.
 - Players on other machines need a reachable host address: set `L2JFREE_EXTERNAL_HOST`. The default `subnets.properties` treats clients from private networks (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, and `127.0.0.1`) as internal and sends them `InternalHostname`, which defaults to `127.0.0.1`. On Docker Desktop and Colima every client looks like the Docker gateway, which is in a private range. For a client on your LAN, set `InternalHostname` to the LAN address of the host in an operator `server.properties`.
 - The datapack and the catalog are read-only in the image. A feature that writes into the datapack tree, such as a saved leaderboard file, cannot write there.
 - `io_uring` is blocked by Docker's default security profile, so the network core uses epoll by default.

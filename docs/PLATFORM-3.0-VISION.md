@@ -197,25 +197,23 @@ match the image. The `login` module does not read the catalog.
 
 ## What PostgreSQL changes in the server
 
-The schema is not the MySQL schema with another driver.
+The schema is not the MySQL schema with another driver. [ADR-0013](adr/0013-what-the-platform-takes-from-postgresql.md)
+records what the platform takes from PostgreSQL and what it leaves.
 
-- A character, an item, and adena are written in a transaction with
-  `INSERT ... ON CONFLICT` and `RETURNING`.
-- A second login of the same account is closed with an advisory lock, in
-  addition to the in-memory session.
-- Manor, mail, and deferred-task queues are claimed with
-  `SELECT ... FOR UPDATE SKIP LOCKED`.
-- Character-name uniqueness is an exclusion constraint on the normalized name.
-- Chat and item logs are declarative partitions.
-- New identifiers are `uuidv7` or `bigint GENERATED AS IDENTITY`. Existing
-  integer ids remain while the client protocol requires them.
-- `synchronous_commit` is off only for logs. Inventory and characters commit
-  synchronously.
+- A player, its items, and its adena are saved in one transaction, with
+  `INSERT ... ON CONFLICT`.
+- A second server on the same world database is refused with an advisory lock.
+- Character, clan, and account names are unique without regard to case
+  (`citext`).
+- Tables that make their own key use identities. Player, item, and clan ids stay
+  integers, because the client protocol carries them as 32-bit numbers.
 - The image loads its catalog with `COPY`.
 
 The MySQL translation is its own work: `tinyint`, `datetime`, `enum`,
 backticks, `ON DUPLICATE KEY UPDATE`, and `AUTO_INCREMENT`. It is not hidden
-inside the pool change.
+inside the pool change. A lock per account, queues claimed with row locks, and
+partitioned logs belong to a server with several processes or with logs in the
+database; this platform has neither.
 
 ## Sequence
 
@@ -243,9 +241,9 @@ IRC, Jython 2.7.5b1, or CI script work from that release.
    codec. Accept the port with conformance tests and an end-to-end smoke test
    ([ADR-0005](adr/0005-netty-network-core.md)). The previous core is not
    released.
-8. After that flight recording, replace Javolution with JDK collections and
-   Trove with fastutil on the measured primitive hot paths. Move every other
-   site to the JDK collections.
+8. Replace Javolution and Trove with the JDK collections. Their sites are cold
+   paths, so the platform does not need fastutil; it can come back where a
+   flight recording under load shows a hot primitive path.
 9. Release Platform 3.0 as one image plus PostgreSQL 18, once
    ([ADR-0007](adr/0007-release-policy.md)). The catalog arrives inside the
    image. The image no longer contains Commons Logging, irclib, Javolution, Trove,
@@ -264,8 +262,9 @@ IRC, Jython 2.7.5b1, or CI script work from that release.
 - Quarkus, Spring, and R2DBC.
 - Virtual threads on world ticks.
 - The previous network core, Commons Logging, irclib, Javolution, and Trove.
-- A separate datapack archive, a shared content volume, or a catalog path the
-  operator chooses.
+- A separate datapack archive, a shared content volume, and a catalog outside
+  the image. The operator directory can override any key, the catalog path
+  included, but the platform neither offers nor supports another catalog.
 - A second world process and the socket adapter that would serve it.
 
 ## Relationship to 2.0.0

@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.model.quest;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -1077,7 +1078,8 @@ public final class QuestState
 			// Otherwise, delete variables for quest and update database (quest CANNOT be created again => not repeatable)
 			if (_vars != null)
 			{
-				for (String var : _vars.keySet())
+				// unset() removes from the map, so walk a copy
+				for (String var : new ArrayList<String>(_vars.keySet()))
 					unset(var);
 			}
 			

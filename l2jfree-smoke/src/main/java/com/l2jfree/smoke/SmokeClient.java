@@ -14,9 +14,18 @@
  */
 package com.l2jfree.smoke;
 
-import java.util.List;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * A Lineage II client for the end-to-end check of the platform: it logs in, takes the one world of the server list,
@@ -29,18 +38,18 @@ import java.util.Random;
 public final class SmokeClient
 {
 	private static final String USAGE = "usage: SmokeClient [--host HOST] [--login-port N] [--world-port N] "
-			+ "[--protocol-revision N] [--timeout-seconds N] [--account NAME] [--password TEXT] [--existing-characters N]";
+			+ "[--protocol-revision N] [--timeout-seconds N] [--account NAME] [--password TEXT] [--existing-characters N] [--sessions N] [--parallel N]";
 
 	/** The settings of a run. */
 	record Config(String host, int loginPort, int worldPort, int protocolRevision, int timeoutSeconds, String account,
-			String password, int existingCharacters)
+			String password, int existingCharacters, int sessions, int parallel)
 	{
 		/** {@code existingCharacters} when the number of characters the account has on entry is not checked */
 		static final int UNCHECKED = -1;
 		
 		static Config defaults()
 		{
-			return new Config("127.0.0.1", 2106, 7777, 87, 120, null, null, UNCHECKED);
+			return new Config("127.0.0.1", 2106, 7777, 87, 120, null, null, UNCHECKED, 1, 1);
 		}
 	}
 
@@ -68,9 +77,64 @@ public final class SmokeClient
 			return;
 		}
 
+		if (config.sessions() > 1)
+		{
+			System.exit(runMany(config, System.out) ? 0 : 1);
+			return;
+		}
+
 		final Result result = run(config, new Reporter(System.out));
 		System.out.println(result.passed() ? "SMOKE PASSED" : "SMOKE FAILED: " + result.failure());
 		System.exit(result.passed() ? 0 : 1);
+	}
+
+	/**
+	 * Takes many clients through the whole flow at once, each with an account of its own, and reports how many
+	 * passed and why the others did not.
+	 *
+	 * @return true when every session passed
+	 */
+	static boolean runMany(Config config, PrintStream out)
+	{
+		final ExecutorService executor = Executors.newFixedThreadPool(config.parallel());
+		final long begin = System.nanoTime();
+		try
+		{
+			final List<Future<Result>> futures = new ArrayList<Future<Result>>();
+			for (int i = 0; i < config.sessions(); i++)
+			{
+				futures.add(executor.submit(() -> run(config,
+						new Reporter(new PrintStream(OutputStream.nullOutputStream())))));
+			}
+			
+			final Map<String, Integer> failures = new LinkedHashMap<String, Integer>();
+			int passed = 0;
+			for (Future<Result> future : futures)
+			{
+				Result result;
+				try
+				{
+					result = future.get();
+				}
+				catch (InterruptedException | ExecutionException e)
+				{
+					result = new Result(false, List.of(), e.toString());
+				}
+				if (result.passed())
+					passed++;
+				else
+					failures.merge(result.failure(), 1, Integer::sum);
+			}
+			
+			out.println(passed + " of " + config.sessions() + " sessions passed, " + config.parallel() + " at a time, in "
+					+ (System.nanoTime() - begin) / 1_000_000_000L + " s");
+			failures.forEach((reason, count) -> out.println("FAILED " + count + " x " + reason));
+			return passed == config.sessions();
+		}
+		finally
+		{
+			executor.shutdownNow();
+		}
 	}
 
 	/** Runs the whole flow against a server and reports it. Never throws for a failed step. */
@@ -116,6 +180,8 @@ public final class SmokeClient
 		String account = null;
 		String password = null;
 		int existingCharacters = Config.UNCHECKED;
+		int sessions = 1;
+		int parallel = 1;
 		
 		for (int i = 0; i < args.length; i++)
 		{
@@ -150,6 +216,12 @@ public final class SmokeClient
 				case "--existing-characters":
 					existingCharacters = number(name, value);
 					break;
+				case "--sessions":
+					sessions = number(name, value);
+					break;
+				case "--parallel":
+					parallel = number(name, value);
+					break;
 				default:
 					throw new IllegalArgumentException("unknown option " + name);
 			}
@@ -160,8 +232,13 @@ public final class SmokeClient
 		if (existingCharacters != Config.UNCHECKED && account == null)
 			throw new IllegalArgumentException("--existing-characters needs --account, a new account has none");
 		
+		if (sessions < 1 || parallel < 1)
+			throw new IllegalArgumentException("--sessions and --parallel are at least 1");
+		if (sessions > 1 && account != null)
+			throw new IllegalArgumentException("--sessions makes an account for every session, so --account does not fit");
+		
 		return new Config(host, loginPort, worldPort, protocolRevision, timeoutSeconds, account, password,
-				existingCharacters);
+				existingCharacters, sessions, Math.min(parallel, sessions));
 	}
 	
 	private static int number(String name, String value)

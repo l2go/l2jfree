@@ -1,6 +1,7 @@
 # Made by theOne
 import sys
 from java.lang import System
+from org.slf4j import LoggerFactory
 from com.l2jfree import L2DatabaseFactory
 from com.l2jfree.gameserver.gameobjects.ai import CtrlIntention
 from com.l2jfree.gameserver.datatables import DoorTable
@@ -25,35 +26,52 @@ WalkTimes = [ 18000,17000,4500,16000,22000,14000,10500,14000,9500,12500,20500,14
 # The state column of grand_boss_state holds the name; the script works with the position in this list.
 BossStates = [ "NOTSPAWN", "ALIVE", "DEAD", "INTERVAL" ]
 
+log = LoggerFactory.getLogger("benom")
+
 def checkState() :
-  checkState = False
-  con = L2DatabaseFactory.getInstance().getConnection(None)
-  offline = con.prepareStatement("SELECT state FROM grand_boss_state WHERE npc_template_id = 29054")
-  rs = offline.executeQuery()
-  if rs :
-    rs.next()
+  state = 1
+  con = None
+  try :
+    con = L2DatabaseFactory.getInstance().getConnection(None)
+    offline = con.prepareStatement("SELECT state FROM grand_boss_state WHERE npc_template_id = 29054")
     try :
-      checkState = BossStates.index(rs.getString("state"))
-      con.close()
-    except :
-      checkState = 1
+      rs = offline.executeQuery()
+      try :
+        if rs.next() :
+          state = BossStates.index(rs.getString("state"))
+        else :
+          # there is no row until the first update, which means Benom was never spawned
+          state = 0
+      finally :
+        rs.close()
+    finally :
+      offline.close()
+  except Exception, e :
+    # the safe answer when the state is unknown is "not spawnable"
+    state = 1
+    log.warn("The state of Benom could not be read: " + str(e))
+  finally :
+    if con is not None :
       try : con.close()
       except : pass
-  else :
-    checkState = 1
-  return int(checkState)
+  return int(state)
 
 def updateState(state) :
-  con = L2DatabaseFactory.getInstance().getConnection(None)
-  offline = con.prepareStatement("INSERT INTO grand_boss_state (npc_template_id, state) VALUES (29054, ?) ON CONFLICT (npc_template_id) DO UPDATE SET state = EXCLUDED.state")
-  offline.setString(1, BossStates[state])
+  con = None
   try :
-    offline.executeUpdate()
-    offline.close()
-    con.close()
-  except :
-    try : con.close()
-    except : pass
+    con = L2DatabaseFactory.getInstance().getConnection(None)
+    offline = con.prepareStatement("INSERT INTO grand_boss_state (npc_template_id, state) VALUES (29054, ?) ON CONFLICT (npc_template_id) DO UPDATE SET state = EXCLUDED.state")
+    try :
+      offline.setString(1, BossStates[state])
+      offline.executeUpdate()
+    finally :
+      offline.close()
+  except Exception, e :
+    log.warn("The state of Benom could not be written: " + str(e))
+  finally :
+    if con is not None :
+      try : con.close()
+      except : pass
 
 def unspawnNpc(npcId) :
   for spawn in SpawnTable.getInstance().getSpawnTable().values():
@@ -114,13 +132,13 @@ class benom (JQuest):
       benomRaidSiegeSpawn = 1
     self.BenomWalkRouteStep = 0
     self.BenomIsSpawned = 0
+    self.BenomNpc = None
     if castleOwner > 0 :
       if benomTeleporterSpawn >= 1 :
         self.startQuestTimer("BenomTeleSpawn", benomTeleporterSpawn, None, None)
       if (siegeDate - System.currentTimeMillis()) > 0 :
         self.startQuestTimer("BenomRaidRoomSpawn", benomRaidRoomSpawn, None, None)
       self.startQuestTimer("BenomRaidSiegeSpawn", benomRaidSiegeSpawn, None, None)
-    self.Benom = Benom
 
   def onTalk(self, npc, player) :
     npcId = npc.getNpcId()
@@ -143,18 +161,19 @@ class benom (JQuest):
       self.addSpawn(BenomTeleport, 11013, -49629, -547, 13400, False, 0)
     elif event == "BenomRaidRoomSpawn" :
       if self.BenomIsSpawned == 0 and checkState() == 0 :
-        self.addSpawn(Benom, 12047, -49211, -3009, 0, False, 0)
+        self.BenomNpc = self.addSpawn(Benom, 12047, -49211, -3009, 0, False, 0)
         self.BenomIsSpawned = 1
     elif event == "BenomRaidSiegeSpawn" :
       if checkState() == 0 :
         if self.BenomIsSpawned == 0 :
-          self.addSpawn(Benom, 11025, -49152, -537, 0, False, 0)
+          self.BenomNpc = self.addSpawn(Benom, 11025, -49152, -537, 0, False, 0)
           self.BenomIsSpawned = 1
-        elif self.BenomIsSpawned == 1 :
-          self.Benom.teleToLocation(11025, -49152, -537)
-        self.startQuestTimer("BenomSpawnEffect", 100, npc, None)
-        self.startQuestTimer("BenomBossDespawn", 5400000, npc, None)
-        self.cancelQuestTimer("BenomSpawn", npc, None)
+        elif self.BenomNpc is not None :
+          self.BenomNpc.teleToLocation(11025, -49152, -537)
+        # the timers of this event were started without an NPC: Benom is the one to act
+        self.startQuestTimer("BenomSpawnEffect", 100, self.BenomNpc, None)
+        self.startQuestTimer("BenomBossDespawn", 5400000, self.BenomNpc, None)
+        self.cancelQuestTimer("BenomSpawn", self.BenomNpc, None)
         unspawnNpc(BenomTeleport)
     elif event == "BenomSpawnEffect" :
       npc.getAI().setIntention(CtrlIntention.AI_INTENTION_IDLE)
@@ -213,6 +232,7 @@ class benom (JQuest):
     elif event == "BenomBossDespawn" :
       updateState(0)
       self.BenomIsSpawned = 0
+      self.BenomNpc = None
       unspawnNpc(Benom)
     return
 

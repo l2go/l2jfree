@@ -3,7 +3,6 @@
 # Visit http://www.l2jdp.com/forum for more details.
 
 import sys
-import time
 
 from com.l2jfree.gameserver.instancemanager		import QuestManager
 from com.l2jfree.gameserver.model.quest			import State
@@ -64,8 +63,7 @@ class Quest (JQuest) :
             st.set("step","1")
             st.playSound("ItemSound3.sys_siren")
             self.startQuestTimer("1",60000, alarm, player)
-            time.sleep(1)
-            player.sendPacket(NpcSay(alarm.getObjectId(), 0, alarm.getNpcId(), "Intruder Alert! The alarm will self-destruct in 2 minutes."))
+            self.startQuestTimer("0",1000, alarm, player)
         elif event == "32366-05.htm" :
             st.unset("step")
             st.playSound("ItemSound.quest_middle")
@@ -92,6 +90,9 @@ class Quest (JQuest) :
                     npc.deleteMe()
                 else :
                     htmltext == "32367-06.htm"
+        elif event == "0" :
+            player.sendPacket(NpcSay(npc.getObjectId(), 0, npc.getNpcId(), "Intruder Alert! The alarm will self-destruct in 2 minutes."))
+            return
         elif event == "1" :
             player.sendPacket(NpcSay(npc.getObjectId(), 0, npc.getNpcId(), "The alarm will self-destruct in 60 seconds. Enter passcode to override."))
             self.startQuestTimer("2",30000, npc, player)

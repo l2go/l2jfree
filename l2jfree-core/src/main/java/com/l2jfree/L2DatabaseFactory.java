@@ -141,6 +141,8 @@ public final class L2DatabaseFactory
 	{
 		HikariConfig poolConfig = new HikariConfig();
 		poolConfig.setPoolName("l2jfree-gameserver");
+		// the state of the pool (busy, idle, waiting) is read from JMX or from a flight recording
+		poolConfig.setRegisterMbeans(true);
 		poolConfig.setDriverClassName(driver);
 		poolConfig.setJdbcUrl(url);
 		poolConfig.setUsername(user);

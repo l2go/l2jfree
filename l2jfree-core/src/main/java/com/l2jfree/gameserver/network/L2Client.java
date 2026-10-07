@@ -31,6 +31,7 @@ import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.LoginLink;
 import com.l2jfree.contract.SessionKey;
 import com.l2jfree.gameserver.ThreadPoolManager;
+import com.l2jfree.gameserver.datatables.CharNameTable;
 import com.l2jfree.gameserver.datatables.ClanTable;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.CharSelectInfoPackage;
@@ -287,6 +288,8 @@ public final class L2Client extends com.l2jfree.network.Connection<L2Client, L2C
 			statement.setInt(1, objid);
 			statement.execute();
 			statement.close();
+			
+			CharNameTable.getInstance().remove(objid);
 		}
 		catch (Exception e)
 		{

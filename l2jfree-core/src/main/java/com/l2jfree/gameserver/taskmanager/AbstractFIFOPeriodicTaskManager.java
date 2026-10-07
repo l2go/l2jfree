@@ -82,7 +82,7 @@ public abstract class AbstractFIFOPeriodicTaskManager<T> extends AbstractPeriodi
 			{
 				callTask(task);
 			}
-			catch (RuntimeException e)
+			catch (RuntimeException | Error e)
 			{
 				_log.warn("", e);
 			}

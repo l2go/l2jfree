@@ -363,8 +363,9 @@ public class ClanHall extends Siegeable<CCHSiege>
 		_isFree = true;
 		// The paid functions and the owner are removed together
 		WorldTransaction.run("Clan hall release", () -> {
-			for (Map.Entry<Integer, ClanHallFunction> fc : _functions.entrySet())
-				removeFunction(fc.getKey());
+			// removeFunction() removes from _functions, so walk a copy of the keys
+			for (Integer functionType : new ArrayList<Integer>(_functions.keySet()))
+				removeFunction(functionType);
 			_functions.clear();
 			_paidUntil = 0;
 			updateDb();

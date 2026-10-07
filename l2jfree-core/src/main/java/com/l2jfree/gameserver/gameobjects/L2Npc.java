@@ -2736,7 +2736,13 @@ public class L2Npc extends L2Creature
 		
 		// Decrease its spawn counter
 		if (_spawn != null)
+		{
 			_spawn.decreaseCount(this);
+			
+			// a script spawn that will not respawn would stay in the spawn table for the life of the process
+			if (_spawn.isTemporary() && !_spawn.isRespawnable())
+				SpawnTable.getInstance().deleteSpawn(_spawn, false);
+		}
 	}
 	
 	private boolean _champion;

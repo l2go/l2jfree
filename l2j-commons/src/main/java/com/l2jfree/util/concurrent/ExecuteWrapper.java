@@ -57,7 +57,8 @@ public class ExecuteWrapper implements Runnable
 		{
 			runnable.run();
 		}
-		catch (RuntimeException e)
+		// an Error that escapes a periodic task cancels all later runs of it, so it is logged and absorbed here
+		catch (RuntimeException | Error e)
 		{
 			_log.warn("Exception in a Runnable execution:", e);
 		}

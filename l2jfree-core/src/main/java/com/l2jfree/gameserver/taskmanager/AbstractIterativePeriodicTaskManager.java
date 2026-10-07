@@ -105,7 +105,7 @@ public abstract class AbstractIterativePeriodicTaskManager<T> extends AbstractPe
 			{
 				callTask(task);
 			}
-			catch (RuntimeException e)
+			catch (RuntimeException | Error e)
 			{
 				_log.warn("", e);
 			}

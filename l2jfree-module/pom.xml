@@ -29,6 +29,7 @@
 		<archunit.version>1.5.1</archunit.version>
 		<netty.version>4.2.18.Final</netty.version>
 		<jfr.argLine></jfr.argLine>
+		<jacoco.argLine></jacoco.argLine>
 		<surefire.excludedGroups>integration</surefire.excludedGroups>
 	</properties>
 	<scm>
@@ -196,7 +197,7 @@
 					<!-- Database tests opt in through -Dgroups=integration -Dsurefire.excludedGroups= (both: the exclusion above is applied as well, so the group alone selects nothing). The default build stays on unit tests. -->
 					<excludedGroups>${surefire.excludedGroups}</excludedGroups>
 					<!-- JDK 21+ refuses Mockito's self-attach. The agent is declared explicitly. -->
-					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar ${jfr.argLine}</argLine>
+					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar ${jfr.argLine} ${jacoco.argLine}</argLine>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -319,4 +320,37 @@
 		<module>../l2jfree-datapack</module>
 		<module>../l2jfree-platform</module>
 	</modules>
+	<profiles>
+		<!-- Coverage of the tests, reported and never enforced: ./mvnw -Pcoverage -Dsurefire.excludedGroups= verify -->
+		<profile>
+			<id>coverage</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<version>0.8.14</version>
+						<executions>
+							<execution>
+								<id>agent</id>
+								<goals>
+									<goal>prepare-agent</goal>
+								</goals>
+								<configuration>
+									<propertyName>jacoco.argLine</propertyName>
+								</configuration>
+							</execution>
+							<execution>
+								<id>report</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>report</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

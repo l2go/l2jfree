@@ -6967,25 +6967,33 @@ public final class L2Player extends L2Playable
 		store(false, storeActiveEffects);
 	}
 	
-	public synchronized void store(boolean items, boolean storeActiveEffects)
+	/**
+	 * @return false if the save was rolled back and nothing of it reached the database
+	 */
+	public synchronized boolean store(boolean items, boolean storeActiveEffects)
 	{
 		_lastStore = System.currentTimeMillis();
 		
 		if (getOnlineState() == ONLINE_STATE_DELETED)
-			return;
+			return true;
 		
 		// Update client coords, if these look like true
 		// if (isInsideRadius(getClientX(), getClientY(), 1000, true))
 		//	getPosition().setXYZ(getClientX(), getClientY(), getClientZ());
 		
-		// The player, the pet, the effects, and the items are saved together or not at all.
-		WorldTransaction.run("Saving player " + getName(), () -> {
+		// The items are written by the queue of the SQL writer, on its own connection, not by the transaction below.
+		if (Config.UPDATE_ITEMS_ON_CHAR_STORE || items)
+			getInventory().updateDatabase();
+		
+		// pet.item_id references item: the control item has to be written before the pet row
+		if (getPet() != null)
+			SQLQueue.getInstance().run();
+		
+		// The player row, the pet, and the effects are saved together or not at all.
+		return WorldTransaction.run("Saving player " + getName(), () -> {
 			storePet();
 			storePlayerData();
 			getEffects().storeEffects(storeActiveEffects);
-			
-			if (Config.UPDATE_ITEMS_ON_CHAR_STORE || items)
-				getInventory().updateDatabase();
 		});
 	}
 	

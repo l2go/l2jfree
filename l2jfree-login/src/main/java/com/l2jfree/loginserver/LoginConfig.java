@@ -56,6 +56,14 @@ public final class LoginConfig
 	public static String LOGIN_SERVER_HOSTNAME;
 	public static int LOGIN_SERVER_PORT;
 	
+	/** Connections one address may open: warn and refuse limits over a short and a long period, see the properties file */
+	public static int ACCEPT_WARN = 10;
+	public static int ACCEPT_REJECT = 20;
+	public static int ACCEPT_SECONDS = 10;
+	public static int ACCEPT_WARN_LONG = 30;
+	public static int ACCEPT_REJECT_LONG = 60;
+	public static int ACCEPT_SECONDS_LONG = 60;
+	
 	/** Show licence or not just after login (if false, will directly go to the Server List */
 	public static boolean SHOW_LICENCE;
 	
@@ -74,6 +82,12 @@ public final class LoginConfig
 			
 			LOGIN_SERVER_HOSTNAME = Deployment.value("BIND", serverSettings.getProperty("LoginServerHostname", "0.0.0.0"));
 			LOGIN_SERVER_PORT = Integer.parseInt(serverSettings.getProperty("LoginServerPort", "2106"));
+			ACCEPT_WARN = Integer.parseInt(serverSettings.getProperty("AcceptWarn", "10"));
+			ACCEPT_REJECT = Integer.parseInt(serverSettings.getProperty("AcceptReject", "20"));
+			ACCEPT_SECONDS = Integer.parseInt(serverSettings.getProperty("AcceptSeconds", "10"));
+			ACCEPT_WARN_LONG = Integer.parseInt(serverSettings.getProperty("AcceptWarnLong", "30"));
+			ACCEPT_REJECT_LONG = Integer.parseInt(serverSettings.getProperty("AcceptRejectLong", "60"));
+			ACCEPT_SECONDS_LONG = Integer.parseInt(serverSettings.getProperty("AcceptSecondsLong", "60"));
 			
 			LOGIN_TRY_BEFORE_BAN = Integer.parseInt(serverSettings.getProperty("LoginTryBeforeBan", "10"));
 			LOGIN_BLOCK_AFTER_BAN = Integer.parseInt(serverSettings.getProperty("LoginBlockAfterBan", "600"));

@@ -324,9 +324,11 @@ class OlympiadManager implements Runnable
 			}
 			else
 			{
+				// the cleanup below clears the registry of every match, so it waits for the last one
+				allGamesTerminated = true;
 				for (OlympiadGameTask game : _gamesQueue.values())
 				{
-					allGamesTerminated = allGamesTerminated || game.isTerminated();
+					allGamesTerminated = allGamesTerminated && game.isTerminated();
 				}
 			}
 		}

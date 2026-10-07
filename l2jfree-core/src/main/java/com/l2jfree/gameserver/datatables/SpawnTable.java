@@ -264,7 +264,7 @@ public class SpawnTable
 		return _spawnTable;
 	}
 	
-	public void addNewSpawn(L2Spawn spawn, boolean storeInDb)
+	public synchronized void addNewSpawn(L2Spawn spawn, boolean storeInDb)
 	{
 		_npcSpawnCount++;
 		if (spawn.isCustom())

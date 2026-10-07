@@ -548,7 +548,8 @@ public abstract class ItemContainer
 	 */
 	public synchronized void destroyAllItems(String process, L2Player actor, L2Object reference)
 	{
-		for (L2ItemInstance item : _items)
+		// destroyItem() removes the item from _items, so walk a copy
+		for (L2ItemInstance item : new ArrayList<L2ItemInstance>(_items))
 			destroyItem(process, item, actor, reference);
 	}
 	

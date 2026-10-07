@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import io.netty.channel.Channel;
 
+import com.l2jfree.loginserver.LoginConfig;
 import com.l2jfree.loginserver.manager.BanManager;
 import com.l2jfree.loginserver.manager.LoginManager;
 import com.l2jfree.loginserver.network.packets.L2ClientPacket;
@@ -44,7 +45,9 @@ public final class L2ClientSelectorThread extends
 		
 		static
 		{
-			final NetworkConfig sc = new NetworkConfig();
+			final NetworkConfig sc = new NetworkConfig().setAcceptLimits(LoginConfig.ACCEPT_WARN,
+					LoginConfig.ACCEPT_REJECT, LoginConfig.ACCEPT_SECONDS, LoginConfig.ACCEPT_WARN_LONG,
+					LoginConfig.ACCEPT_REJECT_LONG, LoginConfig.ACCEPT_SECONDS_LONG);
 			
 			try
 			{

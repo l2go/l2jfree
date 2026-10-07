@@ -17,9 +17,9 @@ package com.l2jfree.gameserver.instancemanager;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -237,8 +237,9 @@ public final class PetitionManager
 	private PetitionManager()
 	{
 		_log.info("PetitionManager: initialized.");
-		_pendingPetitions = new LinkedHashMap<Integer, Petition>();
-		_completedPetitions = new LinkedHashMap<Integer, Petition>();
+		// petitions are filed by players and answered by GMs on different threads; ids grow, so the order stays
+		_pendingPetitions = new ConcurrentSkipListMap<Integer, Petition>();
+		_completedPetitions = new ConcurrentSkipListMap<Integer, Petition>();
 	}
 	
 	public void clearPendingPetitions()
