@@ -25,7 +25,7 @@ All notable changes are recorded here. The format follows [Keep a Changelog](htt
 - Monthly Dependabot updates for the image base and the compose images.
 - One process for login and world: a `contract` module with `LoginPort` and `WorldPort`, admission and status as Java calls, and a `platform` module that starts both and assembles the one distribution. Architecture rules fail the build when the login module and the world module depend on each other.
 - A check that compares every JDBC setter and getter of the game server with the PostgreSQL type of its parameter or column, a test that keeps the number of classes with direct database access from growing, source and bytecode rules that refuse the removed libraries and the update of a map by remove and put, and tests for code that came over without them.
-- A check in the pipeline that no datapack script fails to load, tests of the script that creates the passwords, and a stand profile (an overlay, three configuration files, and a read-only database role) for an external simulator.
+- A check in the pipeline that no datapack script fails to load and tests of the script that creates the passwords.
 - The database counts and explains its statements (`pg_stat_statements`, `auto_explain`), and the deployment guide names the backup and the restore.
 - A check in the pipeline that an account and its character survive a restart of the server, and the report of milestone M2.
 - A repeatable start-up measurement under G1 and ZGC, with and without the AOT cache, a record of the decision for G1 without a cache ([ADR-0012](docs/adr/0012-garbage-collector-and-aot-cache.md)), and a ready line that reports the start by step.
