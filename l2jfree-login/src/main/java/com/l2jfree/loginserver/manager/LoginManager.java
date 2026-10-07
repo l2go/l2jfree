@@ -42,6 +42,7 @@ import com.l2jfree.loginserver.LoginModule;
 import com.l2jfree.loginserver.beans.Accounts;
 import com.l2jfree.loginserver.beans.FailedLoginAttempt;
 import com.l2jfree.loginserver.network.L2Client;
+import com.l2jfree.loginserver.security.PasswordHasher;
 import com.l2jfree.loginserver.services.AccountsServices;
 import com.l2jfree.loginserver.services.exception.AccountBannedException;
 import com.l2jfree.loginserver.services.exception.AccountModificationException;
@@ -532,12 +533,6 @@ public class LoginManager
 		_logLoginTries.info("User trying to connect  '" + user + "' "
 				+ (address == null ? "null" : address.getHostAddress()));
 		
-		// o Convert password in utf8 byte array
-		// ----------------------------------
-		MessageDigest md = MessageDigest.getInstance("SHA");
-		byte[] raw = password.getBytes("UTF-8");
-		byte[] hash = md.digest(raw);
-		
 		// o find Account
 		// -------------
 		Accounts acc = _service.getAccountById(user);
@@ -548,7 +543,7 @@ public class LoginManager
 		// ------------------------------------------------------
 		if (acc == null)
 		{
-			if (handleAccountNotFound(user, address, hash))
+			if (handleAccountNotFound(user, address, password))
 				return true;
 			else
 				throw new AccountWrongPasswordException(user);
@@ -566,11 +561,14 @@ public class LoginManager
 			}
 			try
 			{
-				checkPassword(hash, acc);
+				checkPassword(password, acc);
 				// Write only what a login changes. The row read above may be stale by now: a ban set meanwhile
 				// must not be written back.
 				Accounts seen = new Accounts(acc.getLogin());
 				seen.setLastactive(new BigDecimal(System.currentTimeMillis()));
+				// the plain password is in hand only now: an account of the 2.x line gets the salted form
+				if (PasswordHasher.needsRehash(acc.getPassword()))
+					seen.setPassword(PasswordHasher.hash(password));
 				if (address != null)
 				{
 					seen.setLastIp(address.getHostAddress());
@@ -645,20 +643,13 @@ public class LoginManager
 	 * @param acc
 	 * @throws AccountWrongPasswordException if password is wrong
 	 */
-	private void checkPassword(byte[] hash, Accounts acc) throws AccountWrongPasswordException
+	private void checkPassword(String password, Accounts acc) throws AccountWrongPasswordException
 	{
 		if (_log.isDebugEnabled())
 			_log.debug("account exists");
 		
-		byte[] expected = Base64.decode(acc.getPassword());
-		
-		for (int i = 0; i < expected.length; i++)
-		{
-			if (hash[i] != expected[i])
-			{
-				throw new AccountWrongPasswordException(acc.getLogin());
-			}
-		}
+		if (!PasswordHasher.verify(password, acc.getPassword()))
+			throw new AccountWrongPasswordException(acc.getLogin());
 	}
 	
 	/**
@@ -668,7 +659,7 @@ public class LoginManager
 	 * @return true if accounts was successfully created or false is AUTO_CREATE_ACCOUNTS = false or creation failed
 	 * @throws AccountModificationException
 	 */
-	private boolean handleAccountNotFound(String user, InetAddress address, byte[] hash)
+	private boolean handleAccountNotFound(String user, InetAddress address, String password)
 			throws AccountModificationException
 	{
 		Accounts acc;
@@ -684,7 +675,7 @@ public class LoginManager
 						return false;
 					
 					acc =
-							new Accounts(user, Base64.encodeBytes(hash), new BigDecimal(System.currentTimeMillis()), 0,
+							new Accounts(user, PasswordHasher.hash(password), new BigDecimal(System.currentTimeMillis()), 0,
 									0, 1900, 1, 1, (address == null ? null : address.getHostAddress()));
 					_service.addOrUpdateAccount(acc);
 				}

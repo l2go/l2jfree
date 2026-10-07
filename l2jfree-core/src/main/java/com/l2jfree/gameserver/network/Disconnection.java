@@ -14,6 +14,8 @@
  */
 package com.l2jfree.gameserver.network;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +31,9 @@ public final class Disconnection
 	private static final Logger _log = LoggerFactory.getLogger(Disconnection.class);
 	
 	private static final int STORE_ATTEMPTS = 3;
+	
+	/** How long the packets of a client may keep its disconnect waiting, in milliseconds. */
+	private static final long QUEUE_GRACE = 30000;
 	
 	public static L2Client getClient(L2Client client, L2Player activeChar)
 	{
@@ -140,12 +145,34 @@ public final class Disconnection
 	{
 		if (_activeChar != null)
 		{
+			// The save and the delete run behind the packets that the client sent before it went away, so that they
+			// do not meet a packet that is still changing the inventory. A packet that hangs must not keep the
+			// player unsaved: after a grace period the work runs anyway, and only once.
+			final AtomicBoolean done = new AtomicBoolean();
+			final Runnable work = new Runnable() {
+				@Override
+				public void run()
+				{
+					if (done.compareAndSet(false, true))
+					{
+						store();
+						deleteMe();
+					}
+				}
+			};
+			
 			ThreadPoolManager.getInstance().schedule(new Runnable() {
 				@Override
 				public void run()
 				{
-					store();
-					deleteMe();
+					if (_client == null)
+					{
+						work.run();
+						return;
+					}
+					
+					_client.getPacketQueue().execute(work);
+					ThreadPoolManager.getInstance().schedule(work, QUEUE_GRACE);
 				}
 			}, _activeChar.canLogout() ? 0 : AttackStanceTaskManager.COMBAT_TIME);
 		}

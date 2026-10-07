@@ -148,6 +148,16 @@ public final class Shutdown extends Thread
 	
 	private void shutdownHook()
 	{
+		// nobody enters while the players are saved: the players that are in stay until their turn
+		try
+		{
+			L2ClientSelectorThread.getInstance().stopAccepting();
+		}
+		catch (Throwable t)
+		{
+			t.printStackTrace();
+		}
+		
 		try
 		{
 			Announcements.getInstance().announceToAll("Server is " + _mode.getText() + " NOW!");

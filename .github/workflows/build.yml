@@ -376,6 +376,15 @@ jobs:
           # and an account that is new after the restart works as well
           java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240
 
+      # The flight recording runs from the start and keeps its chunks in the log volume.
+      - name: Check the flight recording
+        env:
+          L2JFREE_IMAGE: l2jfree:ci
+        run: |
+          chunks="$(docker compose -f deploy/compose.yaml exec -T server bash -c 'find /var/lib/l2jfree/log/jfr -name "*.jfr" -size +0 | wc -l')"
+          echo "$chunks flight recording chunks in the log volume"
+          test "$chunks" -ge 1 || { echo "::error::the log volume holds no flight recording"; exit 1; }
+
       # One command collects what an incident needs, from a server that keeps running.
       - name: Capture the state of the running stack
         env:

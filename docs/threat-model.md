@@ -34,7 +34,7 @@ The login and the world share a process (ADR-0003) and meet only through the con
 | S | Taking an account by creating it first | `AutoCreateAccounts` is a setting; the creation of one name by two connections at once is serialized | The default is `True`, as in every L2J server: anyone who connects creates an account. **A public server sets it to `False`** |
 | T | Changing a packet on the way | The protocol has no integrity check | Protocol-fixed. Accepted |
 | I | Reading the password on the way | The password travels in an RSA block with a 1024-bit key and no padding (R-15) | Protocol-fixed. Accepted: the login port should be offered only to players, with a firewall filter in front of it if the host allows |
-| I | A stolen database exposes passwords | The hash is stored, never the password | **The hash is unsalted SHA-1** (open item B-06 of the review; decision for the maintainer: PBKDF2 or Argon2 with rehash at login) |
+| I | A stolen database exposes passwords | The hash is stored, never the password: salted PBKDF2-HMAC-SHA256 with 600,000 iterations for every new password (`PasswordHasherTest`). An account of the 2.x line, which holds an unsalted SHA-1, gets the new form at its next login | An account that never logs in again keeps its SHA-1 hash |
 | R | Denying a login | The `login` and `login.try` log channels name the account and the address | The address behind Docker Desktop is the gateway (R-4) |
 | D | Flooding the port | Per-address limits on connections (`AcceptWarn`, `AcceptReject`, and the long-period keys), per-connection limits on packets and errors, a frame size of at most 64 KiB; the accept limits are tested (`NetworkServerTest`) and the 24-client load of the pipeline passes with raised limits | Many clients behind one address share its limit; an attacker with many addresses is a job for the host firewall |
 | E | Entering as another account | The play key comes from `SecureRandom` since this model was written; a test fails the build if a session key uses the game generator again (`SourcePatternsTest`) | None known |
@@ -54,7 +54,7 @@ The login and the world share a process (ADR-0003) and meet only through the con
 | | Threat | Control | Residual |
 |---|---|---|---|
 | S, E | The world reads or writes accounts, or the login reads characters | The contract has no dependency; architecture rules forbid the modules from knowing each other; the database roles are checked on the image: each role is refused the other's schema (`check-roles.sh`) | A fault or a compromise in one module reaches the memory of the other (R-16). The process exits non-zero when the start fails and the compose policy restarts it |
-| D | A deadlock in the world stops the login | A thread dump can be taken without stopping the server (`capture.sh`); the readiness endpoint reports both ports | Accepted by ADR-0003. A second process is the answer if it ever matters |
+| D | A deadlock in the world stops the login | A thread dump can be taken without stopping the server (`capture.sh`); a flight recording of the last 12 hours is kept in the log volume and read after the incident; the readiness endpoint reports both ports | Accepted by ADR-0003. A second process is the answer if it ever matters |
 
 ## 4. Server to PostgreSQL
 
@@ -93,7 +93,6 @@ Writing it found that the play keys and the passwords for the optional services 
 
 | Decision | Owner | Note |
 |---|---|---|
-| Hash scheme for passwords (B-06) | Maintainer | Slow salted hash with rehash at login; old hashes keep working until the account logs in |
 | `AutoCreateAccounts` default | Maintainer | Keep `True` for a private server; the runbook tells a public server to turn it off |
 | Pin GitHub Actions by commit | Maintainer | A one-time change, then Dependabot keeps them current |
 | Package visibility until the release (R-13) | Maintainer | The package is public today |

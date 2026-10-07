@@ -38,11 +38,23 @@ rm -f "$work/cache/html.cache"
 # The Java options are split on blanks, so L2JFREE_JAVA_OPTS can hold several.
 read -r -a java_opts <<< "${L2JFREE_JAVA_OPTS:--Xms1g -Xmx3g -XX:+UseG1GC}"
 
+# A flight recording runs all the time into the log volume, with a limit on its age and size. After an incident its
+# chunks can be read with the jfr tool of any JDK, also when the process was killed. L2JFREE_FLIGHT_RECORDER=off
+# turns it off.
+recording=()
+if [ "${L2JFREE_FLIGHT_RECORDER:-on}" != off ] && mkdir -p "$logs/jfr" 2>/dev/null; then
+	recording=(
+		"-XX:FlightRecorderOptions:repository=$logs/jfr"
+		"-XX:StartFlightRecording:name=l2jfree,settings=default,disk=true,maxage=12h,maxsize=256m"
+	)
+fi
+
 exec java \
 	-Dfile.encoding=UTF-8 \
 	-Dlogback.configurationFile="$home/config/logback.xml" \
 	-Dl2jfree.config.defaults="$home/config" \
 	-Dl2jfree.config.operator=/var/lib/l2jfree/config \
 	"${java_opts[@]}" \
+	"${recording[@]}" \
 	-cp "$home/config:$home/libs/*:$home/l2jfree-platform.jar" \
 	com.l2jfree.platform.Platform

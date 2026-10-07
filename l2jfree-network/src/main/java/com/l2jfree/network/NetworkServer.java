@@ -201,6 +201,16 @@ public abstract class NetworkServer<T extends Connection<T, RP, SP>, RP extends 
 	}
 	
 	/**
+	 * Closes the server sockets so that no new connection is accepted. The connections that exist stay open. The
+	 * shutdown of a server uses this first, so that nobody enters while the players are saved.
+	 */
+	public final void stopAccepting()
+	{
+		for (Channel channel : _serverChannels)
+			channel.close().syncUninterruptibly();
+	}
+	
+	/**
 	 * Closes the server sockets and all connections, and stops the I/O threads. The hooks of the connections are not
 	 * called.
 	 */

@@ -15,6 +15,7 @@
 package com.l2jfree.network;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.ByteArrayOutputStream;
@@ -182,6 +183,22 @@ class NetworkServerTest
 			assertThat(client.endOfStream()).isTrue();
 		}
 		assertThat(_server.connections).hasSize(1);
+	}
+	
+	@Test
+	void aServerThatStopsAcceptingKeepsItsConnections() throws Exception
+	{
+		try (Client client = connect(Transport.Kind.NIO))
+		{
+			assertThat(client.readText()).isEqualTo("hello");
+			final int port = port();
+			
+			_server.stopAccepting();
+			
+			assertThatThrownBy(() -> new Client(port)).isInstanceOf(java.io.IOException.class);
+			client.send(echo("alive", 4));
+			assertThat(client.readText()).isEqualTo("alive:8");
+		}
 	}
 	
 	@Test

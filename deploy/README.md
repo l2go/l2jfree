@@ -54,6 +54,7 @@ The entry point of the image only validates these variables and starts the proce
 | `L2JFREE_BIND` | no | Listen address of both ports, default `0.0.0.0`. Compose does not pass it; it uses the variable for the published ports |
 | `L2JFREE_EXTERNAL_HOST` | no | Address the world announces when no subnet matches, default the value of `ExternalHostname` in `server.properties` |
 | `L2JFREE_JAVA_OPTS` | no | JVM options, default `-Xms1g -Xmx3g -XX:+UseG1GC` |
+| `L2JFREE_FLIGHT_RECORDER` | no | `on` (default) keeps a JFR flight recording of the last 12 hours, at most 256 MB, in the `log` volume under `jfr/`; `off` turns it off |
 | `L2JFREE_HEALTH_PORT` | no | Port of the readiness endpoint (`/health/live`, `/health/ready`), default off. `L2JFREE_HEALTH_HOST` sets its address, default `127.0.0.1` |
 
 A secret is never an environment value: a variable that ends in `_FILE` names a file inside the container, and the `secrets` volume holds the files.

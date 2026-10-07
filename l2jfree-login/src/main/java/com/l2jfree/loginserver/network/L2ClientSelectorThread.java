@@ -105,7 +105,8 @@ public final class L2ClientSelectorThread extends
 	@Override
 	protected void executePacket(L2ClientPacket packet)
 	{
-		_generalPacketsThreadPool.execute(new ExecuteWrapper(packet));
+		// the packets of one client run in order; those of different clients run side by side
+		packet.getClient().executeInOrder(new ExecuteWrapper(packet), _generalPacketsThreadPool);
 	}
 	
 	// ==============================================

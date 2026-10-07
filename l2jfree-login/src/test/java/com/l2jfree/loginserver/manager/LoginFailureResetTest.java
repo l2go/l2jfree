@@ -36,6 +36,7 @@ import org.mockito.ArgumentCaptor;
 import com.l2jfree.loginserver.LoginConfig;
 import com.l2jfree.loginserver.beans.Accounts;
 import com.l2jfree.loginserver.beans.FailedLoginAttempt;
+import com.l2jfree.loginserver.security.PasswordHasher;
 import com.l2jfree.loginserver.services.AccountsServices;
 import com.l2jfree.loginserver.services.exception.AccountWrongPasswordException;
 import com.l2jfree.tools.codec.Base64;
@@ -86,7 +87,7 @@ class LoginFailureResetTest
 
 	/** The row read for the password check may be stale: a login writes the last login and nothing else. */
 	@Test
-	@DisplayName("a login writes the time and the address, not the access level or the password")
+	@DisplayName("a login writes the time, the address, and the new form of an old password, not the access level")
 	void loginWritesOnlyWhatItChanges() throws Exception
 	{
 		LoginManager manager = mock(LoginManager.class, CALLS_REAL_METHODS);
@@ -106,7 +107,9 @@ class LoginFailureResetTest
 		assertThat(written.getValue().getLastIp()).isEqualTo("192.0.2.7");
 		assertThat(written.getValue().getLastactive()).isNotNull();
 		assertThat(written.getValue().getAccessLevel()).isNull();
-		assertThat(written.getValue().getPassword()).isNull();
+		// the account holds the form of the 2.x line, so the login stores the salted form it can make now
+		assertThat(written.getValue().getPassword()).startsWith("pbkdf2-sha256$");
+		assertThat(PasswordHasher.verify("correct", written.getValue().getPassword())).isTrue();
 	}
 	
 	private static void setField(LoginManager manager, String name, Object value) throws Exception

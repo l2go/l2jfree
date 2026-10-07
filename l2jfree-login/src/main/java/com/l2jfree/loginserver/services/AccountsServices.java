@@ -26,6 +26,7 @@ import com.l2jfree.loginserver.dao.AccountsDAO;
 import com.l2jfree.loginserver.dao.LoginDataAccessException;
 import com.l2jfree.loginserver.dao.LoginObjectNotFoundException;
 import com.l2jfree.loginserver.services.exception.AccountModificationException;
+import com.l2jfree.loginserver.security.PasswordHasher;
 import com.l2jfree.tools.codec.Base64;
 
 /**
@@ -62,25 +63,6 @@ public class AccountsServices
 		// ---------------
 		Accounts acc = null;
 		
-		// o Encode Password
-		// ----------------
-		MessageDigest md;
-		byte[] newpass;
-		try
-		{
-			md = MessageDigest.getInstance("SHA");
-			newpass = password.getBytes("UTF-8");
-			newpass = md.digest(newpass);
-		}
-		catch (NoSuchAlgorithmException e1)
-		{
-			throw new AccountModificationException("No algorithm to encode password.", e1);
-		}
-		catch (UnsupportedEncodingException e1)
-		{
-			throw new AccountModificationException("Unsupported encoding.", e1);
-		}
-		
 		// o update account
 		// ---------------
 		try
@@ -89,7 +71,7 @@ public class AccountsServices
 			Integer iLevel = new Integer(level);
 			acc.setLogin(account);
 			acc.setAccessLevel(iLevel);
-			acc.setPassword(Base64.encodeBytes(newpass));
+			acc.setPassword(PasswordHasher.hash(password));
 			acc.setBirthYear(Integer.valueOf(by));
 			acc.setBirthMonth(Integer.valueOf(bm));
 			acc.setBirthDay(Integer.valueOf(bd));
