@@ -70,7 +70,7 @@ class JdbcBindingPostgresTest
 		{
 			for (JdbcCallSites.Site site : sites)
 			{
-				String prefix = site.location().replaceAll(":\d+$", "") + ": " + site.sql().replaceAll("\s+", " ").strip() + ": ";
+				String prefix = site.location().replaceAll(":\\d+$", "") + ": " + site.sql().replaceAll("\\s+", " ").strip() + ": ";
 				try (PreparedStatement statement = connection.prepareStatement(site.sql()))
 				{
 					checked++;
@@ -124,7 +124,7 @@ class JdbcBindingPostgresTest
 			String type = byName.get(getter.getKey().toLowerCase(Locale.ROOT));
 			if (type == null)
 			{
-				problems.add(getter.getValue() + "("" + getter.getKey() + ""): no such result column");
+				problems.add(getter.getValue() + "(\"" + getter.getKey() + "\"): no such result column");
 				continue;
 			}
 			String error = JdbcTypeRules.check(getter.getValue(), type);
