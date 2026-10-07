@@ -6457,13 +6457,11 @@ public final class L2Player extends L2Playable
 	/** @return the values of this player that the player row stores; level, exp and sp are those of the base class */
 	private PlayerRow buildPlayerRow()
 	{
-		// Get the exp, level, and sp of base class to store in base table
-		int currentClassIndex = getClassIndex();
-		_classIndex = 0;
-		long exp = getStat().getExp();
-		int level = getStat().getLevel();
-		int sp = getStat().getSp();
-		_classIndex = currentClassIndex;
+		// The exp, level, and sp of the base class go to the player row, whichever class is active. They are read
+		// as such: the class index of a live player is not changed for the time of a save.
+		long exp = getStat().getBaseClassExp();
+		int level = getStat().getBaseClassLevel();
+		int sp = getStat().getBaseClassSp();
 		
 		PlayerRow row = new PlayerRow();
 		row.id = getObjectId();
