@@ -14,6 +14,7 @@
  */
 package com.l2jfree.gameserver.cache;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -58,15 +59,16 @@ public final class WarehouseCacheManager implements Runnable
 	@Override
 	public synchronized void run()
 	{
-		for (Map.Entry<L2Player, Long> entry : _cache.entrySet())
+		for (Iterator<Map.Entry<L2Player, Long>> it = _cache.entrySet().iterator(); it.hasNext();)
 		{
+			final Map.Entry<L2Player, Long> entry = it.next();
 			if (System.currentTimeMillis() > entry.getValue() + Config.WAREHOUSE_CACHE_TIME * 60000L)
 			{
 				final L2Player player = entry.getKey();
 				
 				player.clearWarehouse();
 				
-				_cache.remove(player);
+				it.remove();
 			}
 		}
 	}

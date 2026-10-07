@@ -20,6 +20,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +52,7 @@ public class GeoEditorThread extends Thread
 	{
 		_geSocket = ge;
 		_working = true;
-		_gms = new ArrayList<L2Player>();
+		_gms = new CopyOnWriteArrayList<L2Player>();
 	}
 	
 	@Override

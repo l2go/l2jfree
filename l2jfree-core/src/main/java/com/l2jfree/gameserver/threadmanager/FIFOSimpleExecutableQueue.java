@@ -14,16 +14,16 @@
  */
 package com.l2jfree.gameserver.threadmanager;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.List;
+import java.util.Deque;
 
 /**
  * @author NB4L1
  */
 public abstract class FIFOSimpleExecutableQueue<T> extends FIFOExecutableQueue
 {
-	private final List<T> _queue = new ArrayList<T>();
+	private final Deque<T> _queue = new ArrayDeque<T>();
 	
 	public final void execute(T t)
 	{

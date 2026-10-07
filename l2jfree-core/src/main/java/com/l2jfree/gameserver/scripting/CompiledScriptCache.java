@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -93,12 +94,13 @@ public class CompiledScriptCache implements Serializable
 	{
 		synchronized (_compiledScriptCache)
 		{
-			for (String path : _compiledScriptCache.keySet())
+			for (Iterator<String> it = _compiledScriptCache.keySet().iterator(); it.hasNext();)
 			{
+				String path = it.next();
 				File file = new File(L2ScriptEngineManager.SCRIPT_FOLDER, path);
 				if (!file.isFile())
 				{
-					_compiledScriptCache.remove(path);
+					it.remove();
 					_modified = true;
 				}
 			}

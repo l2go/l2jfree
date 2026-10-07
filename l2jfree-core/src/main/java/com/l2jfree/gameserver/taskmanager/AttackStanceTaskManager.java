@@ -14,8 +14,8 @@
  */
 package com.l2jfree.gameserver.taskmanager;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -32,7 +32,7 @@ public final class AttackStanceTaskManager extends AbstractPeriodicTaskManager
 		return SingletonHolder._instance;
 	}
 	
-	private final Map<L2Creature, Long> _attackStanceTasks = new LinkedHashMap<L2Creature, Long>();
+	private final Map<L2Creature, Long> _attackStanceTasks = new ConcurrentHashMap<L2Creature, Long>();
 	
 	private AttackStanceTaskManager()
 	{

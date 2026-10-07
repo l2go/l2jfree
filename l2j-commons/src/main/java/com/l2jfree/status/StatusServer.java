@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 import org.slf4j.Logger;
@@ -79,7 +80,7 @@ public abstract class StatusServer extends Thread
 	protected static final Logger _log = LoggerFactory.getLogger(StatusServer.class);
 	
 	private final ServerSocket _socket;
-	private final List<Filter> _filters = new ArrayList<Filter>();
+	private final List<Filter> _filters = new CopyOnWriteArrayList<Filter>();
 	private final Set<StatusThread> _threads = new L2FastSet<StatusThread>().setShared(true);
 	
 	protected StatusServer() throws IOException
