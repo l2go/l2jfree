@@ -255,6 +255,9 @@ jobs:
           test -f deploy/image/l2jfree/config/server.properties
           test -d deploy/image/l2jfree/libs
 
+      - name: Check the script that creates the passwords
+        run: deploy/image/test-init-secrets.sh
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
