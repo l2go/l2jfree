@@ -35,12 +35,10 @@ import com.l2jfree.gameserver.gameobjects.L2Npc;
 import com.l2jfree.gameserver.gameobjects.base.ClassId;
 import com.l2jfree.gameserver.gameobjects.instance.L2MonsterInstance;
 import com.l2jfree.gameserver.gameobjects.templates.L2NpcTemplate;
-import com.l2jfree.gameserver.instancemanager.FactionManager;
 import com.l2jfree.gameserver.instancemanager.QuestManager;
 import com.l2jfree.gameserver.model.L2MinionData;
 import com.l2jfree.gameserver.model.drop.L2DropCategory;
 import com.l2jfree.gameserver.model.drop.L2DropData;
-import com.l2jfree.gameserver.model.entity.faction.Faction;
 import com.l2jfree.gameserver.model.skills.Formulas;
 import com.l2jfree.gameserver.model.skills.L2Skill;
 import com.l2jfree.gameserver.model.skills.Stats;
@@ -629,20 +627,6 @@ public final class NpcTable
 			
 			npcDat.set("AI", NpcData.getString("ai_type"));
 			npcDat.set("drop_herbs", NpcData.getBoolean("drops_herbs"));
-			
-			if (Config.FACTION_ENABLED)
-			{
-				Faction npcFaction;
-				for (int i = 0; i < FactionManager.getInstance().getFactions().size(); i++)
-				{
-					npcFaction = FactionManager.getInstance().getFactions().get(i);
-					if (npcFaction.getNpcList().contains(id))
-					{
-						npcDat.set("NPCFaction", npcFaction.getId());
-						npcDat.set("NPCFactionName", npcFaction.getName());
-					}
-				}
-			}
 			
 			L2NpcTemplate template = new L2NpcTemplate(npcDat);
 			template.addVulnerability(Stats.BOW_WPN_VULN, 1);

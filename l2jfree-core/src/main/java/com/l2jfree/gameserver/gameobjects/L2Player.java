@@ -123,7 +123,6 @@ import com.l2jfree.gameserver.instancemanager.CastleManager;
 import com.l2jfree.gameserver.instancemanager.CursedWeaponsManager;
 import com.l2jfree.gameserver.instancemanager.DimensionalRiftManager;
 import com.l2jfree.gameserver.instancemanager.DuelManager;
-import com.l2jfree.gameserver.instancemanager.FactionManager;
 import com.l2jfree.gameserver.instancemanager.FortManager;
 import com.l2jfree.gameserver.instancemanager.FortSiegeManager;
 import com.l2jfree.gameserver.instancemanager.FourSepulchersManager;
@@ -174,7 +173,6 @@ import com.l2jfree.gameserver.model.entity.Siege;
 import com.l2jfree.gameserver.model.entity.events.AbstractFunEventPlayerInfo;
 import com.l2jfree.gameserver.model.entity.events.AutomatedTvT;
 import com.l2jfree.gameserver.model.entity.events.CTF.CTFPlayerInfo;
-import com.l2jfree.gameserver.model.entity.faction.FactionMember;
 import com.l2jfree.gameserver.model.items.L2ItemInstance;
 import com.l2jfree.gameserver.model.items.manufacture.L2ManufactureList;
 import com.l2jfree.gameserver.model.items.recipe.L2RecipeList;
@@ -751,7 +749,6 @@ public final class L2Player extends L2Playable
 	
 	private int _clientRevision = 0;
 	
-	private FactionMember _faction;
 	
 	/* Flag to disable equipment/skills while wearing formal wear **/
 	private boolean _IsWearingFormalWear = false;
@@ -1102,15 +1099,6 @@ public final class L2Player extends L2Playable
 	@Override
 	public void setTitle(String value)
 	{
-		if (Config.FACTION_ENABLED)
-		{
-			if (FactionManager.getInstance().getFactionTitles().contains(value.toLowerCase()) && !value.isEmpty())
-			{
-				sendMessage("Title protected by Faction System");
-				return;
-			}
-		}
-		
 		if (value.length() > 16)
 			value = value.substring(0, 15);
 		
@@ -4929,24 +4917,10 @@ public final class L2Player extends L2Playable
 		{
 			if (target instanceof L2Player)
 				increasePvpKills();
-			// Give faction pvp points
-			if (Config.FACTION_ENABLED && targetPlayer.getSide() != getSide() && targetPlayer.getSide() != 0
-					&& getSide() != 0 && Config.FACTION_KILL_REWARD)
-				increaseFactionKillPoints(targetPlayer.getLevel(), false);
 		}
 		else
 		// Target player doesn't have pvp flag set
 		{
-			// Check factions
-			if (Config.FACTION_ENABLED && targetPlayer.getSide() != getSide() && targetPlayer.getSide() != 0
-					&& getSide() != 0 && Config.FACTION_KILL_REWARD)
-			{
-				// Give faction pk points
-				increaseFactionKillPoints(targetPlayer.getLevel(), true);
-				// No karma
-				return;
-			}
-			
 			// Check about wars
 			boolean clanWarKill =
 					(targetPlayer.getClan() != null && getClan() != null && !isAcademyMember()
@@ -4990,20 +4964,6 @@ public final class L2Player extends L2Playable
 				}
 			}
 		}
-	}
-	
-	/**
-	 * Increase the faction points depending on level
-	 * PK Kills give half the points of a PVP Kill
-	 */
-	public void increaseFactionKillPoints(int level, boolean pk)
-	{
-		int points;
-		points = (level / getLevel()) * (Config.FACTION_KILL_RATE / 100);
-		if (pk)
-			points /= 2;
-		_faction.addFactionPoints(points);
-		sendMessage("You earned " + String.valueOf(points) + " Facion Points");
 	}
 	
 	/**
@@ -11889,47 +11849,6 @@ public final class L2Player extends L2Playable
 	public void setCombatFlagEquipped(boolean value)
 	{
 		_combatFlagEquipped = value;
-	}
-	
-	public void setNPCFaction(FactionMember fm)
-	{
-		_faction = fm;
-	}
-	
-	public FactionMember getNPCFaction()
-	{
-		return _faction;
-	}
-	
-	public boolean removeNPCFactionPoints(int factionPoints)
-	{
-		if (_faction != null)
-		{
-			if (_faction.getFactionPoints() < factionPoints)
-				return false;
-			_faction.reduceFactionPoints(factionPoints);
-			return true;
-		}
-		return false;
-	}
-	
-	public int getNPCFactionPoints()
-	{
-		return _faction.getFactionPoints();
-	}
-	
-	public int getSide()
-	{
-		return _faction.getSide();
-	}
-	
-	public void quitNPCFaction()
-	{
-		if (_faction != null)
-		{
-			_faction.quitFaction();
-			_faction = null;
-		}
 	}
 	
 	public boolean getCharmOfCourage()
