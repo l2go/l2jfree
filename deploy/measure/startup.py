@@ -142,13 +142,58 @@ def table(results):
     return "\n".join(rows)
 
 
+def diagnose(image, runs):
+    """Why a restart is slower than a new container: the same stop followed by three kinds of start, G1 only."""
+    options = "%s %s" % (HEAP, CONFIGS["g1"]["gc"])
+    env = {"L2JFREE_IMAGE": image, "L2JFREE_JAVA_OPTS": options}
+    print("== diagnose: %s" % options, file=sys.stderr)
+    compose("down", "-v", "--remove-orphans", check=False)
+    compose("up", "-d", "--wait", "db", env=env)
+    compose("up", "-d", "--no-deps", "server", env=env)
+    wait_for_ready(1)
+    results = {"restart at once": [], "start after 30 s": [], "new container at once": []}
+    for _ in range(runs):
+        for kind in results:
+            compose("stop", "-t", "60", "server", env=env)
+            if kind == "start after 30 s":
+                time.sleep(30)
+            if kind == "new container at once":
+                compose("up", "-d", "--no-deps", "--force-recreate", "server", env=env)
+                before = 0
+            else:
+                before = len(ready_lines())
+                compose("start", "server", env=env)
+            results[kind].append(sample(wait_for_ready(before + 1)))
+    compose("down", "-v", "--remove-orphans", check=False)
+    return results
+
+
+def diagnosis_table(results):
+    rows = ["| Start after the stop | Median | Range |", "|---|---:|---:|"]
+    for kind, samples in results.items():
+        totals = [s["total"] for s in samples]
+        rows.append("| %s | %s | %s - %s |" % (kind, seconds(median(totals)), seconds(min(totals)), seconds(max(totals))))
+    return "\n".join(rows)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--image", required=True)
     parser.add_argument("--runs", type=int, default=5)
     parser.add_argument("--configs", default=",".join(CONFIGS))
     parser.add_argument("--output", default=".")
+    parser.add_argument("--diagnose", action="store_true", help="only compare the kinds of start after a stop")
     args = parser.parse_args()
+    if args.diagnose:
+        os.makedirs(args.output, exist_ok=True)
+        results = diagnose(args.image, args.runs)
+        with open(os.path.join(args.output, "restart.json"), "w") as out:
+            json.dump(results, out, indent=2)
+        markdown = diagnosis_table(results)
+        with open(os.path.join(args.output, "restart.md"), "w") as out:
+            out.write(markdown + "\n")
+        print(markdown)
+        return
     names = args.configs.split(",")
     unknown = [n for n in names if n not in CONFIGS]
     if unknown:

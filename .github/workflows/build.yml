@@ -400,6 +400,17 @@ jobs:
             echo "Cold is the first start on an empty database, without a cache. New container is the next start in a new container on the loaded database. Restart is a restart of that container. Resident memory is read ten seconds after the ports open. Runner: $(nproc) CPUs, $(free -m | awk '/Mem:/ {print $2}') MiB."
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Compare the kinds of start after a stop
+        if: always()
+        run: |
+          python3 deploy/measure/startup.py --image l2jfree:ci --runs 3 --diagnose --output startup | tee startup/restart-table.txt
+          {
+            echo
+            echo "### The same stop, followed by three kinds of start (G1)"
+            echo
+            cat startup/restart.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Keep the numbers
         if: always()
         uses: actions/upload-artifact@v4
