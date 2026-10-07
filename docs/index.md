@@ -12,6 +12,7 @@ Platform 3.0 is in development. v2.5.0 is the final release of the 2.x line, whi
 | [Platform module](../l2jfree-platform/README.md) | The launcher, the layout of the distribution, and how the two ports are wired |
 | [Risk register](risks.md) | Open risks and their mitigations |
 | [Milestone reports](reports/m1-foundation.md) | Plan, result, deviations, and delivery numbers of each closed milestone |
+| [Start-up measurement](reports/startup-measurement.md) | The start of the server under G1 and ZGC, with and without the AOT cache |
 | [Architecture decision records](adr/README.md) | One record per decision, with rationale and consequences |
 | [Platform 3.0 vision](PLATFORM-3.0-VISION.md) | Target platform and design, revised by the decision records |
 | [Database conventions](DATABASE-CONVENTIONS.md) | The rules of the PostgreSQL schemas; the schema test checks them |

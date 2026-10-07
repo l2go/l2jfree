@@ -15,6 +15,7 @@ Each record states one decision, why it was made, what it costs, and when to rev
 | [0009](0009-database-roles-schemas-and-migration.md) | Database roles, schemas, and migration at start | Accepted |
 | [0010](0010-game-content-as-catalog-data.md) | Game content ships as catalog data | Accepted |
 | [0011](0011-configuration-model.md) | Configuration model: defaults in the image, changes in one directory | Accepted |
+| [0012](0012-garbage-collector-and-aot-cache.md) | G1 as the garbage collector, no AOT cache in the image | Accepted |
 
 ## Format
 
