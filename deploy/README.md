@@ -107,6 +107,33 @@ docker compose -f deploy/compose.yaml cp server:/var/lib/l2jfree/log ./log
 
 The OpenTelemetry agent is in the image but is not attached, so telemetry stays off.
 
+The database counts every statement (`pg_stat_statements`) and logs the plan of a statement that takes longer than 500 ms (`auto_explain`), so a slow start or a slow save can be found afterwards:
+
+```sh
+docker compose -f deploy/compose.yaml exec db psql -U postgres -d l2jfree \
+  -c 'SELECT calls, round(total_exec_time) AS ms, left(query, 80) FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 10'
+```
+
+## Backup and restore
+
+The backup is the `login` and `world` schemas. The catalog comes from the image and is loaded again at start, and the `report` views are created again at start, so neither is backed up.
+
+```sh
+docker compose -f deploy/compose.yaml exec db pg_dump -U postgres -d l2jfree -n login -n world -Fc > l2jfree-$(date +%F).dump
+```
+
+To restore, stop the server first. The views of `report` read `world`, so the restore drops the schema and creates it again before it replaces the tables:
+
+```sh
+docker compose -f deploy/compose.yaml stop server
+docker compose -f deploy/compose.yaml exec db psql -U postgres -d l2jfree \
+  -c 'DROP SCHEMA IF EXISTS report CASCADE' -c 'CREATE SCHEMA report AUTHORIZATION l2jfree_world'
+docker compose -f deploy/compose.yaml exec -T db pg_restore -U postgres -d l2jfree --clean --if-exists < l2jfree-2026-10-07.dump
+docker compose -f deploy/compose.yaml start server
+```
+
+The restore is rehearsed on a clean host before the release (milestone M3).
+
 ## Environments
 
 | Environment | Status |

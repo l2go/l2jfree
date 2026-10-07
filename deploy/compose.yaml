@@ -44,6 +44,14 @@ services:
       POSTGRES_DB: l2jfree
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD_FILE: /run/l2jfree-dbsecrets/postgres_password
+    # Slow statements are logged with their plan (auto_explain), and every statement is counted
+    # (pg_stat_statements), so a slow start or a slow save is found without a restart.
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements,auto_explain
+      - -c
+      - auto_explain.log_min_duration=500ms
     volumes:
       - dbdata:/var/lib/postgresql
       - secrets:/run/l2jfree-secrets:ro
