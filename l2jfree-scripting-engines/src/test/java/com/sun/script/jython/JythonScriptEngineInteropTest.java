@@ -52,4 +52,25 @@ class JythonScriptEngineInteropTest
 
 		assertThat(engine.get("bridge_value")).isEqualTo("visible");
 	}
+
+	/**
+	 * Datapack scripts keep their quest in a global ({@code QUEST = karul_bugbear(...)}) and read its attributes at
+	 * module level. The global goes through the script context as a Java object, so reading it back must return the
+	 * Python instance, not a new wrapper of its Java proxy without the instance attributes.
+	 */
+	@Test
+	void aGlobalPythonSubclassOfAJavaClassKeepsItsAttributes() throws ScriptException
+	{
+		ScriptEngine engine = new JythonScriptEngineFactory().getScriptEngine();
+		engine.eval("""
+				from java.lang import Object
+				class Probe(Object):
+				    def __init__(self):
+				        Object.__init__(self)
+				        self.npc = 20600
+				QUEST = Probe()
+				result = QUEST.npc
+				""");
+		assertThat(engine.get("result")).isEqualTo(20600);
+	}
 }

@@ -288,6 +288,21 @@ jobs:
           echo "SMOKE_PASSWORD=$password" >> "$GITHUB_ENV"
           java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240 --account smokesave --password "$password" --existing-characters 0
 
+      # Every datapack script must have loaded: a script that fails to load is not an error of the start, so the
+      # start succeeds without it. The ERROR lines are shown so that a new kind of failure is seen in the log.
+      - name: Check the server log for scripts that did not load
+        env:
+          L2JFREE_IMAGE: l2jfree:ci
+        run: |
+          docker compose -f deploy/compose.yaml logs --no-color server > server.log
+          echo "::group::ERROR lines of the server log"
+          grep -E '(^|\| )ERROR ' server.log | head -50 || true
+          echo "::endgroup::"
+          if grep -E 'Failed executing script|Failed loading:' server.log; then
+            echo "::error::a datapack script did not load"
+            exit 1
+          fi
+
       - name: Restart the server and probe again
         env:
           L2JFREE_IMAGE: l2jfree:ci

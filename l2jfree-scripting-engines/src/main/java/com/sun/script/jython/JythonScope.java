@@ -40,6 +40,7 @@ import org.python.core.PyClass;
 import org.python.core.PyList;
 import org.python.core.PyObject;
 import org.python.core.PyString;
+import org.python.core.PyType;
 
 final class JythonScope extends PyObject
 {
@@ -129,7 +130,9 @@ final class JythonScope extends PyObject
 				scope = ScriptContext.ENGINE_SCOPE;
 			}
 			Object obj = value;
-			if (!(obj instanceof PyClass))
+			// Classes stay Python objects: as Java, a Python class (PyType since Jython 2.5, PyClass before) becomes the
+			// class of its Java proxy, and calling that creates the proxy without running the Python __init__.
+			if (!(obj instanceof PyClass) && !(obj instanceof PyType))
 			{
 				obj = JythonScriptEngine.py2java(value);
 			}
