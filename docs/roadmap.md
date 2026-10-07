@@ -8,7 +8,7 @@ Platform 3.0 is built in three milestones and shipped as one release, `v3.0.0` (
 |---|---|---|
 | M1. Foundation | Decisions recorded, vision revised, 2.x retired, docs structured, and a pipeline that builds a Linux image and starts it with Docker Compose in CI | Done ([report](reports/m1-foundation.md)) |
 | M2. Platform 3.0 | The image runs on PostgreSQL 18 in one process with Netty. An end-to-end smoke test (log in, list the world, enter it, leave) is green in CI. A real client has reached the world | In progress |
-| M3. Release | Runbook, restore rehearsal, threat model, vulnerability policy, signature and SBOM verified, and the tag `v3.0.0` | Not started |
+| M3. Release | Runbook, restore rehearsal, threat model, vulnerability policy, signature and SBOM verified, and the tag `v3.0.0` | In progress |
 
 ## Exit criteria
 

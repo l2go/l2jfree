@@ -398,14 +398,22 @@ public final class L2Client extends com.l2jfree.network.Connection<L2Client, L2C
 		getPacketQueue().execute(rp);
 	}
 	
-	private FIFORunnableQueue<Runnable> _packetQueue;
+	private volatile FIFORunnableQueue<Runnable> _packetQueue;
 	
 	public FIFORunnableQueue<Runnable> getPacketQueue()
 	{
-		if (_packetQueue == null)
-			_packetQueue = new FIFORunnableQueue<Runnable>() {};
+		FIFORunnableQueue<Runnable> queue = _packetQueue;
+		if (queue == null)
+		{
+			synchronized (this)
+			{
+				queue = _packetQueue;
+				if (queue == null)
+					_packetQueue = queue = new FIFORunnableQueue<Runnable>() {};
+			}
+		}
 		
-		return _packetQueue;
+		return queue;
 	}
 	
 	private final class ServerPacketQueue extends ArrayDeque<L2ServerPacket> implements Runnable

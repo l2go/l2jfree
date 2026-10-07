@@ -21,6 +21,7 @@ import java.security.MessageDigest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.l2jfree.loginserver.security.PasswordHasher;
 import com.l2jfree.tools.codec.Base64;
 
 /**
@@ -96,16 +97,7 @@ public class AccountBean implements Serializable
 	
 	public final void setPlainPassword(String password)
 	{
-		try
-		{
-			MessageDigest md = MessageDigest.getInstance("SHA");
-			md.update(password.getBytes("UTF-8"));
-			this.password = Base64.encodeBytes(md.digest());
-		}
-		catch (Exception e)
-		{
-			_log.error("Cannot encrypt password!", e);
-		}
+		this.password = PasswordHasher.hash(password);
 	}
 	
 	public final BigDecimal getLastactive()

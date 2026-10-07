@@ -12,6 +12,7 @@ Platform 3.0 is in development. v2.5.0 is the final release of the 2.x line, whi
 | [Runbook](runbook.md) | First start, daily checks, backup, restore, update, rollback, incident capture, and stop |
 | [Platform module](../l2jfree-platform/README.md) | The launcher, the layout of the distribution, and how the two ports are wired |
 | [Risk register](risks.md) | Open risks and their mitigations |
+| [Threat model](threat-model.md) | What can go wrong at each trust boundary, what stops it, and what remains |
 | [Image verification](image-verification.md) | Signature, provenance, and SBOM of the Platform 3.0 image |
 | [Milestone reports](reports/m1-foundation.md) | Plan, result, deviations, and delivery numbers of each closed milestone |
 | [Milestone report M2](reports/m2-platform.md) | Result of the Platform 3.0 platform work against its exit criteria, deviations, and the acceptance run |

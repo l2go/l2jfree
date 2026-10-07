@@ -29,6 +29,7 @@ AOT_FILE = "/var/lib/l2jfree/aot/server.aot"
 
 CONFIGS = {
     "g1": {"gc": "-XX:+UseG1GC", "aot": False},
+    "g1-no-recording": {"gc": "-XX:+UseG1GC", "aot": False, "env": {"L2JFREE_FLIGHT_RECORDER": "off"}},
     "zgc": {"gc": "-XX:+UseZGC", "aot": False},
     "g1-aot": {"gc": "-XX:+UseG1GC", "aot": True},
     "zgc-aot": {"gc": "-XX:+UseZGC", "aot": True},
@@ -102,7 +103,7 @@ def sample(match):
 def measure(name, image, runs):
     config = CONFIGS[name]
     options = "%s %s" % (HEAP, config["gc"])
-    env = {"L2JFREE_IMAGE": image}
+    env = dict({"L2JFREE_IMAGE": image}, **config.get("env", {}))
     print("== %s: %s" % (name, options), file=sys.stderr)
     compose("down", "-v", "--remove-orphans", check=False)
     compose("up", "-d", "--wait", "db", env=env)

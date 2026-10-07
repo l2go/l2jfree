@@ -81,6 +81,7 @@ services:
       L2JFREE_WORLD_DB_PASSWORD_FILE: /var/lib/l2jfree/secrets/world_password
       L2JFREE_EXTERNAL_HOST: ${L2JFREE_EXTERNAL_HOST:-127.0.0.1}
       L2JFREE_JAVA_OPTS: ${L2JFREE_JAVA_OPTS:--Xms1g -Xmx3g -XX:+UseG1GC}
+      L2JFREE_FLIGHT_RECORDER: ${L2JFREE_FLIGHT_RECORDER:-on}
       # The readiness endpoint, reachable only from inside the container: 200 once both ports accept players.
       L2JFREE_HEALTH_PORT: "8080"
     mem_limit: 4g

@@ -117,6 +117,12 @@ public class RequestAuthLogin extends L2ClientPacket
 					client.setAccount(_user);
 					client.setState(LoginClientState.AUTHED_LOGIN);
 					client.setSessionKey(lc.assignSessionKeyToClient(_user, client));
+					if (client.isDisconnected())
+					{
+						// the connection went away while this packet ran: nothing will remove the entry later
+						lc.removeAuthedLoginClient(_user, client);
+						break;
+					}
 					if (LoginConfig.SECURITY_CARD_LOGIN)
 						client.sendPacket(new LoginFail(LoginFail.REASON_INVALID_SECURITY_CARD_NO));
 					else if (LoginConfig.SHOW_LICENCE)

@@ -24,6 +24,9 @@ $compose exec -T db psql -U postgres -d l2jfree \
   -c "SELECT pid, usename, state, wait_event_type, wait_event, now() - xact_start AS transaction_age, left(query, 100) AS query FROM pg_stat_activity WHERE datname = 'l2jfree' ORDER BY xact_start NULLS LAST" \
   > "$out/pg_stat_activity.txt"
 
+# the flight recording of the last hours, if it is on; the jfr tool of a JDK reads it
+$compose cp server:/var/lib/l2jfree/log/jfr "$out/jfr" > /dev/null 2>&1 || true
+
 mark="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 $compose kill -s QUIT server
 for _ in 1 2 3 4 5 6 7 8 9 10; do

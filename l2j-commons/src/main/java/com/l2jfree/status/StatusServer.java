@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import com.l2jfree.L2AutoInitialization;
 import com.l2jfree.config.L2Properties;
-import com.l2jfree.tools.random.Rnd;
+import com.l2jfree.tools.random.SecureRnd;
 import com.l2jfree.util.L2FastSet;
 
 /**
@@ -185,7 +185,7 @@ public abstract class StatusServer extends Thread
 		final StringBuilder sb = new StringBuilder(length);
 		
 		for (int i = 0; i < length; i++)
-			sb.append(chars.charAt(Rnd.get(chars.length())));
+			sb.append(chars.charAt(SecureRnd.nextInt(chars.length())));
 		
 		return sb.toString();
 	}

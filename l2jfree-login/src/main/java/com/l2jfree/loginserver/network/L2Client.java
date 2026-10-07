@@ -17,8 +17,10 @@ package com.l2jfree.loginserver.network;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.interfaces.RSAPrivateKey;
+import java.util.ArrayDeque;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.concurrent.Executor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +70,13 @@ public final class L2Client extends Connection<L2Client, L2ClientPacket, L2Serve
 	private volatile SessionKey _sessionKey;
 	private final int _sessionId = Rnd.nextInt(Integer.MAX_VALUE);
 	private volatile boolean _joinedGS;
+	
+	/** Set when the connection is gone, so that a packet that finishes later can undo what it registered. */
+	private volatile boolean _disconnected;
+	
+	/** The packets of this client wait here, so that they run one after the other, as the client sent them. */
+	private final ArrayDeque<Runnable> _packets = new ArrayDeque<Runnable>();
+	private boolean _packetsRunning;
 	private final String _ip;
 	
 	private boolean _card;
@@ -283,9 +292,52 @@ public final class L2Client extends Connection<L2Client, L2ClientPacket, L2Serve
 		return new LoginFail(LoginFail.REASON_ACCESS_FAILED);
 	}
 	
+	/**
+	 * Runs the packets of one client in the order they arrived. Each packet may wait on the database, so they run on
+	 * the given executor, but never two of the same client at once.
+	 */
+	public void executeInOrder(Runnable packet, Executor executor)
+	{
+		synchronized (_packets)
+		{
+			_packets.add(packet);
+			if (_packetsRunning)
+				return;
+			_packetsRunning = true;
+		}
+		
+		executor.execute(this::runPackets);
+	}
+	
+	private void runPackets()
+	{
+		for (;;)
+		{
+			Runnable packet;
+			synchronized (_packets)
+			{
+				packet = _packets.poll();
+				if (packet == null)
+				{
+					_packetsRunning = false;
+					return;
+				}
+			}
+			
+			packet.run();
+		}
+	}
+	
+	public boolean isDisconnected()
+	{
+		return _disconnected;
+	}
+	
 	@Override
 	public void onDisconnection()
 	{
+		_disconnected = true;
+		
 		if (_log.isDebugEnabled())
 			_log.info("onDisconnection: " + this);
 		

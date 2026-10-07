@@ -105,6 +105,8 @@ Before: the stack runs, even badly. One command collects the container state, th
 deploy/probe/capture.sh
 ```
 
+The directory also holds a copy of the flight recording (`jfr/`): the server records the last 12 hours, at most 256 MB, into the `log` volume all the time, also after a crash. Read it with the `jfr` tool of any JDK 25 (`jfr summary`, `jfr print --events jdk.GarbageCollection`). `L2JFREE_FLIGHT_RECORDER=off` turns the recording off.
+
 Send the directory it prints with the report, after removing what you do not want to share (account names, addresses). The thread dump is the first thing to read when the server is up but does not answer.
 
 ## Stop
@@ -113,6 +115,6 @@ Send the directory it prints with the report, after removing what you do not wan
 compose stop server
 ```
 
-The server saves the world and the players, and stops within seconds; the pipeline fails if it needs more than 30 seconds or is killed. The compose file gives it 60 seconds before Docker kills it, because the save goes through the players one after the other.
+The server first stops accepting connections, then saves the world and the players, and stops within seconds; the pipeline fails if it needs more than 30 seconds or is killed. The compose file gives it 60 seconds before Docker kills it, because the save goes through the players one after the other.
 
 Check: the exit code of the container is 0 (`docker inspect -f '{{.State.ExitCode}}' l2jfree-server-1`) and the log of the stop has `Data saved. All players disconnected`.

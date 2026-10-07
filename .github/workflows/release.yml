@@ -1,0 +1,176 @@
+name: release
+
+# The release of Platform 3.0 (ADR-0007). It promotes the image that the pipeline built for one commit of main:
+# nothing is rebuilt. The first job checks everything that can be checked without a person and builds the compose
+# bundle; with dry_run (the default) the workflow stops there. The second job needs the approval of the
+# stable-release environment, tags the verified image digest, creates the tag v<version> at the commit, and
+# publishes the release with the bundle.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version without the v, for example 3.0.0"
+        required: true
+        default: "3.0.0"
+      commit:
+        description: "Commit of main to release (a full sha); empty for the head of main"
+        required: false
+        default: ""
+      dry_run:
+        description: "Only verify and build the bundle; publish nothing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY_IMAGE: ghcr.io/l2go/l2jfree
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      commit: ${{ steps.resolve.outputs.commit }}
+      digest: ${{ steps.resolve.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Resolve the commit and the image
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+          COMMIT: ${{ inputs.commit }}
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::the version must look like 3.0.0"; exit 1; }
+          git fetch origin main
+          commit="${COMMIT:-$(git rev-parse origin/main)}"
+          git merge-base --is-ancestor "$commit" origin/main || { echo "::error::$commit is not on main"; exit 1; }
+          ! git rev-parse -q --verify "refs/tags/v$VERSION" > /dev/null || { echo "::error::the tag v$VERSION exists"; exit 1; }
+          passed="$(gh run list --workflow build.yml --event push --commit "$commit" --json conclusion --jq '[.[] | select(.conclusion == "success")] | length')"
+          [ "$passed" -ge 1 ] || { echo "::error::the pipeline of main did not pass for $commit"; exit 1; }
+          echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          digest="$(docker buildx imagetools inspect "$REGISTRY_IMAGE:sha-${commit::12}" --format '{{ .Manifest.Digest }}')"
+          [[ "$digest" == sha256:* ]] || { echo "::error::no image for sha-${commit::12}"; exit 1; }
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "release $VERSION: commit $commit, image $REGISTRY_IMAGE@$digest"
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      # The commands of docs/image-verification.md
+      - name: Verify the signature, the provenance, and the SBOM
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DIGEST: ${{ steps.resolve.outputs.digest }}
+        run: |
+          set -euo pipefail
+          image="$REGISTRY_IMAGE@$DIGEST"
+          cosign verify "$image" \
+            --certificate-identity "https://github.com/${GITHUB_REPOSITORY}/.github/workflows/build.yml@refs/heads/main" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null
+          gh attestation verify "oci://$image" --repo "$GITHUB_REPOSITORY" > /dev/null
+          packages="$(docker buildx imagetools inspect "$image" --format '{{ json .SBOM.SPDX }}' | jq '.packages | length')"
+          test "$packages" -gt 0
+          echo "signature, provenance, and an SBOM of $packages packages verified"
+
+      - name: Scan the image under the vulnerability policy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.REGISTRY_IMAGE }}@${{ steps.resolve.outputs.digest }}
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+          trivyignores: .trivyignore
+
+      - name: Take the release notes from the changelog
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          test -s notes.md || { echo "::error::CHANGELOG.md has no section ## [$VERSION] with entries"; exit 1; }
+          cat notes.md
+
+      - name: Build the compose bundle
+        env:
+          VERSION: ${{ inputs.version }}
+          DIGEST: ${{ steps.resolve.outputs.digest }}
+        run: |
+          deploy/release/bundle.sh "$VERSION" "$REGISTRY_IMAGE:$VERSION@$DIGEST" release
+          ls -l release
+
+      - name: Keep the bundle and the notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: |
+            release/*
+            notes.md
+
+  publish:
+    needs: verify
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    # The approval of the maintainer: the environment has a required reviewer.
+    environment: stable-release
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.verify.outputs.commit }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Name the verified image with the version
+        env:
+          VERSION: ${{ inputs.version }}
+          DIGEST: ${{ needs.verify.outputs.digest }}
+        run: |
+          set -euo pipefail
+          echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker buildx imagetools create -t "$REGISTRY_IMAGE:$VERSION" -t "$REGISTRY_IMAGE:latest" "$REGISTRY_IMAGE@$DIGEST"
+          now="$(docker buildx imagetools inspect "$REGISTRY_IMAGE:$VERSION" --format '{{ .Manifest.Digest }}')"
+          test "$now" = "$DIGEST" || { echo "::error::the tag $VERSION points to $now, not to $DIGEST"; exit 1; }
+          cosign verify "$REGISTRY_IMAGE:$VERSION" \
+            --certificate-identity "https://github.com/${GITHUB_REPOSITORY}/.github/workflows/build.yml@refs/heads/main" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null
+
+      - name: Attest the bundle
+        uses: actions/attest@v4.2.1
+        with:
+          subject-path: release/l2jfree-${{ inputs.version }}-compose.tar.gz
+
+      - name: Create the tag and the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+          COMMIT: ${{ needs.verify.outputs.commit }}
+        run: |
+          gh release create "v$VERSION" release/l2jfree-"$VERSION"-compose.tar.gz release/l2jfree-"$VERSION"-compose.tar.gz.sha256 \
+            --target "$COMMIT" --title "Platform $VERSION" --notes-file notes.md
