@@ -444,7 +444,7 @@ public class LoginManager
 			// only the column that changes: the rest of the row may have been changed since it was read
 			Accounts acc = new Accounts(account);
 			acc.setLastServerId(lastServerId);
-			_service.addOrUpdateAccount(acc);
+			_service.updateGivenColumns(acc);
 		}
 		catch (AccountModificationException e)
 		{
@@ -574,7 +574,7 @@ public class LoginManager
 				{
 					seen.setLastIp(address.getHostAddress());
 				}
-				_service.addOrUpdateAccount(seen);
+				_service.updateGivenColumns(seen);
 				handleGoodLogin(user, address);
 			}
 			// If password are different

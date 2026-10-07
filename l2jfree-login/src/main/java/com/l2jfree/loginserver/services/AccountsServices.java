@@ -135,6 +135,24 @@ public class AccountsServices
 	}
 	
 	/**
+	 * Writes the columns that the bean gives to an existing account and leaves the others as they are in the table.
+	 * A login uses this: the row it read may be stale, and writing it back would undo what changed meanwhile.
+	 * @throws AccountModificationException if the account does not exist or cannot be written
+	 */
+	public void updateGivenColumns(Accounts partial) throws AccountModificationException
+	{
+		try
+		{
+			if (!__accDAO.updateGiven(partial))
+				throw new AccountModificationException("Account " + partial.getLogin() + " doesn't exist.");
+		}
+		catch (LoginDataAccessException e)
+		{
+			throw new AccountModificationException("Unable to update account.", e);
+		}
+	}
+	
+	/**
 	 * Change account level
 	 * @param account - the account to update
 	 * @param level - the new level

@@ -53,6 +53,12 @@ public interface AccountsDAO
 	public boolean updateAccessLevel(String login, int accessLevel);
 	
 	/**
+	 * Update only the columns that the bean gives (the others stay as they are in the table) of an existing account.
+	 * @return false if there is no such account
+	 */
+	public boolean updateGiven(Object partial);
+	
+	/**
 	 * Delete an object.
 	 */
 	public void removeAccount(Object obj);

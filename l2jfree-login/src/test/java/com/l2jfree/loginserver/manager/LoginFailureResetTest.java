@@ -101,7 +101,7 @@ class LoginFailureResetTest
 		assertThat(manager.loginValid("alice", "correct", InetAddress.getByName("192.0.2.7"))).isTrue();
 		
 		ArgumentCaptor<Accounts> written = ArgumentCaptor.forClass(Accounts.class);
-		verify(service).addOrUpdateAccount(written.capture());
+		verify(service).updateGivenColumns(written.capture());
 		assertThat(written.getValue().getLogin()).isEqualTo("alice");
 		assertThat(written.getValue().getLastIp()).isEqualTo("192.0.2.7");
 		assertThat(written.getValue().getLastactive()).isNotNull();
