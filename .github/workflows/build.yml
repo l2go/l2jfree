@@ -291,18 +291,39 @@ jobs:
           echo "SMOKE_PASSWORD=$password" >> "$GITHUB_ENV"
           java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240 --account smokesave --password "$password" --existing-characters 0
 
+      # Many clients at once, each with an account of its own: accounts, characters, and ids are made concurrently.
+      - name: Take many clients through a session at once
+        run: java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240 --sessions 24 --parallel 6
+
+      # Each module reaches its own schema and nothing else (ADR-0003, ADR-0009).
+      - name: Check what each database role may reach
+        env:
+          L2JFREE_IMAGE: l2jfree:ci
+        run: deploy/probe/check-roles.sh
+
       # Every datapack script must have loaded: a script that fails to load is not an error of the start, so the
-      # start succeeds without it. The ERROR lines are shown so that a new kind of failure is seen in the log.
-      - name: Check the server log for scripts that did not load
+      # start succeeds without it. The log must hold no ERROR line and no uncaught exception.
+      - name: Check the server log for scripts and errors
         env:
           L2JFREE_IMAGE: l2jfree:ci
         run: |
           docker compose -f deploy/compose.yaml logs --no-color server > server.log
-          echo "::group::ERROR lines of the server log"
-          grep -E '(^|\| )ERROR ' server.log | head -50 || true
-          echo "::endgroup::"
+          summary="$(grep 'Script loading summary' server.log | tail -1 || true)"
+          echo "${summary:-no summary of the script loading}"
+          loaded="$(sed -n 's/.*summary: \([0-9]*\) loaded, \([0-9]*\) failed from \([0-9]*\) attempted.*//p' <<< "$summary")"
+          failed="$(sed -n 's/.*summary: \([0-9]*\) loaded, \([0-9]*\) failed from \([0-9]*\) attempted.*//p' <<< "$summary")"
+          test -n "$loaded" || { echo "::error::the server log has no summary of the script loading"; exit 1; }
+          test "$failed" = 0 || { echo "::error::$failed datapack scripts did not load"; exit 1; }
+          test "$loaded" -ge 400 || { echo "::error::only $loaded datapack scripts were loaded, 400 or more are expected"; exit 1; }
           if grep -E 'Failed executing script|Failed loading:' server.log; then
             echo "::error::a datapack script did not load"
+            exit 1
+          fi
+          echo "::group::WARN lines of the server log"
+          grep -E '(^|\| )WARN ' server.log | head -50 || true
+          echo "::endgroup::"
+          if grep -E '(^|\| )ERROR |Exception in thread' server.log; then
+            echo "::error::the server log has an ERROR line or an uncaught exception"
             exit 1
           fi
 
@@ -318,6 +339,24 @@ jobs:
           java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240 --account smokesave --password "$SMOKE_PASSWORD" --existing-characters 1
           # and an account that is new after the restart works as well
           java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240
+
+      # The server stops when asked: within the time Docker gives it, without being killed, and after it saved the
+      # state of the world. A save that never ends shows as a kill (exit code 137).
+      - name: Stop the server and check how it stops
+        env:
+          L2JFREE_IMAGE: l2jfree:ci
+        run: |
+          begin="$(date +%s)"
+          docker compose -f deploy/compose.yaml stop -t 60 server
+          seconds="$(( $(date +%s) - begin ))"
+          code="$(docker inspect -f '{{.State.ExitCode}}' l2jfree-server-1)"
+          echo "stopped in $seconds s with exit code $code"
+          docker compose -f deploy/compose.yaml logs --no-color --tail 300 server > stop.log
+          test "$seconds" -lt 30 || { echo "::error::the server needed $seconds s to stop"; exit 1; }
+          test "$code" = 0 -o "$code" = 143 || { echo "::error::the server did not stop by itself (exit code $code)"; exit 1; }
+          for line in 'RaidBossSpawnManager: All raidboss info saved' 'Olympiad System: Data saved' 'Data saved. All players disconnected'; do
+            grep -q "$line" stop.log || { echo "::error::the stop did not log: $line"; exit 1; }
+          done
 
       - name: Show the service logs after a failure
         if: failure()
