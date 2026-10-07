@@ -39,7 +39,30 @@ class SmokeClientTest
 				"--world-port", "7778", "--protocol-revision", "83", "--timeout-seconds", "30", "--account", "anna",
 				"--password", "secret", "--existing-characters", "1" });
 		
-		assertThat(config).isEqualTo(new SmokeClient.Config("example.org", 2107, 7778, 83, 30, "anna", "secret", 1));
+		assertThat(config).isEqualTo(new SmokeClient.Config("example.org", 2107, 7778, 83, 30, "anna", "secret", 1, 1, 1));
+	}
+	
+	@Test
+	void manySessionsAreReadAndTheParallelismNeverExceedsThem()
+	{
+		SmokeClient.Config config = SmokeClient.parse(new String[] { "--sessions", "30", "--parallel", "8" });
+		
+		assertThat(config.sessions()).isEqualTo(30);
+		assertThat(config.parallel()).isEqualTo(8);
+		assertThat(SmokeClient.parse(new String[] { "--sessions", "3", "--parallel", "8" }).parallel()).isEqualTo(3);
+	}
+	
+	@Test
+	void manySessionsAgainstNothingAllFailAndAreCounted()
+	{
+		SmokeClient.Config config = SmokeClient.parse(new String[] { "--login-port", "1", "--world-port", "1",
+				"--timeout-seconds", "5", "--sessions", "4", "--parallel", "2" });
+		java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+		
+		boolean passed = SmokeClient.runMany(config, new java.io.PrintStream(bytes));
+		
+		assertThat(passed).isFalse();
+		assertThat(bytes.toString()).contains("0 of 4 sessions passed").contains("FAILED 4 x");
 	}
 	
 	@Test
@@ -49,6 +72,9 @@ class SmokeClientTest
 		assertThatThrownBy(() -> SmokeClient.parse(new String[] { "--login-port" })).hasMessageContaining("missing value");
 		assertThatThrownBy(() -> SmokeClient.parse(new String[] { "--login-port", "x" })).hasMessageContaining("number");
 		assertThatThrownBy(() -> SmokeClient.parse(new String[] { "--account", "anna" })).hasMessageContaining("together");
+		assertThatThrownBy(() -> SmokeClient.parse(new String[] { "--sessions", "0" })).hasMessageContaining("at least 1");
+		assertThatThrownBy(() -> SmokeClient.parse(new String[] { "--sessions", "2", "--account", "anna", "--password", "x" }))
+				.hasMessageContaining("--account does not fit");
 		assertThatThrownBy(() -> SmokeClient.parse(new String[] { "--existing-characters", "1" }))
 				.hasMessageContaining("needs --account");
 	}
@@ -56,7 +82,7 @@ class SmokeClientTest
 	@Test
 	void aRunAgainstNothingFailsWithAReasonAndDoesNotThrow()
 	{
-		SmokeClient.Config config = new SmokeClient.Config("127.0.0.1", 1, 1, 87, 5, null, null, SmokeClient.Config.UNCHECKED);
+		SmokeClient.Config config = new SmokeClient.Config("127.0.0.1", 1, 1, 87, 5, null, null, SmokeClient.Config.UNCHECKED, 1, 1);
 		Reporter reporter = new Reporter(new java.io.PrintStream(java.io.OutputStream.nullOutputStream()));
 		
 		SmokeClient.Result result = SmokeClient.run(config, reporter);
