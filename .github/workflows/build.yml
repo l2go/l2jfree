@@ -280,8 +280,13 @@ jobs:
           python3 deploy/probe/login_init.py --host 127.0.0.1 --port 2106 --timeout 60
           python3 deploy/probe/login_init.py --host 127.0.0.1 --port 7777 --timeout 60 --connect-only
 
+      # The first session uses an account that the second session, after the restart, must find again with its character.
       - name: Take a client through a whole session
-        run: java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240
+        run: |
+          password="$(openssl rand -hex 8)"
+          echo "::add-mask::$password"
+          echo "SMOKE_PASSWORD=$password" >> "$GITHUB_ENV"
+          java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240 --account smokesave --password "$password" --existing-characters 0
 
       - name: Restart the server and probe again
         env:
@@ -291,6 +296,9 @@ jobs:
           docker compose -f deploy/compose.yaml up -d --wait --wait-timeout 600
           python3 deploy/probe/login_init.py --host 127.0.0.1 --port 2106 --timeout 60
           python3 deploy/probe/login_init.py --host 127.0.0.1 --port 7777 --timeout 60 --connect-only
+          # the account and the character of the first session survived the restart
+          java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240 --account smokesave --password "$SMOKE_PASSWORD" --existing-characters 1
+          # and an account that is new after the restart works as well
           java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240
 
       - name: Show the service logs after a failure
