@@ -358,6 +358,9 @@ jobs:
           echo "::group::WARN lines of the server log"
           grep -E '(^|\| )WARN ' server.log | head -50 || true
           echo "::endgroup::"
+          # the transport of both ports: a native transport that cannot be loaded would leave the server on NIO unnoticed
+          test "$(grep -c 'Accepting connections on .* (transport epoll' server.log)" -ge 2 \
+            || { echo "::error::the ports do not run on the epoll transport"; grep -E 'Transport|Accepting' server.log | head; exit 1; }
           if grep -E '(^|\| )ERROR |Exception in thread' server.log; then
             echo "::error::the server log has an ERROR line or an uncaught exception"
             exit 1

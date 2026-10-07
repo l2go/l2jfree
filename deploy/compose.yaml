@@ -82,6 +82,7 @@ services:
       L2JFREE_EXTERNAL_HOST: ${L2JFREE_EXTERNAL_HOST:-127.0.0.1}
       L2JFREE_JAVA_OPTS: ${L2JFREE_JAVA_OPTS:--Xms1g -Xmx3g -XX:+UseG1GC}
       L2JFREE_FLIGHT_RECORDER: ${L2JFREE_FLIGHT_RECORDER:-on}
+      L2JFREE_NETWORK_TRANSPORT: ${L2JFREE_NETWORK_TRANSPORT:-epoll}
       # The readiness endpoint, reachable only from inside the container: 200 once both ports accept players.
       L2JFREE_HEALTH_PORT: "8080"
     mem_limit: 4g
@@ -107,6 +108,9 @@ services:
     tmpfs:
       - /tmp:uid=10001,gid=10001,mode=1777
       - /run/l2jfree:uid=10001,gid=10001,mode=0700
+      # Netty unpacks its native transport libraries here and loads them, so this one directory may execute code;
+      # /tmp stays noexec. Without it the server falls back to the NIO transport.
+      - /run/l2jfree-native:exec,uid=10001,gid=10001,mode=0700
     healthcheck:
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health/ready HTTP/1.0\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '"]
       interval: 10s

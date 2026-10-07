@@ -140,6 +140,26 @@ class SourcePatternsTest
 		assertThat(found).as("secrets made with Rnd").isEmpty();
 	}
 	
+	/**
+	 * {@code a = ArrayUtils.add(b, x)} with another array than the one assigned: the copy-and-paste error that made
+	 * the Tower of Naia build three door lists from the pre-open ids.
+	 */
+	@Test
+	void arraysAreGrownFromThemselves() throws IOException
+	{
+		Pattern grown = Pattern.compile("(?<![\\w.])(\\w+)\\s*=\\s*ArrayUtils\\.add\\(\\s*(?!\\1\\b)(\\w+)\\s*,");
+		List<String> found = new ArrayList<String>();
+		for (Path file : sources())
+		{
+			String source = Files.readString(file).replace("\r", "");
+			Matcher matcher = grown.matcher(source);
+			while (matcher.find())
+				found.add(file + ":" + lineOf(source, matcher.start()) + " " + matcher.group(1) + " from " + matcher.group(2));
+		}
+		
+		assertThat(found).as("arrays grown from another array").isEmpty();
+	}
+	
 	private static boolean isConcurrent(String source, String name)
 	{
 		Matcher declaration = Pattern.compile("\\b" + name + "\\s*=\\s*[^;]*;").matcher(source);

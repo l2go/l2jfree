@@ -42,7 +42,9 @@ The image starts one process with both modules on PostgreSQL 18; see [deploy](de
 | Why was a decision made? | [Architecture decision records](docs/adr/README.md) |
 | What is planned and when is it done? | [Roadmap](docs/roadmap.md) and the [Platform 3.0 project board](https://github.com/users/l2go/projects/2) |
 | What does it look like? | [Architecture views](docs/architecture.md) |
-| What could go wrong? | [Risk register](docs/risks.md) |
+| How do I run and operate it? | [Runbook](docs/runbook.md) and the [deploy guide](deploy/README.md) |
+| What could go wrong? | [Risk register](docs/risks.md) and the [threat model](docs/threat-model.md) |
+| Is an image genuine? | [Image verification](docs/image-verification.md) |
 | Which document is current? | [Documentation index](docs/index.md) |
 | How are defects handled? | [Correctness program](#correctness-program) |
 

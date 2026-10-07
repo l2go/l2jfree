@@ -217,10 +217,11 @@ public final class GameStatusThread extends Thread
 			{
 				con = L2DatabaseFactory.getInstance().getConnection();
 				PreparedStatement stmt =
-						con.prepareStatement("SELECT COUNT(*) FROM player WHERE name = ? AND access_level >= 100");
+						con.prepareStatement("SELECT access_level FROM player WHERE name = ?");
 				stmt.setString(1, _gm);
 				ResultSet rs = stmt.executeQuery();
-				if (!rs.next())
+				// a name that is not a character gives no row, and a character below the GM level is no GM
+				if (!rs.next() || rs.getInt(1) < 100)
 				{
 					_print.println("No GMs of that name, disconnected...");
 					_print.flush();
@@ -240,6 +241,7 @@ public final class GameStatusThread extends Thread
 				_print.println("Error, disconnected...");
 				_print.flush();
 				_cSocket.close();
+				return;
 			}
 			finally
 			{
@@ -694,9 +696,16 @@ public final class GameStatusThread extends Thread
 							if (playerId != null)
 							{
 								java.sql.Connection con = null;
-								con = L2DatabaseFactory.getInstance().getConnection(con);
-								addItemToInventory(con, playerId, IdFactory.getInstance().getNextId(), itemId, amount,
-										0);
+								try
+								{
+									con = L2DatabaseFactory.getInstance().getConnection(con);
+									addItemToInventory(con, playerId, IdFactory.getInstance().getNextId(), itemId,
+											amount, 0);
+								}
+								finally
+								{
+									L2DatabaseFactory.close(con);
+								}
 								_print.println("ok - was offline");
 							}
 							else
