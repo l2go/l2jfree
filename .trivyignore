@@ -1,0 +1,5 @@
+# Exceptions to the vulnerability policy of SECURITY.md, one identifier per entry.
+# Each entry is preceded by a comment with the reason and the date it is reviewed again:
+#
+# # Reason: the vulnerable code path is not reachable (state why). Review: 2026-12-01.
+# CVE-0000-00000

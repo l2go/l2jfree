@@ -273,6 +273,32 @@ jobs:
       - name: Verify the image content
         run: deploy/verify-image.sh l2jfree:ci
 
+      # The policy of SECURITY.md: a fixed critical or high finding blocks the release, not the merge. The table is
+      # kept in the summary of the run, and the daily scan of the published image fails on a finding that blocks.
+      - name: Scan the image for known vulnerabilities
+        # a problem with the scanner or its database must not block a merge
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: l2jfree:ci
+          format: table
+          output: trivy.txt
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "0"
+          trivyignores: .trivyignore
+
+      - name: Keep the scan in the summary of the run
+        if: always()
+        run: |
+          {
+            echo "### Fixed critical and high vulnerabilities of the image"
+            echo
+            echo '```'
+            cat trivy.txt 2>/dev/null || echo "no scan report"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       # Every client of the load test comes from the address of the Docker gateway, and one address may open only so many
       # connections in a short time. The operator directory raises the limits, as an operator behind such an address does.
       - name: Raise the accept limits of the stack for the load
@@ -484,6 +510,25 @@ jobs:
           subject-name: ${{ env.REGISTRY_IMAGE }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
+
+      # The commands of docs/image-verification.md, run on the image that was just pushed: a signature, a provenance, or
+      # an SBOM that cannot be verified fails the pipeline of main.
+      - name: Verify the signature, the provenance, and the SBOM of the published image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          image="${REGISTRY_IMAGE}@${{ steps.push.outputs.digest }}"
+          cosign verify "$image" \
+            --certificate-identity "https://github.com/${GITHUB_REPOSITORY}/.github/workflows/build.yml@${GITHUB_REF}" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null
+          echo "signature verified"
+          gh attestation verify "oci://$image" --repo "$GITHUB_REPOSITORY" > /dev/null
+          echo "provenance verified"
+          packages="$(docker buildx imagetools inspect "$image" --format '{{ json .SBOM.SPDX }}' | jq '.packages | length')"
+          test "$packages" -gt 0 || { echo "::error::the SBOM of the image lists no packages"; exit 1; }
+          echo "SBOM lists $packages packages"
 
   # Measures the start of the server under the JVM configurations of ADR-0012. It runs on request (workflow_dispatch),
   # reports, and never fails the pipeline: a shared runner is too noisy to gate on, a run takes about twenty minutes,
