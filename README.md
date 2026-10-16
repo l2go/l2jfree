@@ -27,6 +27,8 @@ cd deploy
 docker compose up -d --wait
 ```
 
+The image supports `linux/amd64` and `linux/arm64`.
+
 The first start runs the `edge` image and takes a few minutes. When the command returns, login answers on port **2106** and the world on **7777**. The first login creates the account.
 
 ## Engineering
