@@ -10,6 +10,7 @@ import zipfile
 
 # Split literals keep the forbidden names out of this repository's history.
 FORBIDDEN_WORDS = (b"ala" b"tyr", b"bu" b"yan", b"oko" b"litsa", b"oko" b"lica")
+ARCHIVE_SUFFIXES = (".jar", ".zip", ".war", ".ear")
 REQUIRED_FILES = (
     "l2jfree-platform.jar", "config/server.properties", "config/loginserver.properties",
     "data/scripts.cfg", "catalog/npc_template.csv",
@@ -50,8 +51,12 @@ def inspect_file(name, data, findings):
                         inspect_file(entry.filename, archive.read(entry), nested)
                         findings.extend(f"{name}!/{finding}" for finding in nested)
         except (OSError, RuntimeError, ValueError, zipfile.BadZipFile) as error:
-            findings.append(f"unreadable archive: {name}: {error}")
-    elif Path(name).suffix.lower() in (".jar", ".zip"):
+            # A file can carry a zip signature without being an archive we ship, as the
+            # Jython standalone jar does for its Windows installer stubs. Those bytes were
+            # already scanned. A named archive that cannot be opened is still a failure.
+            if Path(name).suffix.lower() in ARCHIVE_SUFFIXES:
+                findings.append(f"unreadable archive: {name}: {error}")
+    elif Path(name).suffix.lower() in ARCHIVE_SUFFIXES:
         findings.append(f"unreadable archive: {name}")
 
 

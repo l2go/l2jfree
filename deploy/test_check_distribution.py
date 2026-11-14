@@ -9,6 +9,13 @@ import zipfile
 import check_distribution as checker
 
 
+def unreadable_zip():
+    payload = bytearray(archive({"A.class": b"ok"}))
+    at = payload.find(b"PK\x01\x02")
+    payload[at:at + 4] = b"PK\x00\x00"
+    return bytes(payload)
+
+
 def archive(entries):
     data = io.BytesIO()
     with zipfile.ZipFile(data, "w", compression=zipfile.ZIP_DEFLATED) as output:
@@ -70,6 +77,18 @@ class DistributionTest(unittest.TestCase):
         (self.root / "libs/broken.jar").unlink()
         (self.root / "data/link").symlink_to(self.root / "data/scripts.cfg")
         self.assertTrue(checker.check(self.root))
+
+    def test_scans_a_zip_like_binary_without_calling_it_an_archive(self):
+        blob = unreadable_zip() + checker.FORBIDDEN_WORDS[0]
+        self.assertTrue(zipfile.is_zipfile(io.BytesIO(blob)))
+        self.write("libs/server.jar", archive({"Lib/distutils/command/wininst-6.0.exe": blob}))
+        findings = checker.check(self.root)
+        self.assertTrue(any("forbidden content" in finding for finding in findings))
+        self.assertFalse(any("unreadable archive" in finding for finding in findings))
+
+    def test_rejects_a_named_archive_whose_directory_cannot_be_read(self):
+        self.write("libs/server.jar", archive({"Inner.jar": unreadable_zip()}))
+        self.assertTrue(any("unreadable archive" in finding for finding in checker.check(self.root)))
 
 
 if __name__ == "__main__":
