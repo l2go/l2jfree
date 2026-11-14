@@ -27,6 +27,9 @@ RUN set -eu; \
 
 FROM debian:trixie-20261005-slim@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f
 
+# The registry links the package to this repository from this label.
+LABEL org.opencontainers.image.source="https://github.com/l2go/l2jfree"
+
 # JRE native dependencies and the scripts' shell; utility commands come from coreutils.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates libstdc++6 zlib1g \
