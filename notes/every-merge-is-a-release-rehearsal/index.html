@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Every merge is a release rehearsal — L2JFree</title>
+<meta name="description" content="Both architectures check client sessions, restart, shutdown, and restore. Updates from edge are rehearsed when it is available; a versioned release requires completed update proofs. A separate amd64 job checks an empty catalog and a missing catalog directory.">
+<meta name="theme-color" content="#05060c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Every merge is a release rehearsal">
+<meta property="og:description" content="Both architectures check client sessions, restart, shutdown, and restore. Updates from edge are rehearsed when it is available; a versioned release requires completed update proofs. A separate amd64 job checks an empty catalog and a missing catalog directory.">
+<meta property="og:url" content="https://l2go.github.io/l2jfree/notes/every-merge-is-a-release-rehearsal/">
+<meta property="og:image" content="https://l2go.github.io/l2jfree/assets/img/covers/rehearsal.jpg">
+<meta property="article:published_time" content="2026-10-30">
+<meta property="article:modified_time" content="2026-11-15">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/l2jfree/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="author" href="/l2jfree/humans.txt">
+<link rel="preload" href="/l2jfree/assets/fonts/cinzel.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/l2jfree/assets/css/site.css">
+<script src="/l2jfree/assets/js/site.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" aria-hidden="true"></div>
+<header class="bar">
+  <a class="bar__mark" href="/l2jfree/">L2JFREE</a>
+  <nav aria-label="Sections">
+    <a href="/l2jfree/#start">Start</a>
+    <a class="opt" href="/l2jfree/#engineering">Engineering</a>
+    <a href="/l2jfree/#notes">Notes</a>
+    <a href="https://github.com/l2go/l2jfree">GitHub</a>
+  </nav>
+</header>
+<main id="main">
+<article>
+<header class="article-head">
+  <picture><source srcset="/l2jfree/assets/img/covers/rehearsal.webp" type="image/webp"><img src="/l2jfree/assets/img/covers/rehearsal.jpg" alt="" width="1600" height="667"></picture>
+  <div class="wrap">
+    <div class="crumbs"><a href="/l2jfree/#notes">Reviving L2JFree</a> · Part 4</div>
+    <h1>Every merge is a release rehearsal</h1>
+    <p class="dek">Both architectures check client sessions, restart, shutdown, and restore. Updates from edge are rehearsed when it is available; a versioned release requires completed update proofs. A separate amd64 job checks an empty catalog and a missing catalog directory.</p>
+    <div class="byline"><time datetime="2026-10-30">30 October 2026</time> · 8 min read · revised <time datetime="2026-11-15">15 November 2026</time></div>
+  </div>
+</header>
+<div class="prose">
+<p>Unit tests check local decisions. An operator also needs to know whether the delivered image admits a player and preserves accounts and characters across a restart, a restore, and an image replacement. L2JFree 3.3.0 records those deployment checks in <a href="https://github.com/l2go/l2jfree/blob/v3.3.0/.github/workflows/build.yml"><code>build.yml</code></a>.</p>
+<h2>The jobs and their boundaries</h2>
+<p>The <code>image-platform</code> matrix runs on native <code>ubuntu-24.04</code> and <code>ubuntu-24.04-arm</code> runners for amd64 and arm64. It waits for the build, PostgreSQL integration tests, and Jython syntax checks. Each architecture builds from the verified distribution and runs its own rehearsal. An architecture whose checks fail cannot publish its digest. The matrix has <code>fail-fast: false</code>, so the other architecture may still complete and publish.</p>
+<p>The required <code>image</code> job checks the result of both matrix entries. On a push to <code>main</code>, <code>image-index</code> then combines their digests and publishes the multi-platform <code>edge</code> and <code>sha-&lt;commit&gt;</code> tags. Neither tag is a per-architecture tag. The separate <code>empty-world</code> job depends on the build and does not publish an image or gate platform publication.</p>
+<h2>The rehearsal on each architecture</h2>
+<p><strong>1. Build and inspect.</strong> The content check verifies the platform and native runner, user 10001, Debian 13, Temurin 25, required distribution files, writable paths, and the absence of removed libraries. It checks <code>DatapackRoot = /opt/l2jfree</code> and <code>CatalogDirectory = /opt/l2jfree/catalog</code>, and requires startup to refuse a missing <code>L2JFREE_DB_URL</code>. A separate distribution scan rejects forbidden paths and content, including archive entries. These checks do not compare the whole datapack byte for byte with the repository.</p>
+<p>Trivy reports fixed critical and high vulnerabilities here without blocking the merge; a scanner error is also non-blocking in this job. The versioned release and daily scan enforce the policy in <a href="https://github.com/l2go/l2jfree/blob/v3.3.0/SECURITY.md"><code>SECURITY.md</code></a>.</p>
+<p><strong>2. Start it as an operator would.</strong> Run <code>docker compose up -d --wait</code> with the deployment Compose file. A probe sends the first login-protocol packet to port 2106 and connects to port 7777.</p>
+<p><strong>3. Complete one client session.</strong> The Java smoke client logs in, selects the server, creates a character, enters the world, and logs out. Later steps reuse this account and password.</p>
+<p><strong>4. Complete 24 sessions, six at a time.</strong> Each client has its own account. Concurrent account, character, and object-id allocation can expose races. This is a correctness scenario, not a capacity measurement or a combat test.</p>
+<p>The clients share the Docker gateway address. Before starting the stack, the job raises the connection-accept limits through the operator configuration, so that the address limit does not reject the intended concurrency.</p>
+<p><strong>5. Probe database boundaries.</strong> The login role can read <code>login.account</code> and cannot read <code>world.player</code> or <code>catalog.npc_template</code>. The world role can read the latter two and cannot read <code>login.account</code>. Neither role is a superuser or can create a schema or extension. These are selected probes, not an enumeration of every grant or a check of the report schema.</p>
+<p><strong>6. Read the startup log.</strong> The script summary must report at least 400 loaded scripts and zero failed scripts. Explicit script-loading failures, ERROR lines, and uncaught thread exceptions fail the job. WARN lines are printed for inspection and do not fail this log check. Both network ports must report epoll.</p>
+<p>The transport check catches a quiet failure mode: Netty's native library needs an executable unpack directory. With an unsuitable tmpfs it had fallen back to Java NIO. The image now supplies a suitable directory, and a selected native transport that cannot load stops startup.</p>
+<p><strong>7. Change the operator configuration.</strong> The job writes <code>MaximumOnlineUsers = 50</code> and an unknown <code>GuideProbe</code> key through the guide's <code>printf | docker compose exec -T server tee</code> command. After restart, a warning naming that key proves that the server read the operator file.</p>
+<p><strong>8. Restart and find the character.</strong> The first account must find exactly one character. The next session creates a second character; a new account is also checked after restart.</p>
+<p><strong>9. Check recording and diagnostics.</strong> Java Flight Recorder must have non-empty chunks in the log volume. The incident script collects logs, slow statements, database sessions, and a thread dump, and the stack must still serve afterwards.</p>
+<p><strong>10. Stop cleanly.</strong> The server must save and stop within Docker's grace period, without a forced kill. Compose allows 60 seconds because the save visits players sequentially.</p>
+<p><strong>11. Back up and restore.</strong> The guide's dump must contain accounts and players and omit the catalog supplied by the image. The job destroys the stack and its volumes, starts a clean stack, confirms the account is absent, restores the dump, and starts again. The original account must find its two characters, and the role probes run again.</p>
+<p><strong>12. Rehearse an update when edge exists.</strong> The job pulls the published <code>edge</code> image, starts it, and creates an account and character. It replaces that image with the candidate on the same volumes and requires the account and character to survive the migrations.</p>
+<p>If <code>edge</code> cannot be pulled, this step records <code>not-rehearsed</code>, emits a warning, and returns success. The first push can therefore publish without proving an update. Once edge is available, rerun both image jobs before a versioned release. A completed rehearsal writes the exact commit SHA to <code>update-rehearsal-amd64</code> or <code>update-rehearsal-arm64</code>; release verification requires both files to equal that commit.</p>
+<p><strong>13. Publish platform digests, then the index.</strong> On a push to main, each successful architecture publishes its image by digest, signs its runtime manifest, and attaches provenance. After both succeed, the index job assigns <code>edge</code> and <code>sha-&lt;commit&gt;</code>, signs and attests the index, and verifies the index and both platforms. Publication is a sequence: a later failure can leave an already-published object. A versioned release additionally requires a successful complete build run and the two completed update proofs.</p>
+<h2>An empty catalog is a separate fixture</h2>
+<p>The amd64-only <code>empty-world</code> job builds the same distribution into an image. It provides an existing data directory, an empty catalog directory, and a passport containing <code>world.id=empty</code> and <code>world.version=0</code>. The log must contain exactly one empty-world passport with a catalog revision, report readiness, and contain no ERROR, WARN, or stack trace. Both TCP ports must accept a connection. This checks the empty-content startup path, not a playable game.</p>
+<p>The negative case points <code>CatalogDirectory</code> at a directory that does not exist. Startup must stop and name both the configuration key and the missing path. An empty directory and an absent directory are different states. This job remains active in 3.3.0; its stricter WARN rule does not apply to the normal image log check.</p>
+<h2>What the evidence establishes</h2>
+<p>Each successful rehearsal records specific sessions and recovery operations on the delivered system. It does not prove every quest or combat mechanic, establish capacity, or certify every datapack file. The <a href="/l2jfree/notes/releases-promote-never-rebuild/">release workflow</a> consumes the successful run and update proofs before promoting a version.</p>
+</div>
+<nav class="series" aria-label="Series">
+<a href="/l2jfree/notes/one-save-one-transaction/"><small>Previous</small><span>One save, one transaction</span></a>
+<a class="later" href="/l2jfree/notes/releases-promote-never-rebuild/"><small>Next</small><span>Releases promote, never rebuild</span></a>
+</nav>
+</article>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot__top">
+      <span class="foot__mark" title="L2JFREE = SIGNED = 58">L2JFREE</span>
+      <nav aria-label="Project">
+        <a href="https://github.com/l2go/l2jfree">Repository</a>
+        <a href="https://github.com/l2go/l2jfree/releases">Releases</a>
+        <a href="https://github.com/l2go/l2jfree/blob/main/deploy/README.md">Deploy guide</a>
+        <a href="https://github.com/l2go/l2jfree/blob/main/SECURITY.md">Security</a>
+      </nav>
+    </div>
+    <p>Lineage II and NCSOFT are trademarks or registered trademarks of NCSOFT Corporation. L2JFree is an independent, non-commercial open-source project, not affiliated with, endorsed, or sponsored by NCSOFT. The project modernizes an archived open-source server; it adds no game content, and it does not modify, patch, or distribute the game client.</p>
+    <p>The code is under the GNU GPLv3. Banner art generated with AI. Cinzel typeface under the SIL Open Font License. <a class="sigma" href="/l2jfree/numbers/" title="The numbers">Σ</a></p>
+  </div>
+</footer>
+</body>
+</html>

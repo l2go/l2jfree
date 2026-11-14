@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>3.3.0 — L2JFree</title>
+<meta name="description" content="L2JFree 3.3.0 follows 3.1.1: kill rewards follow the configured rates, the signed image runs on Debian 13 for linux/amd64 and linux/arm64, and the Java engine lives under engine/java.">
+<meta name="theme-color" content="#05060c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="3.3.0 — L2JFree">
+<meta property="og:description" content="Kill rewards follow the configured rates. The image runs on Debian 13 for both architectures. The Java engine lives under engine/java.">
+<meta property="og:url" content="https://l2go.github.io/l2jfree/3.3.0/">
+<meta property="og:image" content="https://l2go.github.io/l2jfree/assets/img/og.jpg">
+<meta property="article:published_time" content="2026-11-14">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/l2jfree/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="author" href="/l2jfree/humans.txt">
+<link rel="preload" href="/l2jfree/assets/fonts/cinzel.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/l2jfree/assets/css/site.css">
+<script src="/l2jfree/assets/js/site.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" aria-hidden="true"></div>
+<header class="bar">
+  <a class="bar__mark" href="/l2jfree/">L2JFREE</a>
+  <nav aria-label="Sections">
+    <a href="/l2jfree/#start">Start</a>
+    <a class="opt" href="/l2jfree/#engineering">Engineering</a>
+    <a href="/l2jfree/#chronicle">Chronicle</a>
+    <a href="https://github.com/l2go/l2jfree">GitHub</a>
+  </nav>
+</header>
+<main id="main">
+<article>
+<header class="article-head">
+  <div class="wrap">
+    <div class="crumbs"><a href="/l2jfree/#chronicle">Chronicle</a> · 3.3.0</div>
+    <h1>3.3.0</h1>
+    <p class="dek">The release after 3.1.1. The datapack that shipped with 3.1.1 is still packed in the distribution.</p>
+    <div class="byline"><time datetime="2026-11-14">14 November 2026</time></div>
+  </div>
+</header>
+<div class="prose">
+<p>The full list is the <a href="https://github.com/l2go/l2jfree/blob/v3.3.0/CHANGELOG.md">changelog</a>. The changes a running server meets are these.</p>
+<h2>Rewards follow the rates</h2>
+<p>Vitality is off by default, so a kill pays the configured experience and SP without a vitality bonus. Set <code>EnableVitality = True</code> in <code>vitality.properties</code> to bring the bonus back. An ordinary monster's rewards follow the contribution of each solo player or party: experience and SP from the HP actually dealt, coins and items from a level-weighted share. A party that is the only side is paid when the monster dies, to members who are alive and in range.</p>
+<h2>The image</h2>
+<p>The signed image is published for <code>linux/amd64</code> and <code>linux/arm64</code>. Its base is Debian 13 slim. The distribution adds the native network transports for <code>linux/arm64</code>.</p>
+<h2>The Java engine</h2>
+<p>The Java modules moved under <code>engine/java</code>. Their artifact names are unchanged, and the datapack remains a module of the reactor.</p>
+<h2>Check the release</h2>
+<pre class="code">cosign verify ghcr.io/l2go/l2jfree:3.3.0 \
+  --certificate-identity https://github.com/l2go/l2jfree/.github/workflows/build.yml@refs/heads/main \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+gh release download v3.3.0 --repo l2go/l2jfree
+gh attestation verify l2jfree-3.3.0-compose.tar.gz --repo l2go/l2jfree \
+  --bundle l2jfree-3.3.0-compose.tar.gz.sigstore.json \
+  --signer-workflow l2go/l2jfree/.github/workflows/release.yml</pre>
+</div>
+</article>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot__top">
+      <span class="foot__mark" title="L2JFREE = SIGNED = 58">L2JFREE</span>
+      <nav aria-label="Project">
+        <a href="https://github.com/l2go/l2jfree">Repository</a>
+        <a href="https://github.com/l2go/l2jfree/releases">Releases</a>
+        <a href="https://github.com/l2go/l2jfree/blob/main/deploy/README.md">Deploy guide</a>
+        <a href="https://github.com/l2go/l2jfree/blob/main/SECURITY.md">Security</a>
+      </nav>
+    </div>
+    <p>Lineage II and NCSOFT are trademarks or registered trademarks of NCSOFT Corporation. L2JFree is an independent, non-commercial open-source project, not affiliated with, endorsed, or sponsored by NCSOFT. The project modernizes an archived open-source server; it adds no game content, and it does not modify, patch, or distribute the game client.</p>
+    <p>The code is under the GNU GPLv3. Banner art generated with AI. Cinzel typeface under the SIL Open Font License. <a class="sigma" href="/l2jfree/numbers/" title="The numbers">Σ</a></p>
+  </div>
+</footer>
+</body>
+</html>

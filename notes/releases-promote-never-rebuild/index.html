@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Releases promote, never rebuild — L2JFree</title>
+<meta name="description" content="The release workflow does not rebuild Java or the container image. It finds the image that main already built and tested, verifies its signature, provenance, and SBOM, waits for a human, and gives that exact digest a version.">
+<meta name="theme-color" content="#05060c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Releases promote, never rebuild">
+<meta property="og:description" content="The release workflow does not rebuild Java or the container image. It finds the image that main already built and tested, verifies its signature, provenance, and SBOM, waits for a human, and gives that exact digest a version.">
+<meta property="og:url" content="https://l2go.github.io/l2jfree/notes/releases-promote-never-rebuild/">
+<meta property="og:image" content="https://l2go.github.io/l2jfree/assets/img/covers/releases.jpg">
+<meta property="article:published_time" content="2026-10-30">
+<meta property="article:modified_time" content="2026-11-15">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/l2jfree/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="author" href="/l2jfree/humans.txt">
+<link rel="preload" href="/l2jfree/assets/fonts/cinzel.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/l2jfree/assets/css/site.css">
+<script src="/l2jfree/assets/js/site.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" aria-hidden="true"></div>
+<header class="bar">
+  <a class="bar__mark" href="/l2jfree/">L2JFREE</a>
+  <nav aria-label="Sections">
+    <a href="/l2jfree/#start">Start</a>
+    <a class="opt" href="/l2jfree/#engineering">Engineering</a>
+    <a href="/l2jfree/#notes">Notes</a>
+    <a href="https://github.com/l2go/l2jfree">GitHub</a>
+  </nav>
+</header>
+<main id="main">
+<article>
+<header class="article-head">
+  <picture><source srcset="/l2jfree/assets/img/covers/releases.webp" type="image/webp"><img src="/l2jfree/assets/img/covers/releases.jpg" alt="" width="1600" height="667"></picture>
+  <div class="wrap">
+    <div class="crumbs"><a href="/l2jfree/#notes">Reviving L2JFree</a> · Part 5</div>
+    <h1>Releases promote, never rebuild</h1>
+    <p class="dek">The release workflow does not rebuild Java or the container image. It finds the image that main already built and tested, verifies its signature, provenance, and SBOM, waits for a human, and gives that exact digest a version.</p>
+    <div class="byline"><time datetime="2026-10-30">30 October 2026</time> · 6 min read · revised <time datetime="2026-11-15">15 November 2026</time></div>
+  </div>
+</header>
+<div class="prose">
+<p>Most release pipelines rebuild. They check out a tag, compile, package, and publish. It feels natural, and it quietly breaks the promise that matters most: that what users run is what was tested. A rebuild pulls the base image again, resolves dependencies again, and runs on a different machine at a different time. The result is probably the same. "Probably" is a strange word to put in front of a release.</p>
+<h2>The decision</h2>
+<p>A release does not rebuild Java or the container image. It verifies an existing digest, prepares a small Compose bundle that pins it, and promotes the verified image after approval.</p>
+<p>On a push to <code>main</code>, both architectures run the checks described in <a href="/l2jfree/notes/every-merge-is-a-release-rehearsal/">part 4</a>. When both succeed, the index is published as <code>edge</code> and <code>sha-&lt;commit&gt;</code>, signed and attested. The first publication can precede a completed update rehearsal; a versioned release requires that missing evidence before promotion. No Java or container rebuild happens during release, though verification pulls the existing image and the workflow assembles the Compose archive.</p>
+<h2>What the release workflow does</h2>
+<p><a href="https://github.com/l2go/l2jfree/blob/v3.3.0/.github/workflows/release.yml"><code>release.yml</code></a> is started by hand with a version and, optionally, a commit. It has two jobs.</p>
+<p><strong><code>verify</code></strong> checks everything that can be checked without a person:</p>
+<ol>
+<li>The commit is on <code>main</code>, and the tag <code>v&lt;version&gt;</code> does not exist yet.</li>
+<li>The pipeline of <code>main</code> passed for that commit. The workflow selects a successful push run of <code>build.yml</code> on that exact SHA and requires its amd64 and arm64 update-rehearsal files to contain the same SHA.</li>
+<li>The image <code>sha-&lt;commit&gt;</code> exists. Its digest is resolved once and used from here on. An anonymous pull check requires the package to be publicly readable. The image also carries a source label linking it to this repository.</li>
+<li>The image is verified the way a user would verify it: the cosign signature against the identity of <code>build.yml</code> on <code>main</code>, the build provenance with <code>gh attestation verify</code>, and an SBOM that lists more than zero packages.</li>
+<li>Trivy scans the image under the vulnerability policy. A critical or high finding with a fix fails the release.</li>
+<li>The release notes are taken from the section of <code>CHANGELOG.md</code> with the same version. No section, no release. Publication additionally requires a dated version heading; a dry run can use the Unreleased section.</li>
+<li>The Compose bundle is built with the image pinned by digest, so the archive a user downloads cannot start a different image than the one verified.</li>
+</ol>
+<p>By default the workflow is a dry run and stops here. The dry run is how a release is rehearsed: it proves that everything is in place and shows the notes, and it publishes nothing.</p>
+<p><strong><code>publish</code></strong> runs only when the dry run flag is off, and only after a person approves it. It runs in a GitHub environment called <code>stable-release</code> with a required reviewer. The job sits and waits until the maintainer clicks "Approve and deploy".</p>
+<p>Then it gives the verified digest the tags <code>&lt;version&gt;</code> and <code>latest</code>, reads the digest back and compares it, verifies the signature once more under the new tag, attests the Compose bundle, attaches the Sigstore bundle of that attestation to the release, and creates the git tag at the commit and the GitHub release.</p>
+<h2>The supply chain around it</h2>
+<p>Promotion only helps if the thing promoted was built honestly. The rest of the chain:</p>
+<ul>
+<li><strong>Actions pinned by commit.</strong> Every third-party action in every workflow is referenced by a full SHA, with the version in a comment. Dependabot proposes updates. A moved tag in someone else's repository cannot change what runs.</li>
+<li><strong>Keyless signing.</strong> cosign signs with a short-lived certificate tied to the workflow identity through GitHub's OIDC token. There is no long-lived key to leak. The certificate says which workflow, on which branch, signed the image, and verification checks exactly that.</li>
+<li><strong>Provenance and SBOM.</strong> Each image carries an SLSA build provenance attestation and an SPDX SBOM.</li>
+<li><strong>A signed archive.</strong> The 3.3.0 release attaches <code>l2jfree-&lt;version&gt;-compose.tar.gz.sigstore.json</code>. A user can verify the archive with nothing but the release page and <code>gh</code>:</li>
+</ul>
+<pre class="code"><code class="language-sh">gh attestation verify l2jfree-3.3.0-compose.tar.gz --repo l2go/l2jfree \
+  --bundle l2jfree-3.3.0-compose.tar.gz.sigstore.json \
+  --signer-workflow l2go/l2jfree/.github/workflows/release.yml</code></pre>
+<p>The <code>--signer-workflow</code> flag matters: without it, a provenance from any workflow of the repository would pass.</p>
+<ul>
+<li><strong>Scanning under a stated policy.</strong> The Debian 13 image applies security updates when it is built on main. Both release platforms are scanned, and a fixed critical or high finding blocks release. The policy and narrowly scoped exceptions are recorded in <code>SECURITY.md</code>; future findings can still appear after publication.</li>
+<li><strong>Least privilege for tokens.</strong> Every workflow starts with read-only permissions. A job that writes packages or creates a release asks for that permission itself, in that job only.</li>
+</ul>
+<h2>What it cost</h2>
+<ul>
+<li><strong>The image has to still exist.</strong> A daily job deletes <code>sha-*</code> image versions older than 30 days, unless they carry another tag. A released digest carries its version tag, so the job never touches it; an unreleased commit older than a month can no longer be released. That is deliberate: a release should be cut from recent, rehearsed work, and the registry should not grow without bound.</li>
+<li><strong>Retention is an operator decision.</strong> Versioned tags protect a released digest from the automatic sha-tag cleanup, but a maintainer can still delete artifacts. The current repository publishes 3.3.0; earlier Git tags do not imply that their images or release archives exist here.</li>
+<li><strong>A release is only as good as <code>main</code>.</strong> There is no release branch to patch in isolation. A fix lands on <code>main</code>, passes the rehearsal, and is then promoted. For a project with one maintainer that is a simplification, not a loss.</li>
+<li><strong>A human in the loop.</strong> The approval step means a release cannot happen at 3 a.m. by accident, and also cannot happen at 3 a.m. on purpose without someone awake. That is the intended trade.</li>
+<li><strong>The workflow identity is part of the contract.</strong> Users verify against <code>build.yml@refs/heads/main</code> and <code>release.yml</code>. Renaming either workflow changes what users must type. It is written into the security policy for that reason.</li>
+</ul>
+<h2>How 3.3.0 was verified</h2>
+<p>Release 3.3.0 was published on 14 November 2026 from commit <code>6c832fa1e61027ee100dc2e9b2664e3700938104</code>. Its <a href="https://github.com/l2go/l2jfree/actions/runs/43637667500">build run</a> passed on both architectures, including completed update proofs. A <a href="https://github.com/l2go/l2jfree/actions/runs/43638685738">dry run</a> verified the candidate; the <a href="https://github.com/l2go/l2jfree/actions/runs/43638886488">publication run</a> verified it again and waited for the maintainer's approval.</p>
+<p>The release index is <code>sha256:e84141188f8163325f36565c6330a3d0060b5cbbc134e248366c37849cd979f3</code>. At publication, <code>3.3.0</code>, <code>latest</code>, <code>edge</code>, and <code>sha-6c832fa1e610</code> identified that index; the moving tags can change later.</p>
+<p>The downloaded Compose archive matched its published checksum, <code>5d8080c84c6f02a49bcbb30b6cdc4014e7497ef7a789c4918604fb341aa435de</code>. Independent <code>gh attestation verify</code> checks tied the archive to <code>release.yml</code> and the image index to <code>build.yml</code>, both for the release commit. The <a href="https://github.com/l2go/l2jfree/releases/tag/v3.3.0">release page</a> contains the archive, checksum, and Sigstore bundle.</p>
+</div>
+<nav class="series" aria-label="Series">
+<a href="/l2jfree/notes/every-merge-is-a-release-rehearsal/"><small>Previous</small><span>Every merge is a release rehearsal</span></a>
+<a class="later" href="/l2jfree/notes/starting-a-java-25-server/"><small>Next</small><span>Starting a Java 25 server: G1, ZGC, and an AOT cache that did not help</span></a>
+</nav>
+</article>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot__top">
+      <span class="foot__mark" title="L2JFREE = SIGNED = 58">L2JFREE</span>
+      <nav aria-label="Project">
+        <a href="https://github.com/l2go/l2jfree">Repository</a>
+        <a href="https://github.com/l2go/l2jfree/releases">Releases</a>
+        <a href="https://github.com/l2go/l2jfree/blob/main/deploy/README.md">Deploy guide</a>
+        <a href="https://github.com/l2go/l2jfree/blob/main/SECURITY.md">Security</a>
+      </nav>
+    </div>
+    <p>Lineage II and NCSOFT are trademarks or registered trademarks of NCSOFT Corporation. L2JFree is an independent, non-commercial open-source project, not affiliated with, endorsed, or sponsored by NCSOFT. The project modernizes an archived open-source server; it adds no game content, and it does not modify, patch, or distribute the game client.</p>
+    <p>The code is under the GNU GPLv3. Banner art generated with AI. Cinzel typeface under the SIL Open Font License. <a class="sigma" href="/l2jfree/numbers/" title="The numbers">Σ</a></p>
+  </div>
+</footer>
+</body>
+</html>
