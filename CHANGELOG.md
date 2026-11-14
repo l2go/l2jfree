@@ -4,7 +4,7 @@ Notable changes, in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) for
 
 ## [Unreleased]
 
-## [3.3.0]
+## [3.3.0] - 2026-11-14
 
 ### Added
 
