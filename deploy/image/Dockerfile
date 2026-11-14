@@ -31,8 +31,10 @@ FROM debian:trixie-20261005-slim@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e6
 LABEL org.opencontainers.image.source="https://github.com/l2go/l2jfree"
 
 # JRE native dependencies and the scripts' shell; utility commands come from coreutils.
+# Security updates published for this Debian release are applied here. The base snapshot stays pinned.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates libstdc++6 zlib1g \
+ && apt-get upgrade -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/* \
  && groupadd --gid 10001 l2jfree \
  && useradd --system --uid 10001 --gid 10001 --home-dir /var/lib/l2jfree --shell /usr/sbin/nologin l2jfree \
