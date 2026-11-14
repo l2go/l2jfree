@@ -19,3 +19,11 @@ Use an imperative, capitalized subject of about 70 characters with no final peri
 ## Pull requests
 
 Name the issue, what changes for a running server, how it was verified, and what is left out.
+
+## Release preparation
+
+Set the actual publication date in the changelog and the release page only when the release is approved.
+The release workflow checks anonymous image access and the update rehearsal for both architectures.
+For the first image, make the container package public and link it to this repository. Once `edge` exists,
+rerun both image jobs of the successful main build so they rehearse an update; a skipped rehearsal cannot pass
+release verification. The distribution check runs before either platform image is sent to the registry.

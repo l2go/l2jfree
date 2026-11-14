@@ -24,6 +24,8 @@ echo "verified platform: $platform; runner: $(uname -m)"
 user="$(docker image inspect --format '{{.Config.User}}' "$image")"
 [ "$user" = "10001:10001" ] || fail "the image must run as 10001:10001, found '$user'"
 
+# These variables belong to the container's shell.
+# shellcheck disable=SC2016
 inside '. /etc/os-release && [ "$ID" = debian ] && [ "$VERSION_ID" = 13 ]' || fail "the base is not Debian 13"
 inside 'java -version 2>&1 | head -n1 | grep -q "\"25\."' || fail "the JRE is not version 25"
 inside 'java -XshowSettings:properties -version 2>&1 | grep -q "java.vendor = Eclipse Adoptium"' \

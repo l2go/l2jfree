@@ -4,8 +4,21 @@ Notable changes, in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) for
 
 ## [Unreleased]
 
+## [3.3.0]
+
+### Added
+
+- The server reaches readiness on an empty or partial world and logs each missing component. A missing datapack or catalog directory stops startup and names the configuration key and path.
+- The image check fails when a datapack script fails to load.
+
 ### Changed
 
+- Vitality is off by default, so kill rewards follow the configured rates without a vitality bonus; set `EnableVitality = True` in `vitality.properties` to bring it back.
+- The image is published for linux/arm64 as well as linux/amd64; its base is Debian 13 slim instead of Arch Linux. The distribution adds the native network transports for linux/arm64.
+- An ordinary monster's rewards reflect the contribution of each solo player or party. Experience and SP are proportional to actual HP damage. Coins and items use contribution weighted by level, with a participation threshold of 10% of the total weight; a solo player or party with at least 60% of the total weight receives the items. Players far above the monster's level have less loot weight. Within a party, experience, SP, and coins are shared equally; items follow the party's loot rules. Only players alive and within reward range when the monster dies receive rewards. A party that is the only side is paid at the moment of death.
+- Loading an inventory skips an item whose template is missing, logs one warning, and keeps its database row.
+- Flyway sets the session notice level in a callback instead of `initSql`.
+- The Java engine moved to `engine/java`; module artifacts keep their names. The datapack remains a reactor module and is packed in the distribution.
 - Added the command that verifies a release archive against its Sigstore bundle to the security policy.
 - Added a one-sentence description to the front page; removed its support notice, which the security policy already states.
 - Replaced the front page cards with six engineering decisions and how each is enforced, placed before the architecture; removed the stack line from the banner.
@@ -14,7 +27,17 @@ Notable changes, in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) for
 
 ### Fixed
 
+- A merchant can trade in a world without castles.
+- A broken extensions file is reported as broken rather than missing.
+- Killing a monster gave no experience or SP.
+- A party share of experience was applied twice, and a party lost the coins left over from an equal split.
+- Entering the world failed without a dimensional rift and logged errors for lairs without a zone and for castles without a zone. The hourly door task logged an error when its door was absent.
+- A script rejected before loading, such as a Java script without bytecode, was missing from the loading summary.
 - Releases are titled by their tag, for example `v3.1.1`, instead of `Platform 3.1.1`.
+
+### Removed
+
+- `UPSTREAM_README.md`; it remains in the history.
 
 ## [3.1.1] - 2026-10-12
 
@@ -103,7 +126,8 @@ Final 2.x release: Java 25 bytecode, HikariCP, Jython 2.7.5b1, Logback configura
 the bundled datapack, CI unit tests, and dependency upgrades. See the
 [release](https://github.com/l2go/l2jfree/releases/tag/v2.5.0).
 
-[Unreleased]: https://github.com/l2go/l2jfree/compare/v3.1.1...HEAD
+[Unreleased]: https://github.com/l2go/l2jfree/compare/v3.3.0...HEAD
+[3.3.0]: https://github.com/l2go/l2jfree/compare/v3.1.1...v3.3.0
 [3.1.1]: https://github.com/l2go/l2jfree/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/l2go/l2jfree/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/l2go/l2jfree/compare/v2.5.0...v3.0.0

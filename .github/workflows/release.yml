@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version without the v, for example 3.0.0"
+        description: "Version without the v, for example 3.3.0"
         required: true
-        default: "3.0.0"
+        default: "3.3.0"
       commit:
         description: "Commit of main to release (a full sha); empty for the head of main"
         required: false
@@ -35,6 +35,7 @@ jobs:
     permissions:
       contents: read
       packages: read
+      actions: read
     outputs:
       commit: ${{ steps.resolve.outputs.commit }}
       digest: ${{ steps.resolve.outputs.digest }}
@@ -49,18 +50,31 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ inputs.version }}
           COMMIT: ${{ inputs.commit }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -euo pipefail
-          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::the version must look like 3.0.0"; exit 1; }
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::the version must look like 3.3.0"; exit 1; }
           git fetch origin main
           commit="${COMMIT:-$(git rev-parse origin/main)}"
           git merge-base --is-ancestor "$commit" origin/main || { echo "::error::$commit is not on main"; exit 1; }
           ! git rev-parse -q --verify "refs/tags/v$VERSION" > /dev/null || { echo "::error::the tag v$VERSION exists"; exit 1; }
-          passed="$(gh run list --workflow build.yml --event push --commit "$commit" --json conclusion --jq '[.[] | select(.conclusion == "success")] | length')"
-          [ "$passed" -ge 1 ] || { echo "::error::the pipeline of main did not pass for $commit"; exit 1; }
+          passed="$(gh run list --workflow build.yml --event push --commit "$commit" --json databaseId,conclusion --jq '[.[] | select(.conclusion == "success")][0].databaseId // empty')"
+          test -n "$passed" || { echo "::error::the pipeline of main did not pass for $commit"; exit 1; }
+          for arch in amd64 arm64; do
+            proof="$RUNNER_TEMP/update-rehearsal-$arch"
+            gh run download "$passed" --name "update-rehearsal-$arch" --dir "$proof"
+            test "$(cat "$proof/update-rehearsal.txt")" = "$commit" \
+              || { echo "::error::rerun the $arch image job after edge exists: the update was not rehearsed"; exit 1; }
+          done
+          if [ "$DRY_RUN" = false ]; then
+            grep -E "^## \[$VERSION\] - [0-9]{4}-[0-9]{2}-[0-9]{2}$" CHANGELOG.md \
+              || { echo "::error::set the actual release date in CHANGELOG.md before publishing"; exit 1; }
+          fi
           echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           digest="$(docker buildx imagetools inspect "$REGISTRY_IMAGE:sha-${commit::12}" --format '{{ .Manifest.Digest }}')"
           [[ "$digest" == sha256:* ]] || { echo "::error::no image for sha-${commit::12}"; exit 1; }
+          bash deploy/release/check-public-image.sh "$REGISTRY_IMAGE@$digest" \
+            || { echo "::error::make the container package public and link it to this repository before releasing"; exit 1; }
           echo "commit=$commit" >> "$GITHUB_OUTPUT"
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           echo "release $VERSION: commit $commit, image $REGISTRY_IMAGE@$digest"

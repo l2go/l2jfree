@@ -73,6 +73,11 @@ jobs:
       - name: Test the release bundle script
         run: bash deploy/release/test-bundle.sh
 
+      - name: Test the distribution publication check
+        run: |
+          python3 -B deploy/test_check_distribution.py
+          python3 -B deploy/test_image_checks.py
+
       # Unit tests run in this job. Tests tagged integration need PostgreSQL and run
       # in the integration job. Surefire excludes that tag unless -Dgroups is set.
       # Record the Maven build JVM so the baseline does not depend on Surefire.
@@ -281,8 +286,19 @@ jobs:
 
       - name: Verify the image content
         run: |
+          set -euo pipefail
           deploy/verify-image.sh l2jfree:ci linux/${{ matrix.arch }}
+          bash deploy/check-image-distribution.sh l2jfree:ci 2>&1 | tee distribution-purity.txt
           docker image inspect l2jfree:ci --format '{{.Size}} bytes' | tee image-size.txt
+
+      - name: Keep the distribution check
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: distribution-purity-${{ matrix.arch }}
+          path: distribution-purity.txt
+          if-no-files-found: warn
+          overwrite: true
 
       # The policy of SECURITY.md: a fixed critical or high finding blocks the release, not the merge. The table is
       # kept in the summary of the run, and the daily scan of the published image fails on a finding that blocks.
@@ -317,6 +333,7 @@ jobs:
           name: image-trivy-${{ matrix.arch }}
           path: trivy.txt
           if-no-files-found: warn
+          overwrite: true
 
       # Every client of the load test comes from the address of the Docker gateway, and one address may open only so many
       # connections in a short time. The operator directory raises the limits, as an operator behind such an address does.
@@ -366,7 +383,7 @@ jobs:
           docker compose -f deploy/compose.yaml logs --no-color server > server.log
           summary="$(grep 'Script loading summary' server.log | tail -1 || true)"
           echo "${summary:-no summary of the script loading}"
-          read -r loaded failed attempted < <(sed -nE 's/.*summary: ([0-9]+) loaded, ([0-9]+) failed from ([0-9]+) attempted.*/\1 \2 \3/p' <<< "$summary") || true
+          read -r loaded failed _ < <(sed -nE 's/.*summary: ([0-9]+) loaded, ([0-9]+) failed from ([0-9]+) attempted.*/\1 \2 \3/p' <<< "$summary") || true
           test -n "$loaded" || { echo "::error::the server log has no summary of the script loading"; exit 1; }
           test "$failed" = 0 || { echo "::error::$failed datapack scripts did not load"; exit 1; }
           test "$loaded" -ge 400 || { echo "::error::only $loaded datapack scripts were loaded, 400 or more are expected"; exit 1; }
@@ -503,9 +520,12 @@ jobs:
           OLD_IMAGE: ghcr.io/l2go/l2jfree:edge
         run: |
           set -euo pipefail
+          proof="$RUNNER_TEMP/update-rehearsal.txt"
+          echo not-rehearsed > "$proof"
           compose="docker compose -f deploy/compose.yaml"
           if ! docker pull "$OLD_IMAGE"; then
-            echo "::warning::$OLD_IMAGE cannot be pulled, so the update was not rehearsed"
+            echo "::warning::$OLD_IMAGE cannot be pulled; rerun this image job after edge exists, before releasing"
+            echo '### Update rehearsal not run: rerun the image job after edge is available. Release verification requires a completed rehearsal.' >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           L2JFREE_IMAGE=l2jfree:ci $compose down -v
@@ -518,6 +538,17 @@ jobs:
           test "$(docker inspect -f '{{.Config.Image}}' l2jfree-server-1)" = "$NEW_IMAGE"
           python3 deploy/probe/login_init.py --host 127.0.0.1 --port 2106 --timeout 60
           java -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240 --account smokeupdate --password "$password" --existing-characters 1
+          echo "$GITHUB_SHA" > "$proof"
+          echo '### Update rehearsal completed: the account and character survived the image replacement.' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the update rehearsal result
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: update-rehearsal-${{ matrix.arch }}
+          path: ${{ runner.temp }}/update-rehearsal.txt
+          if-no-files-found: warn
+          overwrite: true
 
       - name: Show the service logs after a failure
         if: failure()
@@ -591,6 +622,7 @@ jobs:
           name: image-digest-${{ matrix.arch }}
           path: digests/*
           if-no-files-found: error
+          overwrite: true
 
   # The rules of main require one check named image. It passes only when the image of every platform passed, and it
   # runs even when one failed, because a skipped required check would count as passed.

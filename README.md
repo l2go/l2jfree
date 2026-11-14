@@ -82,7 +82,7 @@ Java Flight Recorder keeps the last 12 hours. PostgreSQL counts every statement 
 </tr>
 </table>
 
-The decisions in code: the [architecture rules](engine/java/platform/src/test/java/com/l2jfree/platform/ArchitectureTest.java) between the modules, a player save in [one transaction](https://github.com/l2go/l2jfree/pull/162), and a weight-check bypass closed by [a wider type](https://github.com/l2go/l2jfree/pull/193). The [engineering notes](https://l2go.github.io/l2jfree/#notes) on the project site take one decision at a time.
+The decisions in code: the [architecture rules](engine/java/platform/src/test/java/com/l2jfree/platform/ArchitectureTest.java) between the modules, a player save in [one transaction](https://github.com/l2go/l2jfree/commit/2ff5e85e5b38725b7fd7d4ee9e580ace6c9d5d72), and a weight-check bypass closed by [a wider type](https://github.com/l2go/l2jfree/commit/79a4eef43968d9230668b27d5bf6e3712a68a42b). The [engineering notes](https://l2go.github.io/l2jfree/#notes) on the project site take one decision at a time.
 
 ## Architecture
 
