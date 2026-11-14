@@ -14,7 +14,7 @@ Notable changes, in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) for
 ### Changed
 
 - Vitality is off by default, so kill rewards follow the configured rates without a vitality bonus; set `EnableVitality = True` in `vitality.properties` to bring it back.
-- The image is published for linux/arm64 as well as linux/amd64; its base is Debian 13 slim instead of Arch Linux. The distribution adds the native network transports for linux/arm64.
+- The image is published for linux/arm64 as well as linux/amd64; its base is Debian 13 slim instead of Arch Linux. The distribution adds the native network transports for linux/arm64. Security updates published for that Debian release are applied at build time; the base snapshot stays pinned.
 - An ordinary monster's rewards reflect the contribution of each solo player or party. Experience and SP are proportional to actual HP damage. Coins and items use contribution weighted by level, with a participation threshold of 10% of the total weight; a solo player or party with at least 60% of the total weight receives the items. Players far above the monster's level have less loot weight. Within a party, experience, SP, and coins are shared equally; items follow the party's loot rules. Only players alive and within reward range when the monster dies receive rewards. A party that is the only side is paid at the moment of death.
 - Loading an inventory skips an item whose template is missing, logs one warning, and keeps its database row.
 - Flyway sets the session notice level in a callback instead of `initSql`.
