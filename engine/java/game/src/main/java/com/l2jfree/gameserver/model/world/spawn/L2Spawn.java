@@ -535,13 +535,6 @@ public class L2Spawn
 	 */
 	public L2Npc doSpawn(boolean isSummonSpawn, boolean firstspawn)
 	{
-		if (!ThreadPoolManager.getInstance().isWorldThread())
-		{
-			L2Npc[] spawned = new L2Npc[1];
-			ThreadPoolManager.getInstance().runOnWorld(() -> spawned[0] = doSpawn(isSummonSpawn, firstspawn));
-			return spawned[0];
-		}
-		
 		L2Npc mob = null;
 		try
 		{

@@ -92,7 +92,7 @@ public final class Disconnection
 				boolean saved = false;
 				for (int attempt = 1; attempt <= STORE_ATTEMPTS && !saved; attempt++)
 				{
-					saved = _activeChar.store(true, true);
+					saved = _activeChar.storeFinal();
 					if (!saved)
 						_log.warn("Saving " + _activeChar.getName() + " on disconnect failed, attempt " + attempt + " of "
 								+ STORE_ATTEMPTS);

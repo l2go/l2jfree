@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BooleanSupplier;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -6541,12 +6542,24 @@ public final class L2Player extends L2Playable
 	
 	public static void disconnectIfOnline(int objectId)
 	{
+		disconnectIfOnline(objectId, null);
+	}
+	
+	private static void disconnectIfOnline(int objectId, BooleanSupplier current)
+	{
+		if (current != null && !current.getAsBoolean())
+			return;
+		
 		L2Player onlinePlayer = L2World.getInstance().findPlayer(objectId);
 		
 		if (onlinePlayer == null)
 			onlinePlayer = L2World.getInstance().getPlayer(CharNameTable.getInstance().getByObjectId(objectId));
 		
 		if (onlinePlayer == null)
+			return;
+		
+		// A newer selection published this character while the old load was still reading.
+		if (current != null && !current.getAsBoolean())
 			return;
 		
 		if (!onlinePlayer.isInOfflineMode())
@@ -6577,7 +6590,22 @@ public final class L2Player extends L2Playable
 	 */
 	public static L2Player load(int objectId)
 	{
-		disconnectIfOnline(objectId);
+		return load(objectId, null);
+	}
+	
+	/**
+	 * @param current when set, a load that is no longer the session's selection does not disconnect whoever is online
+	 *            and does not return the player it built
+	 */
+	public static L2Player load(int objectId, BooleanSupplier current)
+	{
+		if (current != null && !current.getAsBoolean())
+			return null;
+		
+		disconnectIfOnline(objectId, current);
+		
+		if (current != null && !current.getAsBoolean())
+			return null;
 		
 		L2Player player = null;
 		
@@ -6767,6 +6795,12 @@ public final class L2Player extends L2Playable
 		catch (Exception e)
 		{
 			_log.error("Failed loading character.", e);
+		}
+		
+		if (player != null && current != null && !current.getAsBoolean())
+		{
+			player.stopAllTimers();
+			return null;
 		}
 		
 		return player;
@@ -6986,6 +7020,9 @@ public final class L2Player extends L2Playable
 	
 	private final AtomicInteger _saveGeneration = new AtomicInteger();
 	
+	/** Set when logout's save has claimed the row. A later snapshot does not replace it. */
+	private boolean _finalSave;
+	
 	private final AtomicBoolean _backgroundSave = new AtomicBoolean();
 	
 	public void store()
@@ -6999,48 +7036,75 @@ public final class L2Player extends L2Playable
 	}
 	
 	/**
-	 * @return false if the save was rolled back and nothing of it reached the database
+	 * @return false when the write did not commit. A skipped snapshot is not a success.
 	 */
 	public boolean store(boolean items, boolean storeActiveEffects)
 	{
-		final boolean[] deleted = { false };
-		final int[] generation = { 0 };
-		final PlayerSave[] captured = { null };
-		final boolean[] committed = { true };
-		
-		// The snapshot is taken under the player monitor. JDBC runs after that monitor is released.
-		ThreadPoolManager.releaseThen(this, () -> {
-			_lastStore = System.currentTimeMillis();
-			deleted[0] = getOnlineState() == ONLINE_STATE_DELETED;
-			if (!deleted[0])
-			{
-				generation[0] = _saveGeneration.incrementAndGet();
-				captured[0] = capturePlayerSave();
-			}
-		}, () -> {
-			if (deleted[0])
-				return;
-			
+		return store(items, storeActiveEffects, false);
+	}
+	
+	/** Logout's save. It recopies the character once it owns the row, and a later snapshot does not replace it. */
+	public boolean storeFinal()
+	{
+		return store(true, true, true);
+	}
+	
+	private boolean store(boolean items, boolean storeActiveEffects, boolean logout)
+	{
+		if (logout)
+		{
 			synchronized (_saveLock)
 			{
-				// A logout or a newer save owns the row. This snapshot must not overwrite it.
-				if (generation[0] != _saveGeneration.get() || getOnlineState() == ONLINE_STATE_DELETED)
-					return;
-				
-				committed[0] = WorldTransaction.run("Saving player " + getName(), () -> {
-					if (Config.UPDATE_ITEMS_ON_CHAR_STORE || items)
-						getInventory().updateDatabase();
-					L2Summon pet = getPet();
-					if (pet != null && pet.getInventory() != null)
-						pet.getInventory().updateDatabase();
-					storePet();
-					PlayerRepository.getInstance().savePlayer(captured[0]);
-					getEffects().storeEffects(storeActiveEffects);
-				});
+				if (getOnlineState() == ONLINE_STATE_DELETED)
+					return false;
+				_finalSave = true;
 			}
-		});
+			final PlayerSave captured;
+			synchronized (this)
+			{
+				_lastStore = System.currentTimeMillis();
+				captured = capturePlayerSave();
+			}
+			synchronized (_saveLock)
+			{
+				ThreadPoolManager.enterBackgroundJdbc();
+				return writePlayer(items, storeActiveEffects, captured);
+			}
+		}
 		
-		return deleted[0] || committed[0];
+		final int generation;
+		final PlayerSave captured;
+		synchronized (this)
+		{
+			if (getOnlineState() == ONLINE_STATE_DELETED)
+				return false;
+			_lastStore = System.currentTimeMillis();
+			generation = _saveGeneration.incrementAndGet();
+			captured = capturePlayerSave();
+		}
+		synchronized (_saveLock)
+		{
+			// Someone copied a newer snapshot, or logout already claimed the row. This copy is not written.
+			if (getOnlineState() == ONLINE_STATE_DELETED || _finalSave || generation != _saveGeneration.get())
+				return false;
+			
+			ThreadPoolManager.enterBackgroundJdbc();
+			return writePlayer(items, storeActiveEffects, captured);
+		}
+	}
+	
+	private boolean writePlayer(boolean items, boolean storeActiveEffects, PlayerSave captured)
+	{
+		return WorldTransaction.run("Saving player " + getName(), () -> {
+			if (Config.UPDATE_ITEMS_ON_CHAR_STORE || items)
+				getInventory().updateDatabase();
+			L2Summon pet = getPet();
+			if (pet != null && pet.getInventory() != null)
+				pet.getInventory().updateDatabase();
+			storePet();
+			PlayerRepository.getInstance().savePlayer(captured);
+			getEffects().storeEffects(storeActiveEffects);
+		});
 	}
 	
 	/**

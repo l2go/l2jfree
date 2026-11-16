@@ -15,14 +15,23 @@
 package com.l2jfree.gameserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import com.l2jfree.gameserver.gameobjects.L2Creature;
+import com.l2jfree.gameserver.gameobjects.status.CreatureStatus;
+import com.l2jfree.util.concurrent.L2RejectedExecutionHandler;
 
 /**
  * The world thread keeps moving while background JDBC waits, a second save is not started until the first
@@ -187,6 +196,133 @@ class WorldBoundaryTest
 		{
 			release.countDown();
 		}
+	}
+	
+	@Test
+	void hpChangeUnderTheCreatureMonitorDoesNotWaitForTheWorld() throws Exception
+	{
+		L2Creature creature = mock(L2Creature.class, RETURNS_DEEP_STUBS);
+		CreatureStatus status = new CreatureStatus(creature);
+		CountDownLatch holderHasMonitor = new CountDownLatch(1);
+		CountDownLatch worldEntered = new CountDownLatch(1);
+		Thread holder = new Thread(() -> {
+			synchronized (creature)
+			{
+				holderHasMonitor.countDown();
+				try
+				{
+					Thread.sleep(200);
+				}
+				catch (InterruptedException e)
+				{
+					Thread.currentThread().interrupt();
+				}
+				status.setCurrentHp(0);
+			}
+		});
+		holder.start();
+		ThreadPoolManager.getInstance().execute(() -> {
+			await(holderHasMonitor);
+			synchronized (creature)
+			{
+				worldEntered.countDown();
+			}
+		});
+		assertThat(worldEntered.await(3, TimeUnit.SECONDS)).isTrue();
+		holder.join(1000);
+		assertThat(holder.isAlive()).isFalse();
+	}
+	
+	@Test
+	void aWorldStepIsNotSplitByAnotherWorldTask() throws Exception
+	{
+		AtomicInteger phase = new AtomicInteger();
+		AtomicBoolean sawMiddle = new AtomicBoolean();
+		CountDownLatch middle = new CountDownLatch(1);
+		CountDownLatch release = new CountDownLatch(1);
+		CountDownLatch finished = new CountDownLatch(1);
+		CountDownLatch observed = new CountDownLatch(1);
+		Thread caller = new Thread(() -> {
+			ThreadPoolManager.getInstance().runOnWorld(() -> {
+				phase.set(1);
+				middle.countDown();
+				await(release);
+				phase.set(2);
+			});
+			finished.countDown();
+		});
+		caller.start();
+		assertThat(middle.await(5, TimeUnit.SECONDS)).isTrue();
+		ThreadPoolManager.getInstance().execute(() -> {
+			if (phase.get() == 1)
+				sawMiddle.set(true);
+			observed.countDown();
+		});
+		release.countDown();
+		assertThat(finished.await(5, TimeUnit.SECONDS)).isTrue();
+		assertThat(observed.await(5, TimeUnit.SECONDS)).isTrue();
+		assertThat(sawMiddle).isFalse();
+		assertThat(phase).hasValue(2);
+	}
+	
+	@Test
+	void handedOffApplyReportsTheFailureAndSkipsTheNextStep()
+	{
+		AtomicBoolean next = new AtomicBoolean();
+		assertThatThrownBy(() -> ThreadPoolManager.getInstance().runOnWorld(() -> {
+			throw new IllegalStateException("apply failed");
+		})).isInstanceOf(IllegalStateException.class).hasMessage("apply failed");
+		assertThat(next).isFalse();
+		
+		assertThatThrownBy(() -> ThreadPoolManager.getInstance().runOnWorld(() -> {
+			throw new AssertionError("apply error");
+		})).isInstanceOf(AssertionError.class).hasMessage("apply error");
+	}
+	
+	@Test
+	void aClosedWorldDoesNotLeaveTheCallerWaiting()
+	{
+		ScheduledThreadPoolExecutor world = new ScheduledThreadPoolExecutor(1);
+		world.setRejectedExecutionHandler(new L2RejectedExecutionHandler());
+		world.shutdown();
+		assertThatThrownBy(() -> ThreadPoolManager.applyOn(false, world, () -> {
+		})).isInstanceOf(RejectedExecutionException.class);
+	}
+	
+	@Test
+	void interruptingTheCallerDoesNotLeaveTheApplyOrTheCallerHanging() throws Exception
+	{
+		ScheduledThreadPoolExecutor world = new ScheduledThreadPoolExecutor(1);
+		world.setRejectedExecutionHandler(new L2RejectedExecutionHandler());
+		CountDownLatch started = new CountDownLatch(1);
+		CountDownLatch release = new CountDownLatch(1);
+		AtomicBoolean finished = new AtomicBoolean();
+		Thread caller = new Thread(() -> ThreadPoolManager.applyOn(false, world, () -> {
+			started.countDown();
+			await(release);
+			finished.set(true);
+		}));
+		caller.start();
+		assertThat(started.await(5, TimeUnit.SECONDS)).isTrue();
+		caller.interrupt();
+		caller.join(3000);
+		assertThat(caller.isAlive()).isFalse();
+		release.countDown();
+		for (int i = 0; i < 50 && !finished.get(); i++)
+			Thread.sleep(20);
+		assertThat(finished).isTrue();
+		world.shutdownNow();
+	}
+	
+	@Test
+	void aRejectedBackgroundStartClearsTheInflightFlag()
+	{
+		AtomicBoolean inflight = new AtomicBoolean();
+		assertThatThrownBy(() -> ThreadPoolManager.startOnce(inflight, () -> {
+		}, task -> {
+			throw new RejectedExecutionException("pool stopped");
+		})).isInstanceOf(RejectedExecutionException.class);
+		assertThat(inflight).isFalse();
 	}
 	
 	private static void await(CountDownLatch latch)

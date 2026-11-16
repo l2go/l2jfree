@@ -21,6 +21,7 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -169,6 +170,9 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	/** Bumped on every change that clears {@link #_storedInDb}. A write applies its flags only when this is unchanged. */
 	private int _revision;
 	
+	/** Orders every physical write of this item. It is not the item monitor, and SQL runs while holding it. */
+	private final ReentrantLock _writeLock = new ReentrantLock();
+	
 	private ScheduledFuture<?> itemLootShedule = null;
 	
 	/**
@@ -255,7 +259,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	 * @param owner_id :
 	 *            int designating the ID of the owner
 	 */
-	public void setOwnerId(int owner_id)
+	public synchronized void setOwnerId(int owner_id)
 	{
 		if (owner_id == _ownerId)
 			return;
@@ -296,7 +300,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	 * @param loc_data :
 	 *            int designating the slot where the item is stored or the village for freights
 	 */
-	public void setLocation(ItemLocation loc, int loc_data)
+	public synchronized void setLocation(ItemLocation loc, int loc_data)
 	{
 		if (loc != ItemLocation.VOID)
 			_huntReward = false;
@@ -622,7 +626,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	 * @param price :
 	 *            long designating the price
 	 */
-	public void setPriceToSell(long price)
+	public synchronized void setPriceToSell(long price)
 	{
 		_priceSell = price;
 		_storedInDb = false;
@@ -645,7 +649,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	 * @param price :
 	 *            long
 	 */
-	public void setPriceToBuy(long price)
+	public synchronized void setPriceToBuy(long price)
 	{
 		_priceBuy = price;
 		_storedInDb = false;
@@ -829,7 +833,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	 * 
 	 * @param enchantLevel
 	 */
-	public void setEnchantLevel(int enchantLevel)
+	public synchronized void setEnchantLevel(int enchantLevel)
 	{
 		if (_enchantLevel == enchantLevel)
 			return;
@@ -1079,7 +1083,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	 * @param resetConsumingMana
 	 *            a new consumption task if item is equipped
 	 */
-	public void decreaseMana(boolean resetConsumingMana)
+	public synchronized void decreaseMana(boolean resetConsumingMana)
 	{
 		if (!isShadowItem())
 			return;
@@ -1265,78 +1269,109 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		}
 	};
 	
+	/** One physical write at a time. The item monitor stays free, so {@link #changeCount} can run during the SQL. */
+	public void lockWrite()
+	{
+		_writeLock.lock();
+	}
+	
+	public void unlockWrite()
+	{
+		_writeLock.unlock();
+	}
+	
 	/**
-	 * Copies the row under the item monitor, releases it, then writes. {@link #changeCount} can proceed during the
-	 * SQL. Flags move only when the item has not changed since the copy, and a rollback puts them back.
+	 * Copies the row under the item monitor, then writes it on this connection. Existence follows the INSERT or
+	 * DELETE even when the item changes during the SQL. {@code _storedInDb} is the separate claim that the row
+	 * still matches memory. Attributes of a new row are written on the same connection after the insert exists.
 	 */
 	private void writeOn(Connection con, boolean force)
 	{
-		final UpdateMode mode;
-		final ItemRepository.ItemRow row;
-		final int ownerKey;
-		final int revision;
-		final boolean existed;
-		final boolean stored;
-		final L2Augmentation augmentation;
-		final boolean[] removed = { false };
-		
-		synchronized (this)
+		// A caller that already holds the item monitor, such as a drop, must not wait on the write lock:
+		// the write lock is taken before that monitor, and the two orders would deadlock.
+		if (Thread.holdsLock(this))
 		{
-			mode = getUpdateMode(force);
-			if (mode == UpdateMode.NONE)
-				return;
-			
-			row = toRow();
-			ownerKey = getStoredOwnerKey();
-			revision = _revision;
-			existed = _existsInDb;
-			stored = _storedInDb;
-			augmentation = _augmentation;
-			if (mode == UpdateMode.REMOVE)
-			{
-				_augmentation = null;
-				removed[0] = true;
-			}
-		}
-		
-		if (WorldTransaction.current() != null)
-		{
-			WorldTransaction.onRollback(() -> {
-				synchronized (L2ItemInstance.this)
-				{
-					if (_revision != revision)
-						return;
-					_existsInDb = existed;
-					_storedInDb = stored;
-					if (removed[0])
-						_augmentation = augmentation;
-				}
-			});
-		}
-		
-		ThreadPoolManager.enterBackgroundJdbc();
-		if (!applyWrite(con, mode, row, ownerKey))
+			writeHolding(con, force);
 			return;
+		}
 		
-		if (mode == UpdateMode.INSERT && (_elementals != null || _augmentation != null))
-			saveAttributes(con, "store attributes");
-		
-		synchronized (this)
+		_writeLock.lock();
+		try
 		{
-			if (_revision != revision)
+			writeHolding(con, force);
+		}
+		finally
+		{
+			_writeLock.unlock();
+		}
+	}
+	
+	private void writeHolding(Connection con, boolean force)
+	{
+			final UpdateMode mode;
+			final ItemRepository.ItemRow row;
+			final int ownerKey;
+			final int revision;
+			final boolean existed;
+			final boolean stored;
+			final L2Augmentation augmentation;
+			final boolean[] removed = { false };
+			
+			synchronized (this)
+			{
+				mode = getUpdateMode(force);
+				if (mode == UpdateMode.NONE)
+					return;
+				
+				row = toRow();
+				ownerKey = getStoredOwnerKey();
+				revision = _revision;
+				existed = _existsInDb;
+				stored = _storedInDb;
+				augmentation = _augmentation;
+				if (mode == UpdateMode.REMOVE)
+				{
+					_augmentation = null;
+					removed[0] = true;
+				}
+			}
+			
+			if (WorldTransaction.current() != null)
+			{
+				WorldTransaction.onRollback(() -> {
+					synchronized (L2ItemInstance.this)
+					{
+						_existsInDb = existed;
+						if (removed[0])
+							_augmentation = augmentation;
+						_storedInDb = _revision == revision && stored;
+						if (_revision != revision)
+							_storedInDb = false;
+					}
+				});
+			}
+			
+			ThreadPoolManager.enterBackgroundJdbc();
+			if (!applyWrite(con, mode, row, ownerKey))
 				return;
 			
-			if (mode == UpdateMode.REMOVE)
+			if (mode == UpdateMode.INSERT)
 			{
-				_existsInDb = false;
-				_storedInDb = false;
+				synchronized (this)
+				{
+					_existsInDb = true;
+				}
+				saveAttributes(con, "store attributes");
 			}
-			else
+			
+			synchronized (this)
 			{
-				_existsInDb = true;
-				_storedInDb = true;
+				if (mode == UpdateMode.REMOVE)
+					_existsInDb = false;
+				else
+					_existsInDb = true;
+				_storedInDb = mode != UpdateMode.REMOVE && _revision == revision;
 			}
-		}
 	}
 	
 	private boolean applyWrite(Connection con, UpdateMode mode, ItemRepository.ItemRow row, int ownerKey)
@@ -1365,11 +1400,23 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		}
 	}
 
-	/** Records a successful synchronous exchange write before queued writers inspect this item. */
-	public synchronized void markStoredAfterExchange(boolean exists)
+	/** Records a successful exchange write. Shares the write order of a queued or transactional save. */
+	public void markStoredAfterExchange(boolean exists)
 	{
-		_existsInDb = exists;
-		_storedInDb = true;
+		_writeLock.lock();
+		try
+		{
+			synchronized (this)
+			{
+				_existsInDb = exists;
+				_storedInDb = true;
+				_revision++;
+			}
+		}
+		finally
+		{
+			_writeLock.unlock();
+		}
 	}
 	
 	private UpdateMode getUpdateMode(boolean force)

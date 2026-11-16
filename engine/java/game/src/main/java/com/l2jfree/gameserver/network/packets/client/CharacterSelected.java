@@ -50,19 +50,41 @@ public final class CharacterSelected extends L2ClientPacket
 	{
 		// should always be null
 		// but if not then this is repeated packet and nothing should be done here
-		if (getClient().getActiveChar() != null)
+		final int token = getClient().beginCharacterLoad();
+		if (token == 0)
 			return;
 		
 		final int slot = _charSlot;
 		ThreadPoolManager.getInstance().executeLongRunning(() -> {
-			ThreadPoolManager.enterBackgroundJdbc();
-			final L2Player cha = getClient().loadCharFromDisk(slot);
-			ThreadPoolManager.getInstance().runOnWorld(() -> enterWorld(cha));
+			if (!getClient().characterLoadOpen(token))
+				return;
+			
+			final L2Player cha;
+			try
+			{
+				ThreadPoolManager.enterBackgroundJdbc();
+				if (!getClient().characterLoadOpen(token))
+					return;
+				cha = getClient().loadCharFromDisk(slot, token);
+			}
+			catch (RuntimeException e)
+			{
+				getClient().abandonCharacterLoad(token);
+				throw e;
+			}
+			ThreadPoolManager.getInstance().runOnWorld(() -> enterWorld(cha, token));
 		});
 	}
 	
-	private void enterWorld(L2Player cha)
+	private void enterWorld(L2Player cha, int token)
 	{
+		if (!getClient().claimCharacterLoad(token))
+		{
+			if (cha != null)
+				cha.stopAllTimers();
+			return;
+		}
+		
 		if (cha == null)
 		{
 			_log.error(getClient() + ": character couldn't be loaded (slot:" + _charSlot + ")");

@@ -15,8 +15,10 @@
 package com.l2jfree.util.concurrent;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -70,6 +72,15 @@ class VirtualTaskExecutorTest
 		assertThat(executor.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
 		assertThat(executor.getActiveCount()).isZero();
 		assertThat(executor.getCompletedTaskCount()).isEqualTo(1);
+	}
+	
+	@Test
+	void aTaskSubmittedAfterShutdownIsRejected()
+	{
+		VirtualTaskExecutor executor = new VirtualTaskExecutor("probe");
+		executor.shutdown();
+		assertThatThrownBy(() -> executor.execute(() -> {
+		})).isInstanceOf(RejectedExecutionException.class);
 	}
 	
 	private static void awaitQuietly(CountDownLatch latch)

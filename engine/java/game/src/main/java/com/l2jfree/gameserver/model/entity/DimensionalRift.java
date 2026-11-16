@@ -108,30 +108,7 @@ public class DimensionalRift
 			@Override
 			public void run()
 			{
-				if (_choosenRoom > -1)
-					DimensionalRiftManager.getInstance().getRoom(_roomType, _choosenRoom).unspawn();
-				
-				if (reasonTP && jumps_current < getMaxJumps() && _party.getMemberCount() > deadPlayers.size())
-				{
-					jumps_current++;
-					
-					_completedRooms.add(_choosenRoom);
-					_choosenRoom = -1;
-					
-					for (L2Player p : _party.getPartyMembers())
-						if (!revivedInWaitingRoom.contains(p))
-							teleportToNextRoom(p);
-					createTeleporterTimer(true);
-					createSpawnTimer(_choosenRoom);
-				}
-				else
-				{
-					for (L2Player p : _party.getPartyMembers())
-						if (!revivedInWaitingRoom.contains(p))
-							teleportToWaitingRoom(p);
-					killRift();
-					cancel();
-				}
+				ThreadPoolManager.getInstance().runOnWorld(() -> teleporterTick(reasonTP));
 			}
 		};
 		
@@ -139,6 +116,34 @@ public class DimensionalRift
 			teleporterTimer.schedule(teleporterTimerTask, calcTimeToNextJump()); //Teleporter task, 8-10 minutes
 		else
 			teleporterTimer.schedule(teleporterTimerTask, seconds_5); //incorrect party member invited.
+	}
+	
+	private void teleporterTick(boolean reasonTP)
+	{
+		if (_choosenRoom > -1)
+			DimensionalRiftManager.getInstance().getRoom(_roomType, _choosenRoom).unspawn();
+		
+		if (reasonTP && jumps_current < getMaxJumps() && _party.getMemberCount() > deadPlayers.size())
+		{
+			jumps_current++;
+			
+			_completedRooms.add(_choosenRoom);
+			_choosenRoom = -1;
+			
+			for (L2Player p : _party.getPartyMembers())
+				if (!revivedInWaitingRoom.contains(p))
+					teleportToNextRoom(p);
+			createTeleporterTimer(true);
+			createSpawnTimer(_choosenRoom);
+		}
+		else
+		{
+			for (L2Player p : _party.getPartyMembers())
+				if (!revivedInWaitingRoom.contains(p))
+					teleportToWaitingRoom(p);
+			killRift();
+			teleporterTimerTask.cancel();
+		}
 	}
 	
 	public void createSpawnTimer(final byte room)
@@ -163,7 +168,7 @@ public class DimensionalRift
 			@Override
 			public void run()
 			{
-				riftRoom.spawn();
+				ThreadPoolManager.getInstance().runOnWorld(riftRoom::spawn);
 			}
 		};
 		

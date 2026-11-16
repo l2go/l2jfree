@@ -2778,12 +2778,6 @@ public class L2Npc extends L2Creature
 	 */
 	public void deleteMe()
 	{
-		if (!ThreadPoolManager.getInstance().isWorldThread())
-		{
-			ThreadPoolManager.getInstance().runOnWorld(this::deleteMe);
-			return;
-		}
-		
 		abortCast();
 		abortAttack();
 		getStatus().stopHpMpRegeneration();

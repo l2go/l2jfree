@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
+import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.datatables.HeroSkillTable;
 import com.l2jfree.gameserver.datatables.SpawnTable;
 import com.l2jfree.gameserver.gameobjects.L2Player;
@@ -1061,9 +1062,11 @@ class OlympiadGameTask implements Runnable
 				runGame();
 			
 			_terminated = true;
-			_game.validateWinner();
-			_game.PlayersStatusBack();
-			_game.cleanEffects();
+			onWorld(() -> {
+				_game.validateWinner();
+				_game.PlayersStatusBack();
+				_game.cleanEffects();
+			});
 			
 			if (_game._gamestarted)
 			{
@@ -1071,7 +1074,7 @@ class OlympiadGameTask implements Runnable
 				OlympiadManager.STADIUMS[_game._stadiumID].closeDoors();
 				try
 				{
-					_game.portPlayersBack();
+					onWorld(() -> _game.portPlayersBack());
 				}
 				catch (Exception e)
 				{
@@ -1085,16 +1088,18 @@ class OlympiadGameTask implements Runnable
 					spec.sendPacket(ExOlympiadMatchEnd.PACKET);
 			}
 			
-			if (_game._spawnOne != null)
-			{
-				_game._spawnOne.getLastSpawn().deleteMe();
-				_game._spawnOne = null;
-			}
-			if (_game._spawnTwo != null)
-			{
-				_game._spawnTwo.getLastSpawn().deleteMe();
-				_game._spawnTwo = null;
-			}
+			onWorld(() -> {
+				if (_game._spawnOne != null)
+				{
+					_game._spawnOne.getLastSpawn().deleteMe();
+					_game._spawnOne = null;
+				}
+				if (_game._spawnTwo != null)
+				{
+					_game._spawnTwo.getLastSpawn().deleteMe();
+					_game._spawnTwo = null;
+				}
+			});
 			
 			_game.clearPlayers();
 			OlympiadManager.getInstance().removeGame(_game);
@@ -1111,8 +1116,10 @@ class OlympiadGameTask implements Runnable
 		}
 		SystemMessage sm;
 		OlympiadManager.STADIUMS[_game._stadiumID].closeDoors();
-		_game.portPlayersToArena();
-		_game.removals();
+		onWorld(() -> {
+			_game.portPlayersToArena();
+			_game.removals();
+		});
 		if (Config.ALT_OLY_ANNOUNCE_GAMES)
 			_game.announceGame();
 		try
@@ -1178,12 +1185,14 @@ class OlympiadGameTask implements Runnable
 			}
 		}
 		
-		_game._spawnOne.getLastSpawn().deleteMe();
-		_game._spawnTwo.getLastSpawn().deleteMe();
-		_game._spawnOne = null;
-		_game._spawnTwo = null;
+		onWorld(() -> {
+			_game._spawnOne.getLastSpawn().deleteMe();
+			_game._spawnTwo.getLastSpawn().deleteMe();
+			_game._spawnOne = null;
+			_game._spawnTwo = null;
+		});
 		
-		if (!_game.makeCompetitionStart())
+		if (!onWorldStart())
 		{
 			return false;
 		}
@@ -1243,5 +1252,17 @@ class OlympiadGameTask implements Runnable
 			}
 		}
 		return true;
+	}
+	
+	private void onWorld(Runnable action)
+	{
+		ThreadPoolManager.getInstance().runOnWorld(action);
+	}
+	
+	private boolean onWorldStart()
+	{
+		boolean[] started = { false };
+		onWorld(() -> started[0] = _game.makeCompetitionStart());
+		return started[0];
 	}
 }

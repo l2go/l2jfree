@@ -16,13 +16,18 @@ package com.l2jfree.gameserver;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +58,11 @@ public final class ThreadPoolManager
 	/** Test seam. Production leaves it empty. A stalled gate must not sit on the world thread. */
 	static volatile Runnable jdbcGate = () -> {
 	};
+	
+	public static void setJdbcGate(Runnable gate)
+	{
+		jdbcGate = gate;
+	}
 	
 	public static void enterBackgroundJdbc()
 	{
@@ -200,25 +210,47 @@ public final class ThreadPoolManager
 	}
 	
 	/**
-	 * Applies a short world change on {@code l2jfree-world}. The caller waits when it is some other thread,
-	 * so a rift timer or a match thread can sleep on its own and still not write a creature beside the world.
+	 * Applies one short step on {@code l2jfree-world} and waits for it. A direct call and a handed-off call
+	 * report the same exception. A closed world completes the wait with an error. An interrupt before the step
+	 * starts cancels it; a step that has started runs to the end, and the caller still returns.
 	 */
 	public void runOnWorld(Runnable action)
 	{
-		if (isWorldThread())
+		applyOn(isWorldThread(), _world, action);
+	}
+	
+	static void applyOn(boolean callerIsOwner, ExecutorService executor, Runnable action)
+	{
+		if (callerIsOwner)
 		{
 			action.run();
 			return;
 		}
 		
+		if (executor.isShutdown())
+			throw new RejectedExecutionException("world stopped");
+		
+		FutureTask<Void> task = new FutureTask<>(() -> {
+			action.run();
+			return null;
+		});
+		executor.execute(task);
+		if (executor.isShutdown() && task.cancel(false))
+			throw new RejectedExecutionException("world did not accept the apply");
+		
 		try
 		{
-			submit(action).get();
+			task.get();
 		}
 		catch (InterruptedException e)
 		{
+			task.cancel(false);
 			Thread.currentThread().interrupt();
 			throw new IllegalStateException("interrupted while applying world state", e);
+		}
+		catch (CancellationException e)
+		{
+			throw new RejectedExecutionException("world did not run the apply");
 		}
 		catch (ExecutionException e)
 		{
@@ -243,19 +275,33 @@ public final class ThreadPoolManager
 			return;
 		}
 		
+		startOnce(inflight, body, this::executeLongRunning);
+	}
+	
+	/** Starts {@code body} once. A rejected start clears the flag instead of leaving it stuck. */
+	static void startOnce(AtomicBoolean inflight, Runnable body, Consumer<Runnable> start)
+	{
 		if (!inflight.compareAndSet(false, true))
 			return;
 		
-		executeLongRunning(() -> {
-			try
-			{
-				body.run();
-			}
-			finally
-			{
-				inflight.set(false);
-			}
-		});
+		try
+		{
+			start.accept(() -> {
+				try
+				{
+					body.run();
+				}
+				finally
+				{
+					inflight.set(false);
+				}
+			});
+		}
+		catch (RuntimeException e)
+		{
+			inflight.set(false);
+			throw e;
+		}
 	}
 	
 	// ===========================================================================================

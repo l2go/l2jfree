@@ -254,8 +254,8 @@ public final class AdminCommandHandler extends HandlerRegistry<String, IAdminCom
 		
 		GMAudit.auditGMAction(activeChar, "admincommand", command, params);
 		
-		// The packet thread is the world thread. The command may wait on the database, so it does not run here.
-		// Creature changes inside the command apply on the world thread themselves.
+		// The packet thread is the world thread. The command may wait on the database, so the wait sits on a
+		// virtual thread, and the command itself applies on the world thread before it takes a creature monitor.
 		ThreadPoolManager.getInstance().executeLongRunning(new Runnable() {
 			@Override
 			public void run()
@@ -263,7 +263,8 @@ public final class AdminCommandHandler extends HandlerRegistry<String, IAdminCom
 				final long begin = System.currentTimeMillis();
 				try
 				{
-					runAs(activeChar::sendMessage, () -> handler.useAdminCommand(message, activeChar));
+					ThreadPoolManager.getInstance().runOnWorld(() -> runAs(activeChar::sendMessage,
+							() -> handler.useAdminCommand(message, activeChar)));
 				}
 				catch (RuntimeException e)
 				{

@@ -22,7 +22,6 @@ import static com.l2jfree.gameserver.gameobjects.ai.CtrlIntention.AI_INTENTION_I
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Object;
 import com.l2jfree.gameserver.gameobjects.L2Playable;
@@ -375,12 +374,6 @@ public abstract class AbstractAI implements Ctrl
 	@Override
 	public final void setIntention(CtrlIntention intention, Object arg0, Object arg1)
 	{
-		if (!ThreadPoolManager.getInstance().isWorldThread())
-		{
-			ThreadPoolManager.getInstance().runOnWorld(() -> setIntention(intention, arg0, arg1));
-			return;
-		}
-		
 		if (_actor.isInProtectedAction())
 		{
 			// Cancel action client side by sending Server->Client packet ActionFailed to the L2Player actor
