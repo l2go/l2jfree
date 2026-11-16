@@ -43,7 +43,10 @@ public final class SQLQueue extends SQLQueryQueue
 	
 	private SQLQueue()
 	{
-		ThreadPoolManager.getInstance().scheduleAtFixedRate(this, 60000, 60000);
+		// The timer fires on the world thread and only hands the flush off. The flush opens a
+		// connection, so it must not run there.
+		ThreadPoolManager.getInstance().scheduleAtFixedRate(() -> ThreadPoolManager.getInstance().executeLongRunning(this),
+				60000, 60000);
 		
 		_log.info("SQLQueryQueue: Initialized.");
 	}

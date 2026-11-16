@@ -16,7 +16,6 @@ package com.l2jfree.gameserver;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -26,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.l2jfree.Config;
 import com.l2jfree.util.concurrent.ExecuteWrapper;
 import com.l2jfree.util.concurrent.L2RejectedExecutionHandler;
 import com.l2jfree.util.concurrent.RunnableStatsManager;
@@ -35,6 +33,10 @@ import com.l2jfree.util.concurrent.ScheduledFutureWrapper;
 import com.l2jfree.util.concurrent.VirtualTaskExecutor;
 
 /**
+ * World tasks share one platform thread: movement, knownlist, effects, AI and client packet logic.
+ * A task queued from that thread runs after the current one returns; it does not run beside it.
+ * Blocking work uses virtual threads and does not take this thread.
+ *
  * @author -Wooden-, NB4L1
  */
 public final class ThreadPoolManager
@@ -50,24 +52,16 @@ public final class ThreadPoolManager
 		return SingletonHolder._instance;
 	}
 	
-	private final ScheduledThreadPoolExecutor _scheduledPool;
-	private final ThreadPoolExecutor _instantPool;
-	/** Blocking work (admin commands, cleanups): one virtual thread per task. World tasks stay on the pools above. */
+	/** Movement, knownlist, effects, AI and client packet logic. One thread, so two tasks cannot write one creature at once. */
+	private final ScheduledThreadPoolExecutor _world;
+	/** Blocking work (admin commands, cleanups, JDBC): one virtual thread per task. */
 	private final VirtualTaskExecutor _longRunningPool;
 	
 	private ThreadPoolManager()
 	{
-		final int instantPoolSize = Math.max(1, Config.THREAD_POOL_SIZE / 3);
-		
-		_scheduledPool = new ScheduledThreadPoolExecutor(Config.THREAD_POOL_SIZE - instantPoolSize);
-		_scheduledPool.setRejectedExecutionHandler(new L2RejectedExecutionHandler());
-		_scheduledPool.prestartAllCoreThreads();
-		
-		_instantPool =
-				new ThreadPoolExecutor(instantPoolSize, instantPoolSize, 0, TimeUnit.SECONDS,
-						new ArrayBlockingQueue<Runnable>(100000));
-		_instantPool.setRejectedExecutionHandler(new L2RejectedExecutionHandler());
-		_instantPool.prestartAllCoreThreads();
+		_world = new ScheduledThreadPoolExecutor(1, Thread.ofPlatform().name("l2jfree-world").factory());
+		_world.setRejectedExecutionHandler(new L2RejectedExecutionHandler());
+		_world.prestartAllCoreThreads();
 		
 		_longRunningPool = new VirtualTaskExecutor("long-running");
 		
@@ -79,8 +73,8 @@ public final class ThreadPoolManager
 			}
 		}, 60000, 60000);
 		
-		_log.info("ThreadPoolManager: Initialized with " + _scheduledPool.getPoolSize() + " scheduler, "
-				+ _instantPool.getPoolSize() + " instant thread(s); long running tasks on virtual threads.");
+		_log.info("ThreadPoolManager: world tasks on one platform thread (" + _world.getPoolSize()
+				+ "); long running tasks on virtual threads.");
 	}
 	
 	private final long validate(long delay)
@@ -109,7 +103,7 @@ public final class ThreadPoolManager
 		r = new ThreadPoolExecuteWrapper(r);
 		delay = validate(delay);
 		
-		return new ScheduledFutureWrapper(_scheduledPool.schedule(r, delay, TimeUnit.MILLISECONDS));
+		return new ScheduledFutureWrapper(_world.schedule(r, delay, TimeUnit.MILLISECONDS));
 	}
 	
 	public final ScheduledFuture<?> scheduleEffect(Runnable r, long delay)
@@ -135,7 +129,7 @@ public final class ThreadPoolManager
 		delay = validate(delay);
 		period = validate(period);
 		
-		return new ScheduledFutureWrapper(_scheduledPool.scheduleAtFixedRate(r, delay, period, TimeUnit.MILLISECONDS));
+		return new ScheduledFutureWrapper(_world.scheduleAtFixedRate(r, delay, period, TimeUnit.MILLISECONDS));
 	}
 	
 	public final ScheduledFuture<?> scheduleEffectAtFixedRate(Runnable r, long delay, long period)
@@ -159,7 +153,7 @@ public final class ThreadPoolManager
 	{
 		r = new ThreadPoolExecuteWrapper(r);
 		
-		_instantPool.execute(r);
+		_world.execute(r);
 	}
 	
 	public final void executeTask(Runnable r)
@@ -180,7 +174,7 @@ public final class ThreadPoolManager
 	{
 		r = new ThreadPoolExecuteWrapper(r);
 		
-		return _instantPool.submit(r);
+		return _world.submit(r);
 	}
 	
 	public final Future<?> submitLongRunning(Runnable r)
@@ -197,27 +191,16 @@ public final class ThreadPoolManager
 		List<String> list = new ArrayList<String>();
 		
 		list.add("");
-		list.add("Scheduled pool:");
+		list.add("World thread:");
 		list.add("=================================================");
-		list.add("\tgetActiveCount: ...... " + _scheduledPool.getActiveCount());
-		list.add("\tgetCorePoolSize: ..... " + _scheduledPool.getCorePoolSize());
-		list.add("\tgetPoolSize: ......... " + _scheduledPool.getPoolSize());
-		list.add("\tgetLargestPoolSize: .. " + _scheduledPool.getLargestPoolSize());
-		list.add("\tgetMaximumPoolSize: .. " + _scheduledPool.getMaximumPoolSize());
-		list.add("\tgetCompletedTaskCount: " + _scheduledPool.getCompletedTaskCount());
-		list.add("\tgetQueuedTaskCount: .. " + _scheduledPool.getQueue().size());
-		list.add("\tgetTaskCount: ........ " + _scheduledPool.getTaskCount());
-		list.add("");
-		list.add("Instant pool:");
-		list.add("=================================================");
-		list.add("\tgetActiveCount: ...... " + _instantPool.getActiveCount());
-		list.add("\tgetCorePoolSize: ..... " + _instantPool.getCorePoolSize());
-		list.add("\tgetPoolSize: ......... " + _instantPool.getPoolSize());
-		list.add("\tgetLargestPoolSize: .. " + _instantPool.getLargestPoolSize());
-		list.add("\tgetMaximumPoolSize: .. " + _instantPool.getMaximumPoolSize());
-		list.add("\tgetCompletedTaskCount: " + _instantPool.getCompletedTaskCount());
-		list.add("\tgetQueuedTaskCount: .. " + _instantPool.getQueue().size());
-		list.add("\tgetTaskCount: ........ " + _instantPool.getTaskCount());
+		list.add("\tgetActiveCount: ...... " + _world.getActiveCount());
+		list.add("\tgetCorePoolSize: ..... " + _world.getCorePoolSize());
+		list.add("\tgetPoolSize: ......... " + _world.getPoolSize());
+		list.add("\tgetLargestPoolSize: .. " + _world.getLargestPoolSize());
+		list.add("\tgetMaximumPoolSize: .. " + _world.getMaximumPoolSize());
+		list.add("\tgetCompletedTaskCount: " + _world.getCompletedTaskCount());
+		list.add("\tgetQueuedTaskCount: .. " + _world.getQueue().size());
+		list.add("\tgetTaskCount: ........ " + _world.getTaskCount());
 		list.add("");
 		list.add("Long running tasks (virtual threads):");
 		list.add("=================================================");
@@ -235,10 +218,7 @@ public final class ThreadPoolManager
 		
 		while (System.currentTimeMillis() - begin < timeoutInMillisec)
 		{
-			if (!_scheduledPool.awaitTermination(10, TimeUnit.MILLISECONDS) && _scheduledPool.getActiveCount() > 0)
-				continue;
-			
-			if (!_instantPool.awaitTermination(10, TimeUnit.MILLISECONDS) && _instantPool.getActiveCount() > 0)
+			if (!_world.awaitTermination(10, TimeUnit.MILLISECONDS) && _world.getActiveCount() > 0)
 				continue;
 			
 			if (!_longRunningPool.awaitTermination(10, TimeUnit.MILLISECONDS) && _longRunningPool.getActiveCount() > 0)
@@ -260,12 +240,10 @@ public final class ThreadPoolManager
 		final long begin = System.currentTimeMillis();
 		
 		System.out.println("ThreadPoolManager: Shutting down.");
-		System.out.println("\t... executing " + getTaskCount(_scheduledPool) + " scheduled tasks.");
-		System.out.println("\t... executing " + getTaskCount(_instantPool) + " instant tasks.");
+		System.out.println("\t... executing " + getTaskCount(_world) + " world tasks.");
 		System.out.println("\t... executing " + _longRunningPool.getActiveCount() + " long running tasks.");
 		
-		_scheduledPool.shutdown();
-		_instantPool.shutdown();
+		_world.shutdown();
 		_longRunningPool.shutdown();
 		
 		boolean success = false;
@@ -273,8 +251,8 @@ public final class ThreadPoolManager
 		{
 			success |= awaitTermination(5000);
 			
-			_scheduledPool.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-			_scheduledPool.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+			_world.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+			_world.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
 			
 			success |= awaitTermination(10000);
 		}
@@ -284,8 +262,7 @@ public final class ThreadPoolManager
 		}
 		
 		System.out.println("\t... success: " + success + " in " + (System.currentTimeMillis() - begin) + " msec.");
-		System.out.println("\t... " + getTaskCount(_scheduledPool) + " scheduled tasks left.");
-		System.out.println("\t... " + getTaskCount(_instantPool) + " instant tasks left.");
+		System.out.println("\t... " + getTaskCount(_world) + " world tasks left.");
 		System.out.println("\t... " + _longRunningPool.getActiveCount() + " long running tasks left.");
 		
 		if (TimeUnit.HOURS.toMillis(12) < (System.currentTimeMillis() - GameServer.getStartedTime().getTimeInMillis()))
@@ -294,8 +271,7 @@ public final class ThreadPoolManager
 	
 	public void purge()
 	{
-		_scheduledPool.purge();
-		_instantPool.purge();
+		_world.purge();
 	}
 	
 	@SuppressWarnings("synthetic-access")

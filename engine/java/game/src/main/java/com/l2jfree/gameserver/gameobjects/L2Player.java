@@ -12806,14 +12806,18 @@ public final class L2Player extends L2Playable
 			
 			if (delay <= 0)
 			{
-				try
-				{
-					store();
-				}
-				catch (RuntimeException e)
-				{
-					_log.error("", e);
-				}
+				// store() waits on the database. The autosave timer fires on the world thread,
+				// which cannot sit in that wait.
+				ThreadPoolManager.getInstance().executeLongRunning(() -> {
+					try
+					{
+						store();
+					}
+					catch (RuntimeException e)
+					{
+						_log.error("", e);
+					}
+				});
 				
 				delay = period;
 			}

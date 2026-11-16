@@ -4,6 +4,10 @@ Notable changes, in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) for
 
 ## [Unreleased]
 
+### Changed
+
+- Movement, knownlist, effects, AI and client packet logic share one platform thread, so two tasks cannot write one creature at the same time. The periodic item flush and the character autosave run on virtual threads and do not hold that thread. A save made by the action itself, such as logout, still runs with the action. `BaseThreadPoolSize` and `ExtraThreadPerCore` are no longer read.
+
 ## [3.3.0] - 2026-11-14
 
 ### Added

@@ -1211,8 +1211,6 @@ public final class Config
 	public static boolean SERVER_BIT_3; // UNK/HideName
 	public static boolean SERVER_LIST_BRACKET; // Display [] in front of server name
 	
-	public static int THREAD_POOL_SIZE;
-	
 	public static boolean AUTODELETE_INVALID_QUEST_DATA; // Auto-delete invalid quest data ?
 	public static boolean FORCE_INVENTORY_UPDATE;
 	public static boolean SHOW_LICENSE; // Show License at login
@@ -1512,11 +1510,6 @@ public final class Config
 			
 			AUTODELETE_INVALID_QUEST_DATA =
 					Boolean.parseBoolean(optionsSettings.getProperty("AutoDeleteInvalidQuestData", "False"));
-			
-			final int baseThreadPoolSize = Integer.parseInt(optionsSettings.getProperty("BaseThreadPoolSize", "2"));
-			final int extraThreadPerCore = Integer.parseInt(optionsSettings.getProperty("ExtraThreadPerCore", "4"));
-			
-			THREAD_POOL_SIZE = baseThreadPoolSize + Runtime.getRuntime().availableProcessors() * extraThreadPerCore;
 			
 			DELETE_DAYS = Integer.parseInt(optionsSettings.getProperty("DeleteCharAfterDays", "7"));
 			
