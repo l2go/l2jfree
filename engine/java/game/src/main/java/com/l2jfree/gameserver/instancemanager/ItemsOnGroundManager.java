@@ -17,6 +17,7 @@ package com.l2jfree.gameserver.instancemanager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,17 +157,20 @@ public class ItemsOnGroundManager
 	
 	protected class StoreInDb extends Thread
 	{
+		private final AtomicBoolean _saving = new AtomicBoolean();
+		
 		@Override
 		public void run()
 		{
 			if (!Config.SAVE_DROPPED_ITEM)
 				return;
 			
-			if (_items.isEmpty() && _log.isDebugEnabled())
-			{
-				_log.warn("ItemsOnGroundManager: nothing to save...");
-			}
-			
+			List<ItemRepository.GroundItem> rows = copyRows();
+			ThreadPoolManager.getInstance().runBackgroundOnce(_saving, () -> write(rows));
+		}
+		
+		private List<ItemRepository.GroundItem> copyRows()
+		{
 			List<ItemRepository.GroundItem> rows = new ArrayList<ItemRepository.GroundItem>();
 			for (L2ItemInstance item : _items)
 			{
@@ -175,18 +179,26 @@ public class ItemsOnGroundManager
 				
 				if (CursedWeaponsManager.getInstance().isCursed(item.getItemId()))
 					continue; // Cursed Items not saved to ground, prevent double save
-					
+				
 				// A protected item has no drop time in the table
 				rows.add(new ItemRepository.GroundItem(item.getObjectId(), item.getItemId(), item.getCount(), item
 						.getEnchantLevel(), item.getX(), item.getY(), item.getZ(), item.isProtected() ? 0 : item
 						.getDropTime(), item.isProtected(), item.isEquipable()));
 			}
+			return rows;
+		}
+		
+		private void write(List<ItemRepository.GroundItem> rows)
+		{
+			ThreadPoolManager.enterBackgroundJdbc();
+			if (rows.isEmpty() && _log.isDebugEnabled())
+				_log.warn("ItemsOnGroundManager: nothing to save...");
 			
 			// The table is rewritten as a whole: the old rows go and the new ones are stored in one transaction
 			if (ItemRepository.getInstance().replaceGroundItems(rows))
 			{
 				if (_log.isDebugEnabled())
-					_log.warn("ItemsOnGroundManager: " + _items.size() + " items on ground saved");
+					_log.warn("ItemsOnGroundManager: " + rows.size() + " items on ground saved");
 			}
 			else
 				_log.error("error while saving the items on ground to table ItemsOnGround");

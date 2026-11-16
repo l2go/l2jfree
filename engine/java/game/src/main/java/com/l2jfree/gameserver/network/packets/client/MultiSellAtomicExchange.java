@@ -500,28 +500,51 @@ final class MultiSellAtomicExchange
 			for (TreasuryChange change : treasury)
 				persistence.adjustCastleTreasury(change.castle.getCastleId(), change.before, change.after);
 
-			Connection connection = null;
+			List<L2ItemInstance> writeLocks = new ArrayList<L2ItemInstance>(changedItems);
+			for (L2ItemInstance product : stagedProducts)
+			{
+				if (!writeLocks.contains(product))
+					writeLocks.add(product);
+			}
+			Collections.sort(writeLocks, new Comparator<L2ItemInstance>() {
+				@Override
+				public int compare(L2ItemInstance left, L2ItemInstance right)
+				{
+					return Integer.compare(left.getObjectId(), right.getObjectId());
+				}
+			});
+			for (L2ItemInstance item : writeLocks)
+				item.lockWrite();
 			try
 			{
-				connection = _resources.connection();
-				persistence.commit(connection);
-				committed = true;
+				Connection connection = null;
+				try
+				{
+					connection = _resources.connection();
+					persistence.commit(connection);
+					committed = true;
+				}
+				finally
+				{
+					if (connection != null)
+					{
+						try
+						{
+							connection.close();
+						}
+						catch (SQLException closeFailure)
+						{
+							LOG.warn("Could not close multisell connection", closeFailure);
+						}
+					}
+				}
+				_inventory.publishCommittedMultisell(finalCounts, stagedProducts);
 			}
 			finally
 			{
-				if (connection != null)
-				{
-					try
-					{
-						connection.close();
-					}
-					catch (SQLException closeFailure)
-					{
-						LOG.warn("Could not close multisell connection", closeFailure);
-					}
-				}
+				for (int i = writeLocks.size() - 1; i >= 0; i--)
+					writeLocks.get(i).unlockWrite();
 			}
-			_inventory.publishCommittedMultisell(finalCounts, stagedProducts);
 			if (reputationDebit > 0)
 				clan.setReputationScore((int)(clan.getReputationScore() - reputationDebit), false);
 			if (fameDelta != 0)

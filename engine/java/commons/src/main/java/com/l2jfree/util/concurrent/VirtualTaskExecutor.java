@@ -18,14 +18,13 @@ import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Runs every task on its own virtual thread, for blocking work: database, files, admin commands. It counts the tasks
- * for the thread pool statistics. Like {@link L2RejectedExecutionHandler}, it drops tasks once it is shut down.
+ * for the thread pool statistics. After shutdown a new task is rejected, so the caller can clear its own state.
  */
 public final class VirtualTaskExecutor extends AbstractExecutorService
 {
@@ -43,26 +42,18 @@ public final class VirtualTaskExecutor extends AbstractExecutorService
 	@Override
 	public void execute(Runnable task)
 	{
-		try
-		{
-			_executor.execute(() -> {
-				_largestActive.accumulateAndGet(_active.incrementAndGet(), Math::max);
-				try
-				{
-					task.run();
-				}
-				finally
-				{
-					_active.decrementAndGet();
-					_completed.increment();
-				}
-			});
-		}
-		catch (RejectedExecutionException e)
-		{
-			if (!isShutdown())
-				throw e;
-		}
+		_executor.execute(() -> {
+			_largestActive.accumulateAndGet(_active.incrementAndGet(), Math::max);
+			try
+			{
+				task.run();
+			}
+			finally
+			{
+				_active.decrementAndGet();
+				_completed.increment();
+			}
+		});
 	}
 	
 	public int getActiveCount()

@@ -19,20 +19,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import com.l2jfree.Config;
-
-/** Blocking work runs on virtual threads; world tasks stay on the platform pools (plan 10.3). */
+/** Blocking work runs on virtual threads. World tasks share one platform thread. */
 class ThreadPoolManagerTest
 {
-	@BeforeAll
-	static void configure()
-	{
-		Config.THREAD_POOL_SIZE = 4;
-	}
-	
 	@Test
 	void longRunningTasksRunOnVirtualThreads() throws Exception
 	{
@@ -47,15 +38,20 @@ class ThreadPoolManagerTest
 	}
 	
 	@Test
-	void worldTasksStayOnPlatformThreads() throws Exception
+	void worldTasksShareOnePlatformThread() throws Exception
 	{
 		CompletableFuture<Thread> instant = new CompletableFuture<>();
 		ThreadPoolManager.getInstance().execute(() -> instant.complete(Thread.currentThread()));
-		assertThat(instant.get(5, TimeUnit.SECONDS).isVirtual()).isFalse();
+		Thread instantThread = instant.get(5, TimeUnit.SECONDS);
 		
 		CompletableFuture<Thread> scheduled = new CompletableFuture<>();
 		ThreadPoolManager.getInstance().schedule(() -> scheduled.complete(Thread.currentThread()), 1);
-		assertThat(scheduled.get(5, TimeUnit.SECONDS).isVirtual()).isFalse();
+		Thread scheduledThread = scheduled.get(5, TimeUnit.SECONDS);
+		
+		assertThat(instantThread).isSameAs(scheduledThread);
+		assertThat(instantThread.isVirtual()).isFalse();
+		assertThat(instantThread.getName()).isEqualTo("l2jfree-world");
+		assertThat(ThreadPoolManager.getInstance().getStats()).contains("World thread:");
 	}
 	
 	@Test

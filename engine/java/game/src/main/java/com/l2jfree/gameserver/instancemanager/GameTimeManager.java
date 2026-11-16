@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.OptionalLong;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,12 +82,18 @@ public final class GameTimeManager
 		return GameClockStore.load();
 	}
 	
+	private final AtomicBoolean _clockSave = new AtomicBoolean();
+	
 	private void saveData()
 	{
 		if (!Config.DATETIME_SAVECAL)
 			return;
 		
-		GameClockStore.save(_calendar.getTimeInMillis());
+		long millis = _calendar.getTimeInMillis();
+		ThreadPoolManager.getInstance().runBackgroundOnce(_clockSave, () -> {
+			ThreadPoolManager.enterBackgroundJdbc();
+			GameClockStore.save(millis);
+		});
 	}
 	
 	private static final SimpleDateFormat FORMAT1 = new SimpleDateFormat("hh:mm a");

@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
 import com.l2jfree.L2DatabaseFactory;
+import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.datatables.ClanTable;
 import com.l2jfree.gameserver.datatables.NpcTable;
 import com.l2jfree.gameserver.datatables.SpawnTable;
@@ -1857,6 +1858,12 @@ public class SevenSignsFestival implements SpawnListener
 		
 		protected void festivalInit()
 		{
+			if (!ThreadPoolManager.getInstance().isWorldThread())
+			{
+				ThreadPoolManager.getInstance().runOnWorld(this::festivalInit);
+				return;
+			}
+			
 			boolean isPositive;
 			
 			if (_log.isDebugEnabled())
@@ -1947,6 +1954,12 @@ public class SevenSignsFestival implements SpawnListener
 		
 		protected void festivalStart()
 		{
+			if (!ThreadPoolManager.getInstance().isWorldThread())
+			{
+				ThreadPoolManager.getInstance().runOnWorld(this::festivalStart);
+				return;
+			}
+			
 			if (_log.isDebugEnabled())
 				_log.debug("SevenSignsFestival: Starting festival for " + SevenSigns.getCabalShortName(_cabal) + " ("
 						+ getFestivalName(_levelRange) + ")");
@@ -1956,6 +1969,12 @@ public class SevenSignsFestival implements SpawnListener
 		
 		protected void moveMonstersToCenter()
 		{
+			if (!ThreadPoolManager.getInstance().isWorldThread())
+			{
+				ThreadPoolManager.getInstance().runOnWorld(this::moveMonstersToCenter);
+				return;
+			}
+			
 			boolean isPositive;
 			
 			if (_log.isDebugEnabled())
@@ -2026,6 +2045,12 @@ public class SevenSignsFestival implements SpawnListener
 		 */
 		protected void spawnFestivalMonsters(int respawnDelay, int spawnType)
 		{
+			if (!ThreadPoolManager.getInstance().isWorldThread())
+			{
+				ThreadPoolManager.getInstance().runOnWorld(() -> spawnFestivalMonsters(respawnDelay, spawnType));
+				return;
+			}
+			
 			int[][] _npcSpawns = null;
 			
 			switch (spawnType)
@@ -2130,6 +2155,12 @@ public class SevenSignsFestival implements SpawnListener
 		
 		protected void festivalEnd()
 		{
+			if (!ThreadPoolManager.getInstance().isWorldThread())
+			{
+				ThreadPoolManager.getInstance().runOnWorld(this::festivalEnd);
+				return;
+			}
+			
 			if (_log.isDebugEnabled())
 				_log.debug("SevenSignsFestival: Ending festival for " + SevenSigns.getCabalShortName(_cabal) + " ("
 						+ getFestivalName(_levelRange) + ")");
@@ -2158,6 +2189,12 @@ public class SevenSignsFestival implements SpawnListener
 		
 		protected void unspawnMobs()
 		{
+			if (!ThreadPoolManager.getInstance().isWorldThread())
+			{
+				ThreadPoolManager.getInstance().runOnWorld(this::unspawnMobs);
+				return;
+			}
+			
 			// Delete all the NPCs in the current festival arena.
 			if (_witchInst != null)
 			{

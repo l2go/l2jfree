@@ -73,6 +73,11 @@ public final class L2Client extends com.l2jfree.network.Connection<L2Client, L2C
 	private int[] _charSlotMapping;
 	private GameCrypt _crypt;
 	private volatile boolean _disconnected;
+	
+	/** One character load at a time. Disconnect or a newer selection invalidates it. */
+	private int _charLoadToken;
+	
+	private boolean _charLoadActive;
 	private String _hostAddress;
 	private boolean _protocol;
 	
@@ -303,7 +308,26 @@ public final class L2Client extends com.l2jfree.network.Connection<L2Client, L2C
 	
 	public L2Player loadCharFromDisk(int charslot)
 	{
-		return L2Player.load(getObjectIdForSlot(charslot));
+		return loadCharFromDisk(charslot, 0);
+	}
+	
+	/**
+	 * Loads the character when {@code token} is still this session's load. A stale token does not disconnect a
+	 * character a newer selection has already published.
+	 */
+	public L2Player loadCharFromDisk(int charslot, int token)
+	{
+		if (token != 0 && !characterLoadOpen(token))
+			return null;
+		
+		java.util.function.BooleanSupplier current = token == 0 ? null : () -> characterLoadOpen(token);
+		L2Player loaded = L2Player.load(getObjectIdForSlot(charslot), current);
+		if (loaded != null && current != null && !current.getAsBoolean())
+		{
+			loaded.stopAllTimers();
+			return null;
+		}
+		return loaded;
 	}
 	
 	/**
@@ -390,7 +414,50 @@ public final class L2Client extends com.l2jfree.network.Connection<L2Client, L2C
 	{
 		LoginLink.getInstance().sendLogout(getAccountName(), this);
 		
+		invalidateCharacterLoad();
+	}
+	
+	/** Starts a load. A load already in progress for this session is replaced. Zero means the session cannot load. */
+	public synchronized int beginCharacterLoad()
+	{
+		if (_disconnected || _activeChar != null)
+			return 0;
+		
+		_charLoadToken++;
+		_charLoadActive = true;
+		return _charLoadToken;
+	}
+	
+	/** True while this token is still the session's load and the client is still connected. */
+	public synchronized boolean characterLoadOpen(int token)
+	{
+		return token != 0 && _charLoadActive && token == _charLoadToken && !_disconnected && _activeChar == null;
+	}
+	
+	/**
+	 * Claims the load so a second result cannot publish. A stale token does not.
+	 */
+	public synchronized boolean claimCharacterLoad(int token)
+	{
+		if (!characterLoadOpen(token))
+			return false;
+		
+		_charLoadActive = false;
+		return true;
+	}
+	
+	/** A failed load frees the session for another selection, and only if it is still the current one. */
+	public synchronized void abandonCharacterLoad(int token)
+	{
+		if (token == _charLoadToken)
+			_charLoadActive = false;
+	}
+	
+	synchronized void invalidateCharacterLoad()
+	{
 		_disconnected = true;
+		_charLoadToken++;
+		_charLoadActive = false;
 	}
 	
 	void execute(L2ClientPacket rp)
