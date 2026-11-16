@@ -15,6 +15,7 @@
 package com.l2jfree.gameserver.network.packets.client;
 
 import com.l2jfree.Config;
+import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.Disconnection;
@@ -52,8 +53,16 @@ public final class CharacterSelected extends L2ClientPacket
 		if (getClient().getActiveChar() != null)
 			return;
 		
-		final L2Player cha = getClient().loadCharFromDisk(_charSlot);
-		
+		final int slot = _charSlot;
+		ThreadPoolManager.getInstance().executeLongRunning(() -> {
+			ThreadPoolManager.enterBackgroundJdbc();
+			final L2Player cha = getClient().loadCharFromDisk(slot);
+			ThreadPoolManager.getInstance().runOnWorld(() -> enterWorld(cha));
+		});
+	}
+	
+	private void enterWorld(L2Player cha)
+	{
 		if (cha == null)
 		{
 			_log.error(getClient() + ": character couldn't be loaded (slot:" + _charSlot + ")");

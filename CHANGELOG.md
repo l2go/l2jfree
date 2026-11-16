@@ -6,7 +6,7 @@ Notable changes, in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) for
 
 ### Changed
 
-- Movement, knownlist, effects, AI and client packet logic share one platform thread, so two tasks cannot write one creature at the same time. The periodic item flush and the character autosave run on virtual threads and do not hold that thread. A save made by the action itself, such as logout, still runs with the action. `BaseThreadPoolSize` and `ExtraThreadPerCore` are no longer read.
+- Movement, knownlist, effects, AI and client packet logic share one platform thread, so two tasks cannot write one creature at the same time. Scheduled database work (global tasks, the item flush, dropped items, the game clock, character load) runs on virtual threads. A background save copies its rows, releases the player or item monitor, and does not start a second save of the same kind until that one finishes or fails. Position, HP, effects, AI intention, spawn and removal apply on the world thread when a rift timer, an Olympiad match, the Festival timer or a GM command asks for them. A save made by the action itself, such as logout, still runs with the action and waits for that player's in-flight autosave. `BaseThreadPoolSize` and `ExtraThreadPerCore` are no longer read.
 
 ## [3.3.0] - 2026-11-14
 

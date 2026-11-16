@@ -166,6 +166,8 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	private int _lastChange = 2; // 1 added, 2 modified, 3 removed
 	private boolean _existsInDb; // if a record exists in DB.
 	private boolean _storedInDb; // if DB data is up-to-date.
+	/** Bumped on every change that clears {@link #_storedInDb}. A write applies its flags only when this is unchanged. */
+	private int _revision;
 	
 	private ScheduledFuture<?> itemLootShedule = null;
 	
@@ -260,6 +262,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		
 		_ownerId = owner_id;
 		_storedInDb = false;
+		_revision++;
 	}
 	
 	/**
@@ -302,6 +305,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		_loc = loc;
 		_locData = loc_data;
 		_storedInDb = false;
+		_revision++;
 	}
 	
 	public ItemLocation getLocation()
@@ -322,6 +326,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		
 		_count = count >= -1 ? count : 0;
 		_storedInDb = false;
+		_revision++;
 	}
 	
 	/**
@@ -368,6 +373,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 			setCount(0);
 		
 		_storedInDb = false;
+		_revision++;
 		
 		if (Config.LOG_ITEMS && process != null)
 		{
@@ -620,6 +626,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	{
 		_priceSell = price;
 		_storedInDb = false;
+		_revision++;
 	}
 	
 	/**
@@ -642,6 +649,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	{
 		_priceBuy = price;
 		_storedInDb = false;
+		_revision++;
 	}
 	
 	/**
@@ -827,6 +835,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 			return;
 		_enchantLevel = enchantLevel;
 		_storedInDb = false;
+		_revision++;
 	}
 	
 	/**
@@ -1080,6 +1089,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		
 		if (_storedInDb)
 			_storedInDb = false;
+		_revision++;
 		if (resetConsumingMana)
 			_consumingMana = false;
 		
@@ -1227,23 +1237,7 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		// so a rollback of the player would leave the item behind, or the other way round.
 		if (WorldTransaction.current() != null)
 		{
-			synchronized (this)
-			{
-				switch (getUpdateMode(force))
-				{
-					case INSERT:
-						insertIntoDb(WorldTransaction.current());
-						break;
-					case UPDATE:
-						updateInDb(WorldTransaction.current());
-						break;
-					case REMOVE:
-						removeFromDb(WorldTransaction.current());
-						break;
-					case NONE:
-						break;
-				}
-			}
+			writeOn(WorldTransaction.current(), force);
 			return;
 		}
 		
@@ -1263,49 +1257,113 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		return _storedInDb;
 	}
 	
-	/**
-	 * The flags say what the database holds. A write inside a transaction sets them before the commit, so a rollback
-	 * puts back the values from before the write.
-	 */
-	private void restoreFlagsOnRollback()
-	{
-		if (WorldTransaction.current() == null)
-			return;
-		
-		boolean existed = _existsInDb;
-		boolean stored = _storedInDb;
-		WorldTransaction.onRollback(() -> {
-			synchronized (L2ItemInstance.this)
-			{
-				_existsInDb = existed;
-				_storedInDb = stored;
-			}
-		});
-	}
-	
 	private final SQLQuery UPDATE_DATABASE_QUERY = new SQLQuery() {
 		@Override
 		public void execute(Connection con)
 		{
-			synchronized (L2ItemInstance.this)
-			{
-				switch (getUpdateMode(true))
-				{
-					case INSERT:
-						insertIntoDb(con);
-						break;
-
-					case UPDATE:
-						updateInDb(con);
-						break;
-
-					case REMOVE:
-						removeFromDb(con);
-						break;
-				}
-			}
+			writeOn(con, true);
 		}
 	};
+	
+	/**
+	 * Copies the row under the item monitor, releases it, then writes. {@link #changeCount} can proceed during the
+	 * SQL. Flags move only when the item has not changed since the copy, and a rollback puts them back.
+	 */
+	private void writeOn(Connection con, boolean force)
+	{
+		final UpdateMode mode;
+		final ItemRepository.ItemRow row;
+		final int ownerKey;
+		final int revision;
+		final boolean existed;
+		final boolean stored;
+		final L2Augmentation augmentation;
+		final boolean[] removed = { false };
+		
+		synchronized (this)
+		{
+			mode = getUpdateMode(force);
+			if (mode == UpdateMode.NONE)
+				return;
+			
+			row = toRow();
+			ownerKey = getStoredOwnerKey();
+			revision = _revision;
+			existed = _existsInDb;
+			stored = _storedInDb;
+			augmentation = _augmentation;
+			if (mode == UpdateMode.REMOVE)
+			{
+				_augmentation = null;
+				removed[0] = true;
+			}
+		}
+		
+		if (WorldTransaction.current() != null)
+		{
+			WorldTransaction.onRollback(() -> {
+				synchronized (L2ItemInstance.this)
+				{
+					if (_revision != revision)
+						return;
+					_existsInDb = existed;
+					_storedInDb = stored;
+					if (removed[0])
+						_augmentation = augmentation;
+				}
+			});
+		}
+		
+		ThreadPoolManager.enterBackgroundJdbc();
+		if (!applyWrite(con, mode, row, ownerKey))
+			return;
+		
+		if (mode == UpdateMode.INSERT && (_elementals != null || _augmentation != null))
+			saveAttributes(con, "store attributes");
+		
+		synchronized (this)
+		{
+			if (_revision != revision)
+				return;
+			
+			if (mode == UpdateMode.REMOVE)
+			{
+				_existsInDb = false;
+				_storedInDb = false;
+			}
+			else
+			{
+				_existsInDb = true;
+				_storedInDb = true;
+			}
+		}
+	}
+	
+	private boolean applyWrite(Connection con, UpdateMode mode, ItemRepository.ItemRow row, int ownerKey)
+	{
+		try
+		{
+			switch (mode)
+			{
+				case INSERT:
+					ItemRepository.getInstance().insertItem(con, row, ownerKey);
+					return true;
+				case UPDATE:
+					ItemRepository.getInstance().updateItem(con, row, ownerKey);
+					return true;
+				case REMOVE:
+					ItemRepository.getInstance().deleteItem(con, getObjectId());
+					return true;
+				default:
+					return false;
+			}
+		}
+		catch (Exception e)
+		{
+			_log.error("Could not write item " + getObjectId(), e);
+			return false;
+		}
+	}
 
 	/** Records a successful synchronous exchange write before queued writers inspect this item. */
 	public synchronized void markStoredAfterExchange(boolean exists)
@@ -1483,27 +1541,6 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 		setDropperObjectId(0); //Set the dropper Id back to 0 so it no longer shows the drop packet
 	}
 	
-	/**
-	 * Update the database with values of the item
-	 */
-	private void updateInDb(Connection con)
-	{
-		if (_storedInDb)
-			return;
-		
-		restoreFlagsOnRollback();
-		try
-		{
-			ItemRepository.getInstance().updateItem(con, toRow(), getStoredOwnerKey());
-			_existsInDb = true;
-			_storedInDb = true;
-		}
-		catch (Exception e)
-		{
-			_log.error("Could not update item " + getObjectId(), e);
-		}
-	}
-
 	/** The item as the database stores it. */
 	private ItemRepository.ItemRow toRow()
 	{
@@ -1525,57 +1562,6 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 			return owner.getPet().getControlItemId();
 		}
 		return _ownerId;
-	}
-	
-	/**
-	 * Insert the item in database
-	 */
-	private void insertIntoDb(Connection con)
-	{
-		restoreFlagsOnRollback();
-		try
-		{
-			ItemRepository.getInstance().insertItem(con, toRow(), getStoredOwnerKey());
-			_existsInDb = true;
-			_storedInDb = true;
-		}
-		catch (Exception e)
-		{
-			_log.error("Could not insert item " + getObjectId(), e);
-		}
-
-		// The attributes belong to the row of the item, so they can only be written now
-		if (_existsInDb && (_elementals != null || _augmentation != null))
-			saveAttributes(con, "store attributes");
-	}
-	
-	/**
-	 * Delete item from database
-	 */
-	private void removeFromDb(Connection con)
-	{
-		L2Augmentation augmentation = _augmentation;
-		restoreFlagsOnRollback();
-		_augmentation = null;
-		if (WorldTransaction.current() != null)
-			WorldTransaction.onRollback(() -> {
-				synchronized (L2ItemInstance.this)
-				{
-					_augmentation = augmentation;
-				}
-			});
-		
-		try
-		{
-			// The attributes of the item go with its row
-			ItemRepository.getInstance().deleteItem(con, getObjectId());
-			_existsInDb = false;
-			_storedInDb = false;
-		}
-		catch (Exception e)
-		{
-			_log.error("Could not delete item " + getObjectId(), e);
-		}
 	}
 	
 	/**

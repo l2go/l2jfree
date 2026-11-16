@@ -590,6 +590,16 @@ public abstract class L2Creature extends L2Object
 	
 	public final void teleToLocation(int x, int y, int z, int heading, boolean allowRandomOffset)
 	{
+		if (!ThreadPoolManager.getInstance().isWorldThread())
+		{
+			int px = x;
+			int py = y;
+			int pz = z;
+			int headingNow = heading;
+			ThreadPoolManager.getInstance().runOnWorld(() -> teleToLocation(px, py, pz, headingNow, allowRandomOffset));
+			return;
+		}
+		
 		// Restrict teleport during restart/shutdown
 		if (Shutdown.isActionDisabled(DisableType.TELEPORT))
 		{
@@ -3254,6 +3264,12 @@ public abstract class L2Creature extends L2Object
 	 */
 	public final void stopAllEffects()
 	{
+		if (!ThreadPoolManager.getInstance().isWorldThread())
+		{
+			ThreadPoolManager.getInstance().runOnWorld(this::stopAllEffects);
+			return;
+		}
+		
 		getEffects().stopAllEffects();
 		
 		broadcastFullInfo();
@@ -3261,6 +3277,12 @@ public abstract class L2Creature extends L2Object
 	
 	public final void stopAllEffects(boolean stopEffectsThatLastThroughDeathToo)
 	{
+		if (!ThreadPoolManager.getInstance().isWorldThread())
+		{
+			ThreadPoolManager.getInstance().runOnWorld(() -> stopAllEffects(stopEffectsThatLastThroughDeathToo));
+			return;
+		}
+		
 		getEffects().stopAllEffects(stopEffectsThatLastThroughDeathToo);
 		
 		broadcastFullInfo();
@@ -3268,6 +3290,12 @@ public abstract class L2Creature extends L2Object
 	
 	public final void stopAllEffectsExceptThoseThatLastThroughDeath()
 	{
+		if (!ThreadPoolManager.getInstance().isWorldThread())
+		{
+			ThreadPoolManager.getInstance().runOnWorld(this::stopAllEffectsExceptThoseThatLastThroughDeath);
+			return;
+		}
+		
 		getEffects().stopAllEffectsExceptThoseThatLastThroughDeath();
 		
 		broadcastFullInfo();

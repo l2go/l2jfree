@@ -16,11 +16,13 @@ package com.l2jfree.gameserver;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +37,8 @@ import com.l2jfree.util.concurrent.VirtualTaskExecutor;
 /**
  * World tasks share one platform thread: movement, knownlist, effects, AI and client packet logic.
  * A task queued from that thread runs after the current one returns; it does not run beside it.
- * Blocking work uses virtual threads and does not take this thread.
+ * Background JDBC uses virtual threads, one outstanding task at a time, and does not hold a creature
+ * monitor while it waits. A save the action itself performs still runs on the caller.
  *
  * @author -Wooden-, NB4L1
  */
@@ -46,6 +49,29 @@ public final class ThreadPoolManager
 	public static final long MAXIMUM_RUNTIME_IN_MILLISEC_WITHOUT_WARNING = 5000;
 	
 	private static final long MAX_DELAY = TimeUnit.NANOSECONDS.toMillis(Long.MAX_VALUE - System.nanoTime()) / 2;
+	
+	/** Test seam. Production leaves it empty. A stalled gate must not sit on the world thread. */
+	static volatile Runnable jdbcGate = () -> {
+	};
+	
+	public static void enterBackgroundJdbc()
+	{
+		jdbcGate.run();
+	}
+	
+	/**
+	 * Copies what the monitor protects, releases it, then runs the write. The write may wait on JDBC.
+	 * Callers that still need the monitor, such as a bypass, do not wait for that write.
+	 */
+	public static void releaseThen(Object monitor, Runnable underLock, Runnable afterRelease)
+	{
+		synchronized (monitor)
+		{
+			underLock.run();
+		}
+		enterBackgroundJdbc();
+		afterRelease.run();
+	}
 	
 	public static ThreadPoolManager getInstance()
 	{
@@ -166,6 +192,70 @@ public final class ThreadPoolManager
 		r = new ExecuteWrapper(r);
 		
 		_longRunningPool.execute(r);
+	}
+	
+	public boolean isWorldThread()
+	{
+		return "l2jfree-world".equals(Thread.currentThread().getName());
+	}
+	
+	/**
+	 * Applies a short world change on {@code l2jfree-world}. The caller waits when it is some other thread,
+	 * so a rift timer or a match thread can sleep on its own and still not write a creature beside the world.
+	 */
+	public void runOnWorld(Runnable action)
+	{
+		if (isWorldThread())
+		{
+			action.run();
+			return;
+		}
+		
+		try
+		{
+			submit(action).get();
+		}
+		catch (InterruptedException e)
+		{
+			Thread.currentThread().interrupt();
+			throw new IllegalStateException("interrupted while applying world state", e);
+		}
+		catch (ExecutionException e)
+		{
+			Throwable cause = e.getCause();
+			if (cause instanceof RuntimeException runtime)
+				throw runtime;
+			if (cause instanceof Error error)
+				throw error;
+			throw new IllegalStateException(cause);
+		}
+	}
+	
+	/**
+	 * From the world thread, starts {@code body} on a virtual thread unless one started earlier is still running.
+	 * From any other thread, runs {@code body} on the caller. The flag clears after success and after failure.
+	 */
+	public void runBackgroundOnce(AtomicBoolean inflight, Runnable body)
+	{
+		if (!isWorldThread())
+		{
+			body.run();
+			return;
+		}
+		
+		if (!inflight.compareAndSet(false, true))
+			return;
+		
+		executeLongRunning(() -> {
+			try
+			{
+				body.run();
+			}
+			finally
+			{
+				inflight.set(false);
+			}
+		});
 	}
 	
 	// ===========================================================================================

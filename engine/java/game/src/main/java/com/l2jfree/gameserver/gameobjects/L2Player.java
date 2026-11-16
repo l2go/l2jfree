@@ -35,6 +35,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -6406,7 +6407,13 @@ public final class L2Player extends L2Playable
 		
 		if (_isOnline != value)
 		{
-			_isOnline = value;
+			synchronized (_saveLock)
+			{
+				_isOnline = value;
+				// An autosave that has not started writing yet must not commit after the character is gone.
+				if (value == ONLINE_STATE_DELETED)
+					_saveGeneration.incrementAndGet();
+			}
 			
 			// Update the characters table of the database with online status and lastAccess (called when login and logout)
 			updateOnlineStatusInDb();
@@ -6974,6 +6981,13 @@ public final class L2Player extends L2Playable
 	 */
 	private long _lastStore;
 	
+	/** Serializes the JDBC of this player's saves. Not the player's own monitor. */
+	private final Object _saveLock = new Object();
+	
+	private final AtomicInteger _saveGeneration = new AtomicInteger();
+	
+	private final AtomicBoolean _backgroundSave = new AtomicBoolean();
+	
 	public void store()
 	{
 		store(false, true);
@@ -6987,29 +7001,46 @@ public final class L2Player extends L2Playable
 	/**
 	 * @return false if the save was rolled back and nothing of it reached the database
 	 */
-	public synchronized boolean store(boolean items, boolean storeActiveEffects)
+	public boolean store(boolean items, boolean storeActiveEffects)
 	{
-		_lastStore = System.currentTimeMillis();
+		final boolean[] deleted = { false };
+		final int[] generation = { 0 };
+		final PlayerSave[] captured = { null };
+		final boolean[] committed = { true };
 		
-		if (getOnlineState() == ONLINE_STATE_DELETED)
-			return true;
-		
-		// Update client coords, if these look like true
-		// if (isInsideRadius(getClientX(), getClientY(), 1000, true))
-		//	getPosition().setXYZ(getClientX(), getClientY(), getClientZ());
-		
-		// The player row, the pet, the effects, and the items reach the database together or not at all.
-		// The control item is written before the pet row, which references it.
-		return WorldTransaction.run("Saving player " + getName(), () -> {
-			if (Config.UPDATE_ITEMS_ON_CHAR_STORE || items)
-				getInventory().updateDatabase();
-			L2Summon pet = getPet();
-			if (pet != null && pet.getInventory() != null)
-				pet.getInventory().updateDatabase();
-			storePet();
-			storePlayerData();
-			getEffects().storeEffects(storeActiveEffects);
+		// The snapshot is taken under the player monitor. JDBC runs after that monitor is released.
+		ThreadPoolManager.releaseThen(this, () -> {
+			_lastStore = System.currentTimeMillis();
+			deleted[0] = getOnlineState() == ONLINE_STATE_DELETED;
+			if (!deleted[0])
+			{
+				generation[0] = _saveGeneration.incrementAndGet();
+				captured[0] = capturePlayerSave();
+			}
+		}, () -> {
+			if (deleted[0])
+				return;
+			
+			synchronized (_saveLock)
+			{
+				// A logout or a newer save owns the row. This snapshot must not overwrite it.
+				if (generation[0] != _saveGeneration.get() || getOnlineState() == ONLINE_STATE_DELETED)
+					return;
+				
+				committed[0] = WorldTransaction.run("Saving player " + getName(), () -> {
+					if (Config.UPDATE_ITEMS_ON_CHAR_STORE || items)
+						getInventory().updateDatabase();
+					L2Summon pet = getPet();
+					if (pet != null && pet.getInventory() != null)
+						pet.getInventory().updateDatabase();
+					storePet();
+					PlayerRepository.getInstance().savePlayer(captured[0]);
+					getEffects().storeEffects(storeActiveEffects);
+				});
+			}
 		});
+		
+		return deleted[0] || committed[0];
 	}
 	
 	/**
@@ -7017,6 +7048,11 @@ public final class L2Player extends L2Playable
 	 * Meant to run inside the transaction of {@link #store(boolean, boolean)}.
 	 */
 	private void storePlayerData()
+	{
+		PlayerRepository.getInstance().savePlayer(capturePlayerSave());
+	}
+	
+	private PlayerSave capturePlayerSave()
 	{
 		PlayerSave save = new PlayerSave();
 		save.player = buildPlayerRow();
@@ -7044,7 +7080,7 @@ public final class L2Player extends L2Playable
 				new ColorsRow(HexUtil.fillHex(Util.reverseRGBChanels(getAppearance().getNameColor()), 6), HexUtil.fillHex(
 						Util.reverseRGBChanels(getAppearance().getTitleColor()), 6));
 		
-		PlayerRepository.getInstance().savePlayer(save);
+		return save;
 	}
 	
 	private void storePet()
@@ -12806,9 +12842,9 @@ public final class L2Player extends L2Playable
 			
 			if (delay <= 0)
 			{
-				// store() waits on the database. The autosave timer fires on the world thread,
-				// which cannot sit in that wait.
-				ThreadPoolManager.getInstance().executeLongRunning(() -> {
+				// One autosave per player. The timer does not start another until this one has finished or failed.
+				// Logout cancels the timer; a save already handed off finishes, then a newer save or deletion wins.
+				ThreadPoolManager.getInstance().runBackgroundOnce(_backgroundSave, () -> {
 					try
 					{
 						store();

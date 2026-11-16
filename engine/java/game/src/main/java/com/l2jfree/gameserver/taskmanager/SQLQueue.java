@@ -16,6 +16,7 @@ package com.l2jfree.gameserver.taskmanager;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,8 @@ public final class SQLQueue extends SQLQueryQueue
 {
 	private static final Logger _log = LoggerFactory.getLogger(SQLQueue.class);
 	
+	private final AtomicBoolean _flushing = new AtomicBoolean();
+	
 	private static final class SingletonHolder
 	{
 		private static final SQLQueue INSTANCE = new SQLQueue();
@@ -43,9 +46,8 @@ public final class SQLQueue extends SQLQueryQueue
 	
 	private SQLQueue()
 	{
-		// The timer fires on the world thread and only hands the flush off. The flush opens a
-		// connection, so it must not run there.
-		ThreadPoolManager.getInstance().scheduleAtFixedRate(() -> ThreadPoolManager.getInstance().executeLongRunning(this),
+		// The timer fires on the world thread. One flush runs at a time; a later tick does not queue another.
+		ThreadPoolManager.getInstance().scheduleAtFixedRate(() -> ThreadPoolManager.getInstance().runBackgroundOnce(_flushing, this::flushOnce),
 				60000, 60000);
 		
 		_log.info("SQLQueryQueue: Initialized.");
@@ -55,5 +57,11 @@ public final class SQLQueue extends SQLQueryQueue
 	protected Connection getConnection() throws SQLException
 	{
 		return L2DatabaseFactory.getInstance().getConnection();
+	}
+	
+	private void flushOnce()
+	{
+		ThreadPoolManager.enterBackgroundJdbc();
+		run();
 	}
 }

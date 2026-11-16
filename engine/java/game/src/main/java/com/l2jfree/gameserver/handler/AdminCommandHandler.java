@@ -14,9 +14,7 @@
  */
 package com.l2jfree.gameserver.handler;
 
-import java.util.concurrent.Future;
 import java.util.function.Consumer;
-import java.util.concurrent.TimeUnit;
 
 import com.l2jfree.Config;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -256,7 +254,9 @@ public final class AdminCommandHandler extends HandlerRegistry<String, IAdminCom
 		
 		GMAudit.auditGMAction(activeChar, "admincommand", command, params);
 		
-		final Future<?> task = ThreadPoolManager.getInstance().submitLongRunning(new Runnable() {
+		// The packet thread is the world thread. The command may wait on the database, so it does not run here.
+		// Creature changes inside the command apply on the world thread themselves.
+		ThreadPoolManager.getInstance().executeLongRunning(new Runnable() {
 			@Override
 			public void run()
 			{
@@ -283,17 +283,6 @@ public final class AdminCommandHandler extends HandlerRegistry<String, IAdminCom
 				}
 			}
 		});
-		
-		try
-		{
-			task.get(1000, TimeUnit.MILLISECONDS);
-			return;
-		}
-		catch (Exception e)
-		{
-			activeChar.sendMessage("The execution of '" + message
-					+ "' takes more time than 1000 msec, so execution done asynchronusly.");
-		}
 	}
 	
 	@SuppressWarnings("synthetic-access")

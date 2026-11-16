@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.l2jfree.Config;
+import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.gameobjects.L2Creature;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.gameobjects.stat.CreatureStat;
@@ -78,6 +79,12 @@ public class CreatureStatus
 	
 	public final void setCurrentHp(double newHp)
 	{
+		if (!ThreadPoolManager.getInstance().isWorldThread())
+		{
+			ThreadPoolManager.getInstance().runOnWorld(() -> setCurrentHp(newHp));
+			return;
+		}
+		
 		if (getActiveChar().isDead())
 			return;
 		
@@ -117,6 +124,12 @@ public class CreatureStatus
 	
 	public final void setCurrentMp(double newMp)
 	{
+		if (!ThreadPoolManager.getInstance().isWorldThread())
+		{
+			ThreadPoolManager.getInstance().runOnWorld(() -> setCurrentMp(newMp));
+			return;
+		}
+		
 		if (getActiveChar().isDead())
 			return;
 		
@@ -156,6 +169,12 @@ public class CreatureStatus
 	
 	public final void setCurrentCp(double newCp)
 	{
+		if (!ThreadPoolManager.getInstance().isWorldThread())
+		{
+			ThreadPoolManager.getInstance().runOnWorld(() -> setCurrentCp(newCp));
+			return;
+		}
+		
 		if (getActiveChar().isDead())
 			return;
 		
