@@ -143,7 +143,9 @@ final class WorldFlow
 				throw new SmokeException("UserInfo describes '" + userName + "' instead of '" + selected + "'");
 			}
 			int skippedBefore = game.skipped();
-			int trailing = settle(game, deadline);
+			Watcher watcher = new Watcher(game, Boolean.getBoolean("smoke.fight"));
+			int trailing = settle(game, deadline, watcher);
+			watcher.hold(deadline, Long.getLong("smoke.hold.seconds", 0L) * 1000L, reporter);
 			reporter.ok("UserInfo of " + userName + ", object id " + objectId + ", after " + skippedBefore
 					+ " other packets and " + trailing + " more");
 
@@ -199,7 +201,7 @@ final class WorldFlow
 	 *
 	 * @return the number of packets read
 	 */
-	private static int settle(GameConnection game, Deadline deadline) throws SmokeException
+	private static int settle(GameConnection game, Deadline deadline, Watcher watcher) throws SmokeException
 	{
 		long until = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(SETTLE_MILLIS);
 		int packets = 0;
@@ -207,7 +209,7 @@ final class WorldFlow
 		{
 			try
 			{
-				game.receive(QUIET_MILLIS);
+				watcher.see(game.receive(QUIET_MILLIS));
 				packets++;
 			}
 			catch (SmokeException e)
@@ -281,6 +283,78 @@ final class WorldFlow
 
 			if ((payload[0] & 0xff) == GamePackets.OP_LEAVE_WORLD)
 				return true;
+		}
+	}
+
+	/**
+	 * Measurement branch only. Stays in the world after UserInfo and reads what the world sends. With
+	 * {@code smoke.fight} it attacks the first monster the world announces (NpcInfo with the attackable flag),
+	 * so the server has a fight with watchers around it.
+	 */
+	private static final class Watcher
+	{
+		private static final int OP_NPC_INFO = 0x0c;
+		private static final int OP_ACTION = 0x1f;
+		private static final int OP_ATTACK_REQUEST = 0x01;
+		private static final long ATTACK_EVERY_MILLIS = 2000L;
+
+		private final GameConnection _game;
+		private final boolean _fight;
+		private int _target;
+		private int _npcs;
+		private int _packets;
+
+		Watcher(GameConnection game, boolean fight)
+		{
+			_game = game;
+			_fight = fight;
+		}
+
+		void see(byte[] payload) throws SmokeException
+		{
+			_packets++;
+			PacketReader in = new PacketReader(payload);
+			if (in.readC() != OP_NPC_INFO)
+				return;
+
+			int objectId = in.readD();
+			in.skip(4);
+			boolean attackable = in.readD() == 1;
+			_npcs++;
+			if (attackable && _target == 0)
+				_target = objectId;
+		}
+
+		void hold(Deadline deadline, long millis, Reporter reporter) throws SmokeException
+		{
+			long end = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(millis);
+			long nextAttack = 0L;
+			while (System.nanoTime() < end && !deadline.expired())
+			{
+				if (_fight && _target != 0 && System.nanoTime() >= nextAttack)
+				{
+					_game.send(command(OP_ACTION, _target));
+					_game.send(command(OP_ATTACK_REQUEST, _target));
+					nextAttack = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(ATTACK_EVERY_MILLIS);
+				}
+				try
+				{
+					see(_game.receive(200L));
+				}
+				catch (SmokeException e)
+				{
+					if (e.kind() != SmokeException.Kind.TIMEOUT)
+						throw e;
+				}
+			}
+			reporter.info((_fight ? "fighter" : "watcher") + ": " + _npcs + " NpcInfo, target "
+					+ (_target == 0 ? "none" : Integer.toString(_target)) + ", " + _packets + " packets");
+		}
+
+		private static byte[] command(int opcode, int objectId)
+		{
+			return new PacketWriter().writeC(opcode).writeD(objectId).writeD(0).writeD(0).writeD(0).writeC(0)
+					.toByteArray();
 		}
 	}
 }

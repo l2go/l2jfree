@@ -30,6 +30,19 @@ public final class Broadcast
 	
 	public static void toKnownPlayers(L2Creature character, L2ServerPacket mov)
 	{
+		final long begin = WorldTimings.begin();
+		try
+		{
+			toKnownPlayersUntimed(character, mov);
+		}
+		finally
+		{
+			WorldTimings.end(begin);
+		}
+	}
+	
+	private static void toKnownPlayersUntimed(L2Creature character, L2ServerPacket mov)
+	{
 		if (!character.getKnownList().getKnownPlayers().isEmpty())
 			for (L2Player player : character.getKnownList().getKnownPlayers().values())
 				if (player != null)
@@ -37,6 +50,19 @@ public final class Broadcast
 	}
 	
 	public static void toKnownPlayersInRadius(L2Creature character, L2ServerPacket mov, int radius)
+	{
+		final long begin = WorldTimings.begin();
+		try
+		{
+			toKnownPlayersInRadiusUntimed(character, mov, radius);
+		}
+		finally
+		{
+			WorldTimings.end(begin);
+		}
+	}
+	
+	private static void toKnownPlayersInRadiusUntimed(L2Creature character, L2ServerPacket mov, int radius)
 	{
 		if (radius < 0)
 		{
@@ -58,6 +84,19 @@ public final class Broadcast
 	
 	public static void toKnownPlayersInRadius(L2Creature character, L2ServerPacket mov, long radiusSq)
 	{
+		final long begin = WorldTimings.begin();
+		try
+		{
+			toKnownPlayersInRadiusUntimed(character, mov, radiusSq);
+		}
+		finally
+		{
+			WorldTimings.end(begin);
+		}
+	}
+	
+	private static void toKnownPlayersInRadiusUntimed(L2Creature character, L2ServerPacket mov, long radiusSq)
+	{
 		if (radiusSq < 0)
 		{
 			toKnownPlayers(character, mov);
@@ -78,6 +117,19 @@ public final class Broadcast
 	
 	public static void toSelfAndKnownPlayers(L2Creature character, L2ServerPacket mov)
 	{
+		final long begin = WorldTimings.begin();
+		try
+		{
+			toSelfAndKnownPlayersUntimed(character, mov);
+		}
+		finally
+		{
+			WorldTimings.end(begin);
+		}
+	}
+	
+	private static void toSelfAndKnownPlayersUntimed(L2Creature character, L2ServerPacket mov)
+	{
 		if (character instanceof L2Player)
 			((L2Player)character).sendPacket(mov);
 		
@@ -86,6 +138,19 @@ public final class Broadcast
 	
 	public static void toSelfAndKnownPlayersInRadius(L2Creature character, L2ServerPacket mov, int radius)
 	{
+		final long begin = WorldTimings.begin();
+		try
+		{
+			toSelfAndKnownPlayersInRadiusUntimed(character, mov, radius);
+		}
+		finally
+		{
+			WorldTimings.end(begin);
+		}
+	}
+	
+	private static void toSelfAndKnownPlayersInRadiusUntimed(L2Creature character, L2ServerPacket mov, int radius)
+	{
 		if (character instanceof L2Player)
 			((L2Player)character).sendPacket(mov);
 		
@@ -93,6 +158,19 @@ public final class Broadcast
 	}
 	
 	public static void toSelfAndKnownPlayersInRadius(L2Creature character, L2ServerPacket mov, long radiusSq)
+	{
+		final long begin = WorldTimings.begin();
+		try
+		{
+			toSelfAndKnownPlayersInRadiusUntimed(character, mov, radiusSq);
+		}
+		finally
+		{
+			WorldTimings.end(begin);
+		}
+	}
+	
+	private static void toSelfAndKnownPlayersInRadiusUntimed(L2Creature character, L2ServerPacket mov, long radiusSq)
 	{
 		if (character instanceof L2Player)
 			((L2Player)character).sendPacket(mov);

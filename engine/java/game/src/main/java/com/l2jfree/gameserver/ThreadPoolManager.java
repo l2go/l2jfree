@@ -107,7 +107,19 @@ public final class ThreadPoolManager
 			final Thread thread = worldThreads.newThread(task);
 			_worldThread = thread;
 			return thread;
-		});
+		}) {
+			@Override
+			protected void beforeExecute(Thread t, Runnable r)
+			{
+				com.l2jfree.gameserver.util.WorldTimings.taskBegin();
+			}
+			
+			@Override
+			protected void afterExecute(Runnable r, Throwable t)
+			{
+				com.l2jfree.gameserver.util.WorldTimings.taskEnd();
+			}
+		};
 		_world.setRejectedExecutionHandler(new L2RejectedExecutionHandler());
 		_world.prestartAllCoreThreads();
 		
