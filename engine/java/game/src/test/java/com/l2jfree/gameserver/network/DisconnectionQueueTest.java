@@ -16,6 +16,8 @@ package com.l2jfree.gameserver.network;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -24,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.threadmanager.FIFORunnableQueue;
 
 class DisconnectionQueueTest
@@ -49,6 +52,31 @@ class DisconnectionQueueTest
 
 		verify(queue).execute(work);
 		assertThat(ran).isFalse();
+	}
+
+	@Test
+	@DisplayName("a character that already left the world is not saved again, so no loss is reported")
+	void aDeletedCharacterIsNotSavedAgain()
+	{
+		L2Player player = mock(L2Player.class);
+		when(player.getOnlineState()).thenReturn(L2Player.ONLINE_STATE_DELETED);
+
+		new Disconnection(player).store();
+
+		verify(player, never()).storeFinal();
+	}
+
+	@Test
+	@DisplayName("a character in the world is saved again until the write commits")
+	void aLiveCharacterIsRetriedUntilTheWriteCommits()
+	{
+		L2Player player = mock(L2Player.class);
+		when(player.getOnlineState()).thenReturn(L2Player.ONLINE_STATE_ONLINE);
+		when(player.storeFinal()).thenReturn(false, true);
+
+		new Disconnection(player).store();
+
+		verify(player, times(2)).storeFinal();
 	}
 
 	@Test

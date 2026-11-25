@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -123,6 +124,56 @@ class WorldBoundaryTest
 		CountDownLatch next = new CountDownLatch(1);
 		ThreadPoolManager.getInstance().execute(() -> ThreadPoolManager.getInstance().runBackgroundOnce(inflight, next::countDown));
 		assertThat(next.await(5, TimeUnit.SECONDS)).isTrue();
+	}
+	
+	@Test
+	void theCopyIsTakenOnTheWorldThreadAndTheWriteRunsOnAVirtualThread() throws Exception
+	{
+		ThreadPoolManager pool = ThreadPoolManager.getInstance();
+		AtomicBoolean inflight = new AtomicBoolean();
+		CompletableFuture<Boolean> copiedOnWorld = new CompletableFuture<>();
+		CompletableFuture<Boolean> wroteOnVirtual = new CompletableFuture<>();
+		
+		pool.execute(() -> pool.copyThenRunBackgroundOnce(inflight, () -> {
+			copiedOnWorld.complete(pool.isWorldThread());
+			return () -> wroteOnVirtual.complete(Thread.currentThread().isVirtual());
+		}));
+		
+		assertThat(copiedOnWorld.get(5, TimeUnit.SECONDS)).isTrue();
+		assertThat(wroteOnVirtual.get(5, TimeUnit.SECONDS)).isTrue();
+		assertThat(awaitFalse(inflight)).isTrue();
+	}
+	
+	@Test
+	void nothingIsCopiedForARunThatWouldBeSkipped() throws Exception
+	{
+		ThreadPoolManager pool = ThreadPoolManager.getInstance();
+		AtomicBoolean inflight = new AtomicBoolean(true);
+		AtomicInteger copies = new AtomicInteger();
+		CompletableFuture<Boolean> result = new CompletableFuture<>();
+		
+		pool.execute(() -> result.complete(pool.copyThenRunBackgroundOnce(inflight, () -> {
+			copies.incrementAndGet();
+			return () -> {
+			};
+		})));
+		
+		assertThat(result.get(5, TimeUnit.SECONDS)).isFalse();
+		assertThat(copies).hasValue(0);
+		assertThat(inflight).isTrue();
+	}
+	
+	@Test
+	void aCopyOfNothingStartsNothingAndLeavesTheFlagFree() throws Exception
+	{
+		ThreadPoolManager pool = ThreadPoolManager.getInstance();
+		AtomicBoolean inflight = new AtomicBoolean();
+		CompletableFuture<Boolean> result = new CompletableFuture<>();
+		
+		pool.execute(() -> result.complete(pool.copyThenRunBackgroundOnce(inflight, () -> null)));
+		
+		assertThat(result.get(5, TimeUnit.SECONDS)).isFalse();
+		assertThat(inflight).isFalse();
 	}
 	
 	@Test
@@ -322,6 +373,43 @@ class WorldBoundaryTest
 		}, task -> {
 			throw new RejectedExecutionException("pool stopped");
 		})).isInstanceOf(RejectedExecutionException.class);
+		assertThat(inflight).isFalse();
+	}
+	
+	@Test
+	void aRunInFlightIsReportedAsSkippedAndTheNextOneStartsAfterIt()
+	{
+		AtomicBoolean inflight = new AtomicBoolean();
+		Runnable[] started = new Runnable[1];
+		
+		assertThat(ThreadPoolManager.startOnce(inflight, () -> {
+		}, task -> started[0] = task)).isTrue();
+		assertThat(ThreadPoolManager.startOnce(inflight, () -> {
+		}, task -> {
+			throw new AssertionError("a second run must not start beside the first");
+		})).isFalse();
+		
+		started[0].run();
+		assertThat(inflight).isFalse();
+		assertThat(ThreadPoolManager.startOnce(inflight, () -> {
+		}, task -> started[0] = task)).isTrue();
+	}
+	
+	@Test
+	void aRejectionWhileTheServerStopsIsASkipNotAnError()
+	{
+		AtomicBoolean inflight = new AtomicBoolean();
+		
+		assertThat(ThreadPoolManager.startUnlessStopping(inflight, () -> {
+		}, task -> {
+			throw new RejectedExecutionException("pool stopped");
+		}, () -> true)).isFalse();
+		assertThat(inflight).isFalse();
+		
+		assertThatThrownBy(() -> ThreadPoolManager.startUnlessStopping(inflight, () -> {
+		}, task -> {
+			throw new RejectedExecutionException("pool broken");
+		}, () -> false)).isInstanceOf(RejectedExecutionException.class);
 		assertThat(inflight).isFalse();
 	}
 	

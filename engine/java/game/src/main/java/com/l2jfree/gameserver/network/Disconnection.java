@@ -89,6 +89,11 @@ public final class Disconnection
 			// a rolled-back save loses everything since the last one, and nothing saves this player afterwards
 			if (_activeChar != null)
 			{
+				// A character that already left the world is not saved again: storeFinal would report it as unwritten,
+				// and the retries below would log a loss that did not happen.
+				if (_activeChar.getOnlineState() == L2Player.ONLINE_STATE_DELETED)
+					return this;
+				
 				boolean saved = false;
 				for (int attempt = 1; attempt <= STORE_ATTEMPTS && !saved; attempt++)
 				{

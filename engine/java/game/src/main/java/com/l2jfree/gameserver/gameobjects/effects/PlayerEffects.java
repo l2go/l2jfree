@@ -69,10 +69,34 @@ public final class PlayerEffects extends CreatureEffects
 		return (L2Player)_owner;
 	}
 	
+	/** The effects of one class as they were when they were copied. It carries no live effect. */
+	public static final class EffectsCopy
+	{
+		private final int _classIndex;
+		private final ArrayList<EffectRow> _rows;
+		
+		private EffectsCopy(int classIndex, ArrayList<EffectRow> rows)
+		{
+			_classIndex = classIndex;
+			_rows = rows;
+		}
+	}
+	
 	public void storeEffects(boolean storeActiveEffects)
 	{
+		writeEffects(copyEffects(storeActiveEffects));
+	}
+	
+	/**
+	 * Copies the effects that are saved. Effects change on the world thread, so a background save copies them there
+	 * and writes the copy with {@link #writeEffects(EffectsCopy)} afterwards.
+	 * 
+	 * @return the copy, or null when effects are not stored
+	 */
+	public EffectsCopy copyEffects(boolean storeActiveEffects)
+	{
 		if (!Config.STORE_EFFECTS)
-			return;
+			return null;
 		
 		final ArrayList<StoredEffect> list = getEffectList();
 		
@@ -83,17 +107,25 @@ public final class PlayerEffects extends CreatureEffects
 				if (e != null && e.canBeStoredInDb())
 					list.add(new StoredEffect(e));
 		
+		final ArrayList<EffectRow> rows = new ArrayList<EffectRow>(list.size());
+		for (StoredEffect se : list)
+			rows.add(new EffectRow(se.skillId, se.skillLvl, Math.max(0, se.count), se.remaining));
+		
+		return new EffectsCopy(getOwner().classIndexForStoredEffects(), rows);
+	}
+	
+	/** Replaces the stored effects of the copied class. A copy of null, from a server that stores none, is nothing. */
+	public void writeEffects(EffectsCopy copy)
+	{
+		if (copy == null)
+			return;
+		
 		// TODO: delay effect storage
 		try
 		{
-			final ArrayList<EffectRow> rows = new ArrayList<EffectRow>(list.size());
-			for (StoredEffect se : list)
-				rows.add(new EffectRow(se.skillId, se.skillLvl, Math.max(0, se.count), se.remaining));
+			PlayerRepository.getInstance().replaceEffects(getOwner().getObjectId(), copy._classIndex, copy._rows);
 			
-			int classIndex = getOwner().classIndexForStoredEffects();
-			PlayerRepository.getInstance().replaceEffects(getOwner().getObjectId(), classIndex, rows);
-			
-			_storedEffects.remove(classIndex);
+			_storedEffects.remove(copy._classIndex);
 		}
 		catch (Exception e)
 		{

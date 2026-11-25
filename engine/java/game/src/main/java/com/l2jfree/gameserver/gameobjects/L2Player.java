@@ -7059,41 +7059,70 @@ public final class L2Player extends L2Playable
 					return false;
 				_finalSave = true;
 			}
-			final PlayerSave captured;
+			final SaveCopy copy;
 			synchronized (this)
 			{
 				_lastStore = System.currentTimeMillis();
-				captured = capturePlayerSave();
+				copy = new SaveCopy(_saveGeneration.get(), capturePlayerSave(), getEffects().copyEffects(storeActiveEffects));
 			}
 			synchronized (_saveLock)
 			{
 				ThreadPoolManager.enterBackgroundJdbc();
-				return writePlayer(items, storeActiveEffects, captured);
+				return writePlayer(items, copy);
 			}
 		}
 		
-		final int generation;
-		final PlayerSave captured;
-		synchronized (this)
+		final SaveCopy copy = copyForSave(storeActiveEffects);
+		return copy != null && writeCopy(copy, items);
+	}
+	
+	/** What a save writes, copied from the live player so that the write reads nothing that still changes. */
+	private static final class SaveCopy
+	{
+		private final int _generation;
+		private final PlayerSave _player;
+		private final PlayerEffects.EffectsCopy _effects;
+		
+		private SaveCopy(int generation, PlayerSave player, PlayerEffects.EffectsCopy effects)
 		{
-			if (getOnlineState() == ONLINE_STATE_DELETED)
-				return false;
-			_lastStore = System.currentTimeMillis();
-			generation = _saveGeneration.incrementAndGet();
-			captured = capturePlayerSave();
-		}
-		synchronized (_saveLock)
-		{
-			// Someone copied a newer snapshot, or logout already claimed the row. This copy is not written.
-			if (getOnlineState() == ONLINE_STATE_DELETED || _finalSave || generation != _saveGeneration.get())
-				return false;
-			
-			ThreadPoolManager.enterBackgroundJdbc();
-			return writePlayer(items, storeActiveEffects, captured);
+			_generation = generation;
+			_player = player;
+			_effects = effects;
 		}
 	}
 	
-	private boolean writePlayer(boolean items, boolean storeActiveEffects, PlayerSave captured)
+	/**
+	 * Copies the player and its effects on the calling thread. A background save calls this on the world thread, where
+	 * they change, and writes the copy elsewhere.
+	 * 
+	 * @return the copy, or null when the character is already gone
+	 */
+	private SaveCopy copyForSave(boolean storeActiveEffects)
+	{
+		synchronized (this)
+		{
+			if (getOnlineState() == ONLINE_STATE_DELETED)
+				return null;
+			_lastStore = System.currentTimeMillis();
+			return new SaveCopy(_saveGeneration.incrementAndGet(), capturePlayerSave(),
+					getEffects().copyEffects(storeActiveEffects));
+		}
+	}
+	
+	private boolean writeCopy(SaveCopy copy, boolean items)
+	{
+		synchronized (_saveLock)
+		{
+			// Someone copied a newer snapshot, or logout already claimed the row. This copy is not written.
+			if (getOnlineState() == ONLINE_STATE_DELETED || _finalSave || copy._generation != _saveGeneration.get())
+				return false;
+			
+			ThreadPoolManager.enterBackgroundJdbc();
+			return writePlayer(items, copy);
+		}
+	}
+	
+	private boolean writePlayer(boolean items, SaveCopy copy)
 	{
 		return WorldTransaction.run("Saving player " + getName(), () -> {
 			if (Config.UPDATE_ITEMS_ON_CHAR_STORE || items)
@@ -7102,8 +7131,8 @@ public final class L2Player extends L2Playable
 			if (pet != null && pet.getInventory() != null)
 				pet.getInventory().updateDatabase();
 			storePet();
-			PlayerRepository.getInstance().savePlayer(captured);
-			getEffects().storeEffects(storeActiveEffects);
+			PlayerRepository.getInstance().savePlayer(copy._player);
+			getEffects().writeEffects(copy._effects);
 		});
 	}
 	
@@ -12908,15 +12937,22 @@ public final class L2Player extends L2Playable
 			{
 				// One autosave per player. The timer does not start another until this one has finished or failed.
 				// Logout cancels the timer; a save already handed off finishes, then a newer save or deletion wins.
-				ThreadPoolManager.getInstance().runBackgroundOnce(_backgroundSave, () -> {
-					try
-					{
-						store();
-					}
-					catch (RuntimeException e)
-					{
-						_log.error("", e);
-					}
+				// The copy is taken here, on the world thread, where the player changes; only the write waits for the database.
+				ThreadPoolManager.getInstance().copyThenRunBackgroundOnce(_backgroundSave, () -> {
+					final SaveCopy copy = copyForSave(true);
+					if (copy == null)
+						return null;
+					
+					return () -> {
+						try
+						{
+							writeCopy(copy, false);
+						}
+						catch (RuntimeException e)
+						{
+							_log.error("", e);
+						}
+					};
 				});
 				
 				delay = period;

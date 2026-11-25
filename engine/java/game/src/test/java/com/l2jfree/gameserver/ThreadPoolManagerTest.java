@@ -55,6 +55,22 @@ class ThreadPoolManagerTest
 	}
 	
 	@Test
+	void theWorldThreadIsRecognisedByIdentityNotByName() throws Exception
+	{
+		ThreadPoolManager pool = ThreadPoolManager.getInstance();
+		
+		CompletableFuture<Boolean> inside = new CompletableFuture<>();
+		pool.execute(() -> inside.complete(pool.isWorldThread()));
+		assertThat(inside.get(5, TimeUnit.SECONDS)).isTrue();
+		assertThat(pool.isWorldThread()).isFalse();
+		
+		CompletableFuture<Boolean> namesake = new CompletableFuture<>();
+		Thread thread = new Thread(() -> namesake.complete(pool.isWorldThread()), "l2jfree-world");
+		thread.start();
+		assertThat(namesake.get(5, TimeUnit.SECONDS)).isFalse();
+	}
+	
+	@Test
 	void statsDescribeTheLongRunningTasks() throws Exception
 	{
 		ThreadPoolManager.getInstance().submitLongRunning(() -> {}).get(5, TimeUnit.SECONDS);

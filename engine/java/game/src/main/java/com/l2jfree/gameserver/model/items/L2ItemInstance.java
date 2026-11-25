@@ -1287,8 +1287,10 @@ public final class L2ItemInstance extends L2Object implements FuncOwner, Element
 	 */
 	private void writeOn(Connection con, boolean force)
 	{
-		// A caller that already holds the item monitor, such as a drop, must not wait on the write lock:
-		// the write lock is taken before that monitor, and the two orders would deadlock.
+		// A caller that already holds the item monitor must not wait on the write lock: a writer takes the write lock
+		// first and then needs the monitor to record the result, so the two would wait for each other. Such a write
+		// is not ordered against a background writer that is in its SQL. Closing that needs the item state behind a
+		// lock that a monitor holder can wait for, which is a larger change than this one.
 		if (Thread.holdsLock(this))
 		{
 			writeHolding(con, force);

@@ -148,7 +148,8 @@ public final class TaskManager extends HandlerRegistry<String, TaskHandler>
 		public void run()
 		{
 			// The timer fires on the world thread. The UPDATE of global_task, and the handler, wait on the database.
-			ThreadPoolManager.getInstance().runBackgroundOnce(_busy, this::executeNow);
+			if (!ThreadPoolManager.getInstance().runBackgroundOnce(_busy, this::executeNow))
+				_log.warn("Task {} is still running or the server is stopping, this run is skipped", this);
 		}
 		
 		private void executeNow()

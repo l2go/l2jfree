@@ -24,10 +24,13 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,9 +56,11 @@ public final class ThreadPoolManager
 	
 	public static final long MAXIMUM_RUNTIME_IN_MILLISEC_WITHOUT_WARNING = 5000;
 	
+	private static final String WORLD_THREAD_NAME = "l2jfree-world";
+	
 	private static final long MAX_DELAY = TimeUnit.NANOSECONDS.toMillis(Long.MAX_VALUE - System.nanoTime()) / 2;
 	
-	/** Test seam. Production leaves it empty. A stalled gate must not sit on the world thread. */
+	/** Test seam, for tests only: production leaves it empty. A stalled gate must not sit on the world thread. */
 	static volatile Runnable jdbcGate = () -> {
 	};
 	
@@ -90,12 +95,19 @@ public final class ThreadPoolManager
 	
 	/** Movement, knownlist, effects, AI and client packet logic. One thread, so two tasks cannot write one creature at once. */
 	private final ScheduledThreadPoolExecutor _world;
+	private volatile Thread _worldThread;
 	/** Blocking work (admin commands, cleanups, JDBC): one virtual thread per task. */
 	private final VirtualTaskExecutor _longRunningPool;
 	
 	private ThreadPoolManager()
 	{
-		_world = new ScheduledThreadPoolExecutor(1, Thread.ofPlatform().name("l2jfree-world").factory());
+		final ThreadFactory worldThreads = Thread.ofPlatform().name(WORLD_THREAD_NAME).factory();
+		_world = new ScheduledThreadPoolExecutor(1, task -> {
+			// A dead worker is replaced by a new thread, so the reference follows the factory, not the first thread.
+			final Thread thread = worldThreads.newThread(task);
+			_worldThread = thread;
+			return thread;
+		});
 		_world.setRejectedExecutionHandler(new L2RejectedExecutionHandler());
 		_world.prestartAllCoreThreads();
 		
@@ -206,7 +218,7 @@ public final class ThreadPoolManager
 	
 	public boolean isWorldThread()
 	{
-		return "l2jfree-world".equals(Thread.currentThread().getName());
+		return Thread.currentThread() == _worldThread;
 	}
 	
 	/**
@@ -266,23 +278,74 @@ public final class ThreadPoolManager
 	/**
 	 * From the world thread, starts {@code body} on a virtual thread unless one started earlier is still running.
 	 * From any other thread, runs {@code body} on the caller. The flag clears after success and after failure.
+	 * <p>
+	 * While the server stops, the background pool no longer accepts work. A world task that wakes up then has nothing
+	 * left to do, so it is skipped without an error; the final saves run on the stopping thread, not here.
+	 *
+	 * @return true when {@code body} ran or started; false when it was skipped because the previous run is still in
+	 *         flight or the server is stopping
 	 */
-	public void runBackgroundOnce(AtomicBoolean inflight, Runnable body)
+	public boolean runBackgroundOnce(AtomicBoolean inflight, Runnable body)
 	{
 		if (!isWorldThread())
 		{
 			body.run();
-			return;
+			return true;
 		}
 		
-		startOnce(inflight, body, this::executeLongRunning);
+		return startUnlessStopping(inflight, body, this::executeLongRunning, _longRunningPool::isShutdown);
 	}
 	
-	/** Starts {@code body} once. A rejected start clears the flag instead of leaving it stuck. */
-	static void startOnce(AtomicBoolean inflight, Runnable body, Consumer<Runnable> start)
+	/**
+	 * Like {@link #runBackgroundOnce(AtomicBoolean, Runnable)} for work that must read the world. {@code copy} runs on
+	 * the caller, which is the world thread when it matters, only when no earlier run is in flight, so nothing is
+	 * copied for a run that would be skipped. It returns the write that persists the copy, or null for nothing to
+	 * write. The write runs on a virtual thread and reads only the copy.
+	 * <p>
+	 * Only the world thread starts runs, so the check and the start cannot be interleaved with another start.
+	 *
+	 * @return true when the write ran or started
+	 */
+	public boolean copyThenRunBackgroundOnce(AtomicBoolean inflight, Supplier<Runnable> copy)
+	{
+		if (isWorldThread() && inflight.get())
+			return false;
+		
+		final Runnable write = copy.get();
+		if (write == null)
+			return false;
+		
+		return runBackgroundOnce(inflight, write);
+	}
+	
+	/** {@link #startOnce} that treats a rejection during shutdown as "nothing left to do" and any other as an error. */
+	static boolean startUnlessStopping(AtomicBoolean inflight, Runnable body, Consumer<Runnable> start,
+			BooleanSupplier stopping)
+	{
+		try
+		{
+			return startOnce(inflight, body, start);
+		}
+		catch (RejectedExecutionException e)
+		{
+			if (!stopping.getAsBoolean())
+				throw e;
+			
+			_log.debug("Background work skipped, the server is stopping.");
+			return false;
+		}
+	}
+	
+	/**
+	 * Starts {@code body} once. A rejected start clears the flag instead of leaving it stuck, and the caller sees the
+	 * rejection.
+	 *
+	 * @return false when a run is already in flight, so {@code body} was not started
+	 */
+	static boolean startOnce(AtomicBoolean inflight, Runnable body, Consumer<Runnable> start)
 	{
 		if (!inflight.compareAndSet(false, true))
-			return;
+			return false;
 		
 		try
 		{
@@ -296,6 +359,7 @@ public final class ThreadPoolManager
 					inflight.set(false);
 				}
 			});
+			return true;
 		}
 		catch (RuntimeException e)
 		{

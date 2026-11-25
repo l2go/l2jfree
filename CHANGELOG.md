@@ -11,6 +11,7 @@ Notable changes, in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) for
 ### Fixed
 
 - A packet that writes no byte, as one does when its player left after it was queued, is not sent as an empty frame. The client no longer reads a frame with nothing in it after a logout.
+- The autosave copies the player and its effects on the world thread, where they change, and writes only the copy in the background. A character that already left the world is not saved again on disconnect, so no lost save is logged for it. A background task that wakes up while the server stops is skipped quietly, and a global task whose previous run is still going logs that its run was skipped.
 
 ## [3.3.0] - 2026-11-14
 
