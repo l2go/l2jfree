@@ -11,18 +11,18 @@ Open a [private security advisory](https://github.com/l2go/l2jfree/security/advi
 The image is signed with cosign and carries an SBOM and build provenance:
 
 ```sh
-cosign verify ghcr.io/l2go/l2jfree:3.3.0 \
+cosign verify ghcr.io/l2go/l2jfree:3.3.1 \
   --certificate-identity https://github.com/l2go/l2jfree/.github/workflows/build.yml@refs/heads/main \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
-gh attestation verify oci://ghcr.io/l2go/l2jfree:3.3.0 --repo l2go/l2jfree
+gh attestation verify oci://ghcr.io/l2go/l2jfree:3.3.1 --repo l2go/l2jfree
 ```
 
 The compose archive comes with the Sigstore bundle of its provenance:
 
 ```sh
-gh release download v3.3.0 --repo l2go/l2jfree
-gh attestation verify l2jfree-3.3.0-compose.tar.gz --repo l2go/l2jfree \
-  --bundle l2jfree-3.3.0-compose.tar.gz.sigstore.json \
+gh release download v3.3.1 --repo l2go/l2jfree
+gh attestation verify l2jfree-3.3.1-compose.tar.gz --repo l2go/l2jfree \
+  --bundle l2jfree-3.3.1-compose.tar.gz.sigstore.json \
   --signer-workflow l2go/l2jfree/.github/workflows/release.yml
 ```
 
