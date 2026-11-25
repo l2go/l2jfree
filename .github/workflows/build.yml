@@ -42,7 +42,8 @@ jobs:
         shell: bash
         run: |
           jar="$RUNNER_TEMP/jython-standalone-2.7.5b1.jar"
-          curl --fail --location --silent --show-error \
+          # Maven Central answers 429 to a busy runner; curl waits and asks again, and the checksum below still decides
+          curl --fail --location --silent --show-error --retry 5 --retry-delay 10 --retry-all-errors \
             "https://repo.maven.apache.org/maven2/org/python/jython-standalone/2.7.5b1/jython-standalone-2.7.5b1.jar" \
             --output "$jar"
           echo "0b3af15fad90dd3a887a88ee4fb9af082cb335cff19a54f5927673e328761290  $jar" | sha256sum --check -
