@@ -146,7 +146,9 @@ final class WorldFlow
 			});
 			game.send(GamePackets.enterWorld());
 			PacketReader userInfo = game.expect(GamePackets.OP_USER_INFO, "UserInfo");
-			String where = userInfo.readD() + " " + userInfo.readD() + " " + userInfo.readD();
+			int x = userInfo.readD();
+			int y = userInfo.readD();
+			String where = x + " " + y + " " + userInfo.readD();
 			userInfo.skip(4); // vehicle id
 			int objectId = userInfo.readD();
 			String userName = userInfo.readS();
@@ -155,7 +157,7 @@ final class WorldFlow
 				throw new SmokeException("UserInfo describes '" + userName + "' instead of '" + selected + "'");
 			}
 			int skippedBefore = game.skipped();
-			watcher.at(where);
+			watcher.at(where, x, y);
 			int trailing = settle(game, deadline);
 			watcher.hold(deadline, Long.getLong("smoke.hold.seconds", 0L) * 1000L, reporter);
 			reporter.ok("UserInfo of " + userName + ", object id " + objectId + ", after " + skippedBefore
@@ -315,6 +317,9 @@ final class WorldFlow
 		private int _npcs;
 		private int _packets;
 		private String _where = "?";
+		private int _x;
+		private int _y;
+		private final java.util.Map<Integer, int[]> _candidates = new java.util.LinkedHashMap<>();
 		private final java.util.Map<Integer, Integer> _opcodes = new java.util.TreeMap<>();
 
 		Watcher(GameConnection game, boolean fight)
@@ -323,9 +328,22 @@ final class WorldFlow
 			_fight = fight;
 		}
 
-		void at(String where)
+		void at(String where, int x, int y)
 		{
 			_where = where;
+			_x = x;
+			_y = y;
+			long best = Long.MAX_VALUE;
+			for (java.util.Map.Entry<Integer, int[]> candidate : _candidates.entrySet())
+			{
+				long dx = candidate.getValue()[0] - _x;
+				long dy = candidate.getValue()[1] - _y;
+				if (dx * dx + dy * dy < best)
+				{
+					best = dx * dx + dy * dy;
+					_target = candidate.getKey();
+				}
+			}
 		}
 
 		void see(byte[] payload) throws SmokeException
@@ -341,8 +359,8 @@ final class WorldFlow
 			in.skip(4);
 			boolean attackable = in.readD() == 1;
 			_npcs++;
-			if (attackable && _target == 0)
-				_target = objectId;
+			if (attackable)
+				_candidates.put(objectId, new int[] { in.readD(), in.readD() });
 		}
 
 		void hold(Deadline deadline, long millis, Reporter reporter) throws SmokeException
