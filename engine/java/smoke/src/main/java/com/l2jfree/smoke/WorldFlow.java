@@ -300,14 +300,13 @@ final class WorldFlow
 
 	/**
 	 * Measurement branch only. Stays in the world after UserInfo and reads what the world sends. With
-	 * {@code smoke.fight} it attacks the first monster the world announces (NpcInfo with the attackable flag),
+	 * {@code smoke.fight} it clicks the first monster the world announces again and again (the second click on a selected target starts the fight) (NpcInfo with the attackable flag),
 	 * so the server has a fight with watchers around it.
 	 */
 	private static final class Watcher
 	{
 		private static final int OP_NPC_INFO = 0x0c;
 		private static final int OP_ACTION = 0x1f;
-		private static final int OP_ATTACK_REQUEST = 0x01;
 		private static final long ATTACK_EVERY_MILLIS = 2000L;
 
 		private final GameConnection _game;
@@ -355,7 +354,6 @@ final class WorldFlow
 				if (_fight && _target != 0 && System.nanoTime() >= nextAttack)
 				{
 					_game.send(command(OP_ACTION, _target));
-					_game.send(command(OP_ATTACK_REQUEST, _target));
 					nextAttack = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(ATTACK_EVERY_MILLIS);
 				}
 				try
