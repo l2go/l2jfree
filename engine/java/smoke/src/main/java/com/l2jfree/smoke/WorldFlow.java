@@ -308,6 +308,8 @@ final class WorldFlow
 	private static final class Watcher
 	{
 		private static final int OP_NPC_INFO = 0x0c;
+		/** SystemMessageId.YOU_EARNED_S1_EXP_AND_S2_SP: the monster is dead */
+		private static final int EXP_EARNED = 95;
 		private static final int OP_ACTION = 0x1f;
 		private static final long ATTACK_EVERY_MILLIS = 2000L;
 
@@ -318,6 +320,7 @@ final class WorldFlow
 		private int _packets;
 		private String _where = "?";
 		private final java.util.Map<Integer, Integer> _messages = new java.util.TreeMap<>();
+		private volatile boolean _killed;
 		private int _x;
 		private int _y;
 		private final java.util.Map<Integer, int[]> _candidates = new java.util.LinkedHashMap<>();
@@ -334,6 +337,12 @@ final class WorldFlow
 			_where = where;
 			_x = x;
 			_y = y;
+			pick();
+		}
+
+		private void pick()
+		{
+			_target = 0;
 			long best = Long.MAX_VALUE;
 			for (java.util.Map.Entry<Integer, int[]> candidate : _candidates.entrySet())
 			{
@@ -354,7 +363,12 @@ final class WorldFlow
 			int opcode = in.readC();
 			_opcodes.merge(opcode, 1, Integer::sum);
 			if (opcode == 0x62)
-				_messages.merge(in.readD(), 1, Integer::sum);
+			{
+				int message = in.readD();
+				_messages.merge(message, 1, Integer::sum);
+				if (message == EXP_EARNED)
+					_killed = true;
+			}
 			if (opcode != OP_NPC_INFO)
 				return;
 
@@ -372,6 +386,13 @@ final class WorldFlow
 			long nextAttack = 0L;
 			while (System.nanoTime() < end && !deadline.expired())
 			{
+				if (_killed)
+				{
+					_killed = false;
+					_candidates.remove(_target);
+					pick();
+					nextAttack = 0L;
+				}
 				if (_fight && _target != 0 && System.nanoTime() >= nextAttack)
 				{
 					_game.send(command(OP_ACTION, _target));

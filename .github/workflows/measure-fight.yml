@@ -68,15 +68,15 @@ jobs:
         run: |
           mkdir -p out
           smoke() { java $PROPS -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240 "$@"; }
-          for watchers in 0; do
+          for watchers in 0 10 50 150; do
             start="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo "== $watchers watchers, from $start"
             if [ "$watchers" -gt 0 ]; then
-              PROPS="-Dsmoke.hold.seconds=75" smoke --sessions "$watchers" --parallel 25 > "out/watchers-$watchers.txt" 2>&1 &
+              PROPS="-Dsmoke.hold.seconds=100" smoke --sessions "$watchers" --parallel 25 > "out/watchers-$watchers.txt" 2>&1 &
               watchers_pid=$!
               sleep 30
             fi
-            PROPS="-Dsmoke.fight=true -Dsmoke.hold.seconds=30" smoke | tee "out/fighter-$watchers.txt" || true
+            PROPS="-Dsmoke.fight=true -Dsmoke.hold.seconds=60" smoke | tee "out/fighter-$watchers.txt" || true
             if [ "$watchers" -gt 0 ]; then wait "$watchers_pid" || true; fi
             docker compose -f deploy/compose.yaml logs --no-color --since "$start" server | grep -E "WorldTimings|MEASURE" > "out/timings-$watchers.txt" || true
             echo "-- timings with $watchers watchers"; cat "out/timings-$watchers.txt"
