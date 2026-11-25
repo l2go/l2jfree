@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version without the v, for example 3.3.0"
+        description: "Version without the v, for example 3.3.1"
         required: true
-        default: "3.3.0"
+        default: "3.3.1"
       commit:
         description: "Commit of main to release (a full sha); empty for the head of main"
         required: false
@@ -53,7 +53,7 @@ jobs:
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -euo pipefail
-          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::the version must look like 3.3.0"; exit 1; }
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::the version must look like 3.3.1"; exit 1; }
           git fetch origin main
           commit="${COMMIT:-$(git rev-parse origin/main)}"
           git merge-base --is-ancestor "$commit" origin/main || { echo "::error::$commit is not on main"; exit 1; }

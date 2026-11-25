@@ -4,9 +4,12 @@ Notable changes, in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) for
 
 ## [Unreleased]
 
+## [3.3.1] - 2026-11-25
+
 ### Changed
 
 - Movement, knownlist, effects, AI and client packet logic share one platform thread, so two tasks cannot write one creature at the same time. Scheduled database work (global tasks, the item flush, dropped items, the game clock, character load) runs on virtual threads and does not hold a player or item monitor. One session has one character load: disconnect or a newer selection drops it, and a dropped load is not entered and does not disconnect a character the replacement already entered. An item insert writes its augmentation and elemental attribute on the same connection; a change during the write cannot turn the next write into a duplicate insert or an update of a missing row, and a queued write cannot land after a newer one. A rift tick, an Olympiad step, a Festival step and a GM command apply as one step on the world thread, and that step does not wait for the world while holding a creature monitor. Logout's save is the one that is written; a later snapshot does not replace it and a skipped snapshot is not reported as saved. A handed-off world step reports the failure it threw, and a closed world or an interrupt finishes the wait. `BaseThreadPoolSize` and `ExtraThreadPerCore` are no longer read.
+- A logout's own save, the commit of a multisell exchange, and an admin command still wait for the database on the world thread. A slow database holds the other world tasks for that time, and a world task that runs longer than five seconds is logged. No load measurement of this has been made yet.
 
 ### Fixed
 
@@ -135,7 +138,8 @@ Final 2.x release: Java 25 bytecode, HikariCP, Jython 2.7.5b1, Logback configura
 the bundled datapack, CI unit tests, and dependency upgrades. See the
 [release](https://github.com/l2go/l2jfree/releases/tag/v2.5.0).
 
-[Unreleased]: https://github.com/l2go/l2jfree/compare/v3.3.0...HEAD
+[Unreleased]: https://github.com/l2go/l2jfree/compare/v3.3.1...HEAD
+[3.3.1]: https://github.com/l2go/l2jfree/compare/v3.3.0...v3.3.1
 [3.3.0]: https://github.com/l2go/l2jfree/compare/v3.1.1...v3.3.0
 [3.1.1]: https://github.com/l2go/l2jfree/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/l2go/l2jfree/compare/v3.0.0...v3.1.0
