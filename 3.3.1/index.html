@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>3.3.1 — L2JFree</title>
+<meta name="description" content="L2JFree 3.3.1 follows 3.3.0: the tasks of the world share one thread, the autosave copies the player before it writes, and a packet that writes no byte is no longer sent as an empty frame.">
+<meta name="theme-color" content="#05060c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="3.3.1 — L2JFree">
+<meta property="og:description" content="The tasks of the world share one thread. The autosave copies the player before it writes. A packet that writes no byte is no longer sent.">
+<meta property="og:url" content="https://l2go.github.io/l2jfree/3.3.1/">
+<meta property="og:image" content="https://l2go.github.io/l2jfree/assets/img/og.jpg">
+<meta property="article:published_time" content="2026-11-25">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/l2jfree/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="author" href="/l2jfree/humans.txt">
+<link rel="preload" href="/l2jfree/assets/fonts/cinzel.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/l2jfree/assets/css/site.css">
+<script src="/l2jfree/assets/js/site.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" aria-hidden="true"></div>
+<header class="bar">
+  <a class="bar__mark" href="/l2jfree/">L2JFREE</a>
+  <nav aria-label="Sections">
+    <a href="/l2jfree/#start">Start</a>
+    <a class="opt" href="/l2jfree/#engineering">Engineering</a>
+    <a href="/l2jfree/#chronicle">Chronicle</a>
+    <a href="https://github.com/l2go/l2jfree">GitHub</a>
+  </nav>
+</header>
+<main id="main">
+<article>
+<header class="article-head">
+  <div class="wrap">
+    <div class="crumbs"><a href="/l2jfree/#chronicle">Chronicle</a> · 3.3.1</div>
+    <h1>3.3.1</h1>
+    <p class="dek">The release after 3.3.0. The tasks of the world share one thread, the autosave copies the player before it writes, and a packet that writes no byte is no longer sent.</p>
+    <div class="byline"><time datetime="2026-11-25">25 November 2026</time></div>
+  </div>
+</header>
+<div class="prose">
+<p>The full list is the <a href="https://github.com/l2go/l2jfree/blob/v3.3.1/CHANGELOG.md">changelog</a>. The changes a running server meets are these. The release also ships with known defects; the note <a href="/l2jfree/notes/one-thread-owns-the-blow/">One thread owns the blow</a> names them.</p>
+<h2>One thread for the world</h2>
+<p>Movement, the knownlist, effects, AI and the logic of client packets run as tasks on one platform thread, <code>l2jfree-world</code>, so two of them cannot write one creature at the same time. The global tasks, the item flush, dropped items, the game clock and the character load wait for the database on virtual threads. A rift tick, an Olympiad step, a Festival step and a GM command apply as one step on the world thread. <code>BaseThreadPoolSize</code> and <code>ExtraThreadPerCore</code> are no longer read; a file that still names them is not an error.</p>
+<h2>What still waits</h2>
+<p>A logout's own save, the commit of a multisell exchange, an admin command and the creation of a character still wait for the database on the world thread, and a slow database holds the other world tasks for that time. A task that runs longer than five seconds is logged, and an admin command that runs that long tells the GM. No load measurement has been made.</p>
+<h2>Saves</h2>
+<p>The autosave copies the character row, the subclasses, the cooldowns and the effects on the world thread and writes that copy in the background. A summoned pet is still read by the write, and so is the inventory when <code>UpdateItemsOnCharStore</code> is on; it is off by default. A character that already left the world is not saved again on disconnect.</p>
+<h2>Network</h2>
+<p>A packet that writes no byte is not sent as an empty frame. The client no longer reads a frame with nothing in it after a logout.</p>
+<h2>Check the release</h2>
+<pre class="code">cosign verify ghcr.io/l2go/l2jfree:3.3.1 \
+  --certificate-identity https://github.com/l2go/l2jfree/.github/workflows/build.yml@refs/heads/main \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+gh release download v3.3.1 --repo l2go/l2jfree
+gh attestation verify l2jfree-3.3.1-compose.tar.gz --repo l2go/l2jfree \
+  --bundle l2jfree-3.3.1-compose.tar.gz.sigstore.json \
+  --signer-workflow l2go/l2jfree/.github/workflows/release.yml</pre>
+</div>
+</article>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot__top">
+      <span class="foot__mark" title="L2JFREE = SIGNED = 58">L2JFREE</span>
+      <nav aria-label="Project">
+        <a href="https://github.com/l2go/l2jfree">Repository</a>
+        <a href="https://github.com/l2go/l2jfree/releases">Releases</a>
+        <a href="https://github.com/l2go/l2jfree/blob/main/deploy/README.md">Deploy guide</a>
+        <a href="https://github.com/l2go/l2jfree/blob/main/SECURITY.md">Security</a>
+      </nav>
+    </div>
+    <p>Lineage II and NCSOFT are trademarks or registered trademarks of NCSOFT Corporation. L2JFree is an independent, non-commercial open-source project, not affiliated with, endorsed, or sponsored by NCSOFT. The project modernizes an archived open-source server; it adds no game content, and it does not modify, patch, or distribute the game client.</p>
+    <p>The code is under the GNU GPLv3. Banner art generated with AI. Cinzel typeface under the SIL Open Font License. <a class="sigma" href="/l2jfree/numbers/" title="The numbers">Σ</a></p>
+  </div>
+</footer>
+</body>
+</html>

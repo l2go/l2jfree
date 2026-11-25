@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://l2go.github.io/l2jfree/</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://l2go.github.io/l2jfree/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://l2go.github.io/l2jfree/3.3.0/</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://l2go.github.io/l2jfree/3.3.1/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://l2go.github.io/l2jfree/numbers/</loc><lastmod>2026-11-15</lastmod></url>
   <url><loc>https://l2go.github.io/l2jfree/notes/reviving-an-abandoned-mmo-server/</loc><lastmod>2026-11-15</lastmod></url>
   <url><loc>https://l2go.github.io/l2jfree/notes/one-process-hard-boundaries/</loc><lastmod>2026-11-15</lastmod></url>
@@ -10,5 +11,6 @@
   <url><loc>https://l2go.github.io/l2jfree/notes/releases-promote-never-rebuild/</loc><lastmod>2026-11-15</lastmod></url>
   <url><loc>https://l2go.github.io/l2jfree/notes/starting-a-java-25-server/</loc><lastmod>2026-11-15</lastmod></url>
   <url><loc>https://l2go.github.io/l2jfree/notes/old-bugs-new-invariants/</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://l2go.github.io/l2jfree/notes/one-thread-owns-the-blow/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://l2go.github.io/l2jfree/data/startup-v3.1.1/startup.json</loc><lastmod>2026-11-15</lastmod></url>
 </urlset>

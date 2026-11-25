@@ -128,16 +128,16 @@
     <div class="reveal">
       <p class="kicker">Start</p>
       <h2 id="start-title">Light the beacon</h2>
-      <p class="intro">Release 3.3.0, from a checkout of its tag, with Docker Compose. The first start creates the database passwords, migrates the schemas, and loads the game world; it takes a few minutes. The first login creates the account.</p>
-      <p><a href="https://github.com/l2go/l2jfree/blob/v3.3.0/deploy/README.md">Deploy guide</a> · <a href="https://github.com/l2go/l2jfree/releases">Releases with a compose bundle</a></p>
+      <p class="intro">Release 3.3.1, from a checkout of its tag, with Docker Compose. The first start creates the database passwords, migrates the schemas, and loads the game world; it takes a few minutes. The first login creates the account.</p>
+      <p><a href="https://github.com/l2go/l2jfree/blob/v3.3.1/deploy/README.md">Deploy guide</a> · <a href="https://github.com/l2go/l2jfree/releases">Releases with a compose bundle</a></p>
     </div>
     <div class="plaque reveal">
       <div class="plaque__label">Terminal</div>
-<pre><code><span class="p">$ </span>git clone --branch v3.3.0 https://github.com/l2go/l2jfree
+<pre><code><span class="p">$ </span>git clone --branch v3.3.1 https://github.com/l2go/l2jfree
 <span class="p">$ </span>cd l2jfree/deploy
-<span class="p">$ </span>export L2JFREE_IMAGE=ghcr.io/l2go/l2jfree:3.3.0
+<span class="p">$ </span>export L2JFREE_IMAGE=ghcr.io/l2go/l2jfree:3.3.1
 <span class="p">$ </span>docker compose up -d --wait</code></pre>
-      <div class="ports"><span><b>2106</b>login</span><span><b>7777</b>world</span><span><b>3.3.0</b>image</span></div>
+      <div class="ports"><span><b>2106</b>login</span><span><b>7777</b>world</span><span><b>3.3.1</b>image</span></div>
     </div>
   </div>
 </section>
@@ -148,7 +148,7 @@
   <div class="wrap">
     <p class="kicker reveal">Engineering</p>
     <h2 id="eng-title" class="reveal">Six decisions, each held in place</h2>
-    <p class="intro reveal">A decision that nothing enforces is a wish. Each of these is checked by a rule, a test, or a step of the pipeline, linked to the code of release 3.1.1, with the deployment workflows updated to 3.3.0.</p>
+    <p class="intro reveal">A decision that nothing enforces is a wish. Each of these is checked by a rule, a test, or a step of the pipeline, linked to the code of release 3.1.1, with the deployment workflows updated to 3.3.1.</p>
     <div class="cards">
       <article class="card reveal">
         <div class="card__num">I</div>
@@ -166,13 +166,13 @@
         <div class="card__num">III</div>
         <h3>Every merge is a release rehearsal</h3>
         <p>Each architecture starts the image and runs 24 client sessions, six at a time. Restart and restore checks keep the characters. An update rehearsal replaces the published edge image when it can be pulled; a versioned release requires proof that both architectures completed it.</p>
-        <div class="card__proof">Enforced by <a href="https://github.com/l2go/l2jfree/blob/v3.3.0/.github/workflows/build.yml">build.yml</a>, image jobs</div>
+        <div class="card__proof">Enforced by <a href="https://github.com/l2go/l2jfree/blob/v3.3.1/.github/workflows/build.yml">build.yml</a>, image jobs</div>
       </article>
       <article class="card reveal">
         <div class="card__num">IV</div>
         <h3>Releases promote, never rebuild</h3>
         <p>A release gives a version to the image digest that main built and tested, after the maintainer approves. The image carries a cosign signature, an SBOM, and provenance; the compose archive carries its own signature.</p>
-        <div class="card__proof">Enforced by <a href="https://github.com/l2go/l2jfree/blob/v3.3.0/.github/workflows/release.yml">release.yml</a></div>
+        <div class="card__proof">Enforced by <a href="https://github.com/l2go/l2jfree/blob/v3.3.1/.github/workflows/release.yml">release.yml</a></div>
       </article>
       <article class="card reveal">
         <div class="card__num">V</div>
@@ -271,7 +271,8 @@
       <li class="lit reveal"><time datetime="2026-10-11">Oct 2026</time><div><h3>3.0.0</h3><p>Six days later: one process, PostgreSQL 18 with a schema and a role per module, a signed image, and a pipeline that checks client sessions and recovery.</p></div></li>
       <li class="lit reveal"><time datetime="2026-10-12">Oct 2026</time><div><h3>3.1.0 and 3.1.1</h3><p>Economy and login defects closed by their invariants, a signature for the release archive, and a measured start.</p></div></li>
       <li class="lit reveal"><time datetime="2026-11-14">Nov 2026</time><div><h3><a href="/l2jfree/3.3.0/">3.3.0</a></h3><p>Kill rewards follow the configured rates, the image runs on Debian 13 for both architectures, and the Java engine moves under <code>engine/java</code>.</p></div></li>
-    </ol>
+          <li class="lit reveal"><time datetime="2026-11-25">Nov 2026</time><div><h3><a href="/l2jfree/3.3.1/">3.3.1</a></h3><p>The tasks of the world run on one thread, the autosave copies the player before it writes, and a packet that writes no byte is no longer sent as an empty frame.</p></div></li>
+</ol>
   </div>
 </section>
 
@@ -313,6 +314,20 @@
   </div>
 </section>
 
+<section id="the-tick" aria-labelledby="tick-title">
+  <div class="wrap">
+    <p class="kicker reveal">Engineering notes</p>
+    <h2 id="tick-title" class="reveal">The tick</h2>
+    <p class="intro reveal">A second series, on the world of the server: who is allowed to change a creature, what that costs, and how the answer is checked. It starts with release 3.3.1.</p>
+    <div class="notes">
+      <a class="note reveal" href="/l2jfree/notes/one-thread-owns-the-blow/">
+        <div class="note__img"><picture><source srcset="/l2jfree/assets/img/tick/tick-cover-1-one-thread.webp" type="image/webp"><img src="/l2jfree/assets/img/tick/tick-cover-1-one-thread.jpg" alt="" loading="lazy" width="1600" height="667"></picture></div>
+        <div class="note__body"><div class="note__meta">Part 1 · 8 min</div><h3>One thread owns the blow</h3><p>The tasks of the world share one thread, so two of them cannot write one creature at once. What that cost, which waits it did not remove, and the defects 3.3.1 shipped with.</p></div>
+      </a>
+    </div>
+  </div>
+</section>
+
 <hr class="divider divider--node">
 
 <section id="verify" aria-labelledby="verify-title">
@@ -326,13 +341,13 @@
         <li>The compose archive of a release carries the Sigstore bundle of its own provenance.</li>
       </ul>
     </div>
-<pre class="code reveal">cosign verify ghcr.io/l2go/l2jfree:3.3.0 \
+<pre class="code reveal">cosign verify ghcr.io/l2go/l2jfree:3.3.1 \
   --certificate-identity https://github.com/l2go/l2jfree/.github/workflows/build.yml@refs/heads/main \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 
-gh release download v3.3.0 --repo l2go/l2jfree
-gh attestation verify l2jfree-3.3.0-compose.tar.gz --repo l2go/l2jfree \
-  --bundle l2jfree-3.3.0-compose.tar.gz.sigstore.json \
+gh release download v3.3.1 --repo l2go/l2jfree
+gh attestation verify l2jfree-3.3.1-compose.tar.gz --repo l2go/l2jfree \
+  --bundle l2jfree-3.3.1-compose.tar.gz.sigstore.json \
   --signer-workflow l2go/l2jfree/.github/workflows/release.yml</pre>
   </div>
 </section>
