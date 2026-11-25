@@ -26,6 +26,7 @@ import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.l2jfree.L2DatabaseFactory;
 import com.l2jfree.gameserver.ThreadPoolManager;
@@ -55,6 +56,7 @@ public final class TaskManager extends HandlerRegistry<String, TaskHandler>
 		
 		private long _lastActivation;
 		private ScheduledFuture<?> _scheduled;
+		private final AtomicBoolean _busy = new AtomicBoolean();
 		
 		private ExecutedTask(ResultSet rset) throws SQLException
 		{
@@ -145,6 +147,14 @@ public final class TaskManager extends HandlerRegistry<String, TaskHandler>
 		@Override
 		public void run()
 		{
+			// The timer fires on the world thread. The UPDATE of global_task, and the handler, wait on the database.
+			if (!ThreadPoolManager.getInstance().runBackgroundOnce(_busy, this::executeNow))
+				_log.warn("Task {} is still running or the server is stopping, this run is skipped", this);
+		}
+		
+		private void executeNow()
+		{
+			ThreadPoolManager.enterBackgroundJdbc();
 			Connection con = null;
 			try
 			{

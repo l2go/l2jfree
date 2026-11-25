@@ -420,6 +420,15 @@ public abstract class Connection<T extends Connection<T, RP, SP>, RP extends Rec
 			SendablePacket.restoreBuffer(previous);
 		}
 		
+		// A packet is written when it reaches the I/O thread, so one that has nothing to say any more (its player left
+		// after it was queued) writes no byte. An empty frame would only confuse the client and move the cipher.
+		if (dataSize == 0)
+		{
+			if (NetworkServer._log.isDebugEnabled())
+				NetworkServer._log.debug("Empty packet not sent: " + client + " - " + sp.getType());
+			return false;
+		}
+		
 		// encrypt in place; the cipher leaves the position behind the (possibly longer) encrypted bytes
 		buf.position(0);
 		

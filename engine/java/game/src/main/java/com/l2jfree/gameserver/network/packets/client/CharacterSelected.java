@@ -15,6 +15,7 @@
 package com.l2jfree.gameserver.network.packets.client;
 
 import com.l2jfree.Config;
+import com.l2jfree.gameserver.ThreadPoolManager;
 import com.l2jfree.gameserver.gameobjects.L2Player;
 import com.l2jfree.gameserver.model.world.L2World;
 import com.l2jfree.gameserver.network.Disconnection;
@@ -49,10 +50,40 @@ public final class CharacterSelected extends L2ClientPacket
 	{
 		// should always be null
 		// but if not then this is repeated packet and nothing should be done here
-		if (getClient().getActiveChar() != null)
+		final int token = getClient().beginCharacterLoad();
+		if (token == 0)
 			return;
 		
-		final L2Player cha = getClient().loadCharFromDisk(_charSlot);
+		final int slot = _charSlot;
+		ThreadPoolManager.getInstance().executeLongRunning(() -> {
+			if (!getClient().characterLoadOpen(token))
+				return;
+			
+			final L2Player cha;
+			try
+			{
+				ThreadPoolManager.enterBackgroundJdbc();
+				if (!getClient().characterLoadOpen(token))
+					return;
+				cha = getClient().loadCharFromDisk(slot, token);
+			}
+			catch (RuntimeException e)
+			{
+				getClient().abandonCharacterLoad(token);
+				throw e;
+			}
+			ThreadPoolManager.getInstance().runOnWorld(() -> enterWorld(cha, token));
+		});
+	}
+	
+	private void enterWorld(L2Player cha, int token)
+	{
+		if (!getClient().claimCharacterLoad(token))
+		{
+			if (cha != null)
+				cha.stopAllTimers();
+			return;
+		}
 		
 		if (cha == null)
 		{

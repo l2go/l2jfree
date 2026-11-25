@@ -16,17 +16,25 @@ package com.l2jfree.gameserver;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.l2jfree.Config;
 import com.l2jfree.util.concurrent.ExecuteWrapper;
 import com.l2jfree.util.concurrent.L2RejectedExecutionHandler;
 import com.l2jfree.util.concurrent.RunnableStatsManager;
@@ -35,6 +43,11 @@ import com.l2jfree.util.concurrent.ScheduledFutureWrapper;
 import com.l2jfree.util.concurrent.VirtualTaskExecutor;
 
 /**
+ * World tasks share one platform thread: movement, knownlist, effects, AI and client packet logic.
+ * A task queued from that thread runs after the current one returns; it does not run beside it.
+ * Background JDBC uses virtual threads, one outstanding task at a time, and does not hold a creature
+ * monitor while it waits. A save the action itself performs still runs on the caller.
+ *
  * @author -Wooden-, NB4L1
  */
 public final class ThreadPoolManager
@@ -43,31 +56,60 @@ public final class ThreadPoolManager
 	
 	public static final long MAXIMUM_RUNTIME_IN_MILLISEC_WITHOUT_WARNING = 5000;
 	
+	private static final String WORLD_THREAD_NAME = "l2jfree-world";
+	
 	private static final long MAX_DELAY = TimeUnit.NANOSECONDS.toMillis(Long.MAX_VALUE - System.nanoTime()) / 2;
+	
+	/** Test seam, for tests only: production leaves it empty. A stalled gate must not sit on the world thread. */
+	static volatile Runnable jdbcGate = () -> {
+	};
+	
+	public static void setJdbcGate(Runnable gate)
+	{
+		jdbcGate = gate;
+	}
+	
+	public static void enterBackgroundJdbc()
+	{
+		jdbcGate.run();
+	}
+	
+	/**
+	 * Copies what the monitor protects, releases it, then runs the write. The write may wait on JDBC.
+	 * Callers that still need the monitor, such as a bypass, do not wait for that write.
+	 */
+	public static void releaseThen(Object monitor, Runnable underLock, Runnable afterRelease)
+	{
+		synchronized (monitor)
+		{
+			underLock.run();
+		}
+		enterBackgroundJdbc();
+		afterRelease.run();
+	}
 	
 	public static ThreadPoolManager getInstance()
 	{
 		return SingletonHolder._instance;
 	}
 	
-	private final ScheduledThreadPoolExecutor _scheduledPool;
-	private final ThreadPoolExecutor _instantPool;
-	/** Blocking work (admin commands, cleanups): one virtual thread per task. World tasks stay on the pools above. */
+	/** Movement, knownlist, effects, AI and client packet logic. One thread, so two tasks cannot write one creature at once. */
+	private final ScheduledThreadPoolExecutor _world;
+	private volatile Thread _worldThread;
+	/** Blocking work (admin commands, cleanups, JDBC): one virtual thread per task. */
 	private final VirtualTaskExecutor _longRunningPool;
 	
 	private ThreadPoolManager()
 	{
-		final int instantPoolSize = Math.max(1, Config.THREAD_POOL_SIZE / 3);
-		
-		_scheduledPool = new ScheduledThreadPoolExecutor(Config.THREAD_POOL_SIZE - instantPoolSize);
-		_scheduledPool.setRejectedExecutionHandler(new L2RejectedExecutionHandler());
-		_scheduledPool.prestartAllCoreThreads();
-		
-		_instantPool =
-				new ThreadPoolExecutor(instantPoolSize, instantPoolSize, 0, TimeUnit.SECONDS,
-						new ArrayBlockingQueue<Runnable>(100000));
-		_instantPool.setRejectedExecutionHandler(new L2RejectedExecutionHandler());
-		_instantPool.prestartAllCoreThreads();
+		final ThreadFactory worldThreads = Thread.ofPlatform().name(WORLD_THREAD_NAME).factory();
+		_world = new ScheduledThreadPoolExecutor(1, task -> {
+			// A dead worker is replaced by a new thread, so the reference follows the factory, not the first thread.
+			final Thread thread = worldThreads.newThread(task);
+			_worldThread = thread;
+			return thread;
+		});
+		_world.setRejectedExecutionHandler(new L2RejectedExecutionHandler());
+		_world.prestartAllCoreThreads();
 		
 		_longRunningPool = new VirtualTaskExecutor("long-running");
 		
@@ -79,8 +121,8 @@ public final class ThreadPoolManager
 			}
 		}, 60000, 60000);
 		
-		_log.info("ThreadPoolManager: Initialized with " + _scheduledPool.getPoolSize() + " scheduler, "
-				+ _instantPool.getPoolSize() + " instant thread(s); long running tasks on virtual threads.");
+		_log.info("ThreadPoolManager: world tasks on one platform thread (" + _world.getPoolSize()
+				+ "); long running tasks on virtual threads.");
 	}
 	
 	private final long validate(long delay)
@@ -109,7 +151,7 @@ public final class ThreadPoolManager
 		r = new ThreadPoolExecuteWrapper(r);
 		delay = validate(delay);
 		
-		return new ScheduledFutureWrapper(_scheduledPool.schedule(r, delay, TimeUnit.MILLISECONDS));
+		return new ScheduledFutureWrapper(_world.schedule(r, delay, TimeUnit.MILLISECONDS));
 	}
 	
 	public final ScheduledFuture<?> scheduleEffect(Runnable r, long delay)
@@ -135,7 +177,7 @@ public final class ThreadPoolManager
 		delay = validate(delay);
 		period = validate(period);
 		
-		return new ScheduledFutureWrapper(_scheduledPool.scheduleAtFixedRate(r, delay, period, TimeUnit.MILLISECONDS));
+		return new ScheduledFutureWrapper(_world.scheduleAtFixedRate(r, delay, period, TimeUnit.MILLISECONDS));
 	}
 	
 	public final ScheduledFuture<?> scheduleEffectAtFixedRate(Runnable r, long delay, long period)
@@ -159,7 +201,7 @@ public final class ThreadPoolManager
 	{
 		r = new ThreadPoolExecuteWrapper(r);
 		
-		_instantPool.execute(r);
+		_world.execute(r);
 	}
 	
 	public final void executeTask(Runnable r)
@@ -174,13 +216,165 @@ public final class ThreadPoolManager
 		_longRunningPool.execute(r);
 	}
 	
+	public boolean isWorldThread()
+	{
+		return Thread.currentThread() == _worldThread;
+	}
+	
+	/**
+	 * Applies one short step on {@code l2jfree-world} and waits for it. A direct call and a handed-off call
+	 * report the same exception. A closed world completes the wait with an error. An interrupt before the step
+	 * starts cancels it; a step that has started runs to the end, and the caller still returns.
+	 */
+	public void runOnWorld(Runnable action)
+	{
+		applyOn(isWorldThread(), _world, action);
+	}
+	
+	static void applyOn(boolean callerIsOwner, ExecutorService executor, Runnable action)
+	{
+		if (callerIsOwner)
+		{
+			action.run();
+			return;
+		}
+		
+		if (executor.isShutdown())
+			throw new RejectedExecutionException("world stopped");
+		
+		FutureTask<Void> task = new FutureTask<>(() -> {
+			action.run();
+			return null;
+		});
+		executor.execute(task);
+		if (executor.isShutdown() && task.cancel(false))
+			throw new RejectedExecutionException("world did not accept the apply");
+		
+		try
+		{
+			task.get();
+		}
+		catch (InterruptedException e)
+		{
+			task.cancel(false);
+			Thread.currentThread().interrupt();
+			throw new IllegalStateException("interrupted while applying world state", e);
+		}
+		catch (CancellationException e)
+		{
+			throw new RejectedExecutionException("world did not run the apply");
+		}
+		catch (ExecutionException e)
+		{
+			Throwable cause = e.getCause();
+			if (cause instanceof RuntimeException runtime)
+				throw runtime;
+			if (cause instanceof Error error)
+				throw error;
+			throw new IllegalStateException(cause);
+		}
+	}
+	
+	/**
+	 * From the world thread, starts {@code body} on a virtual thread unless one started earlier is still running.
+	 * From any other thread, runs {@code body} on the caller. The flag clears after success and after failure.
+	 * <p>
+	 * While the server stops, the background pool no longer accepts work. A world task that wakes up then has nothing
+	 * left to do, so it is skipped without an error; the final saves run on the stopping thread, not here.
+	 *
+	 * @return true when {@code body} ran or started; false when it was skipped because the previous run is still in
+	 *         flight or the server is stopping
+	 */
+	public boolean runBackgroundOnce(AtomicBoolean inflight, Runnable body)
+	{
+		if (!isWorldThread())
+		{
+			body.run();
+			return true;
+		}
+		
+		return startUnlessStopping(inflight, body, this::executeLongRunning, _longRunningPool::isShutdown);
+	}
+	
+	/**
+	 * Like {@link #runBackgroundOnce(AtomicBoolean, Runnable)} for work that must read the world. {@code copy} runs on
+	 * the caller, which is the world thread when it matters, only when no earlier run is in flight, so nothing is
+	 * copied for a run that would be skipped. It returns the write that persists the copy, or null for nothing to
+	 * write. The write runs on a virtual thread and reads only the copy.
+	 * <p>
+	 * Only the world thread starts runs, so the check and the start cannot be interleaved with another start.
+	 *
+	 * @return true when the write ran or started
+	 */
+	public boolean copyThenRunBackgroundOnce(AtomicBoolean inflight, Supplier<Runnable> copy)
+	{
+		if (isWorldThread() && inflight.get())
+			return false;
+		
+		final Runnable write = copy.get();
+		if (write == null)
+			return false;
+		
+		return runBackgroundOnce(inflight, write);
+	}
+	
+	/** {@link #startOnce} that treats a rejection during shutdown as "nothing left to do" and any other as an error. */
+	static boolean startUnlessStopping(AtomicBoolean inflight, Runnable body, Consumer<Runnable> start,
+			BooleanSupplier stopping)
+	{
+		try
+		{
+			return startOnce(inflight, body, start);
+		}
+		catch (RejectedExecutionException e)
+		{
+			if (!stopping.getAsBoolean())
+				throw e;
+			
+			_log.debug("Background work skipped, the server is stopping.");
+			return false;
+		}
+	}
+	
+	/**
+	 * Starts {@code body} once. A rejected start clears the flag instead of leaving it stuck, and the caller sees the
+	 * rejection.
+	 *
+	 * @return false when a run is already in flight, so {@code body} was not started
+	 */
+	static boolean startOnce(AtomicBoolean inflight, Runnable body, Consumer<Runnable> start)
+	{
+		if (!inflight.compareAndSet(false, true))
+			return false;
+		
+		try
+		{
+			start.accept(() -> {
+				try
+				{
+					body.run();
+				}
+				finally
+				{
+					inflight.set(false);
+				}
+			});
+			return true;
+		}
+		catch (RuntimeException e)
+		{
+			inflight.set(false);
+			throw e;
+		}
+	}
+	
 	// ===========================================================================================
 	
 	public final Future<?> submit(Runnable r)
 	{
 		r = new ThreadPoolExecuteWrapper(r);
 		
-		return _instantPool.submit(r);
+		return _world.submit(r);
 	}
 	
 	public final Future<?> submitLongRunning(Runnable r)
@@ -197,27 +391,16 @@ public final class ThreadPoolManager
 		List<String> list = new ArrayList<String>();
 		
 		list.add("");
-		list.add("Scheduled pool:");
+		list.add("World thread:");
 		list.add("=================================================");
-		list.add("\tgetActiveCount: ...... " + _scheduledPool.getActiveCount());
-		list.add("\tgetCorePoolSize: ..... " + _scheduledPool.getCorePoolSize());
-		list.add("\tgetPoolSize: ......... " + _scheduledPool.getPoolSize());
-		list.add("\tgetLargestPoolSize: .. " + _scheduledPool.getLargestPoolSize());
-		list.add("\tgetMaximumPoolSize: .. " + _scheduledPool.getMaximumPoolSize());
-		list.add("\tgetCompletedTaskCount: " + _scheduledPool.getCompletedTaskCount());
-		list.add("\tgetQueuedTaskCount: .. " + _scheduledPool.getQueue().size());
-		list.add("\tgetTaskCount: ........ " + _scheduledPool.getTaskCount());
-		list.add("");
-		list.add("Instant pool:");
-		list.add("=================================================");
-		list.add("\tgetActiveCount: ...... " + _instantPool.getActiveCount());
-		list.add("\tgetCorePoolSize: ..... " + _instantPool.getCorePoolSize());
-		list.add("\tgetPoolSize: ......... " + _instantPool.getPoolSize());
-		list.add("\tgetLargestPoolSize: .. " + _instantPool.getLargestPoolSize());
-		list.add("\tgetMaximumPoolSize: .. " + _instantPool.getMaximumPoolSize());
-		list.add("\tgetCompletedTaskCount: " + _instantPool.getCompletedTaskCount());
-		list.add("\tgetQueuedTaskCount: .. " + _instantPool.getQueue().size());
-		list.add("\tgetTaskCount: ........ " + _instantPool.getTaskCount());
+		list.add("\tgetActiveCount: ...... " + _world.getActiveCount());
+		list.add("\tgetCorePoolSize: ..... " + _world.getCorePoolSize());
+		list.add("\tgetPoolSize: ......... " + _world.getPoolSize());
+		list.add("\tgetLargestPoolSize: .. " + _world.getLargestPoolSize());
+		list.add("\tgetMaximumPoolSize: .. " + _world.getMaximumPoolSize());
+		list.add("\tgetCompletedTaskCount: " + _world.getCompletedTaskCount());
+		list.add("\tgetQueuedTaskCount: .. " + _world.getQueue().size());
+		list.add("\tgetTaskCount: ........ " + _world.getTaskCount());
 		list.add("");
 		list.add("Long running tasks (virtual threads):");
 		list.add("=================================================");
@@ -235,10 +418,7 @@ public final class ThreadPoolManager
 		
 		while (System.currentTimeMillis() - begin < timeoutInMillisec)
 		{
-			if (!_scheduledPool.awaitTermination(10, TimeUnit.MILLISECONDS) && _scheduledPool.getActiveCount() > 0)
-				continue;
-			
-			if (!_instantPool.awaitTermination(10, TimeUnit.MILLISECONDS) && _instantPool.getActiveCount() > 0)
+			if (!_world.awaitTermination(10, TimeUnit.MILLISECONDS) && _world.getActiveCount() > 0)
 				continue;
 			
 			if (!_longRunningPool.awaitTermination(10, TimeUnit.MILLISECONDS) && _longRunningPool.getActiveCount() > 0)
@@ -260,12 +440,10 @@ public final class ThreadPoolManager
 		final long begin = System.currentTimeMillis();
 		
 		System.out.println("ThreadPoolManager: Shutting down.");
-		System.out.println("\t... executing " + getTaskCount(_scheduledPool) + " scheduled tasks.");
-		System.out.println("\t... executing " + getTaskCount(_instantPool) + " instant tasks.");
+		System.out.println("\t... executing " + getTaskCount(_world) + " world tasks.");
 		System.out.println("\t... executing " + _longRunningPool.getActiveCount() + " long running tasks.");
 		
-		_scheduledPool.shutdown();
-		_instantPool.shutdown();
+		_world.shutdown();
 		_longRunningPool.shutdown();
 		
 		boolean success = false;
@@ -273,8 +451,8 @@ public final class ThreadPoolManager
 		{
 			success |= awaitTermination(5000);
 			
-			_scheduledPool.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-			_scheduledPool.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+			_world.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+			_world.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
 			
 			success |= awaitTermination(10000);
 		}
@@ -284,8 +462,7 @@ public final class ThreadPoolManager
 		}
 		
 		System.out.println("\t... success: " + success + " in " + (System.currentTimeMillis() - begin) + " msec.");
-		System.out.println("\t... " + getTaskCount(_scheduledPool) + " scheduled tasks left.");
-		System.out.println("\t... " + getTaskCount(_instantPool) + " instant tasks left.");
+		System.out.println("\t... " + getTaskCount(_world) + " world tasks left.");
 		System.out.println("\t... " + _longRunningPool.getActiveCount() + " long running tasks left.");
 		
 		if (TimeUnit.HOURS.toMillis(12) < (System.currentTimeMillis() - GameServer.getStartedTime().getTimeInMillis()))
@@ -294,8 +471,7 @@ public final class ThreadPoolManager
 	
 	public void purge()
 	{
-		_scheduledPool.purge();
-		_instantPool.purge();
+		_world.purge();
 	}
 	
 	@SuppressWarnings("synthetic-access")

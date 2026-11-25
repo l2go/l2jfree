@@ -4,6 +4,15 @@ Notable changes, in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) for
 
 ## [Unreleased]
 
+### Changed
+
+- Movement, knownlist, effects, AI and client packet logic share one platform thread, so two tasks cannot write one creature at the same time. Scheduled database work (global tasks, the item flush, dropped items, the game clock, character load) runs on virtual threads and does not hold a player or item monitor. One session has one character load: disconnect or a newer selection drops it, and a dropped load is not entered and does not disconnect a character the replacement already entered. An item insert writes its augmentation and elemental attribute on the same connection; a change during the write cannot turn the next write into a duplicate insert or an update of a missing row, and a queued write cannot land after a newer one. A rift tick, an Olympiad step, a Festival step and a GM command apply as one step on the world thread, and that step does not wait for the world while holding a creature monitor. Logout's save is the one that is written; a later snapshot does not replace it and a skipped snapshot is not reported as saved. A handed-off world step reports the failure it threw, and a closed world or an interrupt finishes the wait. `BaseThreadPoolSize` and `ExtraThreadPerCore` are no longer read.
+
+### Fixed
+
+- A packet that writes no byte, as one does when its player left after it was queued, is not sent as an empty frame. The client no longer reads a frame with nothing in it after a logout.
+- The autosave copies the player and its effects on the world thread, where they change, and writes only the copy in the background. A character that already left the world is not saved again on disconnect, so no lost save is logged for it. A background task that wakes up while the server stops is skipped quietly, and a global task whose previous run is still going logs that its run was skipped.
+
 ## [3.3.0] - 2026-11-14
 
 ### Added
