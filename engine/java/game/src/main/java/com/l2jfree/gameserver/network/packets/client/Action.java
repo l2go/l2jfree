@@ -77,6 +77,11 @@ public final class Action extends L2ClientPacket
 		else
 			obj = L2World.getInstance().findObject(_objectId);
 		
+		_log.info("MEASURE Action: object " + _objectId + " -> " + (obj == null ? "null" : obj.getClass().getSimpleName()
+				+ ", auto-attackable " + (obj instanceof L2Creature && ((L2Creature)obj).isAutoAttackable(activeChar))
+				+ ", distance " + (int)Math.sqrt(activeChar.getDistanceSq(obj)) + ", target " + activeChar.getTargetId()
+				+ ", same instance " + activeChar.isSameInstance(obj) + ", requester " + activeChar.getActiveRequester()));
+		
 		if (obj == null)
 		{
 			// pressing e.g. pickup many times quickly would get you here
