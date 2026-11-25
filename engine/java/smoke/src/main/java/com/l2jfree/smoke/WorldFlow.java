@@ -135,7 +135,8 @@ final class WorldFlow
 			reporter.begin("world: enter world");
 			game.send(GamePackets.enterWorld());
 			PacketReader userInfo = game.expect(GamePackets.OP_USER_INFO, "UserInfo");
-			userInfo.skip(16); // x, y, z, vehicle id
+			String where = userInfo.readD() + " " + userInfo.readD() + " " + userInfo.readD();
+			userInfo.skip(4); // vehicle id
 			int objectId = userInfo.readD();
 			String userName = userInfo.readS();
 			if (!userName.equals(selected))
@@ -143,7 +144,7 @@ final class WorldFlow
 				throw new SmokeException("UserInfo describes '" + userName + "' instead of '" + selected + "'");
 			}
 			int skippedBefore = game.skipped();
-			Watcher watcher = new Watcher(game, Boolean.getBoolean("smoke.fight"));
+			Watcher watcher = new Watcher(game, Boolean.getBoolean("smoke.fight"), where);
 			int trailing = settle(game, deadline, watcher);
 			watcher.hold(deadline, Long.getLong("smoke.hold.seconds", 0L) * 1000L, reporter);
 			reporter.ok("UserInfo of " + userName + ", object id " + objectId + ", after " + skippedBefore
@@ -303,18 +304,23 @@ final class WorldFlow
 		private int _target;
 		private int _npcs;
 		private int _packets;
+		private final String _where;
+		private final java.util.Map<Integer, Integer> _opcodes = new java.util.TreeMap<>();
 
-		Watcher(GameConnection game, boolean fight)
+		Watcher(GameConnection game, boolean fight, String where)
 		{
 			_game = game;
 			_fight = fight;
+			_where = where;
 		}
 
 		void see(byte[] payload) throws SmokeException
 		{
 			_packets++;
 			PacketReader in = new PacketReader(payload);
-			if (in.readC() != OP_NPC_INFO)
+			int opcode = in.readC();
+			_opcodes.merge(opcode, 1, Integer::sum);
+			if (opcode != OP_NPC_INFO)
 				return;
 
 			int objectId = in.readD();
@@ -348,7 +354,8 @@ final class WorldFlow
 				}
 			}
 			reporter.info((_fight ? "fighter" : "watcher") + ": " + _npcs + " NpcInfo, target "
-					+ (_target == 0 ? "none" : Integer.toString(_target)) + ", " + _packets + " packets");
+					+ (_target == 0 ? "none" : Integer.toString(_target)) + ", " + _packets + " packets at " + _where + ", opcodes "
+					+ _opcodes);
 		}
 
 		private static byte[] command(int opcode, int objectId)

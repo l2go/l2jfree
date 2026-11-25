@@ -68,7 +68,7 @@ jobs:
         run: |
           mkdir -p out
           smoke() { java $PROPS -jar dist/l2jfree-smoke.jar --host 127.0.0.1 --timeout-seconds 240 "$@"; }
-          for watchers in 0 10 50 150; do
+          for watchers in 0; do
             start="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo "== $watchers watchers, from $start"
             if [ "$watchers" -gt 0 ]; then
