@@ -209,4 +209,13 @@ final class TestProtocol
 			writeS(_text);
 		}
 	}
+	
+	/** A packet that writes no byte, as a packet does when the player it describes has left. */
+	static final class Nothing extends Outbound
+	{
+		@Override
+		protected void write(Peer client)
+		{
+		}
+	}
 }

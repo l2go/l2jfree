@@ -433,6 +433,28 @@ class NetworkServerTest
 		}
 	}
 	
+	@ParameterizedTest
+	@EnumSource(Transport.Kind.class)
+	void aPacketThatWritesNothingIsNotSentAndTheCipherStaysInStep(Transport.Kind kind) throws Exception
+	{
+		try (Client client = connect(kind))
+		{
+			assertThat(client.readText()).isEqualTo("hello");
+			while (_server.connections.isEmpty())
+				Thread.sleep(10);
+			final Peer peer = _server.connections.get(0);
+			
+			peer.sendPacket(new TestProtocol.Nothing());
+			peer.sendPacket(new TestProtocol.Text("after"));
+			peer.sendPacket(new TestProtocol.Nothing());
+			peer.sendPacket(new TestProtocol.Text("last"));
+			
+			// an empty frame in between would fail the trailer check, and the rolling key would drift
+			assertThat(client.readText()).isEqualTo("after");
+			assertThat(client.readText()).isEqualTo("last");
+		}
+	}
+	
 	private static byte[] echo(String text, int number)
 	{
 		final ByteBuffer body = ByteBuffer.allocate(1 + 2 * (text.length() + 1) + 4).order(ByteOrder.LITTLE_ENDIAN);
