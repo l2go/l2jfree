@@ -317,6 +317,7 @@ final class WorldFlow
 		private int _npcs;
 		private int _packets;
 		private String _where = "?";
+		private final java.util.Map<Integer, Integer> _messages = new java.util.TreeMap<>();
 		private int _x;
 		private int _y;
 		private final java.util.Map<Integer, int[]> _candidates = new java.util.LinkedHashMap<>();
@@ -352,6 +353,8 @@ final class WorldFlow
 			PacketReader in = new PacketReader(payload);
 			int opcode = in.readC();
 			_opcodes.merge(opcode, 1, Integer::sum);
+			if (opcode == 0x62)
+				_messages.merge(in.readD(), 1, Integer::sum);
 			if (opcode != OP_NPC_INFO)
 				return;
 
@@ -385,8 +388,8 @@ final class WorldFlow
 				}
 			}
 			reporter.info((_fight ? "fighter" : "watcher") + ": " + _npcs + " NpcInfo, target "
-					+ (_target == 0 ? "none" : Integer.toString(_target)) + ", " + _packets + " packets at " + _where + ", opcodes "
-					+ _opcodes);
+					+ (_target == 0 ? "none" : Integer.toString(_target)) + ", " + _packets + " packets at " + _where + ", system messages "
+					+ _messages + ", opcodes " + _opcodes);
 		}
 
 		private static byte[] command(int opcode, int objectId)
