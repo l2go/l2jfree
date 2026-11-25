@@ -133,6 +133,17 @@ final class WorldFlow
 			reporter.ok("character " + selected + " selected");
 
 			reporter.begin("world: enter world");
+			Watcher watcher = new Watcher(game, Boolean.getBoolean("smoke.fight"));
+			game.tap(payload -> {
+				try
+				{
+					watcher.see(payload);
+				}
+				catch (SmokeException e)
+				{
+					// a packet the watcher cannot read is not its business
+				}
+			});
 			game.send(GamePackets.enterWorld());
 			PacketReader userInfo = game.expect(GamePackets.OP_USER_INFO, "UserInfo");
 			String where = userInfo.readD() + " " + userInfo.readD() + " " + userInfo.readD();
@@ -144,8 +155,8 @@ final class WorldFlow
 				throw new SmokeException("UserInfo describes '" + userName + "' instead of '" + selected + "'");
 			}
 			int skippedBefore = game.skipped();
-			Watcher watcher = new Watcher(game, Boolean.getBoolean("smoke.fight"), where);
-			int trailing = settle(game, deadline, watcher);
+			watcher.at(where);
+			int trailing = settle(game, deadline);
 			watcher.hold(deadline, Long.getLong("smoke.hold.seconds", 0L) * 1000L, reporter);
 			reporter.ok("UserInfo of " + userName + ", object id " + objectId + ", after " + skippedBefore
 					+ " other packets and " + trailing + " more");
@@ -202,7 +213,7 @@ final class WorldFlow
 	 *
 	 * @return the number of packets read
 	 */
-	private static int settle(GameConnection game, Deadline deadline, Watcher watcher) throws SmokeException
+	private static int settle(GameConnection game, Deadline deadline) throws SmokeException
 	{
 		long until = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(SETTLE_MILLIS);
 		int packets = 0;
@@ -210,7 +221,7 @@ final class WorldFlow
 		{
 			try
 			{
-				watcher.see(game.receive(QUIET_MILLIS));
+				game.receive(QUIET_MILLIS);
 				packets++;
 			}
 			catch (SmokeException e)
@@ -304,13 +315,17 @@ final class WorldFlow
 		private int _target;
 		private int _npcs;
 		private int _packets;
-		private final String _where;
+		private String _where = "?";
 		private final java.util.Map<Integer, Integer> _opcodes = new java.util.TreeMap<>();
 
-		Watcher(GameConnection game, boolean fight, String where)
+		Watcher(GameConnection game, boolean fight)
 		{
 			_game = game;
 			_fight = fight;
+		}
+
+		void at(String where)
+		{
 			_where = where;
 		}
 
@@ -345,7 +360,7 @@ final class WorldFlow
 				}
 				try
 				{
-					see(_game.receive(200L));
+					_game.receive(200L);
 				}
 				catch (SmokeException e)
 				{

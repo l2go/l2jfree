@@ -28,6 +28,14 @@ final class GameConnection implements AutoCloseable
 		_connection = connection;
 	}
 
+	private java.util.function.Consumer<byte[]> _tap;
+
+	/** Measurement branch only: sees every packet, also those {@link #expect} skips. */
+	void tap(java.util.function.Consumer<byte[]> tap)
+	{
+		_tap = tap;
+	}
+
 	GameCipher cipher()
 	{
 		return _cipher;
@@ -51,6 +59,9 @@ final class GameConnection implements AutoCloseable
 		_cipher.decrypt(frame, 0, frame.length);
 		if (frame.length == 0)
 			throw new SmokeException("the world sent an empty packet");
+
+		if (_tap != null)
+			_tap.accept(frame);
 
 		return frame;
 	}
